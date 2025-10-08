@@ -1,5 +1,5 @@
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
-import { AdminAuthService } from './admin-auth.service.js';
+import { AdminAuthService } from './admin-auth.service';
 
 jest.mock('bcryptjs', () => ({
   compare: jest.fn(),
