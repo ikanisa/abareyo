@@ -23,6 +23,7 @@ export default () => ({
   openai: {
     apiKey: process.env.OPENAI_API_KEY,
     baseUrl: process.env.OPENAI_BASE_URL,
+    onboardingModel: process.env.OPENAI_ONBOARDING_MODEL ?? 'gpt-4.1-mini',
   },
   sms: {
     webhookToken: process.env.SMS_WEBHOOK_TOKEN,

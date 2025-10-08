@@ -384,12 +384,15 @@ const Wallet = () => {
       <div className="space-y-2">
         <h4 className="text-sm font-semibold text-foreground">Payments</h4>
         <ul className="text-xs text-muted-foreground space-y-1">
-          {receipt.payments.map((payment) => (
-            <li key={payment.id}>
-              {payment.status} · {formatter.format(payment.amount)} · created {new Date(payment.createdAt).toLocaleString()}
-              {payment.confirmedAt ? ` · confirmed ${new Date(payment.confirmedAt).toLocaleString()}` : ''}
-            </li>
-          ))}
+          {receipt.payments.map((payment) => {
+            const enriched = payment as (typeof receipt.payments)[number];
+            return (
+              <li key={enriched.id}>
+                {enriched.status} · {formatter.format(enriched.amount)} · created {new Date(enriched.createdAt).toLocaleString()}
+                {enriched.confirmedAt ? ` · confirmed ${new Date(enriched.confirmedAt).toLocaleString()}` : ''}
+              </li>
+            );
+          })}
         </ul>
       </div>
       {receipt.passes.length ? (

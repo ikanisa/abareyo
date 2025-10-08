@@ -78,7 +78,6 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@bubblewrap/cli": "^1.4.1",
     "@capacitor/cli": "^5.0.8",
     "@eslint/js": "^8.57.0",
     "@tailwindcss/typography": "^0.5.16",
@@ -86,7 +85,6 @@
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "autoprefixer": "^10.4.21",
-    "cordova-res": "^0.15.4",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.5",
     "eslint-plugin-react-hooks": "^5.2.0",

@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { BrowserMultiFormatReader, Result } from "@zxing/browser";
+import { BrowserMultiFormatReader } from "@zxing/browser";
+import type { Result } from "@zxing/library";
 import { ScanLine, CheckCircle2, XCircle, AlertTriangle, RefreshCw, Camera } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -27,8 +28,11 @@ type LocalHistoryItem = {
 };
 
 function loadLocalHistory(): LocalHistoryItem[] {
+  if (typeof window === 'undefined') {
+    return [];
+  }
   try {
-    const stored = localStorage.getItem(LOCAL_HISTORY_KEY);
+    const stored = window.localStorage.getItem(LOCAL_HISTORY_KEY);
     if (!stored) return [];
     return JSON.parse(stored) as LocalHistoryItem[];
   } catch (error) {
@@ -38,8 +42,11 @@ function loadLocalHistory(): LocalHistoryItem[] {
 }
 
 function saveLocalHistory(history: LocalHistoryItem[]) {
+  if (typeof window === 'undefined') {
+    return;
+  }
   try {
-    localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(history.slice(0, LOCAL_HISTORY_LIMIT)));
+    window.localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(history.slice(0, LOCAL_HISTORY_LIMIT)));
   } catch (error) {
     console.warn("Failed to persist local gate history", error);
   }
@@ -52,14 +59,19 @@ export default function Gate() {
   const [stewardId, setStewardId] = useState("");
   const [dryRun, setDryRun] = useState(true);
   const [cameraActive, setCameraActive] = useState(false);
-  const [localHistory, setLocalHistory] = useState<LocalHistoryItem[]>(() => loadLocalHistory());
+  const [localHistory, setLocalHistory] = useState<LocalHistoryItem[]>([]);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const scannerRef = useRef<BrowserMultiFormatReader | null>(null);
 
   useEffect(() => {
+    setLocalHistory(loadLocalHistory());
+  }, []);
+
+  useEffect(() => {
     if (!cameraActive) {
-      scannerRef.current?.reset();
+      const reader = scannerRef.current as (BrowserMultiFormatReader & { reset?: () => void }) | null;
+      reader?.reset?.();
       scannerRef.current = null;
       if (videoRef.current) {
         const stream = videoRef.current.srcObject as MediaStream | null;
@@ -73,15 +85,14 @@ export default function Gate() {
     scannerRef.current = reader;
     let cancelled = false;
 
-    reader
-      .listVideoInputDevices()
+    BrowserMultiFormatReader.listVideoInputDevices()
       .then((devices) => {
         if (cancelled) return;
         const deviceId = devices[0]?.deviceId;
         if (!deviceId) {
           throw new Error("No camera available");
         }
-        return reader.decodeFromVideoDevice(deviceId, videoRef.current!, (result, error) => {
+        return reader.decodeFromVideoDevice(deviceId, videoRef.current!, (result) => {
           if (result) {
             handleScanResult(result);
           }
@@ -95,7 +106,7 @@ export default function Gate() {
 
     return () => {
       cancelled = true;
-      reader.reset();
+      (reader as BrowserMultiFormatReader & { reset?: () => void }).reset?.();
       const stream = videoRef.current?.srcObject as MediaStream | null;
       stream?.getTracks().forEach((track) => track.stop());
     };

@@ -12,6 +12,7 @@ import { ShopModule } from './modules/shop/shop.module.js';
 import { CommunityModule } from './modules/community/community.module.js';
 import { FundraisingModule } from './modules/fundraising/fundraising.module.js';
 import { RealtimeModule } from './modules/realtime/realtime.module.js';
+import { OnboardingModule } from './modules/onboarding/onboarding.module.js';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { RealtimeModule } from './modules/realtime/realtime.module.js';
     ShopModule,
     CommunityModule,
     FundraisingModule,
+    OnboardingModule,
   ],
 })
 export class AppModule {}
