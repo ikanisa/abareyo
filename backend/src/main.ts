@@ -24,6 +24,15 @@ async function bootstrap() {
 
   await app.register(async (instance) => {
     const sessionSecret = config.get<string>('admin.session.secret', 'change-me');
+    const isDefaultSecret = ['change-me-admin-session', 'change-me'].includes(sessionSecret);
+    if (isDefaultSecret) {
+      const env = config.get<string>('app.env', 'development');
+      const msg = 'ADMIN_SESSION_SECRET must be configured for secure admin sessions.';
+      if (env === 'production') {
+        throw new Error(msg);
+      }
+      logger.warn(msg);
+    }
     await instance.register(fastifyCookie, {
       secret: sessionSecret,
       hook: 'onRequest',
