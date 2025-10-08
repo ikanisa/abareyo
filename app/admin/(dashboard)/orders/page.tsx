@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
 
 import { TicketOrdersTable } from '@/components/admin/orders/TicketOrdersTable';
 import { ShopOrdersTable } from '@/components/admin/orders/ShopOrdersTable';
@@ -13,12 +14,16 @@ import type {
 
 const BACKEND_BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api';
 
-async function fetchWithSession<T>(path: string) {
+async function fetchWithSession<T>(path: string, deniedKey: string) {
   const cookieHeader = cookies().toString();
   const response = await fetch(`${BACKEND_BASE.replace(/\/$/, '')}${path}`, {
     headers: { cookie: cookieHeader },
     cache: 'no-store',
   });
+
+  if (response.status === 401 || response.status === 403) {
+    redirect(`/admin?denied=${deniedKey}`);
+  }
   if (!response.ok) {
     throw new Error(`Failed to load ${path}`);
   }
@@ -27,9 +32,9 @@ async function fetchWithSession<T>(path: string) {
 
 const AdminOrdersPage = async () => {
   const [ticketOrders, shopOrders, donations] = await Promise.all([
-    fetchWithSession<PaginatedResponse<AdminTicketOrder>>('/admin/ticket-orders'),
-    fetchWithSession<PaginatedResponse<AdminShopOrder>>('/admin/shop-orders'),
-    fetchWithSession<PaginatedResponse<AdminDonation>>('/admin/donations'),
+    fetchWithSession<PaginatedResponse<AdminTicketOrder>>('/admin/ticket-orders', 'orders'),
+    fetchWithSession<PaginatedResponse<AdminShopOrder>>('/admin/shop-orders', 'orders'),
+    fetchWithSession<PaginatedResponse<AdminDonation>>('/admin/donations', 'orders'),
   ]);
 
   return (
