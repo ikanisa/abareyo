@@ -279,6 +279,8 @@ export default function Community() {
   const [predictionMatchId, setPredictionMatchId] = useState("");
   const [predictionPick, setPredictionPick] = useState("Win");
 
+  const trimmedUserId = userId.trim();
+
   const feedQuery = useQuery({
     queryKey: ["community", "feed"],
     queryFn: fetchCommunityFeed,
@@ -292,7 +294,7 @@ export default function Community() {
   const leaderboardQuery = useQuery({
     queryKey: ["community", "leaderboard", leaderboardPeriod],
     queryFn: () => fetchCommunityLeaderboard(leaderboardPeriod),
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 
   const missionsQuery = useQuery({
@@ -325,8 +327,6 @@ export default function Community() {
       return prev.filter((_, currentIndex) => currentIndex !== index);
     });
   };
-
-  const trimmedUserId = userId.trim();
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -393,8 +393,6 @@ export default function Community() {
       setPredictionMatchId("");
     }
   }, [predictionMission?.matchId]);
-  const trimmedUserId = userId.trim();
-
   const checkInMutation = useMutation({
     mutationFn: async () => {
       if (!trimmedUserId) {

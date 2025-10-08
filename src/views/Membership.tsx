@@ -26,6 +26,16 @@ const channelOptions: { id: Channel; label: string; helper: string }[] = [
   { id: "airtel", label: "Airtel Money", helper: "Use for Airtel subscribers" },
 ];
 
+const extractPerks = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item));
+  }
+  if (value && typeof value === "object" && Array.isArray((value as { perks?: unknown[] }).perks)) {
+    return (value as { perks: unknown[] }).perks.map((item) => String(item));
+  }
+  return [];
+};
+
 export default function Membership() {
   const { toast } = useToast();
   const [userIdInput, setUserIdInput] = useState("");
@@ -190,13 +200,11 @@ export default function Membership() {
             <div className="flex flex-wrap gap-2 text-xs text-primary-foreground/90">
               <Award className="w-4 h-4" />
               <span>Perks</span>
-              {Array.isArray((activeStatus.plan.perks as Record<string, unknown>)?.perks)
-                ? (activeStatus.plan.perks as Record<string, unknown>).perks.map((perk: unknown, index: number) => (
-                    <Badge key={index} variant="outline" className="bg-white/10 text-primary-foreground">
-                      {String(perk)}
-                    </Badge>
-                  ))
-                : null}
+              {extractPerks(activeStatus.plan.perks).map((perk, index) => (
+                <Badge key={index} variant="outline" className="bg-white/10 text-primary-foreground">
+                  {perk}
+                </Badge>
+              ))}
             </div>
           </div>
         </GlassCard>
@@ -222,11 +230,9 @@ export default function Membership() {
                     <p className="text-lg font-bold text-foreground">{plan.name}</p>
                     <p className="text-sm text-muted-foreground">{formatter.format(plan.price)} / year</p>
                     <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                      {Array.isArray((plan.perks as Record<string, unknown>)?.perks)
-                        ? (plan.perks as Record<string, unknown>).perks.map((perk: unknown, index: number) => (
-                            <Badge key={index} variant="outline">{String(perk)}</Badge>
-                          ))
-                        : null}
+                      {extractPerks(plan.perks).map((perk, index) => (
+                        <Badge key={index} variant="outline">{perk}</Badge>
+                      ))}
                     </div>
                   </div>
                   <Button

@@ -60,9 +60,16 @@ S3_PUBLIC_BASE_URL=http://127.0.0.1:9000/rayon-dev
 
 In development, you can run a local MinIO instance and point the `S3_PUBLIC_BASE_URL` at its HTTP endpoint so the frontend receives fully-qualified image URLs.
 
+### Chat-Based Onboarding
+- Visit `/onboarding` to launch the anonymous, ChatGPT-style onboarding assistant.
+- The backend requires `OPENAI_API_KEY` and optionally `OPENAI_ONBOARDING_MODEL` (defaults to `gpt-4.1-mini`) in `backend/.env` to call the OpenAI Responses API.
+- The agent stores each fan's WhatsApp and MoMo numbers, linking them to the guest profile for future payments.
+- Once onboarding is completed, the app automatically unlocks the regular `/` home experience.
+
 ## Useful Scripts
 - `npm run lint` / `npm run type-check` / `npm run build` – CI parity checks.
-- `npm run cap:sync`, `npm run cap:android`, `npm run cap:ios` – entry points for Capacitor shells.
+- `npm run cap:sync`, `npm run cap:android`, `npm run cap:ios` – entry points for Capacitor shells (install `@capacitor/cli` and related platform toolchains locally when you run them).
+- Use `npx cordova-res` and `npx @bubblewrap/cli` on demand for mobile asset generation and TWA packaging; they are no longer pinned in `devDependencies` to avoid shipping known vulnerabilities.
 - `docker compose up web` – build and run the production web image locally.
 - `node tools/gsm-emulator/send-sms.js "…"` – simulate inbound MoMo/Airtel confirmation messages during flows.
 - Admin console → `/admin/sms` lists inbound traffic and a manual review queue for low-confidence parses; link SMS to payments directly from the UI.

@@ -43,7 +43,8 @@ export type MembershipUpgradeResponseContract = {
   message?: string;
 };
 
-export * from './community.js';
+export * from './community';
+export * from './onboarding';
 
 export type TicketCheckoutItemContract = {
   zone: TicketZoneContract;
