@@ -1,0 +1,95 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+import { PrismaService } from '../../prisma/prisma.service.js';
+import { PaymentsService } from '../payments/payments.service.js';
+import { RealtimeService } from '../realtime/realtime.service.js';
+import { SmsWebhookDto, SmsWebhookMeta } from './sms.dto.js';
+import { SmsQueueService } from './sms.queue.js';
+
+@Injectable()
+export class SmsService {
+  private readonly logger = new Logger(SmsService.name);
+  private readonly webhookToken?: string;
+  private readonly adminToken?: string;
+
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly prisma: PrismaService,
+    private readonly queue: SmsQueueService,
+    private readonly realtime: RealtimeService,
+    private readonly payments: PaymentsService,
+  ) {
+    this.webhookToken = this.configService.get<string>('sms.webhookToken');
+    this.adminToken = this.configService.get<string>('admin.apiToken');
+  }
+
+  validateWebhookToken(token?: string) {
+    return Boolean(token && this.webhookToken && token === this.webhookToken);
+  }
+
+  validateAdminToken(token?: string) {
+    return Boolean(token && this.adminToken && token === this.adminToken);
+  }
+
+  async handleInboundSms(payload: SmsWebhookDto, meta: SmsWebhookMeta) {
+    const receivedAt = payload.receivedAt ? new Date(payload.receivedAt) : new Date();
+
+    const record = await this.prisma.smsRaw.create({
+      data: {
+        text: payload.text,
+        fromMsisdn: payload.from ?? 'unknown',
+        toMsisdn: payload.to ?? null,
+        receivedAt,
+        metadata: {
+          modemId: meta.modemId,
+          simSlot: meta.simSlot,
+        },
+        ingestStatus: 'received',
+      },
+    });
+
+    this.logger.debug(`SMS stored (${record.id}) – queued for parsing`);
+    await this.queue.enqueue({ smsId: record.id });
+
+    this.realtime.notifySmsReceived({
+      smsId: record.id,
+      from: record.fromMsisdn,
+      receivedAt: record.receivedAt.toISOString(),
+    });
+    return record.id;
+  }
+
+  async listRecentSms(limit = 50) {
+    return this.prisma.smsRaw.findMany({
+      orderBy: { receivedAt: 'desc' },
+      take: limit,
+      include: { parsed: true },
+    });
+  }
+
+  async listManualReviewSms(limit = 50) {
+    const items = await this.prisma.smsRaw.findMany({
+      where: { ingestStatus: 'manual_review' },
+      orderBy: { receivedAt: 'desc' },
+      take: limit,
+      include: { parsed: true },
+    });
+
+    return items.map((item) => ({
+      ...item,
+      parsed: item.parsed
+        ? {
+            ...item.parsed,
+            confidence: Number(item.parsed.confidence),
+          }
+        : null,
+    }));
+  }
+
+  async attachSmsToPayment(smsId: string, paymentId: string) {
+    const result = await this.payments.attachSmsToPayment(paymentId, smsId);
+    this.logger.log(`SMS ${smsId} manually attached to payment ${paymentId}`);
+    return result;
+  }
+}

@@ -4,7 +4,7 @@
   "description": "Official Rayon Sports fan app for tickets, membership, shop and community",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#001433",
+  "background_color": "#001A66",
   "theme_color": "#0033FF",
   "orientation": "portrait",
   "icons": [
@@ -21,7 +21,10 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["sports", "entertainment"],
+  "categories": [
+    "sports",
+    "entertainment"
+  ],
   "shortcuts": [
     {
       "name": "Buy Tickets",
@@ -33,5 +36,6 @@
       "url": "/matches",
       "description": "Live scores and stats"
     }
-  ]
+  ],
+  "scope": "/"
 }

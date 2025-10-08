@@ -1,0 +1,427 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("DATABASE_SHADOW_URL")
+}
+
+enum MatchStatus {
+  scheduled
+  live
+  finished
+  postponed
+}
+
+enum TicketOrderStatus {
+  pending
+  paid
+  cancelled
+  expired
+}
+
+enum TicketPassState {
+  active
+  used
+  refunded
+}
+
+enum PaymentKind {
+  ticket
+  membership
+  shop
+  donation
+}
+
+enum PaymentStatus {
+  pending
+  confirmed
+  failed
+  manual_review
+}
+
+enum SmsIngestStatus {
+  received
+  parsed
+  error
+  manual_review
+}
+
+enum MembershipStatus {
+  pending
+  active
+  expired
+  cancelled
+}
+
+enum GamificationKind {
+  prediction
+  checkin
+  quiz
+  donation_bonus
+}
+
+enum LeaderboardPeriod {
+  weekly
+  monthly
+  seasonal
+}
+
+model User {
+  id            String    @id @default(uuid())
+  createdAt     DateTime  @default(now())
+  locale        String    @default("rw")
+  phoneMask     String?
+  status        String    @default("guest")
+  preferredZone String?
+  fcmToken      String?
+  memberships   Membership[]
+  ticketOrders  TicketOrder[]
+  shopOrders    Order[]
+  fundDonations FundDonation[]
+  gamification  GamificationEvent[]
+  fanClubLinks  FanClubMember[]
+  posts         Post[] @relation("PostAuthor")
+}
+
+model Match {
+  id           String       @id @default(uuid())
+  opponent     String
+  kickoff      DateTime
+  venue        String
+  status       MatchStatus  @default(scheduled)
+  competition  String?
+  createdAt    DateTime     @default(now())
+  ticketOrders TicketOrder[]
+}
+
+model TicketOrder {
+  id        String             @id @default(uuid())
+  user      User?              @relation(fields: [userId], references: [id])
+  userId    String?
+  match     Match              @relation(fields: [matchId], references: [id])
+  matchId   String
+  total     Int
+  status    TicketOrderStatus  @default(pending)
+  ussdCode  String
+  smsRef    String?
+  createdAt DateTime           @default(now())
+  expiresAt DateTime
+  items     TicketOrderItem[]
+  passes    TicketPass[]
+  payments  Payment[]
+
+  @@index([status], map: "idx_ticket_orders_status")
+  @@index([createdAt], map: "idx_ticket_orders_created")
+}
+
+model TicketOrderItem {
+  id       String      @id @default(uuid())
+  order    TicketOrder @relation(fields: [orderId], references: [id])
+  orderId  String
+  zone     String
+  gate     String?
+  price    Int
+  quantity Int
+}
+
+model TicketPass {
+  id          String          @id @default(uuid())
+  order       TicketOrder     @relation(fields: [orderId], references: [id])
+  orderId     String
+  zone        String
+  gate        String?
+  qrTokenHash String          @unique
+  state       TicketPassState @default(active)
+  activatedAt DateTime?
+  consumedAt  DateTime?
+  transferredToUserId String?
+  transferredAt DateTime?
+  transferTokenHash String?
+  updatedAt   DateTime        @updatedAt
+  gateScans   GateScan[]
+}
+
+model SmsRaw {
+  id           String          @id @default(uuid())
+  receivedAt   DateTime        @default(now())
+  fromMsisdn   String
+  toMsisdn     String?
+  text         String
+  metadata     Json
+  ingestStatus SmsIngestStatus @default(received)
+  parsed       SmsParsed?
+}
+
+model SmsParsed {
+  id            String        @id @default(uuid())
+  sms           SmsRaw        @relation(fields: [smsId], references: [id])
+  smsId         String        @unique
+  amount        Int
+  currency      String        @default("RWF")
+  payerMask     String?
+  ref           String
+  timestamp     DateTime      @default(now())
+  confidence    Decimal
+  parserVersion String?
+  parsedPayload Json?
+  matchedEntity String?
+  payment       Payment?
+}
+
+model Payment {
+  id           String        @id @default(uuid())
+  kind         PaymentKind
+  amount       Int
+  currency     String        @default("RWF")
+  status       PaymentStatus @default(pending)
+  smsParsed    SmsParsed?    @relation(fields: [smsParsedId], references: [id])
+  smsParsedId  String?
+  order        TicketOrder?  @relation(fields: [orderId], references: [id])
+  orderId      String?
+  membership   Membership?   @relation(fields: [membershipId], references: [id])
+  membershipId String?
+  donation     FundDonation? @relation(fields: [donationId], references: [id])
+  donationId   String?
+  metadata     Json?
+  confirmedAt  DateTime?
+  createdAt    DateTime      @default(now())
+
+  @@index([status], map: "idx_payments_status")
+}
+
+model MembershipPlan {
+  id       String   @id @default(uuid())
+  slug     String   @unique
+  name     String
+  price    Int
+  perks    Json
+  isActive Boolean  @default(true)
+  memberships Membership[]
+}
+
+model Membership {
+  id        String           @id @default(uuid())
+  user      User             @relation(fields: [userId], references: [id])
+  userId    String
+  plan      MembershipPlan   @relation(fields: [planId], references: [id])
+  planId    String
+  status    MembershipStatus @default(pending)
+  startedAt DateTime?
+  expiresAt DateTime?
+  autoRenew Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  payments  Payment[]
+}
+
+model Product {
+  id        String  @id @default(uuid())
+  name      String
+  slug      String  @unique
+  price     Int
+  stock     Int
+  images    Json
+  category  String?
+  isActive  Boolean @default(true)
+  createdAt DateTime @default(now())
+  items     OrderItem[]
+}
+
+model Order {
+  id             String     @id @default(uuid())
+  user           User?      @relation(fields: [userId], references: [id])
+  userId         String?
+  total          Int
+  status         String      @default("pending")
+  shippingAddress Json?
+  createdAt      DateTime    @default(now())
+  items          OrderItem[]
+  payments       Payment[]
+}
+
+model OrderItem {
+  id        String @id @default(uuid())
+  order     Order  @relation(fields: [orderId], references: [id])
+  orderId   String
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+  qty       Int
+  price     Int
+}
+
+model FundProject {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  goal        Int
+  progress    Int       @default(0)
+  status      String    @default("draft")
+  coverImage  String?
+  createdAt   DateTime  @default(now())
+  donations   FundDonation[]
+}
+
+model FundDonation {
+  id        String   @id @default(uuid())
+  project   FundProject @relation(fields: [projectId], references: [id])
+  projectId String
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+  amount    Int
+  status    PaymentStatus @default(pending)
+  createdAt DateTime @default(now())
+  payments  Payment[]
+}
+
+model GamificationEvent {
+  id         String           @id @default(uuid())
+  user       User             @relation(fields: [userId], references: [id])
+  userId     String
+  kind       GamificationKind
+  value      Int
+  context    Json?
+  occurredAt DateTime @default(now())
+}
+
+model Quiz {
+  id            String   @id @default(uuid())
+  prompt        String
+  correctAnswer String
+  rewardPoints  Int      @default(20)
+  activeFrom    DateTime @default(now())
+  activeUntil   DateTime?
+  createdAt     DateTime @default(now())
+}
+
+model PredictionFixture {
+  id           String   @id @default(uuid())
+  match        Match    @relation(fields: [matchId], references: [id])
+  matchId      String
+  question     String
+  rewardPoints Int      @default(15)
+  deadline     DateTime
+  createdAt    DateTime @default(now())
+}
+
+model Leaderboard {
+  period     LeaderboardPeriod
+  user       User @relation(fields: [userId], references: [id])
+  userId     String
+  points     Int
+  rank       Int
+  snapshotAt DateTime @default(now())
+
+  @@id([period, userId])
+}
+
+model GateScan {
+  id        String   @id @default(uuid())
+  pass      TicketPass @relation(fields: [passId], references: [id])
+  passId    String
+  stewardId String?
+  result    String
+  createdAt DateTime @default(now())
+}
+
+model FanClub {
+  id         String @id @default(uuid())
+  name       String
+  region     String?
+  bio        String?
+  isOfficial Boolean @default(false)
+  members    FanClubMember[]
+}
+
+model FanClubMember {
+  fanClub  FanClub @relation(fields: [fanClubId], references: [id])
+  fanClubId String
+  user     User   @relation(fields: [userId], references: [id])
+  userId   String
+  role     String @default("member")
+  joinedAt DateTime @default(now())
+
+  @@id([fanClubId, userId])
+}
+
+model Post {
+  id         String   @id @default(uuid())
+  author     User     @relation("PostAuthor", fields: [authorId], references: [id])
+  authorId   String
+  content    String
+  media      Json?
+  visibility String @default("public")
+  status     String @default("published")
+  createdAt  DateTime @default(now())
+  viewCount  Int      @default(0)
+  reactions  PostReaction[]
+  comments   PostComment[]
+  poll       Poll?    @relation("PostPoll")
+}
+
+model PostReaction {
+  post      Post   @relation(fields: [postId], references: [id])
+  postId    String
+  user      User   @relation(fields: [userId], references: [id])
+  userId    String
+  kind      String @default("like")
+  createdAt DateTime @default(now())
+
+  @@id([postId, userId])
+}
+
+model PostComment {
+  id        String   @id @default(uuid())
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([postId])
+}
+
+model Poll {
+  id        String   @id @default(uuid())
+  question  String
+  author    User?    @relation(fields: [authorId], references: [id])
+  authorId  String?
+  createdAt DateTime @default(now())
+  post      Post?    @relation("PostPoll", fields: [postId], references: [id])
+  postId    String?  @unique
+  options   PollOption[]
+}
+
+model PollOption {
+  id     String @id @default(uuid())
+  poll   Poll   @relation(fields: [pollId], references: [id])
+  pollId String
+  label  String
+  votes  PollVote[]
+}
+
+model PollVote {
+  id        String @id @default(uuid())
+  poll      Poll   @relation(fields: [pollId], references: [id])
+  pollId    String
+  option    PollOption @relation(fields: [optionId], references: [id])
+  optionId  String
+  user      User   @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@unique([pollId, userId])
+}
+
+model AdminAction {
+  id         String  @id @default(uuid())
+  actor      User?   @relation(fields: [actorId], references: [id])
+  actorId    String?
+  targetType String
+  targetId   String
+  action     String
+  details    Json?
+  createdAt  DateTime @default(now())
+}

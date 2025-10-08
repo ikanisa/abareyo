@@ -1,31 +1,37 @@
+"use client";
+
 import { Home, Calendar, Ticket, ShoppingBag, Users, MoreHorizontal } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/providers/i18n-provider";
 
 const navItems = [
-  { icon: Home, label: "Home", path: "/" },
-  { icon: Calendar, label: "Matches", path: "/matches" },
-  { icon: Ticket, label: "Tickets", path: "/tickets" },
-  { icon: ShoppingBag, label: "Shop", path: "/shop" },
-  { icon: Users, label: "Community", path: "/community" },
-  { icon: MoreHorizontal, label: "More", path: "/more" },
+  { icon: Home, labelKey: "nav.home", path: "/" },
+  { icon: Calendar, labelKey: "nav.matches", path: "/matches" },
+  { icon: Ticket, labelKey: "nav.tickets", path: "/tickets" },
+  { icon: ShoppingBag, labelKey: "nav.shop", path: "/shop" },
+  { icon: Users, labelKey: "nav.community", path: "/community" },
+  { icon: MoreHorizontal, labelKey: "nav.more", path: "/more" },
 ];
 
 export const BottomNav = () => {
-  const location = useLocation();
+  const pathname = usePathname();
+  const { t } = useI18n();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 pb-safe">
       <div className="glass-card rounded-t-3xl border-t-2 border-primary/20">
         <div className="grid grid-cols-6 gap-1 px-2 py-3">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive =
+              pathname === item.path || (item.path !== "/" && pathname.startsWith(`${item.path}/`));
             const Icon = item.icon;
             
             return (
               <Link
                 key={item.path}
-                to={item.path}
+                href={item.path}
                 className={cn(
                   "flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl transition-all duration-300",
                   isActive
@@ -34,7 +40,7 @@ export const BottomNav = () => {
                 )}
               >
                 <Icon className={cn("w-5 h-5", isActive && "drop-shadow-glow")} />
-                <span className="text-[10px] font-medium">{item.label}</span>
+                <span className="text-[10px] font-medium">{t(item.labelKey, item.labelKey)}</span>
               </Link>
             );
           })}
