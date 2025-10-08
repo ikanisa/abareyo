@@ -1,73 +1,81 @@
-# Welcome to your Lovable project
+# Rayon Sports Digital Platform
 
-## Project info
+This monorepo powers the Rayon Sports fan experience across web, mobile, and match operations. The current iteration delivers the Phase 1 foundation: a Next.js App Router frontend, a NestJS 11 backend scaffold, shared TypeScript contracts, and automation for CI/CD and containerised development.
 
-**URL**: https://lovable.dev/projects/36b481f2-2a20-47d7-a8cf-399558fd41cd
+## Stack at a Glance
+- **Frontend**: Next.js 14 (App Router), Tailwind CSS, shadcn/ui, TanStack Query, next-themes, Socket.IO client for realtime toasts.
+- **Backend**: NestJS 11 + Fastify, Prisma ORM, PostgreSQL, Redis, BullMQ (queued jobs), OpenAI integrations, Socket.IO gateway.
+- **Shared packages**: `packages/contracts` distributes request/response DTOs used by the app and API.
+- **Tooling**: Dockerfiles for web + services, GitHub Actions CI (`npm run lint`, `npm run type-check`, `npm run build`).
 
-## How can I edit this code?
+## Local Setup
+1. Install dependencies:
+   ```bash
+   npm install
+   (cd backend && npm install)
+   ```
+2. Copy backend environment defaults and tweak as needed:
+   ```bash
+   cp backend/.env.example backend/.env
+   ```
+3. Create a root `.env` for the Next.js app (keys prefixed with `NEXT_PUBLIC_` are exposed to the browser):
+   ```
+   NEXT_PUBLIC_BACKEND_URL=http://localhost:5000/api
+   NEXT_PUBLIC_ADMIN_API_TOKEN=admin-dev-token
+   ```
+4. Start supporting services (Postgres, Redis) via Docker Compose or local installs. A minimal compose file is provided:
+   ```bash
+   docker compose up db redis -d
+   ```
+5. Apply Prisma schema and seed the database:
+   ```bash
+   cd backend
+   npm run prisma:generate
+   npm run prisma:dev
+   npm run seed
+   ```
+6. Run the backend and frontend in separate terminals:
+   ```bash
+   # backend
+   cd backend
+   npm run start:dev
 
-There are several ways of editing your application.
+   # frontend
+   npm run dev
+   ```
+   Visit <http://localhost:3000> to explore the mobile-first PWA.
 
-**Use Lovable**
+Realtime events (ticket confirmations, gate scans, etc.) stream over Socket.IO at `<backend>/ws`. The UI already listens and surfaces toasts for the most common signals.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/36b481f2-2a20-47d7-a8cf-399558fd41cd) and start prompting.
+If you plan to surface media (shop products, fundraising covers), configure S3-compatible storage in `backend/.env`:
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+S3_ENDPOINT=http://127.0.0.1:9000
+S3_BUCKET=rayon-dev
+S3_REGION=us-east-1
+S3_ACCESS_KEY_ID=minio
+S3_SECRET_ACCESS_KEY=miniostorage
+S3_PUBLIC_BASE_URL=http://127.0.0.1:9000/rayon-dev
 ```
 
-**Edit a file directly in GitHub**
+In development, you can run a local MinIO instance and point the `S3_PUBLIC_BASE_URL` at its HTTP endpoint so the frontend receives fully-qualified image URLs.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Useful Scripts
+- `npm run lint` / `npm run type-check` / `npm run build` – CI parity checks.
+- `npm run cap:sync`, `npm run cap:android`, `npm run cap:ios` – entry points for Capacitor shells.
+- `docker compose up web` – build and run the production web image locally.
+- `node tools/gsm-emulator/send-sms.js "…"` – simulate inbound MoMo/Airtel confirmation messages during flows.
+- Admin console → `/admin/sms` lists inbound traffic and a manual review queue for low-confidence parses; link SMS to payments directly from the UI.
+- Realtime dashboard → `/admin/realtime` visualises websocket events (ticket confirmations, gate scans, manual review, donations) for match-day ops.
+- Community feed now supports reactions, quick comments, media attachments, and highlights flagged keywords for moderators.
 
-**Use GitHub Codespaces**
+## Repository Layout
+- `app/` – Next.js route tree (`/(routes)` encloses mobile navigation, `/admin/*` hosts internal consoles).
+- `src/views/` – Client components powering screens referenced by routes.
+- `src/providers/` – Global context providers (auth façade, i18n scaffold, theme provider, React Query).
+- `backend/` – NestJS application (modules for tickets, payments, wallet, community, fundraising, SMS processing).
+- `packages/contracts/` – Shared DTOs and enums consumed by frontend and backend.
+- `docs/` – Architecture decisions, local runbooks, and mobile packaging guides.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/36b481f2-2a20-47d7-a8cf-399558fd41cd) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## Next Steps
+Phase 2 onwards will layer in full Prisma migrations, payment reconciliation workers, GSM ingestion, offline-first caching, and the mobile packaging pipeline. Refer to `docs/architecture/phase0/architecture-lockdown.md` for the roadmap.
