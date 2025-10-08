@@ -27,6 +27,15 @@ OPENAI_API_KEY=sk-***
 SMS_WEBHOOK_TOKEN=dev-token
 MTN_MOMO_PAY_CODE=0700123456
 AIRTEL_MONEY_PAY_CODE=0700123456
+ADMIN_SESSION_COOKIE=admin_session
+ADMIN_SESSION_SECRET=change-me-admin-session
+ADMIN_SESSION_TTL_HOURS=24
+# optional
+ADMIN_SESSION_COOKIE_DOMAIN=
+# seed a bootstrap admin (password hash must be bcrypt)
+ADMIN_SEED_EMAIL=admin@example.com
+ADMIN_SEED_PASSWORD_HASH=
+ADMIN_SEED_NAME=System Admin
 ```
 
 ## Project Structure
@@ -34,6 +43,7 @@ AIRTEL_MONEY_PAY_CODE=0700123456
 - `src/modules/tickets` – Ticket catalogue & checkout endpoints with USSD generator.
 - `src/modules/payments` – Shared payment reconciliation helpers.
 - `src/modules/wallet` – Wallet summary + transaction queries for the PWA.
+- `src/modules/admin` – Admin auth/session management, RBAC guards, future admin endpoints.
 - `prisma/` – Schema and migrations (`202501131200_init`).
 - `packages/contracts` – Shared DTOs/enums consumed by frontend/backends.
 

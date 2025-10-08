@@ -126,6 +126,7 @@ model Match {
   competition  String?
   createdAt    DateTime     @default(now())
   ticketOrders TicketOrder[]
+  zones        TicketZone[]
 }
 
 model TicketOrder {
@@ -156,6 +157,20 @@ model TicketOrderItem {
   gate     String?
   price    Int
   quantity Int
+}
+
+model TicketZone {
+  id        String   @id @default(uuid())
+  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId   String
+  name      String
+  capacity  Int
+  price     Int
+  gate      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([matchId, name])
 }
 
 model TicketPass {
@@ -356,6 +371,19 @@ model GateScan {
   createdAt DateTime @default(now())
 }
 
+model MatchGate {
+  id        String   @id @default(uuid())
+  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId   String
+  name      String
+  location  String?
+  maxThroughput Int? 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([matchId, name])
+}
+
 model FanClub {
   id         String @id @default(uuid())
   name       String
@@ -455,4 +483,139 @@ model AdminAction {
   action     String
   details    Json?
   createdAt  DateTime @default(now())
+}
+
+model AdminUser {
+  id                String               @id @default(uuid())
+  email             String               @unique
+  passwordHash      String
+  displayName       String
+  status            String               @default("active")
+  lastLoginAt       DateTime?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  roles             AdminUsersOnRoles[]
+  sessions          AdminSession[]
+  auditLogs         AuditLog[]
+  updatedFeatureFlags FeatureFlag[]      @relation("FeatureFlagUpdatedBy")
+  updatedTranslations Translation[]      @relation("TranslationUpdatedBy")
+  ussdTemplates     UssdTemplate[]       @relation("UssdTemplateUpdatedBy")
+  smsParserPrompts  SmsParserPrompt[]    @relation("SmsParserPromptCreatedBy")
+}
+
+model AdminRole {
+  id          String               @id @default(uuid())
+  name        String               @unique
+  description String?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  members     AdminUsersOnRoles[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  key         String           @unique
+  description String?
+  createdAt   DateTime         @default(now())
+  roles       RolePermission[]
+}
+
+model AdminUsersOnRoles {
+  adminUserId String
+  roleId      String
+  assignedAt  DateTime             @default(now())
+  adminUser   AdminUser            @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  role        AdminRole            @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([adminUserId, roleId])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  grantedAt    DateTime             @default(now())
+  role         AdminRole            @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission           @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model AdminSession {
+  id           String    @id @default(uuid())
+  adminUser    AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+  adminUserId  String
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime?
+  revoked      Boolean   @default(false)
+  ip           String?
+  userAgent    String?
+
+  @@index([adminUserId, revoked])
+}
+
+model AuditLog {
+  id          String     @id @default(uuid())
+  at          DateTime   @default(now())
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+  adminUserId String?
+  action      String
+  entityType  String
+  entityId    String?
+  before      Json?
+  after       Json?
+  ip          String?
+  userAgent   String?
+
+  @@index([adminUserId, at])
+  @@index([entityType, entityId])
+}
+
+model FeatureFlag {
+  key        String     @id
+  value      Json       @default(json("{}"))
+  description String?
+  updatedAt  DateTime   @updatedAt
+  updatedBy  AdminUser? @relation("FeatureFlagUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedById String?
+}
+
+model Translation {
+  lang        String
+  key         String
+  value       String
+  updatedAt   DateTime   @updatedAt
+  updatedBy   AdminUser? @relation("TranslationUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedById String?
+
+  @@id([lang, key])
+}
+
+model UssdTemplate {
+  id          String     @id @default(uuid())
+  name        String
+  telco       String
+  body        String
+  variables   Json?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  updatedBy   AdminUser? @relation("UssdTemplateUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedById String?
+
+  @@index([telco, isActive])
+}
+
+model SmsParserPrompt {
+  id          String     @id @default(uuid())
+  label       String
+  body        String
+  version     Int        @default(1)
+  isActive    Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  createdBy   AdminUser? @relation("SmsParserPromptCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdById String?
+
+  @@index([isActive])
+  @@unique([label])
 }

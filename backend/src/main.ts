@@ -5,6 +5,7 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
+import fastifyCookie from '@fastify/cookie';
 import fastifyHelmet, { type FastifyHelmetOptions } from '@fastify/helmet';
 import fastifyCors, { type FastifyCorsOptions } from '@fastify/cors';
 
@@ -22,6 +23,11 @@ async function bootstrap() {
   const host = config.get<string>('app.host', '0.0.0.0');
 
   await app.register(async (instance) => {
+    const sessionSecret = config.get<string>('admin.session.secret', 'change-me');
+    await instance.register(fastifyCookie, {
+      secret: sessionSecret,
+      hook: 'onRequest',
+    });
     await instance.register(fastifyHelmet, {
       contentSecurityPolicy: false,
     } satisfies FastifyHelmetOptions);

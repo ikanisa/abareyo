@@ -16,6 +16,8 @@
     "test": "echo \"No tests yet\""
   },
   "dependencies": {
+  "/react-table": "^8.15.2",
+  "002freact-table": "^8.15.2",
     "@capacitor/app": "^5.0.8",
     "@capacitor/core": "^5.0.8",
     "@capacitor/haptics": "^5.0.8",
@@ -52,6 +54,7 @@
     "@rayon/contracts": "file:packages/contracts",
     "@supabase/supabase-js": "^2.74.0",
     "@tanstack/react-query": "^5.83.0",
+    "@tanstack/react-table": "^8.15.2",
     "@zxing/browser": "^0.1.5",
     "@zxing/library": "^0.21.0",
     "class-variance-authority": "^0.7.1",

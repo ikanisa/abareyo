@@ -75,6 +75,28 @@ export const REALTIME_EVENTS: RealtimeEventDefinition[] = [
       });
     },
   },
+  {
+    event: "match.updated",
+    label: "Match Updated",
+    handler: (payload, toast) => {
+      const status = typeof payload.status === "string" ? payload.status : 'updated';
+      toast({
+        title: `Match ${status}`,
+        description: `Match ${String(payload.matchId ?? '').slice(0, 8)}… changed`,
+      });
+    },
+  },
+  {
+    event: "tickets.gate.metrics",
+    label: "Gate Metrics",
+    handler: (payload, toast) => {
+      const gate = typeof payload.gate === "string" ? payload.gate : 'Gate';
+      toast({
+        title: `${gate} throughput`,
+        description: `${payload.total ?? 0} total / ${payload.rejected ?? 0} rejected`,
+      });
+    },
+  },
 ];
 
 export const REALTIME_EVENT_NAMES = REALTIME_EVENTS.map((item) => item.event);
