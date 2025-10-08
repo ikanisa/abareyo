@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 import AdminMatchOpsView from '@/views/AdminMatchOpsView';
 import type { AdminMatch } from '@/lib/api/admin/match';
@@ -11,6 +12,10 @@ async function fetchAdminMatchesServer() {
     headers: { cookie: cookieHeader },
     cache: 'no-store',
   });
+
+  if (response.status === 401 || response.status === 403) {
+    redirect('/admin?denied=match-ops');
+  }
 
   if (!response.ok) {
     throw new Error('Failed to load match data');
