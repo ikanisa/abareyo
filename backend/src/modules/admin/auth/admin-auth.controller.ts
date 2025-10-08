@@ -37,10 +37,10 @@ export class AdminAuthController {
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
     const rateKey = `${body.email.toLowerCase()}|${request.ip ?? 'unknown'}`;
-    this.rateLimiter.registerAttempt(rateKey);
+    await this.rateLimiter.registerAttempt(rateKey);
 
     const adminUser = await this.adminAuthService.validateCredentials(body.email, body.password);
-    this.rateLimiter.reset(rateKey);
+    await this.rateLimiter.reset(rateKey);
 
     const session = await this.adminAuthService.createSession(adminUser.id, {
       ip: request.ip,
