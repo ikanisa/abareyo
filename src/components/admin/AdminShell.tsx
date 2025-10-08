@@ -1,13 +1,14 @@
 'use client';
 
-import { ReactNode, useMemo, useState, useCallback } from 'react';
+import { ReactNode, useMemo, useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ChevronDown } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
 
 const NAV_ITEMS: Array<{ label: string; href: string }> = [
   { label: 'Overview', href: '/admin' },
@@ -38,6 +39,8 @@ export type AdminShellProps = {
 export const AdminShell = ({ user, environment = 'dev', children }: AdminShellProps) => {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const activeHref = useMemo(() => {
     if (!pathname) {
@@ -65,6 +68,29 @@ export const AdminShell = ({ user, environment = 'dev', children }: AdminShellPr
       router.refresh();
     }
   }, [isLoggingOut, router]);
+
+  useEffect(() => {
+    const denied = searchParams.get('denied');
+    if (!denied) {
+      return;
+    }
+
+    const messages: Record<string, string> = {
+      orders: 'You lack permission to view order management. Contact an admin to request access.',
+      'match-ops': 'Match operations require the match:update permission.',
+    };
+
+    toast({
+      title: 'Access denied',
+      description: messages[denied] ?? 'You do not have permission to access that section.',
+      variant: 'destructive',
+    });
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('denied');
+    const next = params.toString();
+    router.replace(next ? `${pathname}?${next}` : pathname);
+  }, [pathname, router, searchParams, toast]);
 
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-100">
