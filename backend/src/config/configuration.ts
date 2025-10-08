@@ -4,6 +4,7 @@ export default () => ({
     port: Number(process.env.APP_PORT ?? 5000),
     corsOrigin: process.env.CORS_ORIGIN ?? '*',
     baseUrl: process.env.BACKEND_BASE_URL ?? 'http://localhost:5000',
+    env: process.env.NODE_ENV ?? 'development',
   },
   database: {
     url: process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/rayon',
@@ -35,5 +36,11 @@ export default () => ({
   },
   admin: {
     apiToken: process.env.ADMIN_API_TOKEN,
+    session: {
+      cookieName: process.env.ADMIN_SESSION_COOKIE ?? 'admin_session',
+      secret: process.env.ADMIN_SESSION_SECRET ?? 'change-me-admin-session',
+      ttlHours: Number(process.env.ADMIN_SESSION_TTL_HOURS ?? 24),
+      cookieDomain: process.env.ADMIN_SESSION_COOKIE_DOMAIN ?? undefined,
+    },
   },
 });

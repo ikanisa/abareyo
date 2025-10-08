@@ -23,6 +23,7 @@
     "@nestjs/platform-socket.io": "^11.0.0",
     "@nestjs/websockets": "^11.0.0",
     "@prisma/client": "^6.1.0",
+    "@fastify/cookie": "^9.4.1",
     "@aws-sdk/client-s3": "^3.744.0",
     "@aws-sdk/s3-request-presigner": "^3.744.0",
     "bullmq": "^5.13.0",
@@ -33,6 +34,8 @@
     "@fastify/helmet": "^13.0.0",
     "@fastify/cors": "^9.0.1",
     "@rayon/contracts": "file:../packages/contracts",
+    "@nestjs/mapped-types": "^2.0.4",
+    "bcryptjs": "^2.4.3",
     "openai": "^4.52.0"
   },
   "devDependencies": {

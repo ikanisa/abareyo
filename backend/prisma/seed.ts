@@ -5,6 +5,160 @@ const prisma = new PrismaClient();
 async function main() {
   console.info('Seeding Rayon Sports base data...');
 
+  const adminEmail = process.env.ADMIN_SEED_EMAIL;
+  const adminPasswordHash = process.env.ADMIN_SEED_PASSWORD_HASH;
+  const adminDisplayName = process.env.ADMIN_SEED_NAME ?? 'System Admin';
+
+  const defaultPermissionKeys = [
+    'match:create',
+    'match:update',
+    'match:delete',
+    'ticket:price:update',
+    'ticket:order:view',
+    'ticket:order:refund',
+    'ticket:order:resend',
+    'order:shop:update',
+    'order:shop:view',
+    'order:donation:export',
+    'order:donation:view',
+    'sms:attach',
+    'sms:retry',
+    'sms:view',
+    'sms:parser:update',
+    'gate:update',
+    'membership:plan:create',
+    'membership:plan:update',
+    'membership:member:update',
+    'product:crud',
+    'inventory:adjust',
+    'fundraising:project:update',
+    'community:post:schedule',
+    'post:moderate',
+    'content:page:publish',
+    'ussd:template:update',
+    'admin:user:crud',
+    'admin:role:assign',
+    'admin:permission:update',
+    'audit:view',
+    'featureflag:update',
+    'translation:update',
+    'report:download',
+  ];
+
+  await Promise.all(
+    defaultPermissionKeys.map((key) =>
+      prisma.permission.upsert({
+        where: { key },
+        update: {},
+        create: { key },
+      }),
+    ),
+  );
+
+  const systemAdminRole = await prisma.adminRole.upsert({
+    where: { name: 'SYSTEM_ADMIN' },
+    update: {},
+    create: {
+      name: 'SYSTEM_ADMIN',
+      description: 'Grants unrestricted access to all admin capabilities.',
+    },
+  });
+
+  const permissions = await prisma.permission.findMany({
+    where: { key: { in: defaultPermissionKeys } },
+    select: { id: true, key: true },
+  });
+
+  await prisma.rolePermission.createMany({
+    data: permissions.map((permission) => ({
+      roleId: systemAdminRole.id,
+      permissionId: permission.id,
+    })),
+    skipDuplicates: true,
+  });
+
+  if (adminEmail && adminPasswordHash) {
+    const adminUser = await prisma.adminUser.upsert({
+      where: { email: adminEmail.toLowerCase() },
+      update: {
+        passwordHash: adminPasswordHash,
+        displayName: adminDisplayName,
+        status: 'active',
+      },
+      create: {
+        email: adminEmail.toLowerCase(),
+        passwordHash: adminPasswordHash,
+        displayName: adminDisplayName,
+      },
+    });
+
+    await prisma.adminUsersOnRoles.upsert({
+      where: {
+        adminUserId_roleId: {
+          adminUserId: adminUser.id,
+          roleId: systemAdminRole.id,
+        },
+      },
+      update: {},
+      create: {
+        adminUserId: adminUser.id,
+        roleId: systemAdminRole.id,
+      },
+    });
+  } else {
+    console.warn(
+      'Skipping seeded admin user. Provide ADMIN_SEED_EMAIL and ADMIN_SEED_PASSWORD_HASH to bootstrap a SYSTEM_ADMIN account.',
+    );
+  }
+
+  const defaultPromptLabel = 'Default Parser v1';
+  const prompt = await prisma.smsParserPrompt.upsert({
+    where: { label: defaultPromptLabel },
+    update: {},
+    create: {
+      label: defaultPromptLabel,
+      body:
+        'You interpret mobile money SMS receipts and extract normalized fields (amount, currency, payer mask, reference, timestamp) with a confidence score between 0 and 1. If a field is missing, provide a reasonable default and reduce confidence.',
+      version: 1,
+      isActive: true,
+    },
+  });
+
+  await prisma.smsParserPrompt.updateMany({
+    where: { id: { not: prompt.id } },
+    data: { isActive: false },
+  });
+
+  await prisma.ussdTemplate.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000201' },
+    update: {
+      body: '*182*7*1*{amount}#',
+      telco: 'MTN',
+    },
+    create: {
+      id: '00000000-0000-0000-0000-000000000201',
+      name: 'MTN Ticket Purchase',
+      telco: 'MTN',
+      body: '*182*7*1*{amount}#',
+      variables: { placeholders: ['amount'] },
+    },
+  });
+
+  await prisma.ussdTemplate.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000202' },
+    update: {
+      body: '*500*9*{amount}#',
+      telco: 'Airtel',
+    },
+    create: {
+      id: '00000000-0000-0000-0000-000000000202',
+      name: 'Airtel Ticket Purchase',
+      telco: 'Airtel',
+      body: '*500*9*{amount}#',
+      variables: { placeholders: ['amount'] },
+    },
+  });
+
   await prisma.match.upsert({
     where: { id: '00000000-0000-0000-0000-000000000001' },
     update: {},

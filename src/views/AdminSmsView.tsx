@@ -1,136 +1,214 @@
 "use client";
 
+import { useMemo, useState, useTransition } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { RefreshCw, Inbox, Database, Link as LinkIcon, MessageCircleWarning } from "lucide-react";
-import { useState } from "react";
+import { Inbox, Link2, RefreshCw, TriangleAlert, Wand2 } from "lucide-react";
 
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { attachSmsToPayment, fetchInboundSms, fetchManualReviewPayments, fetchManualReviewSms } from "@/lib/api/admin";
+import {
+  attachSmsToPayment,
+  fetchInboundSms,
+  fetchManualReviewPayments,
+  fetchManualReviewSms,
+  fetchSmsParserPrompts,
+  fetchActiveSmsParserPrompt,
+  createSmsParserPrompt,
+  activateSmsParserPrompt,
+  testSmsParser,
+} from "@/lib/api/admin/sms";
 
-const formatter = new Intl.DateTimeFormat(undefined, {
+const dateFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
   timeStyle: "short",
 });
 
-export default function AdminSms() {
+export default function AdminSmsView() {
   const { toast } = useToast();
-  const query = useQuery({
-    queryKey: ["admin", "sms"],
-    queryFn: fetchInboundSms,
-  });
+  const [selectedSmsId, setSelectedSmsId] = useState<string | null>(null);
+  const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
+  const [sampleText, setSampleText] = useState("");
+  const [promptBody, setPromptBody] = useState("");
+  const [selectedPromptId, setSelectedPromptId] = useState<string | null>(null);
+  const [isTestingPrompt, startTestTransition] = useTransition();
 
-  const records = query.data ?? [];
+  const inboundQuery = useQuery({
+    queryKey: ["admin", "sms", "inbound"],
+    queryFn: () => fetchInboundSms(50),
+  });
 
   const manualSmsQuery = useQuery({
     queryKey: ["admin", "sms", "manual"],
-    queryFn: fetchManualReviewSms,
+    queryFn: () => fetchManualReviewSms(50),
   });
 
   const manualPaymentsQuery = useQuery({
     queryKey: ["admin", "payments", "manual"],
-    queryFn: fetchManualReviewPayments,
+    queryFn: () => fetchManualReviewPayments(50),
   });
 
-  const [selectedSmsId, setSelectedSmsId] = useState<string | null>(null);
-  const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
+  const promptsQuery = useQuery({
+    queryKey: ["admin", "sms", "prompts"],
+    queryFn: fetchSmsParserPrompts,
+  });
+
+  const activePromptQuery = useQuery({
+    queryKey: ["admin", "sms", "prompts", "active"],
+    queryFn: fetchActiveSmsParserPrompt,
+  });
 
   const attachMutation = useMutation({
-    mutationFn: async () => {
-      if (!selectedSmsId || !selectedPaymentId) {
-        throw new Error("Select an SMS and a payment first");
-      }
-      const response = await attachSmsToPayment({ smsId: selectedSmsId, paymentId: selectedPaymentId });
+    mutationFn: attachSmsToPayment,
+    onSuccess: () => {
+      toast({ title: "Payment confirmed", description: "SMS linked and payment marked confirmed." });
       manualSmsQuery.refetch();
       manualPaymentsQuery.refetch();
-      query.refetch();
+      inboundQuery.refetch();
       setSelectedSmsId(null);
       setSelectedPaymentId(null);
-      return response;
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : "Manual attachment failed";
       toast({ title: "Unable to attach", description: message, variant: "destructive" });
     },
+  });
+
+  const createPromptMutation = useMutation({
+    mutationFn: createSmsParserPrompt,
     onSuccess: () => {
-      toast({ title: "Payment updated", description: "SMS linked and payment confirmed." });
+        toast({ title: "Prompt saved" });
+      promptsQuery.refetch();
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : "Unable to create prompt";
+      toast({ title: message, variant: "destructive" });
     },
   });
 
-  const statusVariant = (status: string) => {
-    switch (status) {
-      case "parsed":
-        return "success";
-      case "error":
-        return "destructive";
-      case "manual_review":
-        return "accent";
-      default:
-        return "secondary";
+  const activatePromptMutation = useMutation({
+    mutationFn: activateSmsParserPrompt,
+    onSuccess: () => {
+      toast({ title: "Prompt activated" });
+      promptsQuery.refetch();
+      activePromptQuery.refetch();
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: "Failed to activate prompt",
+        description: error instanceof Error ? error.message : undefined,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const parserTestMutation = useMutation({
+    mutationFn: testSmsParser,
+    onError: (error: unknown) => {
+      toast({
+        title: "Parser test failed",
+        description: error instanceof Error ? error.message : undefined,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const inboundRecords = inboundQuery.data ?? [];
+  const manualSms = manualSmsQuery.data ?? [];
+  const manualPayments = manualPaymentsQuery.data ?? [];
+  const prompts = promptsQuery.data ?? [];
+  const activePrompt = activePromptQuery.data ?? null;
+
+  const parserResult = parserTestMutation.data;
+
+  const handleManualAttach = () => {
+    if (!selectedSmsId || !selectedPaymentId) {
+      toast({ title: "Select both an SMS and a payment", variant: "destructive" });
+      return;
     }
+    attachMutation.mutate({ smsId: selectedSmsId, paymentId: selectedPaymentId });
   };
 
-  return (
-    <div className="min-h-screen pb-24 px-4">
-      <div className="pt-8 pb-6 space-y-2">
-        <h1 className="text-3xl font-black gradient-text">SMS Monitor</h1>
-        <p className="text-muted-foreground">Recent GSM modem messages and parsing confidence.</p>
-      </div>
+  const handlePromptTest = () => {
+    if (!sampleText.trim()) {
+      toast({ title: "Enter an SMS sample", variant: "destructive" });
+      return;
+    }
+    startTestTransition(() => {
+      parserTestMutation.mutate({
+        text: sampleText,
+        promptBody: promptBody.trim() || undefined,
+        promptId: promptBody.trim() ? undefined : selectedPromptId ?? activePrompt?.id,
+      });
+    });
+  };
 
-      <GlassCard className="p-5 space-y-4">
+  const sortedPrompts = useMemo(
+    () => prompts.sort((a, b) => b.version - a.version),
+    [prompts],
+  );
+
+  return (
+    <div className="space-y-8">
+      <GlassCard className="space-y-4 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Inbox className="w-6 h-6 text-primary" />
+            <Inbox className="h-6 w-6 text-primary" />
             <div>
-              <p className="font-semibold text-foreground">Inbound SMS</p>
-              <p className="text-xs text-muted-foreground">
-                Requires `NEXT_PUBLIC_ADMIN_API_TOKEN` to be set in your environment.
+              <h1 className="text-xl font-semibold text-slate-100">Inbound SMS Stream</h1>
+              <p className="text-xs text-slate-400">
+                Monitor recent GSM modem messages and parser confidence.
               </p>
             </div>
           </div>
-          <Button variant="glass" onClick={() => query.refetch()} disabled={query.isFetching}>
-            <RefreshCw className="w-4 h-4" />
-            Refresh
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => inboundQuery.refetch()}
+            disabled={inboundQuery.isFetching}
+          >
+            <RefreshCw className="mr-2 h-4 w-4" /> Refresh
           </Button>
         </div>
 
-        {query.isLoading && (
+        {inboundQuery.isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 5 }).map((_, index) => (
               <Skeleton key={index} className="h-20 w-full" />
             ))}
           </div>
-        )}
-
-        {!query.isLoading && records.length === 0 && (
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <Database className="w-5 h-5" />
-            <span>No SMS captured yet.</span>
-          </div>
-        )}
-
-        {!query.isLoading && records.length > 0 && (
-          <div className="space-y-3">
-            {records.map((sms) => (
-              <div key={sms.id} className="p-4 rounded-xl bg-muted/10 border border-muted/30 space-y-2">
-                <div className="flex items-center justify-between gap-3">
+        ) : inboundRecords.length === 0 ? (
+          <p className="text-sm text-slate-400">No SMS captured yet.</p>
+        ) : (
+          <div className="space-y-2 max-h-96 overflow-auto pr-1">
+            {inboundRecords.map((sms) => (
+              <div key={sms.id} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold text-foreground">{sms.fromMsisdn}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatter.format(new Date(sms.receivedAt))} • {sms.id.slice(0, 8)}
+                    <p className="font-semibold text-slate-100">{sms.fromMsisdn}</p>
+                    <p className="text-xs text-slate-400">
+                      {dateFormatter.format(new Date(sms.receivedAt))} • {sms.id.slice(0, 8)}
                     </p>
                   </div>
-                  <Badge variant={statusVariant(sms.ingestStatus)}>{sms.ingestStatus}</Badge>
+                  <Badge variant="outline" className="bg-white/10 text-xs text-slate-200">
+                    {sms.ingestStatus}
+                  </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{sms.text}</p>
+                <p className="mt-2 text-sm text-slate-200 whitespace-pre-wrap">{sms.text}</p>
                 {sms.parsed && (
-                  <div className="text-xs text-muted-foreground flex flex-wrap gap-4">
-                    <span>Amount: <span className="font-semibold text-foreground">{sms.parsed.amount} {sms.parsed.currency}</span></span>
-                    <span>Ref: <span className="font-mono text-foreground">{sms.parsed.ref}</span></span>
-                    <span>Confidence: {(sms.parsed.confidence * 100).toFixed(0)}%</span>
+                  <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-400">
+                    <span>
+                      Amount:{' '}
+                      <span className="font-semibold text-slate-100">
+                        {sms.parsed.amount.toLocaleString()} {sms.parsed.currency}
+                      </span>
+                    </span>
+                    <span>Ref: <span className="font-mono text-slate-100">{sms.parsed.ref}</span></span>
+                    <span>Confidence {(sms.parsed.confidence * 100).toFixed(0)}%</span>
                     {sms.parsed.matchedEntity && <span>Matched: {sms.parsed.matchedEntity}</span>}
                   </div>
                 )}
@@ -140,118 +218,217 @@ export default function AdminSms() {
         )}
       </GlassCard>
 
-      <GlassCard className="mt-6 p-5 space-y-4">
-        <div className="flex items-center gap-3">
-          <MessageCircleWarning className="w-6 h-6 text-accent" />
-          <div>
-            <p className="font-semibold text-foreground">Manual Review Queue</p>
-            <p className="text-xs text-muted-foreground">Link uncertain SMS to pending payments once verified.</p>
+      <GlassCard className="grid gap-6 p-6 lg:grid-cols-2">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <TriangleAlert className="h-5 w-5 text-amber-400" />
+            <div>
+              <h2 className="text-lg font-semibold text-slate-100">SMS awaiting review</h2>
+              <p className="text-xs text-slate-400">Select an SMS to attach to a pending payment.</p>
+            </div>
           </div>
+          {manualSmsQuery.isLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <Skeleton key={index} className="h-20 w-full" />
+              ))}
+            </div>
+          ) : manualSms.length === 0 ? (
+            <p className="text-sm text-slate-400">No SMS in manual review.</p>
+          ) : (
+            <div className="space-y-2 max-h-80 overflow-auto pr-1">
+              {manualSms.map((sms) => {
+                const isSelected = selectedSmsId === sms.id;
+                const confidence = sms.parsed ? Math.round(sms.parsed.confidence * 100) : null;
+                return (
+                  <button
+                    key={sms.id}
+                    type="button"
+                    onClick={() => setSelectedSmsId(isSelected ? null : sms.id)}
+                    className={`w-full rounded-xl border px-3 py-2 text-left transition ${
+                      isSelected ? 'border-accent bg-accent/10' : 'border-white/10 hover:border-accent/40'
+                    }`}
+                  >
+                    <p className="font-mono text-xs text-slate-400">{sms.id.slice(0, 8)}…</p>
+                    <p className="text-sm text-slate-100 line-clamp-2">{sms.text}</p>
+                    <div className="mt-1 flex flex-wrap gap-3 text-xs text-slate-400">
+                      <span>{dateFormatter.format(new Date(sms.receivedAt))}</span>
+                      {confidence !== null && <span>Confidence {confidence}%</span>}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
-
-        <div className="grid gap-4 lg:grid-cols-2">
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-foreground">SMS needing review</h3>
-            {manualSmsQuery.isLoading ? (
-              <div className="space-y-2">
-                {Array.from({ length: 3 }).map((_, index) => (
-                  <Skeleton key={index} className="h-20 w-full" />
-                ))}
-              </div>
-            ) : manualSmsQuery.data?.length ? (
-              <div className="space-y-2 max-h-72 overflow-auto pr-1">
-                {manualSmsQuery.data.map((sms) => {
-                  const confidence = sms.parsed ? Math.round(sms.parsed.confidence * 100) : null;
-                  const isSelected = selectedSmsId === sms.id;
-                  return (
-                    <button
-                      key={sms.id}
-                      type="button"
-                      onClick={() => setSelectedSmsId(isSelected ? null : sms.id)}
-                      className={`w-full rounded-xl border px-3 py-2 text-left transition ${
-                        isSelected ? 'border-accent bg-accent/10' : 'border-border hover:border-accent/40'
-                      }`}
-                    >
-                      <p className="font-mono text-xs text-muted-foreground">{sms.id.slice(0, 8)}…</p>
-                      <p className="text-sm text-foreground line-clamp-2">{sms.text}</p>
-                      <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                        <span>{new Date(sms.receivedAt).toLocaleString()}</span>
-                        {confidence !== null && <span>Confidence {confidence}%</span>}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">No SMS awaiting manual review.</p>
-            )}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Link2 className="h-5 w-5 text-primary" />
+            <div>
+              <h2 className="text-lg font-semibold text-slate-100">Pending payments</h2>
+              <p className="text-xs text-slate-400">Attach the selected SMS to confirm a payment.</p>
+            </div>
           </div>
-
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-foreground">Payments awaiting confirmation</h3>
-            {manualPaymentsQuery.isLoading ? (
-              <div className="space-y-2">
-                {Array.from({ length: 3 }).map((_, index) => (
-                  <Skeleton key={index} className="h-20 w-full" />
-                ))}
-              </div>
-            ) : manualPaymentsQuery.data?.length ? (
-              <div className="space-y-2 max-h-72 overflow-auto pr-1">
-                {manualPaymentsQuery.data.map((payment) => {
-                  const isSelected = selectedPaymentId === payment.id;
-                  return (
-                    <button
-                      key={payment.id}
-                      type="button"
-                      onClick={() => setSelectedPaymentId(isSelected ? null : payment.id)}
-                      className={`w-full rounded-xl border px-3 py-2 text-left transition ${
-                        isSelected ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/40'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-semibold text-foreground uppercase">{payment.kind}</p>
-                        <span className="font-mono text-xs text-muted-foreground">{payment.id.slice(0, 8)}…</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>{new Date(payment.createdAt).toLocaleString()}</span>
-                        <span className="font-semibold text-foreground">
-                          {new Intl.NumberFormat(undefined, {
-                            style: 'currency',
-                            currency: payment.currency ?? 'RWF',
-                          }).format(payment.amount)}
-                        </span>
-                      </div>
-                      {payment.smsParsed?.ref && (
-                        <p className="text-xs text-muted-foreground mt-1">Ref {payment.smsParsed.ref}</p>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">No payments waiting for manual confirmation.</p>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center justify-end gap-3">
+          {manualPaymentsQuery.isLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <Skeleton key={index} className="h-20 w-full" />
+              ))}
+            </div>
+          ) : manualPayments.length === 0 ? (
+            <p className="text-sm text-slate-400">No payments awaiting manual confirmation.</p>
+          ) : (
+            <div className="space-y-2 max-h-80 overflow-auto pr-1">
+              {manualPayments.map((payment) => {
+                const isSelected = selectedPaymentId === payment.id;
+                return (
+                  <button
+                    key={payment.id}
+                    type="button"
+                    onClick={() => setSelectedPaymentId(isSelected ? null : payment.id)}
+                    className={`w-full rounded-xl border px-3 py-2 text-left transition ${
+                      isSelected ? 'border-primary bg-primary/10' : 'border-white/10 hover:border-primary/40'
+                    }`}
+                  >
+                    <p className="text-sm font-semibold text-slate-100">{payment.amount.toLocaleString()} RWF</p>
+                    <p className="text-xs text-slate-400">
+                      {payment.kind} • {dateFormatter.format(new Date(payment.createdAt))}
+                    </p>
+                    {payment.smsParsed && (
+                      <p className="text-xs text-slate-400">
+                        Suggested ref {payment.smsParsed.ref} ({Math.round(payment.smsParsed.confidence * 100)}%)
+                      </p>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           <Button
-            variant="hero"
-            onClick={() => attachMutation.mutate()}
+            onClick={handleManualAttach}
             disabled={!selectedSmsId || !selectedPaymentId || attachMutation.isPending}
           >
-            {attachMutation.isPending ? (
-              <>
-                <LinkIcon className="w-4 h-4" />
-                Linking…
-              </>
-            ) : (
-              <>
-                <LinkIcon className="w-4 h-4" />
-                Attach SMS to Payment
-              </>
-            )}
+            Attach SMS to payment
           </Button>
+        </div>
+      </GlassCard>
+
+      <GlassCard className="space-y-4 p-6">
+        <div className="flex items-center gap-2">
+          <Wand2 className="h-5 w-5 text-primary" />
+          <div>
+            <h2 className="text-lg font-semibold text-slate-100">Parser Playground</h2>
+            <p className="text-xs text-slate-400">Test prompt iterations and preview parsed payloads before activation.</p>
+          </div>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-4">
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-wide text-slate-400">Sample SMS</label>
+              <Textarea
+                rows={6}
+                value={sampleText}
+                onChange={(event) => setSampleText(event.target.value)}
+                placeholder="Paste a recent MTN or Airtel mobile money receipt..."
+                className="bg-white/5 text-slate-100"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-wide text-slate-400">Override prompt (optional)</label>
+              <Textarea
+                rows={4}
+                value={promptBody}
+                onChange={(event) => setPromptBody(event.target.value)}
+                placeholder="Provide ad-hoc instructions to override the active prompt"
+                className="bg-white/5 text-slate-100"
+              />
+            </div>
+            <Button onClick={handlePromptTest} disabled={isTestingPrompt || parserTestMutation.isPending}>
+              Test parser
+            </Button>
+            {parserTestMutation.isPending || isTestingPrompt ? (
+              <p className="text-sm text-slate-400">Running parser…</p>
+            ) : parserResult ? (
+              <pre className="rounded-xl bg-black/40 p-4 text-xs text-slate-200">
+                {JSON.stringify(parserResult, null, 2)}
+              </pre>
+            ) : null}
+          </div>
+          <div className="space-y-3">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-100">Prompt versions</h3>
+              <p className="text-xs text-slate-400">Activate a prompt or create a new revision.</p>
+            </div>
+            <div className="space-y-2 max-h-72 overflow-auto pr-1">
+              {sortedPrompts.map((prompt) => {
+                const isActive = activePrompt?.id === prompt.id;
+                return (
+                  <div key={prompt.id} className="rounded-xl border border-white/10 bg-white/[0.04] p-3 text-sm">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-slate-100">{prompt.label}</p>
+                        <p className="text-xs text-slate-400">v{prompt.version}</p>
+                      </div>
+                      {isActive ? (
+                        <Badge variant="success">Active</Badge>
+                      ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => activatePromptMutation.mutate(prompt.id)}
+                  disabled={activatePromptMutation.isPending}
+                >
+                          Activate
+                        </Button>
+                      )}
+                    </div>
+                    <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap text-xs text-slate-300">
+                      {prompt.body}
+                    </pre>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="px-0 text-xs"
+                      onClick={() => {
+                        setSelectedPromptId(prompt.id);
+                        setPromptBody('');
+                      }}
+                    >
+                      Use for testing
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+            <form
+              className="space-y-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const form = event.currentTarget;
+                const formData = new FormData(form);
+                const label = String(formData.get('label') ?? '');
+                const body = String(formData.get('body') ?? '');
+                if (!label || !body) {
+                  toast({ title: 'Provide label and body', variant: 'destructive' });
+                  return;
+                }
+                createPromptMutation.mutate({ label, body });
+                form.reset();
+              }}
+            >
+              <div className="space-y-1">
+                <label className="text-xs uppercase tracking-wide text-slate-400">New prompt label</label>
+                <Input name="label" placeholder="e.g. Parser v2" className="bg-white/5" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs uppercase tracking-wide text-slate-400">Prompt body</label>
+                <Textarea name="body" rows={5} placeholder="System instructions for the parser" className="bg-white/5" />
+              </div>
+        <Button type="submit" disabled={createPromptMutation.isPending}>
+          Save prompt
+        </Button>
+            </form>
+          </div>
         </div>
       </GlassCard>
     </div>

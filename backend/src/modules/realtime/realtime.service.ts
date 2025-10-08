@@ -37,6 +37,14 @@ export class RealtimeService {
     this.emit('tickets.gate.scan', payload);
   }
 
+  notifyGateMetrics(payload: { matchId: string; gate: string; total: number; rejected: number }) {
+    this.emit('tickets.gate.metrics', payload);
+  }
+
+  notifyMatchUpdated(payload: { matchId: string; status: string }) {
+    this.emit('match.updated', payload);
+  }
+
   notifyMembershipActivated(payload: { membershipId: string; validUntil: string }) {
     this.emit('membership.activated', payload);
   }

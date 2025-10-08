@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 
+import { PrismaService } from '../../prisma/prisma.service.js';
+
 export interface ParsedSmsResult {
   amount: number;
   currency: string;
@@ -25,23 +27,37 @@ export class SmsParserService {
   private readonly client: OpenAI | null;
   private readonly model = 'gpt-4o-mini';
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(private readonly configService: ConfigService, private readonly prisma: PrismaService) {
     const apiKey = this.configService.get<string>('openai.apiKey');
     this.client = apiKey
       ? new OpenAI({ apiKey, baseURL: this.configService.get<string>('openai.baseUrl') })
       : null;
   }
 
-  async parseWithAi(sms: SmsInput): Promise<ParsedSmsResult | null> {
+  async parseWithAi(sms: SmsInput, options?: { promptBody?: string; promptId?: string }): Promise<ParsedSmsResult | null> {
     if (!this.client) {
       this.logger.warn('OpenAI API key missing; falling back to heuristic parser');
       return null;
     }
 
     try {
+      const prompt = await this.resolvePrompt(options);
+      const input = prompt
+        ? [
+            {
+              role: 'system',
+              content: prompt,
+            },
+            {
+              role: 'user',
+              content: sms.text,
+            },
+          ]
+        : sms.text;
+
       const response = await this.client.responses.parse({
         model: this.model,
-        input: sms.text,
+        input,
         schema: {
           name: 'momo_payment_receipt',
           schema: {
@@ -71,6 +87,12 @@ export class SmsParserService {
       const timestamp = typeof output.timestamp === 'string' ? output.timestamp : undefined;
       const confidence = Number(output.confidence ?? 0.5);
 
+      const parserVersion = options?.promptId
+        ? `openai:${this.model}:prompt:${options.promptId}`
+        : prompt
+          ? `openai:${this.model}:prompt:custom`
+          : `openai:${this.model}`;
+
       return {
         amount: Number(output.amount ?? 0),
         currency,
@@ -78,7 +100,7 @@ export class SmsParserService {
         ref: reference,
         timestamp,
         confidence,
-        parserVersion: `openai:${this.model}`,
+        parserVersion,
       };
     } catch (error) {
       this.logger.error('OpenAI parser failed', error as Error);
@@ -114,5 +136,37 @@ export class SmsParserService {
     }
 
     return this.parseHeuristically(sms);
+  }
+
+  async parseSample(text: string, options?: { promptBody?: string; promptId?: string }) {
+    const sms: SmsInput = {
+      id: 'sample',
+      text,
+      fromMsisdn: null,
+      toMsisdn: null,
+    };
+
+    const result = await this.parseWithAi(sms, options);
+    return result ?? this.parseHeuristically(sms);
+  }
+
+  private async resolvePrompt(options?: { promptBody?: string; promptId?: string }) {
+    if (options?.promptBody) {
+      return options.promptBody;
+    }
+
+    if (options?.promptId) {
+      const prompt = await this.prisma.smsParserPrompt.findUnique({
+        where: { id: options.promptId },
+      });
+      return prompt?.body ?? null;
+    }
+
+    const active = await this.prisma.smsParserPrompt.findFirst({
+      where: { isActive: true },
+      orderBy: { version: 'desc' },
+    });
+
+    return active?.body ?? null;
   }
 }
