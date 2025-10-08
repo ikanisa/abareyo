@@ -12,6 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
+import { Logger } from '@nestjs/common';
 
 import { SmsService } from '../../sms/sms.service.js';
 import { PaymentsService } from '../../payments/payments.service.js';
@@ -28,6 +29,8 @@ import { CreatePromptDto } from './dto/create-prompt.dto.js';
 @Controller('admin/sms')
 @UseGuards(AdminSessionGuard, AdminPermissionsGuard)
 export class AdminSmsController {
+  private readonly logger = new Logger(AdminSmsController.name);
+
   constructor(
     private readonly smsService: SmsService,
     private readonly paymentsService: PaymentsService,
@@ -87,16 +90,34 @@ export class AdminSmsController {
       userAgent: request.headers['user-agent'] as string | undefined,
     });
 
+    this.logger.log(
+      JSON.stringify({
+        event: 'admin.sms.manual_attach',
+        adminUserId: request.adminUser?.id ?? null,
+        paymentId: body.paymentId,
+        smsId: body.smsId,
+      }),
+    );
+
     return { status: 'ok', data: result };
   }
 
   @Post('parser/test')
   @RequireAdminPermissions('sms:parser:update')
-  async testParser(@Body() body: ParserTestDto) {
+  async testParser(@Body() body: ParserTestDto, @Req() request: FastifyRequest) {
     const result = await this.parserService.parseSample(body.text, {
       promptBody: body.promptBody,
       promptId: body.promptId,
     });
+    this.logger.debug(
+      JSON.stringify({
+        event: 'admin.sms.parser_test',
+        adminUserId: request.adminUser?.id ?? null,
+        promptId: body.promptId ?? null,
+        hasCustomPrompt: Boolean(body.promptBody),
+        confidence: result?.confidence ?? null,
+      }),
+    );
     return { data: result };
   }
 
@@ -144,6 +165,15 @@ export class AdminSmsController {
       userAgent: request.headers['user-agent'] as string | undefined,
     });
 
+    this.logger.log(
+      JSON.stringify({
+        event: 'admin.sms.prompt.create',
+        adminUserId: request.adminUser?.id ?? null,
+        promptId: prompt.id,
+        version: prompt.version,
+      }),
+    );
+
     return { data: prompt };
   }
 
@@ -171,6 +201,14 @@ export class AdminSmsController {
       ip: request.ip,
       userAgent: request.headers['user-agent'] as string | undefined,
     });
+
+    this.logger.log(
+      JSON.stringify({
+        event: 'admin.sms.prompt.activate',
+        adminUserId: request.adminUser?.id ?? null,
+        promptId,
+      }),
+    );
 
     return { data: updated };
   }

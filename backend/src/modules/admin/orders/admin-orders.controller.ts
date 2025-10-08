@@ -12,6 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
+import { Logger } from '@nestjs/common';
 
 import { TicketOrderStatus } from '@prisma/client';
 
@@ -25,6 +26,8 @@ import { AdminUserSummary } from '../auth/admin-auth.service.js';
 @Controller('admin')
 @UseGuards(AdminSessionGuard, AdminPermissionsGuard)
 export class AdminOrdersController {
+  private readonly logger = new Logger(AdminOrdersController.name);
+
   constructor(
     private readonly ordersService: AdminOrdersService,
     private readonly auditService: AdminAuditService,
@@ -85,6 +88,15 @@ export class AdminOrdersController {
       ip: request.ip,
       userAgent: request.headers['user-agent'] as string | undefined,
     });
+
+    this.logger.warn(
+      JSON.stringify({
+        event: 'admin.orders.refund',
+        orderId,
+        adminUserId: request.adminUser?.id ?? null,
+        paymentsAffected: updated.payments.length,
+      }),
+    );
 
     return { status: 'ok', data: updated };
   }

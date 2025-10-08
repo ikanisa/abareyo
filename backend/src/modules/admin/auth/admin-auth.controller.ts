@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { FastifyReply, FastifyRequest } from 'fastify';
+import { Logger } from '@nestjs/common';
 
 import { AdminAuthService } from './admin-auth.service.js';
 import { AdminLoginDto } from './admin-auth.dto.js';
@@ -20,6 +21,7 @@ import { AdminSessionGuard } from '../rbac/admin-session.guard.js';
 @Controller('admin')
 export class AdminAuthController {
   private readonly isProd: boolean;
+  private readonly logger = new Logger(AdminAuthController.name);
 
   constructor(
     private readonly adminAuthService: AdminAuthService,
@@ -39,7 +41,21 @@ export class AdminAuthController {
     const rateKey = `${body.email.toLowerCase()}|${request.ip ?? 'unknown'}`;
     await this.rateLimiter.registerAttempt(rateKey);
 
-    const adminUser = await this.adminAuthService.validateCredentials(body.email, body.password);
+    let adminUser;
+    try {
+      adminUser = await this.adminAuthService.validateCredentials(body.email, body.password);
+    } catch (error) {
+      this.logger.warn(
+        JSON.stringify({
+          event: 'admin.auth.login.failure',
+          email: body.email.toLowerCase(),
+          ip: request.ip ?? null,
+          reason: error instanceof Error ? error.message : String(error),
+        }),
+      );
+      throw error;
+    }
+
     await this.rateLimiter.reset(rateKey);
 
     const session = await this.adminAuthService.createSession(adminUser.id, {
@@ -65,6 +81,15 @@ export class AdminAuthController {
 
     const permissions = Array.from(activeSession.permissionKeys).sort();
 
+    this.logger.log(
+      JSON.stringify({
+        event: 'admin.auth.login.success',
+        adminUserId: adminUser.id,
+        ip: request.ip ?? null,
+        sessionId: session.id,
+      }),
+    );
+
     return {
       data: {
         user: this.adminAuthService.mapAdminPayload(activeSession.session.adminUser),
@@ -80,6 +105,14 @@ export class AdminAuthController {
     const sessionId = request.cookies?.[this.adminAuthService.cookieName];
     if (sessionId) {
       await this.adminAuthService.revokeSession(sessionId);
+      this.logger.log(
+        JSON.stringify({
+          event: 'admin.auth.logout',
+          sessionId,
+          adminUserId: request.adminUser?.id ?? null,
+          ip: request.ip ?? null,
+        }),
+      );
     }
 
     reply.clearCookie(this.adminAuthService.cookieName, {

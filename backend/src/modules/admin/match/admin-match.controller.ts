@@ -13,6 +13,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
+import { Logger } from '@nestjs/common';
 
 import { AdminAuditService } from '../audit/admin-audit.service.js';
 import { AdminSessionGuard } from '../rbac/admin-session.guard.js';
@@ -30,6 +31,8 @@ import { RealtimeService } from '../../realtime/realtime.service.js';
 @Controller('admin/match-ops')
 @UseGuards(AdminSessionGuard, AdminPermissionsGuard)
 export class AdminMatchController {
+  private readonly logger = new Logger(AdminMatchController.name);
+
   constructor(
     private readonly matchService: AdminMatchService,
     private readonly auditService: AdminAuditService,
@@ -57,6 +60,14 @@ export class AdminMatchController {
       userAgent: request.headers['user-agent'] as string | undefined,
     });
     this.realtime.notifyMatchUpdated({ matchId: match.id, status: match.status });
+    this.logger.log(
+      JSON.stringify({
+        event: 'admin.match.create',
+        adminUserId: request.adminUser?.id ?? null,
+        matchId: match.id,
+        opponent: match.opponent,
+      }),
+    );
     return { data: match };
   }
 
@@ -80,6 +91,14 @@ export class AdminMatchController {
       userAgent: request.headers['user-agent'] as string | undefined,
     });
     this.realtime.notifyMatchUpdated({ matchId, status: updated.status });
+    this.logger.log(
+      JSON.stringify({
+        event: 'admin.match.update',
+        adminUserId: request.adminUser?.id ?? null,
+        matchId,
+        status: updated.status,
+      }),
+    );
     return { data: updated };
   }
 
@@ -99,6 +118,13 @@ export class AdminMatchController {
       ip: request.ip,
       userAgent: request.headers['user-agent'] as string | undefined,
     });
+    this.logger.warn(
+      JSON.stringify({
+        event: 'admin.match.delete',
+        adminUserId: request.adminUser?.id ?? null,
+        matchId,
+      }),
+    );
     return { status: 'ok' };
   }
 
@@ -128,6 +154,15 @@ export class AdminMatchController {
       ip: request.ip,
       userAgent: request.headers['user-agent'] as string | undefined,
     });
+    this.logger.log(
+      JSON.stringify({
+        event: 'admin.match.zone.upsert',
+        adminUserId: request.adminUser?.id ?? null,
+        matchId,
+        zoneId: zone.id,
+        name: zone.name,
+      }),
+    );
     return { data: zone };
   }
 
@@ -151,6 +186,14 @@ export class AdminMatchController {
       ip: request.ip,
       userAgent: request.headers['user-agent'] as string | undefined,
     });
+    this.logger.warn(
+      JSON.stringify({
+        event: 'admin.match.zone.delete',
+        adminUserId: request.adminUser?.id ?? null,
+        matchId,
+        zoneId,
+      }),
+    );
     return { status: 'ok' };
   }
 
@@ -180,6 +223,15 @@ export class AdminMatchController {
       ip: request.ip,
       userAgent: request.headers['user-agent'] as string | undefined,
     });
+    this.logger.log(
+      JSON.stringify({
+        event: 'admin.match.gate.upsert',
+        adminUserId: request.adminUser?.id ?? null,
+        matchId,
+        gateId: gate.id,
+        name: gate.name,
+      }),
+    );
     return { data: gate };
   }
 
@@ -203,6 +255,14 @@ export class AdminMatchController {
       ip: request.ip,
       userAgent: request.headers['user-agent'] as string | undefined,
     });
+    this.logger.warn(
+      JSON.stringify({
+        event: 'admin.match.gate.delete',
+        adminUserId: request.adminUser?.id ?? null,
+        matchId,
+        gateId,
+      }),
+    );
     return { status: 'ok' };
   }
 
