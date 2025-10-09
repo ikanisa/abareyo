@@ -18,6 +18,7 @@ import type { ActiveTicketPassContract, TicketOrderReceiptContract } from "@rayo
 const formatter = new Intl.NumberFormat("en-RW", { style: "currency", currency: "RWF" });
 
 const PASS_TOKEN_STORAGE_KEY = "wallet-pass-tokens";
+const LAST_USER_STORAGE_KEY = "wallet:last-user";
 
 type StoredPassToken = {
   token: string;
@@ -75,6 +76,15 @@ const Wallet = () => {
   }, [passTokens]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const cached = window.localStorage.getItem(LAST_USER_STORAGE_KEY);
+    if (cached) {
+      setUserIdInput(cached);
+      setActiveUserId(cached);
+    }
+  }, []);
+
+  useEffect(() => {
     setReceipt(null);
   }, [activeUserId]);
 
@@ -96,6 +106,14 @@ const Wallet = () => {
     enabled: Boolean(activeUserId),
     staleTime: 60_000,
   });
+
+  useEffect(() => {
+    const error = summaryQuery.error || transactionsQuery.error || passesQuery.error;
+    if (error) {
+      const message = error instanceof Error ? error.message : 'Unable to load wallet data.';
+      toast({ title: 'Wallet fetch failed', description: message, variant: 'destructive' });
+    }
+  }, [summaryQuery.error, transactionsQuery.error, passesQuery.error, toast]);
 
   const rotateMutation = useMutation({
     mutationFn: async (passId: string) => {
@@ -134,9 +152,24 @@ const Wallet = () => {
   const pendingAmount = totals ? formatter.format(totals.pending) : formatter.format(0);
   const confirmedAmount = totals ? formatter.format(totals.confirmed) : formatter.format(0);
 
+  const handleLoad = () => {
+    const trimmed = userIdInput.trim();
+    if (!trimmed) {
+      toast({ title: "Enter a user ID", description: "Paste the fan's UUID to view their wallet.", variant: "destructive" });
+      return;
+    }
+    setActiveUserId(trimmed);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(LAST_USER_STORAGE_KEY, trimmed);
+    }
+  };
+
   const handleClear = () => {
     setActiveUserId(null);
     setUserIdInput("");
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(LAST_USER_STORAGE_KEY);
+    }
   };
 
   const renderPass = (pass: ActiveTicketPassContract) => {
@@ -231,11 +264,7 @@ const Wallet = () => {
             className="font-mono"
           />
           <div className="flex gap-2">
-            <Button
-              variant="hero"
-              onClick={() => setActiveUserId(userIdInput.trim() || null)}
-              disabled={!userIdInput.trim()}
-            >
+            <Button variant="hero" onClick={handleLoad} disabled={!userIdInput.trim()}>
               <Search className="w-4 h-4" />
               Load
             </Button>
@@ -271,6 +300,18 @@ const Wallet = () => {
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-primary" />
               <p className="font-semibold text-foreground">Recent Transactions</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  summaryQuery.refetch();
+                  transactionsQuery.refetch();
+                  passesQuery.refetch();
+                }}
+                disabled={summaryQuery.isFetching || transactionsQuery.isFetching || passesQuery.isFetching}
+              >
+                Refresh
+              </Button>
             </div>
 
             {transactionsQuery.isLoading && (
