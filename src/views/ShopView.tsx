@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ShoppingCart, Star, PhoneCall, Copy, Trash2, Loader2, Package2, Images } from "lucide-react";
 
@@ -13,6 +13,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { checkoutShop, fetchProducts } from "@/lib/api/shop";
 import type { ShopProduct, ShopCheckoutResponse } from "@/lib/api/shop";
 import { launchUssdDialer } from "@/lib/ussd";
+import { useRealtime } from "@/providers/realtime-provider";
 
 const formatter = new Intl.NumberFormat("en-RW", { style: "currency", currency: "RWF" });
 
@@ -23,12 +24,28 @@ const channelOptions: { id: Channel; label: string }[] = [
   { id: "airtel", label: "Airtel Money" },
 ];
 
+const CART_CACHE_KEY = "shop:cart";
+const USER_CACHE_KEY = "shop:user";
+
 export default function Shop() {
   const { toast } = useToast();
+  const { socket } = useRealtime();
   const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [cart, setCart] = useState<Record<string, number>>({});
+  const [cart, setCart] = useState<Record<string, number>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const raw = window.localStorage.getItem(CART_CACHE_KEY);
+      return raw ? (JSON.parse(raw) as Record<string, number>) : {};
+    } catch (error) {
+      console.warn("Unable to parse cached cart", error);
+      return {};
+    }
+  });
   const [channel, setChannel] = useState<Channel>("mtn");
-  const [userId, setUserId] = useState("");
+  const [userId, setUserId] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem(USER_CACHE_KEY) ?? "";
+  });
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [order, setOrder] = useState<ShopCheckoutResponse | null>(null);
@@ -37,6 +54,24 @@ export default function Shop() {
     queryKey: ["shop", "products"],
     queryFn: fetchProducts,
   });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(CART_CACHE_KEY, JSON.stringify(cart));
+    } catch (error) {
+      console.warn("Unable to persist cart", error);
+    }
+  }, [cart]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (userId) {
+      window.localStorage.setItem(USER_CACHE_KEY, userId);
+    } else {
+      window.localStorage.removeItem(USER_CACHE_KEY);
+    }
+  }, [userId]);
 
   const products = productsQuery.data ?? [];
 
@@ -103,6 +138,24 @@ export default function Shop() {
     setOrder(null);
     checkoutMutation.reset();
   };
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleOrderConfirmed = (payload: { orderId?: string } | undefined) => {
+      if (!payload?.orderId || !order || payload.orderId !== order.orderId) {
+        return;
+      }
+      toast({ title: "Shop order confirmed", description: "You can pick up this order." });
+      setOrder(null);
+      setCart({});
+    };
+
+    socket.on("shop.order.confirmed", handleOrderConfirmed);
+    return () => {
+      socket.off("shop.order.confirmed", handleOrderConfirmed);
+    };
+  }, [socket, order, toast]);
 
   const launchDialer = () => {
     if (!order?.ussdCode) return;
