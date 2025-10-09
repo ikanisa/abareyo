@@ -169,13 +169,16 @@ export default function Tickets() {
 
       const checkout = await createTicketCheckout(payload);
       setOrder(checkout);
-      ordersQuery.refetch();
+      await ordersQuery.refetch();
       setValidationError(null);
       return checkout;
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : "Checkout failed";
       toast({ title: "Could not start payment", description: message, variant: "destructive" });
+    },
+    onSettled: () => {
+      setQuantities({});
     },
   });
 
