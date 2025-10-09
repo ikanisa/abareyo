@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { HeartHandshake, Flame, PhoneCall, Copy, Loader2, Target } from "lucide-react";
 
@@ -13,12 +13,15 @@ import { useToast } from "@/components/ui/use-toast";
 import { donateToProject, fetchFundraisingProjects } from "@/lib/api/fundraising";
 import type { FundraisingProject, FundraisingDonationResponse } from "@/lib/api/fundraising";
 import { launchUssdDialer } from "@/lib/ussd";
+import { useRealtime } from "@/providers/realtime-provider";
 
 const formatter = new Intl.NumberFormat("en-RW", { style: "currency", currency: "RWF" });
 const channelOptions: { id: 'mtn' | 'airtel'; label: string }[] = [
   { id: 'mtn', label: 'MTN MoMo' },
   { id: 'airtel', label: 'Airtel Money' },
 ];
+
+const LAST_PROJECT_KEY = "fundraising:last-project";
 
 function progressPercent(project: FundraisingProject) {
   if (!project.goal) return 0;
@@ -27,6 +30,7 @@ function progressPercent(project: FundraisingProject) {
 
 export default function Fundraising() {
   const { toast } = useToast();
+  const { socket } = useRealtime();
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [amount, setAmount] = useState(5000);
   const [channel, setChannel] = useState<'mtn' | 'airtel'>('mtn');
@@ -38,6 +42,23 @@ export default function Fundraising() {
     queryKey: ["fundraising", "projects"],
     queryFn: fetchFundraisingProjects,
   });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const cached = window.localStorage.getItem(LAST_PROJECT_KEY);
+    if (cached) {
+      setSelectedProject(cached);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (selectedProject) {
+      window.localStorage.setItem(LAST_PROJECT_KEY, selectedProject);
+    } else {
+      window.localStorage.removeItem(LAST_PROJECT_KEY);
+    }
+  }, [selectedProject]);
 
   const donateMutation = useMutation({
     mutationFn: async () => {
@@ -69,6 +90,32 @@ export default function Fundraising() {
   const projects = projectsQuery.data ?? [];
   const currentProject = projects.find((project) => project.id === selectedProject) ?? null;
   const ussdDisplay = receipt?.ussdCode?.replaceAll("%23", "#");
+
+  useEffect(() => {
+    if (!socket || !currentProject) {
+      return;
+    }
+
+    const handleDonationConfirmed = (payload: { donationId?: string; projectId?: string } | undefined) => {
+      if (!payload?.projectId || payload.projectId !== currentProject.id) {
+        return;
+      }
+      toast({ title: "Donation received", description: "Thank you for supporting Rayon Sports." });
+      setReceipt(null);
+      projectsQuery.refetch();
+    };
+
+    socket.on("fundraising.donation.confirmed", handleDonationConfirmed);
+    return () => {
+      socket.off("fundraising.donation.confirmed", handleDonationConfirmed);
+    };
+  }, [socket, currentProject, projectsQuery, toast]);
+
+  useEffect(() => {
+    if (!projectsQuery.error) return;
+    const message = projectsQuery.error instanceof Error ? projectsQuery.error.message : 'Unable to load projects';
+    toast({ title: 'Fundraising load failed', description: message, variant: 'destructive' });
+  }, [projectsQuery.error, toast]);
 
   const launchDialer = () => {
     if (!receipt?.ussdCode) return;
