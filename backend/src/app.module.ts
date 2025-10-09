@@ -14,6 +14,7 @@ import { FundraisingModule } from './modules/fundraising/fundraising.module.js';
 import { RealtimeModule } from './modules/realtime/realtime.module.js';
 import { OnboardingModule } from './modules/onboarding/onboarding.module.js';
 import { AdminModule } from './modules/admin/admin.module.js';
+import { MatchesModule } from './modules/matches/matches.module.js';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { AdminModule } from './modules/admin/admin.module.js';
     FundraisingModule,
     OnboardingModule,
     AdminModule,
+    MatchesModule,
   ],
 })
 export class AppModule {}

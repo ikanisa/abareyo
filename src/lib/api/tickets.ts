@@ -148,6 +148,39 @@ export async function fetchTicketCatalog() {
   return data;
 }
 
+export type TicketMatchSummary = {
+  id: string;
+  opponent: string;
+  kickoff: string;
+  venue: string;
+  status: string;
+  competition?: string | null;
+  score?: {
+    home: number;
+    away: number;
+  } | null;
+  timeline?: Array<{
+    minute: number;
+    type: string;
+    description: string;
+    team: 'home' | 'away';
+  }>;
+  stats?: Array<{
+    label: string;
+    home: number;
+    away: number;
+  }>;
+};
+
+export async function fetchMatchSummaries() {
+  const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/matches/summaries`);
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  const { data } = (await response.json()) as { data: TicketMatchSummary[] };
+  return data;
+}
+
 export async function fetchTicketAnalytics() {
   const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/tickets/analytics`, {
     headers: {
