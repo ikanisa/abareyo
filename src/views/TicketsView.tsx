@@ -19,6 +19,7 @@ import {
 } from "@/lib/api/tickets";
 import { useToast } from "@/components/ui/use-toast";
 import { launchUssdDialer } from "@/lib/ussd";
+import { useRealtime } from "@/providers/realtime-provider";
 import {
   TicketZoneContract,
   type TicketCheckoutItemContract,
@@ -39,6 +40,7 @@ const formatPrice = (value: number) => `${value.toLocaleString()} RWF`;
 
 export default function Tickets() {
   const { toast } = useToast();
+  const { socket } = useRealtime();
   const catalogQuery = useQuery({
     queryKey: ["tickets", "catalog"],
     queryFn: fetchTicketCatalog,
@@ -61,6 +63,7 @@ export default function Tickets() {
       setActiveMatchId(matches[0].id);
     }
   }, [matches, activeMatchId]);
+
 
   const matchIndex = useMemo(
     () => (activeMatchId ? matches.findIndex((match) => match.id === activeMatchId) : -1),
@@ -100,6 +103,34 @@ export default function Tickets() {
     enabled: Boolean(trimmedUserId),
   });
   const orders = ordersQuery.data ?? [];
+
+  useEffect(() => {
+    if (!socket) {
+      return;
+    }
+
+    const handleOrderConfirmed = (payload: { orderId?: string; paymentId?: string } | undefined) => {
+      if (!payload?.orderId) {
+        return;
+      }
+
+      const relevant = order?.orderId === payload.orderId || orders.some((item) => item.id === payload.orderId);
+      if (!relevant) {
+        return;
+      }
+
+      toast({ title: "Payment confirmed", description: "Passes are ready in the wallet." });
+      ordersQuery.refetch();
+      if (order?.orderId === payload.orderId) {
+        setOrder(null);
+      }
+    };
+
+    socket.on("tickets.order.confirmed", handleOrderConfirmed);
+    return () => {
+      socket.off("tickets.order.confirmed", handleOrderConfirmed);
+    };
+  }, [socket, order, orders, ordersQuery, toast]);
 
   const checkoutMutation = useMutation({
     mutationFn: async () => {
