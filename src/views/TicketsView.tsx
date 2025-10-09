@@ -20,6 +20,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { launchUssdDialer } from "@/lib/ussd";
 import { useRealtime } from "@/providers/realtime-provider";
+import { useAuth } from "@/providers/auth-provider";
 import {
   TicketZoneContract,
   type TicketCheckoutItemContract,
@@ -41,6 +42,7 @@ const formatPrice = (value: number) => `${value.toLocaleString()} RWF`;
 export default function Tickets() {
   const { toast } = useToast();
   const { socket } = useRealtime();
+  const { user } = useAuth();
   const catalogQuery = useQuery({
     queryKey: ["tickets", "catalog"],
     queryFn: fetchTicketCatalog,
@@ -64,6 +66,12 @@ export default function Tickets() {
       setActiveMatchId(matches[0].id);
     }
   }, [matches, activeMatchId]);
+
+  useEffect(() => {
+    if (user?.id && userId.trim().length === 0) {
+      setUserId(user.id);
+    }
+  }, [user?.id, userId]);
 
 
   const matchIndex = useMemo(

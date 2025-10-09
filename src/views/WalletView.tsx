@@ -14,6 +14,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { fetchWalletSummary, fetchWalletTransactions } from "@/lib/api/wallet";
 import { fetchActivePasses, fetchTicketReceipt, rotateTicketPass } from "@/lib/api/tickets";
 import type { ActiveTicketPassContract, TicketOrderReceiptContract } from "@rayon/contracts";
+import { useAuth } from "@/providers/auth-provider";
 
 const formatter = new Intl.NumberFormat("en-RW", { style: "currency", currency: "RWF" });
 
@@ -65,6 +66,7 @@ const statusVariant = (status: string) => {
 const formatDateTime = (value: string) => new Date(value).toLocaleString();
 
 const Wallet = () => {
+  const { user } = useAuth();
   const [userIdInput, setUserIdInput] = useState("");
   const [activeUserId, setActiveUserId] = useState<string | null>(null);
   const [passTokens, setPassTokens] = useState<PassTokenState>(() => loadStoredTokens());
@@ -81,8 +83,11 @@ const Wallet = () => {
     if (cached) {
       setUserIdInput(cached);
       setActiveUserId(cached);
+    } else if (user?.id) {
+      setUserIdInput(user.id);
+      setActiveUserId(user.id);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     setReceipt(null);
