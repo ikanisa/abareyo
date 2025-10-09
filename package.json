@@ -16,8 +16,6 @@
     "test": "echo \"No tests yet\""
   },
   "dependencies": {
-  "/react-table": "^8.15.2",
-  "002freact-table": "^8.15.2",
     "@capacitor/app": "^5.0.8",
     "@capacitor/core": "^5.0.8",
     "@capacitor/haptics": "^5.0.8",
