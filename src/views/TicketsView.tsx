@@ -53,6 +53,7 @@ export default function Tickets() {
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [receipt, setReceipt] = useState<TicketOrderReceiptContract | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const matches = catalogQuery.data ?? [];
 
@@ -135,6 +136,7 @@ export default function Tickets() {
   const checkoutMutation = useMutation({
     mutationFn: async () => {
       if (!activeMatch) {
+        setValidationError("Select a match before checking out.");
         throw new Error("Select a match");
       }
 
@@ -147,10 +149,12 @@ export default function Tickets() {
         }));
 
       if (!items.length) {
+        setValidationError("Add at least one ticket before paying.");
         throw new Error("Add at least one ticket");
       }
 
       if (!trimmedUserId) {
+        setValidationError("Enter the fan's user ID so we can attach the passes.");
         throw new Error("Provide the fan's user ID to attach this order");
       }
 
@@ -166,6 +170,7 @@ export default function Tickets() {
       const checkout = await createTicketCheckout(payload);
       setOrder(checkout);
       ordersQuery.refetch();
+      setValidationError(null);
       return checkout;
     },
     onError: (error: unknown) => {
@@ -382,6 +387,9 @@ export default function Tickets() {
         <p className="text-xs text-muted-foreground">
           Use the same user ID when viewing the Wallet so payments and passes surface automatically.
         </p>
+        {validationError && (
+          <p className="text-xs text-destructive">{validationError}</p>
+        )}
       </GlassCard>
 
       <div className="space-y-4 mt-6">
