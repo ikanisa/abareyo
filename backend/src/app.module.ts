@@ -15,6 +15,7 @@ import { RealtimeModule } from './modules/realtime/realtime.module.js';
 import { OnboardingModule } from './modules/onboarding/onboarding.module.js';
 import { AdminModule } from './modules/admin/admin.module.js';
 import { MatchesModule } from './modules/matches/matches.module.js';
+import { FanAuthModule } from './modules/fan-auth/fan-auth.module.js';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { MatchesModule } from './modules/matches/matches.module.js';
     OnboardingModule,
     AdminModule,
     MatchesModule,
+    FanAuthModule,
   ],
 })
 export class AppModule {}

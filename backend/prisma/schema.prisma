@@ -554,6 +554,19 @@ model AdminSession {
   @@index([adminUserId, revoked])
 }
 
+model FanSession {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+  expiresAt DateTime?
+  revoked   Boolean  @default(false)
+  ip        String?
+  userAgent String?
+
+  @@index([userId, revoked])
+}
+
 model AuditLog {
   id          String     @id @default(uuid())
   at          DateTime   @default(now())

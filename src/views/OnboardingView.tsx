@@ -1,10 +1,10 @@
 "use client";
 
-import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bot, RefreshCw, Send, UserRound } from 'lucide-react';
 import type { OnboardingMessageDto, OnboardingSessionDto } from '@rayon/contracts/onboarding';
+import { useRouter } from 'next/navigation';
 
 import { startOnboardingSession, fetchOnboardingSession, sendOnboardingMessage } from '@/lib/api/onboarding';
 import { cn } from '@/lib/utils';
@@ -14,9 +14,10 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/providers/auth-provider';
+import { useToast } from '@/components/ui/use-toast';
 
 const SESSION_ID_KEY = 'onboarding:sessionId';
-const ONBOARDING_STATUS_KEY = 'onboarding:completed';
 
 type SessionStatusCopy = {
   label: string;
@@ -144,6 +145,9 @@ const OnboardingView = () => {
   const [input, setInput] = useState('');
   const [hasBootstrapped, setHasBootstrapped] = useState(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const router = useRouter();
+  const { login } = useAuth();
+  const { toast } = useToast();
 
   const sessionQuery = useQuery({
     queryKey: ['onboarding', sessionId],
@@ -180,6 +184,22 @@ const OnboardingView = () => {
     },
   });
 
+  const finalizeMutation = useMutation({
+    mutationFn: (onboardingSessionId: string) => login(onboardingSessionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fan', 'session'] });
+      router.replace('/');
+      router.refresh();
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: 'Unable to finalize onboarding',
+        description: error instanceof Error ? error.message : 'Please try again shortly.',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const session = sessionQuery.data ?? createSessionMutation.data;
 
   useEffect(() => {
@@ -195,14 +215,13 @@ const OnboardingView = () => {
   }, [sessionQuery.error, queryClient, sessionId]);
 
   useEffect(() => {
-    if (!session) {
+    if (!sessionId || !session) {
       return;
     }
-    if (typeof window !== 'undefined') {
-      const state = session.status === 'completed' ? 'completed' : 'pending';
-      window.localStorage.setItem(ONBOARDING_STATUS_KEY, state);
+    if (session.status === 'completed' && !finalizeMutation.isPending && !finalizeMutation.isSuccess) {
+      finalizeMutation.mutate(sessionId);
     }
-  }, [session]);
+  }, [finalizeMutation, session, sessionId]);
 
   useEffect(() => {
     if (bottomRef.current) {
@@ -228,10 +247,8 @@ const OnboardingView = () => {
     setSessionId(null);
     setInput('');
     queryClient.removeQueries({ queryKey: ['onboarding'] });
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem(ONBOARDING_STATUS_KEY);
-    }
     setHasBootstrapped(false);
+    finalizeMutation.reset();
     createSessionMutation.reset();
   };
 
@@ -255,11 +272,16 @@ const OnboardingView = () => {
               <RefreshCw className="mr-2 h-4 w-4" />
               Start new chat
             </Button>
-            {session?.status === 'completed' && (
-              <Button asChild size="sm" variant="default">
-                <Link href="/">Enter the app</Link>
+            {session?.status === 'completed' && session?.id ? (
+              <Button
+                size="sm"
+                variant="default"
+                disabled={finalizeMutation.isPending}
+                onClick={() => finalizeMutation.mutate(session.id)}
+              >
+                {finalizeMutation.isPending ? 'Preparing access…' : 'Enter the app'}
               </Button>
-            )}
+            ) : null}
           </div>
         </header>
 
