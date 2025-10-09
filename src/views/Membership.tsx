@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Crown, Clock, CheckCircle2, PhoneCall, Copy, Loader2, Award } from "lucide-react";
 
@@ -16,6 +16,7 @@ import {
 } from "@/lib/api/membership";
 import { launchUssdDialer } from "@/lib/ussd";
 import type { MembershipPlanContract } from "@rayon/contracts";
+import { useRealtime } from "@/providers/realtime-provider";
 
 const formatter = new Intl.NumberFormat("en-RW", { style: "currency", currency: "RWF" });
 
@@ -25,6 +26,8 @@ const channelOptions: { id: Channel; label: string; helper: string }[] = [
   { id: "mtn", label: "MTN MoMo", helper: "Best for MTN Rwanda numbers" },
   { id: "airtel", label: "Airtel Money", helper: "Use for Airtel subscribers" },
 ];
+
+const LAST_USER_STORAGE_KEY = "membership:last-user";
 
 const extractPerks = (value: unknown): string[] => {
   if (Array.isArray(value)) {
@@ -38,6 +41,7 @@ const extractPerks = (value: unknown): string[] => {
 
 export default function Membership() {
   const { toast } = useToast();
+  const { socket } = useRealtime();
   const [userIdInput, setUserIdInput] = useState("");
   const [activeUserId, setActiveUserId] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
@@ -96,6 +100,46 @@ export default function Membership() {
   const isPending = activeStatus?.status === "pending";
   const ussdDisplay = pendingUpgrade?.ussdCode?.replaceAll("%23", "#");
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const cached = window.localStorage.getItem(LAST_USER_STORAGE_KEY);
+    if (cached) {
+      setUserIdInput(cached);
+      setActiveUserId(cached);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!socket || !activeUserId) {
+      return;
+    }
+
+    const handleMembershipActivated = (payload: { membershipId?: string; userId?: string } | undefined) => {
+      if (!payload) return;
+      if (payload.userId && payload.userId !== activeUserId) return;
+      toast({ title: "Membership activated", description: "Perks are now unlocked." });
+      statusQuery.refetch();
+      setPendingUpgrade(null);
+    };
+
+    socket.on("membership.activated", handleMembershipActivated);
+    return () => {
+      socket.off("membership.activated", handleMembershipActivated);
+    };
+  }, [socket, activeUserId, statusQuery, toast]);
+
+  useEffect(() => {
+    if (!plansQuery.error && !statusQuery.error) {
+      return;
+    }
+    const message = plansQuery.error ?? statusQuery.error;
+    toast({
+      title: "Membership fetch failed",
+      description: message instanceof Error ? message.message : "Unable to load membership data.",
+      variant: "destructive",
+    });
+  }, [plansQuery.error, statusQuery.error, toast]);
+
   const handleCopy = async () => {
     if (!ussdDisplay) return;
     try {
@@ -142,16 +186,25 @@ export default function Membership() {
             placeholder="User ID (UUID)"
             className="font-mono"
           />
-          <div className="flex gap-2">
-            <Button
+         <div className="flex gap-2">
+           <Button
               variant="hero"
               onClick={() => {
                 const value = userIdInput.trim();
-                setActiveUserId(value || null);
                 if (!value) {
-                  setPendingUpgrade(null);
+                  toast({
+                    title: "Enter a user ID",
+                    description: "Paste the fan UUID before continuing.",
+                    variant: "destructive",
+                  });
+                  return;
                 }
+                setActiveUserId(value);
+                setPendingUpgrade(null);
                 statusQuery.refetch();
+                if (typeof window !== "undefined") {
+                  window.localStorage.setItem(LAST_USER_STORAGE_KEY, value);
+                }
               }}
               disabled={!userIdInput.trim()}
             >
@@ -163,6 +216,9 @@ export default function Membership() {
                 setUserIdInput("");
                 setActiveUserId(null);
                 setPendingUpgrade(null);
+                if (typeof window !== "undefined") {
+                  window.localStorage.removeItem(LAST_USER_STORAGE_KEY);
+                }
               }}
             >
               Clear
