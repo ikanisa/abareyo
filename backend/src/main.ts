@@ -33,6 +33,16 @@ async function bootstrap() {
       }
       logger.warn(msg);
     }
+
+    const fanSecret = config.get<string>('fan.session.secret', 'change-me-fan-session');
+    if (['change-me-fan-session', 'change-me'].includes(fanSecret)) {
+      const env = config.get<string>('app.env', 'development');
+      const msg = 'FAN_SESSION_SECRET must be configured for secure fan sessions.';
+      if (env === 'production') {
+        throw new Error(msg);
+      }
+      logger.warn(msg);
+    }
     await instance.register(fastifyCookie, {
       secret: sessionSecret,
       hook: 'onRequest',

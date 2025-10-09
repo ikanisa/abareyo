@@ -23,6 +23,8 @@ import { cn } from "@/lib/utils";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useI18n } from "@/providers/i18n-provider";
+import { useAuth } from "@/providers/auth-provider";
+import { useToast } from "@/components/ui/use-toast";
 
 const useMenuLabels = () => {
   const { t } = useI18n();
@@ -70,6 +72,8 @@ const colorStyles: Record<string, { container: string; icon: string }> = {
 export default function More() {
   const router = useRouter();
   const { t } = useI18n();
+  const { user, logout, loading } = useAuth();
+  const { toast } = useToast();
   const labels = useMenuLabels();
   const menuItems = baseMenuItems.map((item) => {
     switch (item.path) {
@@ -118,8 +122,8 @@ export default function More() {
             <User className="w-8 h-8 text-primary-foreground" />
           </div>
           <div className="flex-1">
-            <h3 className="font-bold text-lg text-foreground">Fan #12345</h3>
-            <p className="text-sm text-muted-foreground">Member since Jan 2025</p>
+            <h3 className="font-bold text-lg text-foreground">{user?.id ?? 'Guest fan'}</h3>
+            <p className="text-sm text-muted-foreground">Status: {user?.status ?? 'anonymous'}</p>
           </div>
           <div className="flex gap-2">
             <LanguageSwitcher />
@@ -165,12 +169,36 @@ export default function More() {
       </div>
 
       {/* Logout */}
-      <GlassCard className="mt-6 p-4 cursor-pointer hover:border-destructive/40 transition-all">
+      <GlassCard
+        className="mt-6 p-4 cursor-pointer hover:border-destructive/40 transition-all"
+        role="button"
+        tabIndex={0}
+        onClick={async () => {
+          try {
+            await logout();
+            toast({ title: t('auth.loggedOut', 'Signed out') });
+            router.replace('/onboarding');
+            router.refresh();
+          } catch (error) {
+            toast({
+              title: t('auth.logoutFailed', 'Logout failed'),
+              description: error instanceof Error ? error.message : t('auth.tryAgain', 'Please try again.'),
+              variant: 'destructive',
+            });
+          }
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            (event.currentTarget as HTMLDivElement).click();
+          }
+        }}
+      >
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
             <LogOut className="w-5 h-5 text-destructive" />
           </div>
-          <span className="flex-1 font-medium text-destructive">Log Out</span>
+          <span className="flex-1 font-medium text-destructive">{loading ? t('auth.loggingOut', 'Signing out…') : t('auth.logout', 'Log Out')}</span>
         </div>
       </GlassCard>
 

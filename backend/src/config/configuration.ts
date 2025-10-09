@@ -43,4 +43,12 @@ export default () => ({
       cookieDomain: process.env.ADMIN_SESSION_COOKIE_DOMAIN ?? undefined,
     },
   },
+  fan: {
+    session: {
+      cookieName: process.env.FAN_SESSION_COOKIE ?? 'fan_session',
+      secret: process.env.FAN_SESSION_SECRET ?? 'change-me-fan-session',
+      ttlHours: Number(process.env.FAN_SESSION_TTL_HOURS ?? 24 * 30),
+      cookieDomain: process.env.FAN_SESSION_COOKIE_DOMAIN ?? undefined,
+    },
+  },
 });
