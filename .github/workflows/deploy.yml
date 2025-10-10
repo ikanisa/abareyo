@@ -1,0 +1,51 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: production
+      # Required secrets must be configured in repo or environment
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_SHADOW_URL: ${{ secrets.DATABASE_SHADOW_URL }}
+      REDIS_URL: ${{ secrets.REDIS_URL }}
+      CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
+      METRICS_TOKEN: ${{ secrets.METRICS_TOKEN }}
+      ADMIN_SESSION_SECRET: ${{ secrets.ADMIN_SESSION_SECRET }}
+      FAN_SESSION_SECRET: ${{ secrets.FAN_SESSION_SECRET }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install backend deps
+        working-directory: backend
+        run: npm ci
+
+      - name: Prisma generate
+        working-directory: backend
+        run: npx prisma generate
+
+      - name: Run DB migrations (deploy)
+        working-directory: backend
+        run: npm run prisma:migrate
+
+      # Build + push image would go here (docker login + buildx + push)
+      # - name: Build and push image
+      #   run: |
+      #     echo "Implement container build/push per your registry"
+
+      - name: Health check (placeholder)
+        run: echo "Implement health check against your deployment URL"
+
