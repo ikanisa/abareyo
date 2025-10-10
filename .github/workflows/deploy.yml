@@ -41,6 +41,12 @@ jobs:
         working-directory: backend
         run: npm run prisma:migrate
 
+      - name: Prisma migrate status (post-deploy)
+        working-directory: backend
+        run: |
+          npx prisma -v
+          npx prisma migrate status || true
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
