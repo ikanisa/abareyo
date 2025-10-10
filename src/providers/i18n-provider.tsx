@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 const LOCALSTORAGE_KEY = "rayon-locale";
 
@@ -95,26 +95,30 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const setLocale = (value: Locale) => {
+  const setLocale = useCallback((value: Locale) => {
     setLocaleState(value);
     localStorage.setItem(LOCALSTORAGE_KEY, value);
-  };
+  }, []);
 
   const value = useMemo<I18nContextValue>(() => ({
     locale,
     t: (path: string, fallback = path) => {
       const segments = path.split('.');
-      let current: any = dictionaries[locale];
+      let current: unknown = dictionaries[locale];
       for (const segment of segments) {
-        current = current?.[segment];
-        if (!current) {
+        if (!current || typeof current !== 'object') {
           return fallback;
         }
+        const record = current as Record<string, unknown>;
+        if (!(segment in record)) {
+          return fallback;
+        }
+        current = record[segment];
       }
       return typeof current === 'string' ? current : fallback;
     },
     setLocale,
-  }), [locale]);
+  }), [locale, setLocale]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 };

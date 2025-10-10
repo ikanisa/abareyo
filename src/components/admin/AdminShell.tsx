@@ -19,6 +19,7 @@ const NAV_ITEMS: Array<{ label: string; href: string }> = [
   { label: 'Fundraising', href: '/admin/fundraising' },
   { label: 'Community', href: '/admin/community' },
   { label: 'Content', href: '/admin/content' },
+  { label: 'Translations', href: '/admin/translations' },
   { label: 'SMS Console', href: '/admin/sms' },
   { label: 'USSD Templates', href: '/admin/ussd' },
   { label: 'Users', href: '/admin/users' },
@@ -78,6 +79,8 @@ export const AdminShell = ({ user, environment = 'dev', children }: AdminShellPr
     const messages: Record<string, string> = {
       orders: 'You lack permission to view order management. Contact an admin to request access.',
       'match-ops': 'Match operations require the match:update permission.',
+      translations: 'Translations console requires the translation:view permission.',
+      reports: 'Reports require the reports:view permission.',
     };
 
     toast({

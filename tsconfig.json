@@ -48,6 +48,8 @@
     "app/**/*.tsx",
     "src/**/*.ts",
     "src/**/*.tsx",
+    "tests/**/*.ts",
+    "tests/**/*.tsx",
     "**/*.cjs",
     "**/*.mjs",
     ".next/types/**/*.ts"

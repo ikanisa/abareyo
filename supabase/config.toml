@@ -1,1 +1,5 @@
 project_id = "bduokvxvnscoknwamfle"
+
+[db]
+port = 54329
+shadow_port = 54330

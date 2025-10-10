@@ -2,9 +2,10 @@ export default () => ({
   app: {
     host: process.env.APP_HOST ?? '0.0.0.0',
     port: Number(process.env.APP_PORT ?? 5000),
-    corsOrigin: process.env.CORS_ORIGIN ?? '*',
+    corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:3000',
     baseUrl: process.env.BACKEND_BASE_URL ?? 'http://localhost:5000',
     env: process.env.NODE_ENV ?? 'development',
+    logLevel: process.env.APP_LOG_LEVEL ?? 'info',
   },
   database: {
     url: process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/rayon',
@@ -50,5 +51,8 @@ export default () => ({
       ttlHours: Number(process.env.FAN_SESSION_TTL_HOURS ?? 24 * 30),
       cookieDomain: process.env.FAN_SESSION_COOKIE_DOMAIN ?? undefined,
     },
+  },
+  metrics: {
+    token: process.env.METRICS_TOKEN ?? '',
   },
 });

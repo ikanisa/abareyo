@@ -25,6 +25,7 @@ import { RequireAdminPermissions } from '../rbac/permissions.decorator.js';
 import { ManualAttachDto } from './dto/manual-attach.dto.js';
 import { ParserTestDto } from './dto/parser-test.dto.js';
 import { CreatePromptDto } from './dto/create-prompt.dto.js';
+import { ManualDismissDto } from './dto/manual-dismiss.dto.js';
 
 @Controller('admin/sms')
 @UseGuards(AdminSessionGuard, AdminPermissionsGuard)
@@ -211,6 +212,93 @@ export class AdminSmsController {
     );
 
     return { data: updated };
+  }
+
+  @Post('manual/:smsId/retry')
+  @RequireAdminPermissions('sms:attach')
+  async retryManualSms(@Param('smsId', ParseUUIDPipe) smsId: string, @Req() request: FastifyRequest) {
+    const before = await this.prisma.smsRaw.findUnique({
+      where: { id: smsId },
+      include: { parsed: true },
+    });
+    if (!before) {
+      throw new Error('SMS not found');
+    }
+
+    const result = await this.smsService.retryManualSms(smsId);
+
+    await this.auditService.record({
+      adminUserId: request.adminUser?.id ?? null,
+      action: 'sms.manual_retry',
+      entityType: 'sms_raw',
+      entityId: smsId,
+      before: serialize(before),
+      after: serialize(result),
+      ip: request.ip,
+      userAgent: request.headers['user-agent'] as string | undefined,
+    });
+
+    this.logger.log(
+      JSON.stringify({
+        event: 'admin.sms.manual_retry',
+        adminUserId: request.adminUser?.id ?? null,
+        smsId,
+      }),
+    );
+
+    return { status: 'queued' };
+  }
+
+  @Post('manual/:smsId/dismiss')
+  @RequireAdminPermissions('sms:attach')
+  async dismissManualSms(
+    @Param('smsId', ParseUUIDPipe) smsId: string,
+    @Body() body: ManualDismissDto,
+    @Req() request: FastifyRequest,
+  ) {
+    const before = await this.prisma.smsRaw.findUnique({
+      where: { id: smsId },
+      include: { parsed: true },
+    });
+    if (!before) {
+      throw new Error('SMS not found');
+    }
+
+    const result = await this.smsService.dismissManualSms({
+      smsId,
+      resolution: body.resolution,
+      note: body.note,
+      adminUserId: request.adminUser?.id ?? null,
+    });
+
+    await this.auditService.record({
+      adminUserId: request.adminUser?.id ?? null,
+      action: 'sms.manual_dismiss',
+      entityType: 'sms_raw',
+      entityId: smsId,
+      before: serialize(before),
+      after: serialize(result),
+      ip: request.ip,
+      userAgent: request.headers['user-agent'] as string | undefined,
+    });
+
+    this.logger.log(
+      JSON.stringify({
+        event: 'admin.sms.manual_dismiss',
+        adminUserId: request.adminUser?.id ?? null,
+        smsId,
+        resolution: body.resolution,
+      }),
+    );
+
+    return { status: 'resolved', data: result };
+  }
+
+  @Get('queue')
+  @RequireAdminPermissions('sms:attach')
+  async queueOverview() {
+    const data = await this.smsService.getQueueOverview();
+    return { data };
   }
 }
 

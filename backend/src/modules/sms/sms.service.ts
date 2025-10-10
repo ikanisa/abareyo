@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { PrismaService } from '../../prisma/prisma.service.js';
@@ -6,6 +6,7 @@ import { PaymentsService } from '../payments/payments.service.js';
 import { RealtimeService } from '../realtime/realtime.service.js';
 import { SmsWebhookDto, SmsWebhookMeta } from './sms.dto.js';
 import { SmsQueueService } from './sms.queue.js';
+import { ManualSmsResolution } from '../admin/sms/dto/manual-dismiss.dto.js';
 
 @Injectable()
 export class SmsService {
@@ -91,5 +92,84 @@ export class SmsService {
     const result = await this.payments.attachSmsToPayment(paymentId, smsId);
     this.logger.log(`SMS ${smsId} manually attached to payment ${paymentId}`);
     return result;
+  }
+
+  async retryManualSms(smsId: string) {
+    const sms = await this.prisma.smsRaw.findUnique({
+      where: { id: smsId },
+      include: { parsed: true },
+    });
+    if (!sms) {
+      throw new NotFoundException('SMS not found');
+    }
+
+    const metadata =
+      typeof sms.metadata === 'object' && sms.metadata !== null
+        ? { ...(sms.metadata as Record<string, unknown>) }
+        : {};
+    if ('adminResolution' in metadata) {
+      delete (metadata as Record<string, unknown>).adminResolution;
+    }
+
+    const updated = await this.prisma.smsRaw.update({
+      where: { id: smsId },
+      data: {
+        ingestStatus: 'received',
+        metadata,
+      },
+      include: { parsed: true },
+    });
+
+    await this.queue.enqueue({ smsId }, { removeOnComplete: true });
+    return updated;
+  }
+
+  async dismissManualSms({
+    smsId,
+    resolution,
+    note,
+    adminUserId,
+  }: {
+    smsId: string;
+    resolution: ManualSmsResolution;
+    note?: string;
+    adminUserId: string | null;
+  }) {
+    const sms = await this.prisma.smsRaw.findUnique({
+      where: { id: smsId },
+      include: { parsed: true },
+    });
+    if (!sms) {
+      throw new NotFoundException('SMS not found');
+    }
+
+    const metadata =
+      typeof sms.metadata === 'object' && sms.metadata !== null
+        ? { ...(sms.metadata as Record<string, unknown>) }
+        : {};
+
+    (metadata as Record<string, unknown>).adminResolution = {
+      status: resolution,
+      note: note ?? null,
+      resolvedBy: adminUserId,
+      resolvedAt: new Date().toISOString(),
+    };
+
+    const ingestStatus = resolution === ManualSmsResolution.LINKED_ELSEWHERE ? 'parsed' : 'error';
+
+    const updated = await this.prisma.smsRaw.update({
+      where: { id: smsId },
+      data: {
+        ingestStatus,
+        metadata,
+      },
+      include: { parsed: true },
+    });
+
+    return updated;
+  }
+
+  async getQueueOverview() {
+    return this.queue.getOverview();
   }
 }

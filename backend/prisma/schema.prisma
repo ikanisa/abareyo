@@ -282,6 +282,9 @@ model Order {
   total          Int
   status         String      @default("pending")
   shippingAddress Json?
+  fulfillmentNotes Json?
+  trackingNumber  String?
+  fulfilledAt     DateTime?
   createdAt      DateTime    @default(now())
   items          OrderItem[]
   payments       Payment[]

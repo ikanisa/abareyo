@@ -94,7 +94,7 @@ export default function AdminUssdView() {
     },
   });
 
-  const templates = templatesQuery.data ?? [];
+  const templates = useMemo(() => templatesQuery.data ?? [], [templatesQuery.data]);
   const mtnTemplates = useMemo(() => templates.filter((tpl) => tpl.telco.toLowerCase().includes("mtn")), [templates]);
   const airtelTemplates = useMemo(
     () => templates.filter((tpl) => tpl.telco.toLowerCase().includes("airtel")),

@@ -93,6 +93,38 @@ export const attachSmsToPayment = (payload: { smsId: string; paymentId: string }
     body: JSON.stringify(payload),
   });
 
+export type SmsQueueOverview = {
+  waiting: number;
+  delayed: number;
+  active: number;
+  pending: Array<{
+    jobId: string;
+    smsId: string;
+    attemptsMade: number;
+    maxAttempts: number;
+    state: string;
+    enqueuedAt: string;
+    lastFailedReason?: string | null;
+  }>;
+};
+
+export const fetchSmsQueueOverview = () =>
+  request<{ data: SmsQueueOverview }>(`/admin/sms/queue`).then((res) => res.data);
+
+export const retryManualSms = (smsId: string) =>
+  request<{ status: string }>(`/admin/sms/manual/${smsId}/retry`, {
+    method: 'POST',
+  });
+
+export const dismissManualSms = (
+  smsId: string,
+  payload: { resolution: 'ignore' | 'linked_elsewhere' | 'duplicate'; note?: string },
+) =>
+  request<{ status: string }>(`/admin/sms/manual/${smsId}/dismiss`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
 export const fetchSmsParserPrompts = () =>
   request<{ data: SmsParserPrompt[] }>(`/admin/sms/parser/prompts`).then((res) => res.data);
 
