@@ -8,6 +8,10 @@ const notFound = () => new NextResponse('Not found', { status: 404 });
 
 // Very small in-memory store for e2e
 let sessionId: string | null = null;
+let featureFlags: Array<{ key: string; enabled: boolean; description: string | null; updatedAt: string }> = [
+  { key: 'ui.new_shop_flow', enabled: false, description: 'New shop UI', updatedAt: new Date().toISOString() },
+  { key: 'community.predictions', enabled: true, description: 'Enable predictions', updatedAt: new Date().toISOString() },
+];
 
 export async function GET(request: NextRequest, { params }: { params: { path?: string[] } }) {
   if (!process.env.E2E_API_MOCKS) return notFound();
@@ -210,11 +214,36 @@ export async function POST(request: NextRequest, { params }: { params: { path?: 
     path.startsWith('/admin/membership/plans') ||
     path.startsWith('/admin/fundraising/donations/') ||
     path.startsWith('/admin/fundraising/projects') ||
-    path.startsWith('/admin/shop/orders')
+    path.startsWith('/admin/shop/orders') ||
+    path.startsWith('/admin/feature-flags')
   ) {
+    if (path === '/admin/feature-flags') {
+      try {
+        const body = await request.json().catch(() => ({} as any));
+        const { key, enabled, description } = body as { key: string; enabled?: boolean; description?: string };
+        if (typeof key === 'string' && key.length) {
+          const idx = featureFlags.findIndex((f) => f.key === key);
+          const flag = {
+            key,
+            enabled: typeof enabled === 'boolean' ? enabled : featureFlags[idx]?.enabled ?? false,
+            description: typeof description === 'string' ? description : featureFlags[idx]?.description ?? null,
+            updatedAt: new Date().toISOString(),
+          };
+          if (idx >= 0) featureFlags[idx] = flag;
+          else featureFlags.push(flag);
+          return ok({ status: 'ok', data: flag });
+        }
+      } catch {}
+      return ok({ status: 'ok' });
+    }
     return ok({ status: 'ok' });
   }
 
   return notFound();
 }
-
+  // Feature flags
+  if (path === '/admin/feature-flags') {
+    const guard = requireAuth();
+    if (guard) return guard;
+    return ok({ data: featureFlags });
+  }
