@@ -14,7 +14,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
     "prisma:dev": "prisma migrate dev --name init",
-    "seed": "ts-node --swc prisma/seed.ts"
+    "seed": "ts-node --swc prisma/seed.ts",
+    "env:check": "ts-node --swc tools/validate-env.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.744.0",
