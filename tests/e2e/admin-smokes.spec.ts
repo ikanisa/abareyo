@@ -27,3 +27,14 @@ test('shop orders list renders and basic search input exists', async ({ page }) 
   await expect(page.getByPlaceholder('Search order id/email')).toBeVisible();
 });
 
+test('fundraising dashboard renders donations table', async ({ page }) => {
+  // Login (if not already)
+  await page.goto('/admin/login');
+  await page.getByLabel('Email').fill('admin@example.com');
+  await page.getByLabel('Password').fill('password');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page).toHaveURL(/\/admin$/);
+
+  await page.goto('/admin/fundraising');
+  await expect(page.getByRole('heading', { name: 'Recent Donations' })).toBeVisible();
+});
