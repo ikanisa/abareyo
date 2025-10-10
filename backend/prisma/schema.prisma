@@ -93,6 +93,14 @@ model User {
   fanClubLinks  FanClubMember[]
   posts         Post[] @relation("PostAuthor")
   onboardingSessions OnboardingSession[]
+  // Back-relations for admin and community features
+  postReactions PostReaction[]
+  postComments  PostComment[]
+  pollVotes     PollVote[]
+  leaderboards  Leaderboard[]
+  fanSessions   FanSession[]
+  adminActions  AdminAction[]
+  pollsAuthored Poll[]        @relation("PollAuthor")
 }
 
 model OnboardingSession {
@@ -127,6 +135,9 @@ model Match {
   createdAt    DateTime     @default(now())
   ticketOrders TicketOrder[]
   zones        TicketZone[]
+  // Back-relations for admin/match features
+  gates        MatchGate[]
+  predictionFixtures PredictionFixture[]
 }
 
 model TicketOrder {
@@ -224,9 +235,12 @@ model Payment {
   currency     String        @default("RWF")
   status       PaymentStatus @default(pending)
   smsParsed    SmsParsed?    @relation(fields: [smsParsedId], references: [id])
-  smsParsedId  String?
+  smsParsedId  String?       @unique
   order        TicketOrder?  @relation(fields: [orderId], references: [id])
   orderId      String?
+  // Shop order relation
+  shopOrder    Order?        @relation(fields: [shopOrderId], references: [id])
+  shopOrderId  String?
   membership   Membership?   @relation(fields: [membershipId], references: [id])
   membershipId String?
   donation     FundDonation? @relation(fields: [donationId], references: [id])
@@ -448,12 +462,13 @@ model PostComment {
 model Poll {
   id        String   @id @default(uuid())
   question  String
-  author    User?    @relation(fields: [authorId], references: [id])
+  author    User?    @relation("PollAuthor", fields: [authorId], references: [id])
   authorId  String?
   createdAt DateTime @default(now())
   post      Post?    @relation("PostPoll", fields: [postId], references: [id])
   postId    String?  @unique
   options   PollOption[]
+  votes     PollVote[]
 }
 
 model PollOption {
@@ -589,7 +604,7 @@ model AuditLog {
 
 model FeatureFlag {
   key        String     @id
-  value      Json       @default(json("{}"))
+  value      Json       @default("{}")
   description String?
   updatedAt  DateTime   @updatedAt
   updatedBy  AdminUser? @relation("FeatureFlagUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
