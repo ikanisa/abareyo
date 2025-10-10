@@ -1,4 +1,4 @@
-.PHONY: dev test e2e backend-migrate backend-seed env-check
+.PHONY: dev test e2e backend-migrate backend-seed env-check k8s-apply k8s-namespace
 
 dev:
 	npm run dev
@@ -18,3 +18,9 @@ backend-seed:
 env-check:
 	cd backend && npm run env:check
 
+k8s-namespace:
+	kubectl apply -f k8s/namespace.yaml
+
+k8s-apply: k8s-namespace
+	kubectl apply -f k8s/backend-deployment.yaml
+	kubectl apply -f k8s/frontend-deployment.yaml

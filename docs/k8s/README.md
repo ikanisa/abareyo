@@ -28,6 +28,5 @@ Usage
 4. Expose via Ingress (not included): configure your Ingress controller with TLS and point to `frontend` Service.
 
 Notes
-- Replace `ghcr.io/ORG/REPO-...` image names with your actual org/repo.
+- Images point to `ghcr.io/ikanisa/abareyo-*` (updated).
 - Health endpoints: backend `/api/health`, frontend `/`.
-
