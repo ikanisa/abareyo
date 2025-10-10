@@ -55,12 +55,19 @@ export class MetricsService {
     this.smsQueueDepth.set({ queue }, depth);
   }
 
-  recordGateScan(params: { gate: string; outcome: 'verified' | 'rejected' }) {
-    this.gateScans.inc({ gate: params.gate, outcome: params.outcome });
+  recordGateScan(params: {
+    gate: string;
+    outcome?: 'verified' | 'rejected' | 'refunded';
+    result?: 'verified' | 'rejected' | 'refunded' | 'used';
+    matchId?: string;
+  }) {
+    const raw = params.outcome ?? params.result ?? 'verified';
+    const normalised = raw === 'used' ? 'verified' : raw;
+    const outcome = normalised as 'verified' | 'rejected' | 'refunded';
+    this.gateScans.inc({ gate: params.gate, outcome });
   }
 
   async getMetrics() {
     return await this.registry.metrics();
   }
 }
-
