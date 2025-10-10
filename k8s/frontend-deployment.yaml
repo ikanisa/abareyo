@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/ORG/REPO-frontend:latest
+          image: ghcr.io/ikanisa/abareyo-frontend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
@@ -49,4 +49,3 @@ spec:
     - name: http
       port: 80
       targetPort: 3000
-
