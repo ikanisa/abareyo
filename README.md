@@ -84,5 +84,25 @@ In development, you can run a local MinIO instance and point the `S3_PUBLIC_BASE
 - `packages/contracts/` – Shared DTOs and enums consumed by frontend and backend.
 - `docs/` – Architecture decisions, local runbooks, and mobile packaging guides.
 
-## Next Steps
-Phase 2 onwards will layer in full Prisma migrations, payment reconciliation workers, GSM ingestion, offline-first caching, and the mobile packaging pipeline. Refer to `docs/architecture/phase0/architecture-lockdown.md` for the roadmap.
+## Next Steps (Production Readiness)
+
+- Migrations & Seed
+  - See `docs/migrations.md` and run `make backend-migrate` then `make backend-seed`.
+
+- Envs & Secrets
+  - Confirm required envs in `docs/production-env.md`. Validate with `make env-check`.
+
+- E2E Smokes
+  - `make e2e` runs Playwright smokes with mocked API (guarded by `E2E_API_MOCKS=1`).
+
+- CI/CD
+  - CI runs lint/unit/e2e. Deploy workflow builds/pushes images (GHCR) and runs Prisma migrate deploy.
+  - Optional `HEALTH_URL` secret enables post-deploy health check loop.
+
+- Observability & Security
+  - Prometheus rules: `docs/observability/prometheus-rules.yml`; Grafana dashboard: `docs/grafana/backend-overview.json`.
+  - Security hardening notes: `docs/security.md`; enable CSP via `APP_ENABLE_CSP=1` in production.
+
+- Runbooks & Manifests
+  - Deploy: `docs/runbooks/deploy.md`; Rollback: `docs/runbooks/rollback.md`; Cutover: `docs/cutover-readiness.md`.
+  - K8s examples under `k8s/` and `docs/k8s/README.md`.
