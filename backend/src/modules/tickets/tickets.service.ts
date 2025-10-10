@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHash, randomBytes, randomUUID } from 'crypto';
 
@@ -6,6 +6,7 @@ import type { TicketAnalyticsContract } from '@rayon/contracts';
 
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { RealtimeService } from '../realtime/realtime.service.js';
+import { MetricsService } from '../metrics/metrics.service.js';
 import { TicketCheckoutDto } from './dto/create-checkout.dto.js';
 import { InitiateTransferDto } from './dto/initiate-transfer.dto.js';
 import { ClaimTransferDto } from './dto/claim-transfer.dto.js';
@@ -25,10 +26,13 @@ const DEFAULT_ZONE_PRICING: Record<string, number> = {
 
 @Injectable()
 export class TicketsService {
+  private readonly logger = new Logger(TicketsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
     private readonly realtime: RealtimeService,
+    private readonly metrics: MetricsService,
   ) {}
 
   async createPendingOrder(dto: TicketCheckoutDto) {
@@ -180,7 +184,14 @@ export class TicketsService {
     const hash = this.hashToken(token);
     const pass = await this.prisma.ticketPass.findUnique({
       where: { qrTokenHash: hash },
-      include: { order: true },
+      include: {
+        order: {
+          select: {
+            id: true,
+            matchId: true,
+          },
+        },
+      },
     });
 
     if (!pass) {
@@ -202,6 +213,12 @@ export class TicketsService {
           gate: pass.gate,
           stewardId: options?.stewardId ?? null,
         });
+        this.metrics.recordGateScan({
+          matchId: pass.order.matchId,
+          gate: pass.gate ?? 'Unassigned',
+          result: pass.state,
+        });
+        await this.emitGateMetricsForMatch(pass.order.matchId);
       }
       return { status: pass.state as 'used' | 'refunded', passId: pass.id };
     }
@@ -224,6 +241,12 @@ export class TicketsService {
         gate: pass.gate,
         stewardId: options?.stewardId ?? null,
       });
+      this.metrics.recordGateScan({
+        matchId: pass.order.matchId,
+        gate: pass.gate ?? 'Unassigned',
+        result: 'verified',
+      });
+      await this.emitGateMetricsForMatch(pass.order.matchId);
     }
 
     return {
@@ -734,5 +757,50 @@ export class TicketsService {
         locale: 'rw',
       },
     });
+  }
+
+  private async emitGateMetricsForMatch(matchId: string) {
+    try {
+      const scans = await this.prisma.gateScan.findMany({
+        where: {
+          pass: {
+            order: {
+              matchId,
+            },
+          },
+        },
+        include: {
+          pass: {
+            select: { gate: true },
+          },
+        },
+      });
+
+      const metricsMap = new Map<string, { total: number; verified: number; rejected: number }>();
+      for (const scan of scans) {
+        const gate = scan.pass?.gate ?? 'Unassigned';
+        const current = metricsMap.get(gate) ?? { total: 0, verified: 0, rejected: 0 };
+        current.total += 1;
+        if (scan.result === 'verified') {
+          current.verified += 1;
+        } else {
+          current.rejected += 1;
+        }
+        metricsMap.set(gate, current);
+      }
+
+      const snapshot = Array.from(metricsMap.entries()).map(([gate, values]) => ({
+        gate,
+        total: values.total,
+        verified: values.verified,
+        rejected: values.rejected,
+      }));
+
+      this.realtime.notifyGateMetricsSnapshot({ matchId, metrics: snapshot });
+    } catch (error) {
+      // Avoid blocking gate scans if aggregation fails; log for observability.
+      const err = error as Error;
+      this.logger.error(`Failed to emit gate metrics for match ${matchId}: ${err.message}`, err.stack);
+    }
   }
 }

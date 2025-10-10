@@ -37,7 +37,10 @@ export class RealtimeService {
     this.emit('tickets.gate.scan', payload);
   }
 
-  notifyGateMetrics(payload: { matchId: string; gate: string; total: number; rejected: number }) {
+  notifyGateMetricsSnapshot(payload: {
+    matchId: string;
+    metrics: Array<{ gate: string; total: number; verified: number; rejected: number }>;
+  }) {
     this.emit('tickets.gate.metrics', payload);
   }
 

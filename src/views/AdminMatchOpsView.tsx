@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { useAdminSession } from "@/providers/admin-session-provider";
+import { useRealtime } from "@/providers/realtime-provider";
 import {
   AdminMatch,
   MatchScanMetric,
@@ -68,6 +69,7 @@ const AdminMatchOpsView = ({ initialMatches }: AdminMatchOpsViewProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { permissions } = useAdminSession();
+  const { socket } = useRealtime();
 
   const canCreateMatch = permissions.includes("match:create");
   const canUpdateMatch = permissions.includes("match:update");
@@ -97,6 +99,7 @@ const AdminMatchOpsView = ({ initialMatches }: AdminMatchOpsViewProps) => {
     queryFn: () => fetchMatchScanMetrics(selectedMatch!.id),
     enabled: Boolean(selectedMatch?.id) && canManageGates,
   });
+  const [metricsSnapshot, setMetricsSnapshot] = useState<MatchScanMetric[]>([]);
 
   const createMutation = useMutation({
     mutationFn: createAdminMatch,
@@ -213,6 +216,59 @@ const AdminMatchOpsView = ({ initialMatches }: AdminMatchOpsViewProps) => {
     },
   });
 
+  useEffect(() => {
+    if (!selectedMatchId) {
+      setMetricsSnapshot([]);
+      return;
+    }
+
+    if (metricsQuery.data) {
+      setMetricsSnapshot(metricsQuery.data);
+    } else if (!metricsQuery.isFetching) {
+      setMetricsSnapshot([]);
+    }
+  }, [metricsQuery.data, metricsQuery.isFetching, selectedMatchId]);
+
+  useEffect(() => {
+    if (!socket || !selectedMatchId) {
+      return;
+    }
+
+    const handler = (payload: unknown) => {
+      if (!payload || typeof payload !== "object") {
+        return;
+      }
+      const data = payload as Record<string, unknown>;
+      if (typeof data.matchId !== "string" || data.matchId !== selectedMatchId) {
+        return;
+      }
+      const metrics = Array.isArray(data.metrics) ? data.metrics : null;
+      if (!metrics) {
+        return;
+      }
+      const mapped: MatchScanMetric[] = metrics
+        .map((item) => {
+          if (!item || typeof item !== "object") {
+            return null;
+          }
+          const value = item as Record<string, unknown>;
+          return {
+            gate: typeof value.gate === "string" ? value.gate : "Unassigned",
+            total: Number(value.total ?? 0),
+            verified: Number(value.verified ?? 0),
+            rejected: Number(value.rejected ?? 0),
+          };
+        })
+        .filter((metric): metric is MatchScanMetric => metric !== null);
+      setMetricsSnapshot(mapped);
+    };
+
+    socket.on("tickets.gate.metrics", handler);
+    return () => {
+      socket.off("tickets.gate.metrics", handler);
+    };
+  }, [socket, selectedMatchId]);
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -288,7 +344,7 @@ const AdminMatchOpsView = ({ initialMatches }: AdminMatchOpsViewProps) => {
               canUpdate={canUpdateMatch}
               canDelete={canDeleteMatch}
               canManageGates={canManageGates}
-              metrics={metricsQuery.data ?? []}
+              metrics={metricsSnapshot}
               metricsLoading={metricsQuery.isLoading}
               onUpdate={(payload) => updateMutation.mutate({ matchId: selectedMatch.id, payload })}
               onDelete={() => deleteMutation.mutate(selectedMatch.id)}

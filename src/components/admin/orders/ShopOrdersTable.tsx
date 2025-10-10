@@ -50,7 +50,7 @@ export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
         setIsLoading(false);
       }
     },
-    [meta.page, meta.pageSize, searchTerm, status, toast],
+    [meta.page, meta.pageSize, searchTerm, toast],
   );
 
   const handleSearchChange = useCallback(

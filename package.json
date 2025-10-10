@@ -6,14 +6,19 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "lint": "next lint",
+    "lint": "eslint app src tests/unit",
     "build:capacitor": "next build && next export -o dist",
     "cap:sync": "npm run build:capacitor && npx cap sync",
     "cap:android": "npm run cap:sync && npx cap open android",
     "cap:ios": "npm run cap:sync && npx cap open ios",
     "start": "next start",
     "type-check": "tsc --noEmit",
-    "test": "echo \"No tests yet\""
+    "test": "npm run type-check && npm run test:unit",
+    "test:unit": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "setup:hooks": "git config core.hooksPath .githooks"
   },
   "dependencies": {
     "@capacitor/app": "^5.0.8",
@@ -81,10 +86,12 @@
   "devDependencies": {
     "@capacitor/cli": "^5.0.8",
     "@eslint/js": "^8.57.0",
+    "@playwright/test": "^1.50.1",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^22.16.5",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
+    "@types/supertest": "^6.0.3",
     "autoprefixer": "^10.4.21",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.5",
@@ -93,8 +100,11 @@
     "globals": "^15.15.0",
     "lovable-tagger": "^1.1.10",
     "postcss": "^8.5.6",
+    "supertest": "^7.1.4",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.38.0"
+    "typescript-eslint": "^8.38.0",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.2.4"
   }
 }

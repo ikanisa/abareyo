@@ -5,12 +5,13 @@ Use this checklist before pushing the Rayon Sports fan experience to production 
 ## 1. Source & Dependency Hygiene
 - Ensure dependency tree resolves with `npm install --legacy-peer-deps` (temporary workaround until Capacitor peer conflicts are fixed). Commit the resulting `package-lock.json` if changes are expected.
 - Confirm environment variables for production (`NEXT_PUBLIC_BACKEND_URL`, `NEXT_PUBLIC_APP_BASE_URL`, telemetry API tokens, etc.) are present in your deployment platform.
-- Run `npm run lint` and `npm run type-check` locally.
+- Run `npm run lint` (no warnings tolerated) and `npm run test` locally. The latter performs the type-check plus unit suites.
+- Enforce local quality gates by running `npm run setup:hooks` once; the repo-level pre-commit hook now executes `npm run lint` and `npm run test`.
 
 ## 2. CI Smoke Tests
 Ensure your CI pipeline runs the following (in this order) on every release candidate:
 1. `npm run lint`
-2. `npm run type-check`
+2. `npm run test`
 3. `npm test -- community`
 4. `npm test -- tickets`
 5. `npm run build`
@@ -34,6 +35,8 @@ Ensure your CI pipeline runs the following (in this order) on every release cand
 If native projects cannot be synced locally (e.g., due to dependency conflicts), document the skip and run these steps on a workstation once resolved.
 
 ## 5. Telemetry & Observability
+- Confirm `METRICS_TOKEN` is configured in the runtime and that `/metrics` responds with `401` when the token is absent.
+- Verify `CORS_ORIGIN` is a comma-separated allow-list that matches the deployed web origins (no wildcard in production).
 - Backend must accept `POST /api/telemetry/app-state` beacons (emitted from `app/providers.tsx`). Confirm logs/metrics record app state transitions when the Capacitor app foregrounds/backgrounds.
 - Validate notification permission flow: deny once, ensure the console log is produced and UI handles disabled push gracefully.
 - Confirm existing analytics dashboards receive community mission data (`adminMissionsOverview`).

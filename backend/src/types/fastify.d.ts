@@ -24,5 +24,6 @@ declare module 'fastify' {
       expiresAt: string | null;
     };
     fanOnboardingStatus?: string;
+    metricsStart?: number;
   }
 }

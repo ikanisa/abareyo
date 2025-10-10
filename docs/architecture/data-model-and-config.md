@@ -84,6 +84,8 @@ Prisma schema will live under `backend/prisma/schema.prisma`, with migrations co
 | `FEATURE_FLAGS` | ⬜ | JSON blob toggling experimental UI. |
 | `ANALYTICS_WRITE_KEY` | ⬜ | Segment/analytics write key (optional). |
 | `LOG_LEVEL` | ⬜ | Default `info`; adjust per environment. |
+| `CORS_ORIGIN` | ✅ | Comma-separated list of allowed browser origins (e.g. `https://admin.rayon.rw,https://app.rayon.rw`). |
+| `METRICS_TOKEN` | ✅ | Bearer token required to access the `/metrics` endpoint; generate a strong random value. |
 | `QUEUE_SCHEDULER_DISABLED` | ⬜ | Set `true` in environments without background worker. |
 
 ### Environment Configuration

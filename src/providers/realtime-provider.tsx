@@ -89,12 +89,8 @@ export const REALTIME_EVENTS: RealtimeEventDefinition[] = [
   {
     event: "tickets.gate.metrics",
     label: "Gate Metrics",
-    handler: (payload, toast) => {
-      const gate = typeof payload.gate === "string" ? payload.gate : 'Gate';
-      toast({
-        title: `${gate} throughput`,
-        description: `${payload.total ?? 0} total / ${payload.rejected ?? 0} rejected`,
-      });
+    handler: () => {
+      // Handled by views subscribing directly; avoid toast noise.
     },
   },
 ];

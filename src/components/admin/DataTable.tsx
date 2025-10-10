@@ -3,6 +3,7 @@
 import * as React from 'react';
 import {
   ColumnDef,
+  RowSelectionState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -15,9 +16,10 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export type DataTableProps<TData> = {
-  columns: ColumnDef<TData, any>[];
+  columns: ColumnDef<TData, unknown>[];
   data: TData[];
   isLoading?: boolean;
   meta?: { page: number; pageSize: number; total: number };
@@ -25,6 +27,10 @@ export type DataTableProps<TData> = {
   onSearchChange?: (term: string) => void;
   searchPlaceholder?: string;
   emptyState?: React.ReactNode;
+  enableSelection?: boolean;
+  getRowId?: (originalRow: TData, index: number) => string;
+  onSelectionChange?: (selectedRows: TData[]) => void;
+  renderBatchActions?: (context: { selectedRows: TData[]; clearSelection: () => void }) => React.ReactNode;
 };
 
 export function DataTable<TData>({
@@ -36,9 +42,14 @@ export function DataTable<TData>({
   onSearchChange,
   searchPlaceholder = 'Search…',
   emptyState = <div className="py-6 text-sm text-muted-foreground">No results found.</div>,
+  enableSelection = false,
+  getRowId,
+  onSelectionChange,
+  renderBatchActions,
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState('');
+  const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
 
   React.useEffect(() => {
     if (onSearchChange) {
@@ -50,21 +61,96 @@ export function DataTable<TData>({
     return undefined;
   }, [globalFilter, onSearchChange]);
 
+  const resolvedColumns = React.useMemo<ColumnDef<TData, unknown>[]>(() => {
+    if (!enableSelection) {
+      return columns;
+    }
+
+    const selectionColumn: ColumnDef<TData, unknown> = {
+      id: '__select__',
+      header: ({ table }) => (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            aria-label="Select all rows on current page"
+            checked={
+              table.getIsAllPageRowsSelected()
+                ? true
+                : table.getIsSomePageRowsSelected()
+                ? 'indeterminate'
+                : false
+            }
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          />
+        </div>
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            aria-label="Select row"
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            disabled={!row.getCanSelect()}
+          />
+        </div>
+      ),
+      enableSorting: false,
+      enableHiding: false,
+      size: 36,
+    };
+
+    return [selectionColumn, ...columns];
+  }, [columns, enableSelection]);
+
   const table = useReactTable({
     data,
-    columns,
+    columns: resolvedColumns,
     state: {
       sorting,
       globalFilter,
+      rowSelection: enableSelection ? rowSelection : {},
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
+    ...(enableSelection
+      ? {
+          enableRowSelection: true as const,
+          onRowSelectionChange: setRowSelection,
+        }
+      : {}),
+    getRowId:
+      getRowId ??
+      ((originalRow: TData, index: number) => {
+        const candidate = (originalRow as { id?: string | number } | undefined)?.id;
+        return candidate ? String(candidate) : String(index);
+      }),
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
 
+  const selectedRows = React.useMemo(() => {
+    if (!enableSelection) {
+      return [] as TData[];
+    }
+    const selectionSize = Object.keys(rowSelection).length;
+    if (selectionSize === 0) {
+      return [];
+    }
+    return table.getSelectedRowModel().flatRows.map((row) => row.original);
+  }, [enableSelection, rowSelection, table]);
+
   const rowCount = data.length;
+
+  React.useEffect(() => {
+    if (!enableSelection || !onSelectionChange) {
+      return;
+    }
+    onSelectionChange(selectedRows);
+  }, [enableSelection, onSelectionChange, selectedRows]);
+
+  const clearSelection = React.useCallback(() => {
+    setRowSelection({});
+  }, []);
 
   return (
     <div className="space-y-3">
@@ -75,6 +161,19 @@ export function DataTable<TData>({
           placeholder={searchPlaceholder}
           className="max-w-sm bg-white/5"
         />
+      ) : null}
+      {enableSelection && renderBatchActions && selectedRows.length > 0 ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary-foreground">
+          <span className="font-medium">
+            {selectedRows.length} selected
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            {renderBatchActions({ selectedRows, clearSelection })}
+            <Button variant="ghost" size="sm" onClick={clearSelection} className="text-primary-foreground/80 hover:text-primary-foreground">
+              Clear
+            </Button>
+          </div>
+        </div>
       ) : null}
       <div className="overflow-hidden rounded-xl border border-white/10">
         <Table>

@@ -6,6 +6,7 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import { PaymentsService } from '../payments/payments.service.js';
 import { RealtimeService } from '../realtime/realtime.service.js';
 import { SmsParserService } from './sms.parser.js';
+import { MetricsService } from '../metrics/metrics.service.js';
 
 export interface SmsParseJob {
   smsId: string;
@@ -24,6 +25,7 @@ export class SmsQueueService implements OnModuleInit, OnModuleDestroy {
     private readonly parser: SmsParserService,
     private readonly payments: PaymentsService,
     private readonly realtime: RealtimeService,
+    private readonly metrics: MetricsService,
   ) {}
 
   onModuleInit() {
@@ -43,6 +45,7 @@ export class SmsQueueService implements OnModuleInit, OnModuleDestroy {
     this.events.on('completed', ({ jobId }) => this.logger.debug(`SMS parse job completed ${jobId}`));
 
     this.logger.log('SMS parser queue initialized');
+    void this.refreshQueueDepth();
   }
 
   async enqueue(job: SmsParseJob, options?: JobsOptions) {
@@ -51,6 +54,7 @@ export class SmsQueueService implements OnModuleInit, OnModuleDestroy {
       return;
     }
     await this.queue.add('parse', job, { attempts: 3, backoff: { type: 'exponential', delay: 2000 }, ...options });
+    await this.refreshQueueDepth();
   }
 
   private async handleJob(job: Job<SmsParseJob>) {
@@ -131,6 +135,8 @@ export class SmsQueueService implements OnModuleInit, OnModuleDestroy {
         data: { ingestStatus: 'error' },
       });
       throw error;
+    } finally {
+      await this.refreshQueueDepth();
     }
   }
 
@@ -138,5 +144,46 @@ export class SmsQueueService implements OnModuleInit, OnModuleDestroy {
     await this.worker?.close();
     await this.events?.close();
     await this.queue?.close();
+    this.metrics.setSmsQueueDepth('sms-parse', 0);
+  }
+
+  private async refreshQueueDepth() {
+    if (!this.queue) {
+      return;
+    }
+    try {
+      const waiting = await this.queue.getWaitingCount();
+      const delayed = await this.queue.getDelayedCount();
+      this.metrics.setSmsQueueDepth('sms-parse', waiting + delayed);
+    } catch (error) {
+      this.logger.debug(`Failed to compute queue depth: ${(error as Error).message}`);
+    }
+  }
+
+  async getOverview(limit = 20) {
+    if (!this.queue) {
+      return { waiting: 0, delayed: 0, active: 0, pending: [] as Array<Record<string, unknown>> };
+    }
+
+    const [waiting, delayed, active] = await Promise.all([
+      this.queue.getWaitingCount(),
+      this.queue.getDelayedCount(),
+      this.queue.getActiveCount(),
+    ]);
+
+    const jobs = await this.queue.getJobs(['waiting', 'delayed'], 0, Math.max(limit - 1, 0));
+    const states = await Promise.all(jobs.map((job) => job.getState()));
+
+    const pending = jobs.map((job, index) => ({
+      jobId: job.id ?? '',
+      smsId: job.data.smsId,
+      attemptsMade: job.attemptsMade,
+      maxAttempts: job.opts.attempts ?? 3,
+      state: states[index],
+      enqueuedAt: new Date(job.timestamp).toISOString(),
+      lastFailedReason: job.failedReason ?? null,
+    }));
+
+    return { waiting, delayed, active, pending };
   }
 }
