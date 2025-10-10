@@ -162,8 +162,20 @@ async function bootstrap() {
       secret: sessionSecret,
       hook: 'onRequest',
     });
+    const enableCsp = process.env.APP_ENABLE_CSP === '1';
     await instance.register(fastifyHelmet, {
-      contentSecurityPolicy: false,
+      contentSecurityPolicy: enableCsp
+        ? {
+            directives: {
+              defaultSrc: ["'self'"],
+              imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+              styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
+              scriptSrc: ["'self'", "'unsafe-inline'", 'https:'],
+              connectSrc: ["'self'", '*'],
+              fontSrc: ["'self'", 'https:', 'data:'],
+            },
+          }
+        : false,
     } satisfies FastifyHelmetOptions);
     await instance.register(fastifyCors, {
       origin: resolveOrigin,

@@ -32,8 +32,11 @@ jobs:
         run: npm run test
 
       # Uncomment to run Playwright e2e once e2e mocks or backend are available
-      # - name: Install Playwright browsers
-      #   run: npx playwright install --with-deps
-      # - name: E2E tests
-      #   run: npm run test:e2e
-
+      # E2E smoke tests with mocked API (guarded by E2E_API_MOCKS)
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      - name: Run E2E smokes (mocked)
+        env:
+          E2E_API_MOCKS: '1'
+          NEXT_PUBLIC_BACKEND_URL: 'http://localhost:3000/api/e2e'
+        run: npm run test:e2e
