@@ -19,6 +19,9 @@ async function main() {
     'ticket:order:resend',
     'order:shop:update',
     'order:shop:view',
+    // New granular shop permissions used by admin/shop endpoints
+    'shop:order:view',
+    'shop:order:update',
     'order:donation:export',
     'order:donation:view',
     'sms:attach',
@@ -28,10 +31,15 @@ async function main() {
     'gate:update',
     'membership:plan:create',
     'membership:plan:update',
+    'membership:plan:view',
+    'membership:member:view',
     'membership:member:update',
     'product:crud',
     'inventory:adjust',
+    'fundraising:project:view',
     'fundraising:project:update',
+    'fundraising:donation:view',
+    'fundraising:donation:update',
     'community:post:schedule',
     'post:moderate',
     'content:page:publish',
@@ -41,8 +49,10 @@ async function main() {
     'admin:permission:update',
     'audit:view',
     'featureflag:update',
+    'translation:view',
     'translation:update',
     'report:download',
+    'reports:view',
   ];
 
   await Promise.all(

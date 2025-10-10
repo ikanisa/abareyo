@@ -80,6 +80,8 @@ export const AdminShell = ({ user, environment = 'dev', children }: AdminShellPr
       orders: 'You lack permission to view order management. Contact an admin to request access.',
       'match-ops': 'Match operations require the match:update permission.',
       translations: 'Translations console requires the translation:view permission.',
+      membership: 'Membership console requires the membership:member:view permission.',
+      fundraising: 'Fundraising console requires the fundraising:donation:view permission.',
       reports: 'Reports require the reports:view permission.',
     };
 

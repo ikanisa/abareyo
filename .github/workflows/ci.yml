@@ -6,28 +6,34 @@ on:
   pull_request:
     branches: [ main ]
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+permissions:
+  contents: read
 
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
+          node-version: '20'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm ci
 
       - name: Lint
-        run: npm run lint --if-present
+        run: npm run lint
 
-      - name: Type check
-        run: npm run type-check --if-present || npm run typecheck --if-present
+      - name: Unit tests
+        run: npm run test
 
-      - name: Build
-        run: npm run build
+      # Uncomment to run Playwright e2e once e2e mocks or backend are available
+      # - name: Install Playwright browsers
+      #   run: npx playwright install --with-deps
+      # - name: E2E tests
+      #   run: npm run test:e2e
+
