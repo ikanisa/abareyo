@@ -1,0 +1,37 @@
+groups:
+  - name: rayon-backend-slos
+    interval: 1m
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(increase(rayon_http_requests_total{statusCode=~"5.."}[5m]))
+            /
+          sum(increase(rayon_http_requests_total[5m])) > 0.01
+        for: 10m
+        labels:
+          severity: page
+        annotations:
+          summary: High HTTP 5xx rate
+          description: HTTP 5xx rate > 1% over 10m
+
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le, route) (rate(rayon_http_request_duration_seconds_bucket[5m]))
+          ) > 0.5
+        for: 10m
+        labels:
+          severity: page
+        annotations:
+          summary: High p95 latency
+          description: p95 latency > 500ms over 10m
+
+      - alert: SmsQueueDepthSpike
+        expr: rayon_sms_queue_depth > 100
+        for: 5m
+        labels:
+          severity: ticket
+        annotations:
+          summary: SMS queue depth high
+          description: SMS queue depth over 100 for 5m
+
