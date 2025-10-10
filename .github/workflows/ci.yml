@@ -31,6 +31,22 @@ jobs:
       - name: Unit tests
         run: npm run test
 
+      - name: Install backend deps
+        working-directory: backend
+        run: npm ci
+
+      - name: Backend env check (production vars present)
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://user:pass@localhost:5432/db
+          DATABASE_SHADOW_URL: postgresql://user:pass@localhost:5432/db_shadow
+          REDIS_URL: redis://localhost:6379
+          CORS_ORIGIN: http://localhost:3000
+          METRICS_TOKEN: test-token
+          ADMIN_SESSION_SECRET: test-admin-secret
+          FAN_SESSION_SECRET: test-fan-secret
+        run: npm run env:check
+
       # Uncomment to run Playwright e2e once e2e mocks or backend are available
       # E2E smoke tests with mocked API (guarded by E2E_API_MOCKS)
       - name: Install Playwright browsers
