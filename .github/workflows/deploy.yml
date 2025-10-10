@@ -97,6 +97,20 @@ jobs:
         env:
           KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG_B64 }}
 
+      - name: Install cert-manager (optional)
+        if: secrets.KUBE_CONFIG_B64 != '' && env.INSTALL_CERT_MANAGER == '1'
+        run: |
+          kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.15.1/cert-manager.yaml
+        env:
+          INSTALL_CERT_MANAGER: ${{ secrets.INSTALL_CERT_MANAGER }}
+
+      - name: Apply ClusterIssuer (optional)
+        if: secrets.KUBE_CONFIG_B64 != '' && env.CERT_MANAGER_EMAIL != ''
+        run: |
+          sed "s/__LETSENCRYPT_EMAIL__/${CERT_MANAGER_EMAIL}/g" k8s/cert-issuer.yaml | kubectl apply -f -
+        env:
+          CERT_MANAGER_EMAIL: ${{ secrets.CERT_MANAGER_EMAIL }}
+
       - name: Create GHCR imagePullSecret (optional)
         if: secrets.KUBE_CONFIG_B64 != '' && secrets.GHCR_TOKEN != ''
         run: |
@@ -113,6 +127,14 @@ jobs:
           kubectl apply -f k8s/namespace.yaml
           kubectl apply -f k8s/backend-deployment.yaml
           kubectl apply -f k8s/frontend-deployment.yaml
+          if [ -n "${INGRESS_HOST}" ] && [ -n "${TLS_SECRET}" ]; then \
+            sed -e "s/__INGRESS_HOST__/${INGRESS_HOST}/g" -e "s/__TLS_SECRET__/${TLS_SECRET}/g" k8s/ingress.yaml | kubectl apply -f - ; \
+          else \
+            echo "Skipping ingress apply (missing INGRESS_HOST/TLS_SECRET secrets)" ; \
+          fi
+        env:
+          INGRESS_HOST: ${{ secrets.INGRESS_HOST }}
+          TLS_SECRET: ${{ secrets.TLS_SECRET }}
 
       - name: Set images to current SHA (optional)
         if: secrets.KUBE_CONFIG_B64 != ''
