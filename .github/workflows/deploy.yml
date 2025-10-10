@@ -85,10 +85,49 @@ jobs:
             ghcr.io/${{ github.repository }}-backend:latest
             ghcr.io/${{ github.repository }}-backend:${{ github.sha }}
 
-      # Build + push image would go here (docker login + buildx + push)
-      # - name: Build and push image
-      #   run: |
-      #     echo "Implement container build/push per your registry"
+      - name: Setup kubectl (optional)
+        if: secrets.KUBE_CONFIG_B64 != ''
+        uses: azure/setup-kubectl@v4
+
+      - name: Configure kubeconfig (optional)
+        if: secrets.KUBE_CONFIG_B64 != ''
+        run: |
+          mkdir -p "$HOME/.kube"
+          echo "${KUBE_CONFIG_B64}" | base64 -d > "$HOME/.kube/config"
+        env:
+          KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG_B64 }}
+
+      - name: Create GHCR imagePullSecret (optional)
+        if: secrets.KUBE_CONFIG_B64 != '' && secrets.GHCR_TOKEN != ''
+        run: |
+          kubectl -n rayon create secret docker-registry ghcr \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.actor }} \
+            --docker-password=${{ secrets.GHCR_TOKEN }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+          kubectl -n rayon patch serviceaccount default --type merge -p '{"imagePullSecrets":[{"name":"ghcr"}]}' || true
+
+      - name: Apply Kubernetes manifests (optional)
+        if: secrets.KUBE_CONFIG_B64 != ''
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/backend-deployment.yaml
+          kubectl apply -f k8s/frontend-deployment.yaml
+
+      - name: Set images to current SHA (optional)
+        if: secrets.KUBE_CONFIG_B64 != ''
+        run: |
+          kubectl -n rayon set image deployment/backend backend=ghcr.io/${{ github.repository }}-backend:${{ github.sha }} --record=true || true
+          kubectl -n rayon set image deployment/frontend frontend=ghcr.io/${{ github.repository }}-frontend:${{ github.sha }} --record=true || true
+          kubectl -n rayon rollout status deployment/backend --timeout=180s || true
+          kubectl -n rayon rollout status deployment/frontend --timeout=180s || true
+          kubectl -n rayon get pods -o wide
+
+      - name: In-cluster health check (optional)
+        if: secrets.KUBE_CONFIG_B64 != '' && env.HEALTH_URL == ''
+        run: |
+          kubectl -n rayon run curl --image=curlimages/curl:8.8.0 -i --rm --restart=Never -- \
+            sh -lc 'curl -fsS http://backend:5000/api/health || exit 1' || true
 
       - name: Health check (optional)
         if: env.HEALTH_URL != ''
