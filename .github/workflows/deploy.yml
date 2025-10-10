@@ -2,13 +2,20 @@ name: Deploy
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-${{ github.ref }}
+      cancel-in-progress: true
     env:
       NODE_ENV: production
       # Required secrets must be configured in repo or environment
@@ -19,6 +26,7 @@ jobs:
       METRICS_TOKEN: ${{ secrets.METRICS_TOKEN }}
       ADMIN_SESSION_SECRET: ${{ secrets.ADMIN_SESSION_SECRET }}
       FAN_SESSION_SECRET: ${{ secrets.FAN_SESSION_SECRET }}
+      HEALTH_URL: ${{ secrets.HEALTH_URL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -97,4 +105,3 @@ jobs:
           done
           echo "Health check failed"
           exit 1
-      HEALTH_URL: ${{ secrets.HEALTH_URL }}
