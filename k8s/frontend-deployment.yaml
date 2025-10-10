@@ -21,7 +21,7 @@ spec:
             - containerPort: 3000
           env:
             - name: NEXT_PUBLIC_BACKEND_URL
-              value: http://backend.rayon.svc.cluster.local:5000/api
+              value: /api
             - name: NODE_ENV
               value: production
           livenessProbe:
