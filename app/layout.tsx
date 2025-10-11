@@ -5,6 +5,12 @@ import { Providers } from "./providers";
 export const metadata: Metadata = {
   title: "Rayon Sports - Fan App",
   description: "Official Rayon Sports fan experience.",
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/manifest.json",
+  themeColor: "#0033FF",
 };
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => (
