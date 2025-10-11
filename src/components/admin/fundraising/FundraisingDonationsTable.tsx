@@ -106,7 +106,7 @@ export const FundraisingDonationsTable = ({ initial }: FundraisingDonationsTable
     }
   };
 
-  const columns = useMemo<ColumnDef<AdminFundraisingDonation, unknown>>(
+  const columns = useMemo<ColumnDef<AdminFundraisingDonation, unknown>[]>(
     () => [
       {
         header: 'When',
