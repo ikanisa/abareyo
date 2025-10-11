@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 backups/
+.env.production
+
+# Supabase local temp files
+supabase/.temp/
+supabase/supabase/.temp/
 
 # Editor directories and files
 .vscode/*
