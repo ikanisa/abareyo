@@ -4,7 +4,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
   const auth = req.headers.authorization?.replace("Bearer ", "");
-  if (!auth || auth !== process.env.ONBOARDING_API_TOKEN) {
+  const validA = process.env.ONBOARDING_API_TOKEN;
+  const validB = process.env.NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN;
+  if (!auth || (auth !== validA && auth !== validB)) {
     return res.status(401).json({ error: "unauthorized" });
   }
 
