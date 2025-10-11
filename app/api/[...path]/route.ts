@@ -367,13 +367,15 @@ async function onboardingGateway(req: NextRequest, ctx: MockContext) {
   const segments = ctx.params.path ?? [];
   const method = req.method.toUpperCase();
   const bearer = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+  const validA = process.env.ONBOARDING_API_TOKEN || '';
+  const validB = process.env.NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN || '';
 
   // /api/onboarding/sessions
   if (segments[1] === 'sessions' && segments.length === 2) {
     if (method !== 'POST') {
       return NextResponse.json({ error: 'method_not_allowed' }, { status: 405 });
     }
-    if (!bearer || bearer !== (process.env.ONBOARDING_API_TOKEN || '')) {
+    if (!bearer || (bearer !== validA && bearer !== validB)) {
       return NextResponse.json({ error: 'unauthorized', message: 'Missing or invalid token.' }, { status: 401 });
     }
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -400,7 +402,7 @@ async function onboardingGateway(req: NextRequest, ctx: MockContext) {
     if (method !== 'POST') {
       return NextResponse.json({ error: 'method_not_allowed' }, { status: 405 });
     }
-    if (!bearer || bearer !== (process.env.ONBOARDING_API_TOKEN || '')) {
+    if (!bearer || (bearer !== validA && bearer !== validB)) {
       return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
     }
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
