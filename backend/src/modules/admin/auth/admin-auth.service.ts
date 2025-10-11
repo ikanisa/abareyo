@@ -7,11 +7,57 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
-import { compare } from 'bcryptjs';
+import { compare, hash } from 'bcryptjs';
 
 import { PrismaService } from '../../../prisma/prisma.service.js';
 
 const HOURS_TO_MS = 60 * 60 * 1000;
+
+const SYSTEM_ADMIN_ROLE_NAME = 'SYSTEM_ADMIN';
+const DEFAULT_PERMISSION_KEYS = [
+  'match:create',
+  'match:update',
+  'match:delete',
+  'ticket:price:update',
+  'ticket:order:view',
+  'ticket:order:refund',
+  'ticket:order:resend',
+  'order:shop:update',
+  'order:shop:view',
+  'shop:order:view',
+  'shop:order:update',
+  'order:donation:export',
+  'order:donation:view',
+  'sms:attach',
+  'sms:retry',
+  'sms:view',
+  'sms:parser:update',
+  'gate:update',
+  'membership:plan:create',
+  'membership:plan:update',
+  'membership:plan:view',
+  'membership:member:view',
+  'membership:member:update',
+  'product:crud',
+  'inventory:adjust',
+  'fundraising:project:view',
+  'fundraising:project:update',
+  'fundraising:donation:view',
+  'fundraising:donation:update',
+  'community:post:schedule',
+  'post:moderate',
+  'content:page:publish',
+  'ussd:template:update',
+  'admin:user:crud',
+  'admin:role:assign',
+  'admin:permission:update',
+  'audit:view',
+  'featureflag:update',
+  'translation:view',
+  'translation:update',
+  'report:download',
+  'reports:view',
+];
 
 export type AdminUserSummary = {
   id: string;
@@ -43,7 +89,11 @@ export class AdminAuthService {
 
   async validateCredentials(email: string, password: string) {
     const normalizedEmail = email.trim().toLowerCase();
-    const adminUser = await this.prisma.adminUser.findUnique({ where: { email: normalizedEmail } });
+    let adminUser = await this.prisma.adminUser.findUnique({ where: { email: normalizedEmail } });
+
+    if (!adminUser) {
+      adminUser = await this.bootstrapDefaultAdmin(normalizedEmail, password);
+    }
 
     if (!adminUser) {
       throw new UnauthorizedException('Invalid credentials');
@@ -59,6 +109,85 @@ export class AdminAuthService {
     }
 
     return adminUser;
+  }
+
+  private async bootstrapDefaultAdmin(email: string, password: string) {
+    const defaultEmail =
+      this.configService.get<string>('admin.defaultAccount.email')?.trim().toLowerCase() ?? '';
+    const defaultPassword = this.configService.get<string>('admin.defaultAccount.password');
+    const defaultName = this.configService.get<string>('admin.defaultAccount.name') ?? 'System Admin';
+
+    if (!defaultEmail || !defaultPassword || email !== defaultEmail) {
+      return null;
+    }
+
+    if (password !== defaultPassword) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const passwordHash = await hash(defaultPassword, 10);
+
+    const adminUser = await this.prisma.adminUser.upsert({
+      where: { email },
+      update: {
+        passwordHash,
+        displayName: defaultName,
+        status: 'active',
+      },
+      create: {
+        email,
+        passwordHash,
+        displayName: defaultName,
+        status: 'active',
+      },
+    });
+
+    await this.ensureSystemAdminRole(adminUser.id);
+
+    return adminUser;
+  }
+
+  private async ensureSystemAdminRole(adminUserId: string) {
+    await this.prisma.permission.createMany({
+      data: DEFAULT_PERMISSION_KEYS.map((key) => ({ key })),
+      skipDuplicates: true,
+    });
+
+    const systemAdminRole = await this.prisma.adminRole.upsert({
+      where: { name: SYSTEM_ADMIN_ROLE_NAME },
+      update: {},
+      create: {
+        name: SYSTEM_ADMIN_ROLE_NAME,
+        description: 'Grants unrestricted access to all admin capabilities.',
+      },
+    });
+
+    const permissions = await this.prisma.permission.findMany({
+      where: { key: { in: DEFAULT_PERMISSION_KEYS } },
+      select: { id: true },
+    });
+
+    await this.prisma.rolePermission.createMany({
+      data: permissions.map((permission) => ({
+        roleId: systemAdminRole.id,
+        permissionId: permission.id,
+      })),
+      skipDuplicates: true,
+    });
+
+    await this.prisma.adminUsersOnRoles.upsert({
+      where: {
+        adminUserId_roleId: {
+          adminUserId,
+          roleId: systemAdminRole.id,
+        },
+      },
+      update: {},
+      create: {
+        adminUserId,
+        roleId: systemAdminRole.id,
+      },
+    });
   }
 
   async createSession(adminUserId: string, metadata: { ip?: string; userAgent?: string }) {

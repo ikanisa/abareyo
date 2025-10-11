@@ -43,6 +43,11 @@ export default () => ({
       ttlHours: Number(process.env.ADMIN_SESSION_TTL_HOURS ?? 24),
       cookieDomain: process.env.ADMIN_SESSION_COOKIE_DOMAIN ?? undefined,
     },
+    defaultAccount: {
+      email: process.env.ADMIN_DEFAULT_EMAIL,
+      password: process.env.ADMIN_DEFAULT_PASSWORD,
+      name: process.env.ADMIN_DEFAULT_NAME ?? 'System Admin',
+    },
   },
   fan: {
     session: {
