@@ -71,6 +71,8 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
+          build-args: |
+            NEXT_PUBLIC_BACKEND_URL=/api
           tags: |
             ghcr.io/${{ github.repository }}-frontend:latest
             ghcr.io/${{ github.repository }}-frontend:${{ github.sha }}
