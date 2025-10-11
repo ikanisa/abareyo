@@ -380,7 +380,10 @@ async function onboardingGateway(req: NextRequest, ctx: MockContext) {
     }
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
     const AGENT_ID = process.env.AGENT_ID || 'abareyo-onboarding';
-    const ALLOW_MOCK = (process.env.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK === '1' || process.env.ONBOARDING_ALLOW_MOCK === '1' || !(OPENAI_API_KEY || '').startsWith('sk-'));
+    const ALLOW_MOCK = (
+      process.env.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK === '1' ||
+      process.env.ONBOARDING_ALLOW_MOCK === '1'
+    );
     if (!OPENAI_API_KEY || !AGENT_ID) {
       if (ALLOW_MOCK) {
         const session = { sessionId: randomUUID(), agentId: AGENT_ID, createdAt: new Date().toISOString(), mock: true } as const;
@@ -407,7 +410,10 @@ async function onboardingGateway(req: NextRequest, ctx: MockContext) {
     }
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
     const AGENT_ID = process.env.AGENT_ID || 'abareyo-onboarding';
-    const ALLOW_MOCK = (process.env.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK === '1' || process.env.ONBOARDING_ALLOW_MOCK === '1' || !(OPENAI_API_KEY || '').startsWith('sk-'));
+    const ALLOW_MOCK = (
+      process.env.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK === '1' ||
+      process.env.ONBOARDING_ALLOW_MOCK === '1'
+    );
     if (ALLOW_MOCK) {
       const res = NextResponse.json({ ok: true, reply: "(mock) Hello! Let’s get your fan profile set up." }, { status: 200 });
       res.headers.set('x-onboarding-mock', '1');

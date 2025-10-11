@@ -13,7 +13,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { sessionId, text } = req.body || {};
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   const AGENT_ID = process.env.AGENT_ID || 'abareyo-onboarding';
-  const ALLOW_MOCK = (process.env.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK === '1' || process.env.ONBOARDING_ALLOW_MOCK === '1' || !(OPENAI_API_KEY || '').startsWith('sk-'));
+  const ALLOW_MOCK = (
+    process.env.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK === '1' ||
+    process.env.ONBOARDING_ALLOW_MOCK === '1'
+  );
 
   if (ALLOW_MOCK) {
     res.setHeader('x-onboarding-mock', '1');
