@@ -32,6 +32,10 @@ ADMIN_SESSION_SECRET=change-me-admin-session
 ADMIN_SESSION_TTL_HOURS=24
 # optional
 ADMIN_SESSION_COOKIE_DOMAIN=
+# optional: bootstrap admin credentials without pre-computing a hash
+ADMIN_DEFAULT_EMAIL=info@ikanisa.com
+ADMIN_DEFAULT_PASSWORD=MoMo!!0099
+ADMIN_DEFAULT_NAME=Ikanisa Admin
 # seed a bootstrap admin (password hash must be bcrypt)
 ADMIN_SEED_EMAIL=admin@example.com
 ADMIN_SEED_PASSWORD_HASH=
