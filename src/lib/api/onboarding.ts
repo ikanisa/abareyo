@@ -15,6 +15,7 @@ async function apiJson<T>(path: string, init?: RequestInit) {
     ...init,
     headers: {
       'content-type': 'application/json',
+      'authorization': `Bearer ${process.env.NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN ?? ''}`,
       ...(init?.headers ?? {}),
     },
     cache: 'no-store',

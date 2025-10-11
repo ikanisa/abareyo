@@ -363,8 +363,84 @@ async function mockResponse(req: NextRequest, ctx: MockContext) {
   }
 }
 
+async function onboardingGateway(req: NextRequest, ctx: MockContext) {
+  const segments = ctx.params.path ?? [];
+  const method = req.method.toUpperCase();
+  const bearer = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+
+  // /api/onboarding/sessions
+  if (segments[1] === 'sessions' && segments.length === 2) {
+    if (method !== 'POST') {
+      return NextResponse.json({ error: 'method_not_allowed' }, { status: 405 });
+    }
+    if (!bearer || bearer !== (process.env.ONBOARDING_API_TOKEN || '')) {
+      return NextResponse.json({ error: 'unauthorized', message: 'Missing or invalid token.' }, { status: 401 });
+    }
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+    const AGENT_ID = process.env.AGENT_ID;
+    if (!OPENAI_API_KEY || !AGENT_ID) {
+      return NextResponse.json({
+        error: 'service_unavailable',
+        message: 'Onboarding service is not ready. Missing OPENAI_API_KEY or AGENT_ID in production.'
+      }, { status: 503 });
+    }
+    const session = { sessionId: randomUUID(), agentId: AGENT_ID, createdAt: new Date().toISOString() };
+    return NextResponse.json({ ok: true, session });
+  }
+
+  // /api/onboarding/message
+  if (segments[1] === 'message' && segments.length === 2) {
+    if (method !== 'POST') {
+      return NextResponse.json({ error: 'method_not_allowed' }, { status: 405 });
+    }
+    if (!bearer || bearer !== (process.env.ONBOARDING_API_TOKEN || '')) {
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    }
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+    const AGENT_ID = process.env.AGENT_ID;
+    if (!OPENAI_API_KEY || !AGENT_ID) {
+      return NextResponse.json({ error: 'service_unavailable', message: 'Agent not configured' }, { status: 503 });
+    }
+    const body = await req.json().catch(() => ({}) as any);
+    const { sessionId, text } = body || {};
+    if (!sessionId || !text) {
+      return NextResponse.json({ error: 'bad_request', message: 'sessionId and text are required' }, { status: 400 });
+    }
+    try {
+      const resp = await fetch('https://api.openai.com/v1/responses', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          input: `Agent:${AGENT_ID}\nUser:${text}\nReturn a short onboarding reply.`,
+          metadata: { app: 'abareyo', sessionId },
+        }),
+      });
+      if (!resp.ok) {
+        const detail = await resp.text();
+        return NextResponse.json({ error: 'upstream_error', detail }, { status: 502 });
+      }
+      const data = await resp.json();
+      const reply = data?.output?.[0]?.content?.[0]?.text ?? "Muraho! Let's get started.";
+      return NextResponse.json({ ok: true, reply });
+    } catch (e: any) {
+      return NextResponse.json({ error: 'internal_error', message: e?.message ?? 'Unknown error' }, { status: 500 });
+    }
+  }
+
+  return null;
+}
+
 async function proxy(req: NextRequest, ctx: MockContext) {
   if (!BACKEND_BASE) {
+    // Special-case onboarding endpoints with explicit statuses and bearer token
+    if ((ctx.params.path?.[0] || '') === 'onboarding') {
+      const gw = await onboardingGateway(req, ctx);
+      if (gw) return gw;
+    }
     return mockResponse(req, ctx);
   }
 
