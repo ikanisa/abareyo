@@ -17,10 +17,7 @@ export class AdminShopService {
     if (params.status) where.status = params.status;
     if (params.search) {
       const term = params.search.trim();
-      where.OR = [
-        { id: { contains: term, mode: 'insensitive' } },
-        { user: { email: { contains: term, mode: 'insensitive' } } },
-      ];
+      where.OR = [{ id: { contains: term, mode: 'insensitive' } }];
     }
 
     const [total, orders] = await this.prisma.$transaction([
@@ -31,7 +28,7 @@ export class AdminShopService {
         skip: (page - 1) * pageSize,
         take: pageSize,
         include: {
-          user: { select: { id: true, email: true, phoneMask: true } },
+          user: { select: { id: true, phoneMask: true } },
           items: { include: { product: true } },
           payments: true,
         },
@@ -113,4 +110,3 @@ export class AdminShopService {
     };
   }
 }
-

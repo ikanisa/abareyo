@@ -35,9 +35,9 @@ export class AdminFundraisingController {
       action: body.id ? 'fundraising.project.update' : 'fundraising.project.create',
       entityType: 'fund_project',
       entityId: data.id,
-      after: data,
+      after: JSON.parse(JSON.stringify(data)) as any,
       ip: req.ip,
-      userAgent: req.headers['user-agent'] as string | undefined,
+      userAgent: (req as any).headers?.['user-agent'] as string | undefined,
     });
     return { data };
   }
@@ -74,9 +74,9 @@ export class AdminFundraisingController {
       action: 'fundraising.donation.update-status',
       entityType: 'fund_donation',
       entityId: donationId,
-      after: data,
+      after: JSON.parse(JSON.stringify(data)) as any,
       ip: req.ip,
-      userAgent: req.headers['user-agent'] as string | undefined,
+      userAgent: (req as any).headers?.['user-agent'] as string | undefined,
     });
     return { status: 'ok', data };
   }
@@ -113,7 +113,7 @@ export class AdminFundraisingController {
         [
           d.id,
           d.project?.title ?? '',
-          d.user?.email ?? d.user?.phoneMask ?? '',
+          d.user?.phoneMask ?? '',
           String(d.amount),
           d.status,
           new Date(d.createdAt).toISOString(),
@@ -123,4 +123,3 @@ export class AdminFundraisingController {
     return lines.join('\n');
   }
 }
-

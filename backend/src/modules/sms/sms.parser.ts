@@ -42,18 +42,7 @@ export class SmsParserService {
 
     try {
       const prompt = await this.resolvePrompt(options);
-      const input = prompt
-        ? [
-            {
-              role: 'system',
-              content: prompt,
-            },
-            {
-              role: 'user',
-              content: sms.text,
-            },
-          ]
-        : sms.text;
+      const input = prompt ? `SYSTEM:\n${prompt}\n\nUSER:\n${sms.text}` : sms.text;
 
       const response = await this.client.responses.parse({
         model: this.model,

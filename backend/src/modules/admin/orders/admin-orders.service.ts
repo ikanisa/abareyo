@@ -5,7 +5,7 @@ import { PrismaService } from '../../../prisma/prisma.service.js';
 
 export type TicketOrderDetail = Prisma.TicketOrderGetPayload<{
   include: {
-    user: { select: { id: true; email: true; phoneMask: true } };
+    user: { select: { id: true; phoneMask: true } };
     match: { select: { id: true; opponent: true; kickoff: true; venue: true; status: true } };
     items: true;
     payments: true;
@@ -33,8 +33,7 @@ export class AdminOrdersService {
       const term = params.search.trim();
       where.OR = [
         { id: { contains: term, mode: 'insensitive' } },
-        { user: { email: { contains: term, mode: 'insensitive' } } },
-        { user: { phoneMask: { contains: term, mode: 'insensitive' } } },
+        { user: { is: { phoneMask: { contains: term, mode: 'insensitive' } } } },
         { ussdCode: { contains: term, mode: 'insensitive' } },
       ];
     }
@@ -47,7 +46,7 @@ export class AdminOrdersService {
         skip: (page - 1) * pageSize,
         take: pageSize,
         include: {
-          user: { select: { id: true, email: true, phoneMask: true } },
+          user: { select: { id: true, phoneMask: true } },
           match: { select: { id: true, opponent: true, kickoff: true, venue: true } },
           payments: true,
         },
@@ -68,7 +67,7 @@ export class AdminOrdersService {
     const order = await this.prisma.ticketOrder.findUnique({
       where: { id: orderId },
       include: {
-        user: { select: { id: true, email: true, phoneMask: true } },
+        user: { select: { id: true, phoneMask: true } },
         match: { select: { id: true, opponent: true, kickoff: true, venue: true, status: true } },
         items: true,
         payments: true,
@@ -104,19 +103,26 @@ export class AdminOrdersService {
         payments: {
           updateMany: {
             where: {},
-            data: {
-              status: 'manual_review',
-              metadata: {
-                ...(order.payments[0]?.metadata ?? {}),
-                adminRefundedBy: adminUserId,
-                adminRefundedAt: new Date().toISOString(),
-              },
-            },
+            data: (() => {
+              const meta = order.payments[0]?.metadata;
+              const baseMeta =
+                typeof meta === 'object' && meta !== null && !Array.isArray(meta)
+                  ? (meta as Record<string, unknown>)
+                  : {};
+              return {
+                status: 'manual_review',
+                metadata: {
+                  ...baseMeta,
+                  adminRefundedBy: adminUserId,
+                  adminRefundedAt: new Date().toISOString(),
+                } as unknown as import('@prisma/client').Prisma.InputJsonValue,
+              };
+            })(),
           },
         },
       },
       include: {
-        user: { select: { id: true, email: true, phoneMask: true } },
+        user: { select: { id: true, phoneMask: true } },
         match: { select: { id: true, opponent: true, kickoff: true, venue: true, status: true } },
         items: true,
         payments: true,
@@ -138,10 +144,7 @@ export class AdminOrdersService {
 
     if (params.search) {
       const term = params.search.trim();
-      where.OR = [
-        { id: { contains: term, mode: 'insensitive' } },
-        { user: { email: { contains: term, mode: 'insensitive' } } },
-      ];
+      where.OR = [{ id: { contains: term, mode: 'insensitive' } }];
     }
 
     const [total, orders] = await this.prisma.$transaction([
@@ -152,7 +155,7 @@ export class AdminOrdersService {
         skip: (page - 1) * pageSize,
         take: pageSize,
         include: {
-          user: { select: { id: true, email: true } },
+          user: { select: { id: true } },
           items: { include: { product: true } },
           payments: true,
         },
