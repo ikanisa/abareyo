@@ -41,7 +41,8 @@ jobs:
         working-directory: backend
         run: npm ci
 
-      - name: Validate required env
+      - name: Validate required env (if DB configured)
+        if: env.DATABASE_URL != ''
         working-directory: backend
         run: npm run env:check
 
@@ -50,10 +51,12 @@ jobs:
         run: npx prisma generate
 
       - name: Run DB migrations (deploy)
+        if: env.DATABASE_URL != ''
         working-directory: backend
         run: npm run prisma:migrate
 
       - name: Prisma migrate status (post-deploy)
+        if: env.DATABASE_URL != ''
         working-directory: backend
         run: |
           npx prisma -v
