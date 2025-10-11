@@ -103,7 +103,7 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
     }
   };
 
-  const columns = useMemo<ColumnDef<AdminMembershipRecord, unknown>[]>(
+  const columns = useMemo<ColumnDef<AdminMembershipRecord, unknown>>(
     () => [
       {
         header: 'User',
@@ -161,7 +161,7 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
         ),
       },
     ],
-    [],
+    [updateStatus],
   );
 
   return (
@@ -193,4 +193,3 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
     </div>
   );
 };
-

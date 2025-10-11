@@ -8,7 +8,7 @@ const notFound = () => new NextResponse('Not found', { status: 404 });
 
 // Very small in-memory store for e2e
 let sessionId: string | null = null;
-let featureFlags: Array<{ key: string; enabled: boolean; description: string | null; updatedAt: string }> = [
+const featureFlags: Array<{ key: string; enabled: boolean; description: string | null; updatedAt: string }> = [
   { key: 'ui.new_shop_flow', enabled: false, description: 'New shop UI', updatedAt: new Date().toISOString() },
   { key: 'community.predictions', enabled: true, description: 'Enable predictions', updatedAt: new Date().toISOString() },
 ];
@@ -171,6 +171,13 @@ export async function GET(request: NextRequest, { params }: { params: { path?: s
     });
   }
 
+  // Feature flags
+  if (path === '/admin/feature-flags') {
+    const guard = requireAuth();
+    if (guard) return guard;
+    return ok({ data: featureFlags });
+  }
+
   // Translations (used by existing page)
   if (path === '/admin/translations/languages') {
     const guard = requireAuth();
@@ -219,8 +226,13 @@ export async function POST(request: NextRequest, { params }: { params: { path?: 
   ) {
     if (path === '/admin/feature-flags') {
       try {
-        const body = await request.json().catch(() => ({} as any));
-        const { key, enabled, description } = body as { key: string; enabled?: boolean; description?: string };
+        let body: unknown;
+        try {
+          body = await request.json();
+        } catch (_e) {
+          body = {};
+        }
+        const { key, enabled, description } = (body ?? {}) as { key?: string; enabled?: boolean; description?: string };
         if (typeof key === 'string' && key.length) {
           const idx = featureFlags.findIndex((f) => f.key === key);
           const flag = {
@@ -233,7 +245,9 @@ export async function POST(request: NextRequest, { params }: { params: { path?: 
           else featureFlags.push(flag);
           return ok({ status: 'ok', data: flag });
         }
-      } catch {}
+      } catch (_err) {
+        // ignore malformed input
+      }
       return ok({ status: 'ok' });
     }
     return ok({ status: 'ok' });
@@ -241,9 +255,3 @@ export async function POST(request: NextRequest, { params }: { params: { path?: 
 
   return notFound();
 }
-  // Feature flags
-  if (path === '/admin/feature-flags') {
-    const guard = requireAuth();
-    if (guard) return guard;
-    return ok({ data: featureFlags });
-  }

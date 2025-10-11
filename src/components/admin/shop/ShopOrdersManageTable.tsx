@@ -134,7 +134,7 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
     }
   };
 
-  const columns = useMemo<ColumnDef<AdminShopOrder, unknown>[]>(
+  const columns = useMemo<ColumnDef<AdminShopOrder, unknown>>(
     () => [
       {
         header: 'Order',
@@ -217,7 +217,7 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
         ),
       },
     ],
-    [noteDrafts, trackingDrafts],
+    [noteDrafts, trackingDrafts, applyStatus, saveNote, saveTracking],
   );
 
   return (
@@ -249,4 +249,3 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
     </div>
   );
 };
-
