@@ -5,40 +5,6 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, 
 const LOCALSTORAGE_KEY = "rayon-locale";
 
 const dictionaries = {
-  rw: {
-    nav: {
-      home: "Ahabanza",
-      matches: "Imikino",
-      tickets: "Amatike",
-      shop: "Iduka",
-      community: "Abafana",
-      more: "Ibindi",
-      wallet: "Umufuka",
-      membership: "Ubunyamuryango",
-      fundraising: "Inkunga",
-      events: "Ibikorwa",
-      transfer: "Ohereza itike",
-      profile: "Umwirondoro",
-      settings: "Igenamiterere",
-      language: "Ururimi",
-      support: "Ifashanyo",
-      moderation: "Kugenzura",
-      realtime: "Igihe nyacyo",
-      missions: "Imyitozo y'abafana",
-      ticketAnalytics: "Isesengura ry'amatike",
-    },
-    actions: {
-      changeLanguage: "Hindura ururimi",
-      toggleTheme: "Hindura urumuri",
-    },
-    copy: {
-      moreSubtitle: "Konti n'igenamiterere",
-    },
-    theme: {
-      light: "Rumuri",
-      dark: "Umukara",
-    },
-  },
   en: {
     nav: {
       home: "Home",
@@ -73,6 +39,74 @@ const dictionaries = {
       dark: "Dark",
     },
   },
+  fr: {
+    nav: {
+      home: "Accueil",
+      matches: "Matchs",
+      tickets: "Billets",
+      shop: "Boutique",
+      community: "Communauté",
+      more: "Plus",
+      wallet: "Portefeuille",
+      membership: "Adhésion",
+      fundraising: "Collecte",
+      events: "Événements",
+      transfer: "Transférer le billet",
+      profile: "Profil",
+      settings: "Paramètres",
+      language: "Langue",
+      support: "Aide & Support",
+      moderation: "Modération Admin",
+      realtime: "Suivi en direct",
+      missions: "Missions des fans",
+      ticketAnalytics: "Statistiques billets",
+    },
+    actions: {
+      changeLanguage: "Changer de langue",
+      toggleTheme: "Changer de thème",
+    },
+    copy: {
+      moreSubtitle: "Compte & paramètres",
+    },
+    theme: {
+      light: "Clair",
+      dark: "Sombre",
+    },
+  },
+  rw: {
+    nav: {
+      home: "Ahabanza",
+      matches: "Imikino",
+      tickets: "Amatike",
+      shop: "Iduka",
+      community: "Abafana",
+      more: "Ibindi",
+      wallet: "Umufuka",
+      membership: "Ubunyamuryango",
+      fundraising: "Inkunga",
+      events: "Ibikorwa",
+      transfer: "Ohereza itike",
+      profile: "Umwirondoro",
+      settings: "Igenamiterere",
+      language: "Ururimi",
+      support: "Ifashanyo",
+      moderation: "Kugenzura",
+      realtime: "Igihe nyacyo",
+      missions: "Imyitozo y'abafana",
+      ticketAnalytics: "Isesengura ry'amatike",
+    },
+    actions: {
+      changeLanguage: "Hindura ururimi",
+      toggleTheme: "Hindura urumuri",
+    },
+    copy: {
+      moreSubtitle: "Konti n'igenamiterere",
+    },
+    theme: {
+      light: "Rumuri",
+      dark: "Umukara",
+    },
+  },
 } as const;
 
 type Locale = keyof typeof dictionaries;
@@ -86,12 +120,21 @@ type I18nContextValue = {
 const I18nContext = createContext<I18nContextValue | undefined>(undefined);
 
 export const I18nProvider = ({ children }: { children: ReactNode }) => {
-  const [locale, setLocaleState] = useState<Locale>('rw');
+  const [locale, setLocaleState] = useState<Locale>('en');
 
   useEffect(() => {
     const stored = localStorage.getItem(LOCALSTORAGE_KEY) as Locale | null;
     if (stored && stored in dictionaries) {
       setLocaleState(stored);
+      return;
+    }
+    // Fallback to URL prefix if present
+    if (typeof window !== 'undefined') {
+      const m = window.location.pathname.match(/^\/(en|fr|rw)(?=\/|$)/);
+      if (m) {
+        setLocaleState(m[1] as Locale);
+        localStorage.setItem(LOCALSTORAGE_KEY, m[1]);
+      }
     }
   }, []);
 
