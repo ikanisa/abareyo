@@ -19,7 +19,7 @@ export const LanguageSwitcher = () => {
 
   const computePath = (to: Locale) => {
     // Remove any existing locale prefix
-    const bare = pathname.replace(/^\/(en|fr|rw)(?=\/|$)/, "") || "/";
+    const bare = (pathname || '/').replace(/^\/(en|fr|rw)(?=\/|$)/, "") || "/";
     if (to === "en") return bare; // default locale without prefix
     return bare === "/" ? `/${to}` : `/${to}${bare}`;
   };
