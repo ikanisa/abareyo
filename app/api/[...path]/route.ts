@@ -377,8 +377,15 @@ async function onboardingGateway(req: NextRequest, ctx: MockContext) {
       return NextResponse.json({ error: 'unauthorized', message: 'Missing or invalid token.' }, { status: 401 });
     }
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-    const AGENT_ID = process.env.AGENT_ID;
+    const AGENT_ID = process.env.AGENT_ID || 'abareyo-onboarding';
+    const ALLOW_MOCK = (process.env.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK === '1' || process.env.ONBOARDING_ALLOW_MOCK === '1' || !(OPENAI_API_KEY || '').startsWith('sk-'));
     if (!OPENAI_API_KEY || !AGENT_ID) {
+      if (ALLOW_MOCK) {
+        const session = { sessionId: randomUUID(), agentId: AGENT_ID, createdAt: new Date().toISOString(), mock: true } as const;
+        const res = NextResponse.json({ ok: true, session }, { status: 200 });
+        res.headers.set('x-onboarding-mock', '1');
+        return res;
+      }
       return NextResponse.json({
         error: 'service_unavailable',
         message: 'Onboarding service is not ready. Missing OPENAI_API_KEY or AGENT_ID in production.'
@@ -397,8 +404,14 @@ async function onboardingGateway(req: NextRequest, ctx: MockContext) {
       return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
     }
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-    const AGENT_ID = process.env.AGENT_ID;
+    const AGENT_ID = process.env.AGENT_ID || 'abareyo-onboarding';
+    const ALLOW_MOCK = (process.env.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK === '1' || process.env.ONBOARDING_ALLOW_MOCK === '1' || !(OPENAI_API_KEY || '').startsWith('sk-'));
     if (!OPENAI_API_KEY || !AGENT_ID) {
+      if (ALLOW_MOCK) {
+        const res = NextResponse.json({ ok: true, reply: "(mock) Hello! Let’s get your fan profile set up." }, { status: 200 });
+        res.headers.set('x-onboarding-mock', '1');
+        return res;
+      }
       return NextResponse.json({ error: 'service_unavailable', message: 'Agent not configured' }, { status: 503 });
     }
     const body = await req.json().catch(() => ({}) as any);
