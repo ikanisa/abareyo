@@ -6,10 +6,15 @@ export const metadata: Metadata = {
   title: "Rayon Sports - Fan App",
   description: "Official Rayon Sports fan experience.",
   icons: {
-    icon: "/icon-192.png",
+    icon: [
+      { url: "/icon-192x192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icon-512x512.png", type: "image/png", sizes: "512x512" },
+      "/favicon.ico",
+    ],
     apple: "/apple-touch-icon.png",
   },
   manifest: "/manifest.json",
+  other: { "theme-color": "#0033FF" },
 };
 
 export const viewport: Viewport = {
