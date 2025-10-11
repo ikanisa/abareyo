@@ -106,7 +106,7 @@ export const FundraisingDonationsTable = ({ initial }: FundraisingDonationsTable
     }
   };
 
-  const columns = useMemo<ColumnDef<AdminFundraisingDonation, unknown>[]>(
+  const columns = useMemo<ColumnDef<AdminFundraisingDonation, unknown>>(
     () => [
       {
         header: 'When',
@@ -164,7 +164,7 @@ export const FundraisingDonationsTable = ({ initial }: FundraisingDonationsTable
         ),
       },
     ],
-    [noteDrafts],
+    [noteDrafts, updateStatus],
   );
 
   return (
@@ -196,4 +196,3 @@ export const FundraisingDonationsTable = ({ initial }: FundraisingDonationsTable
     </div>
   );
 };
-
