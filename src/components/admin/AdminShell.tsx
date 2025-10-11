@@ -71,7 +71,7 @@ export const AdminShell = ({ user, environment = 'dev', children }: AdminShellPr
   }, [isLoggingOut, router]);
 
   useEffect(() => {
-    const denied = searchParams.get('denied');
+    const denied = searchParams?.get('denied');
     if (!denied) {
       return;
     }
@@ -91,10 +91,11 @@ export const AdminShell = ({ user, environment = 'dev', children }: AdminShellPr
       variant: 'destructive',
     });
 
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams?.toString() || '');
     params.delete('denied');
     const next = params.toString();
-    router.replace(next ? `${pathname}?${next}` : pathname);
+    const current = pathname || '/admin';
+    router.replace(next ? `${current}?${next}` : current);
   }, [pathname, router, searchParams, toast]);
 
   return (

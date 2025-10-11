@@ -3,14 +3,14 @@ import { redirect } from 'next/navigation';
 
 import { fetchFanSessionServer } from '@/lib/server/fan-session';
 
-const OnboardingView = dynamic(() => import('@/views/OnboardingView'), { ssr: false });
+const Switcher = dynamic(() => import('./Switcher'), { ssr: false });
 
 const OnboardingPage = async () => {
   const session = await fetchFanSessionServer();
   if (session?.onboardingStatus === 'completed') {
     redirect('/');
   }
-  return <OnboardingView />;
+  return <Switcher />;
 };
 
 export default OnboardingPage;

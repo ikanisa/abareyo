@@ -41,7 +41,7 @@ const AdminLoginForm = () => {
         return;
       }
 
-      const nextTarget = searchParams.get('next') ?? '/admin';
+      const nextTarget = searchParams?.get('next') ?? '/admin';
       router.replace(nextTarget);
       router.refresh();
     } catch (err) {
