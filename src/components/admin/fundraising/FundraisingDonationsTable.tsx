@@ -94,17 +94,23 @@ export const FundraisingDonationsTable = ({ initial }: FundraisingDonationsTable
     setMeta(initial.meta);
   }, [initial]);
 
-  const updateStatus = async (row: AdminFundraisingDonation, value: string) => {
-    try {
-      const note = noteDrafts[row.id]?.trim();
-      const updated = await updateAdminFundraisingDonationStatus(row.id, { status: value, note: note || undefined });
-      setData((prev) => prev.map((d) => (d.id === row.id ? { ...d, status: updated.status } : d)));
-      toast({ title: 'Donation updated' });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Update failed';
-      toast({ title: 'Failed to update donation', description: msg, variant: 'destructive' });
-    }
-  };
+  const updateStatus = useCallback(
+    async (row: AdminFundraisingDonation, value: string) => {
+      try {
+        const note = noteDrafts[row.id]?.trim();
+        const updated = await updateAdminFundraisingDonationStatus(row.id, {
+          status: value,
+          note: note || undefined,
+        });
+        setData((prev) => prev.map((d) => (d.id === row.id ? { ...d, status: updated.status } : d)));
+        toast({ title: 'Donation updated' });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Update failed';
+        toast({ title: 'Failed to update donation', description: msg, variant: 'destructive' });
+      }
+    },
+    [noteDrafts, toast],
+  );
 
   const columns = useMemo<ColumnDef<AdminFundraisingDonation, unknown>[]>(
     () => [
