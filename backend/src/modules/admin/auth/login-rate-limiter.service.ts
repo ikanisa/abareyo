@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto';
 
-import { Injectable, Logger, OnModuleDestroy, TooManyRequestsException } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
+import type { Redis as RedisClient } from 'ioredis';
 
 const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 5 * 60 * 1000; // 5 minutes
@@ -17,13 +18,13 @@ type AttemptState = {
 export class LoginRateLimiterService implements OnModuleDestroy {
   private readonly logger = new Logger(LoginRateLimiterService.name);
   private readonly fallbackAttempts = new Map<string, AttemptState>();
-  private readonly redis: Redis | null;
+  private readonly redis: RedisClient | null;
   private redisEnabled: boolean;
 
   constructor(private readonly configService: ConfigService) {
     const redisUrl = this.configService.get<string>('redis.url');
     if (redisUrl) {
-      this.redis = new Redis(redisUrl, {
+      this.redis = new (Redis as unknown as { new (...args: any[]): RedisClient })(redisUrl, {
         lazyConnect: true,
         maxRetriesPerRequest: 1,
         enableOfflineQueue: false,
@@ -44,7 +45,7 @@ export class LoginRateLimiterService implements OnModuleDestroy {
   async registerAttempt(key: string) {
     const count = await this.incrementAttempts(key);
     if (count > MAX_ATTEMPTS) {
-      throw new TooManyRequestsException('Too many login attempts. Please try again soon.');
+      throw new HttpException('Too many login attempts. Please try again soon.', HttpStatus.TOO_MANY_REQUESTS);
     }
   }
 

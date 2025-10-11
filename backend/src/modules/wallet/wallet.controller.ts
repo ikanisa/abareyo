@@ -1,5 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ParseUUIDPipe } from '@nestjs/common/pipes/parse-uuid.pipe';
+import { ParseUUIDPipe } from '@nestjs/common';
 
 import { WalletService } from './wallet.service.js';
 

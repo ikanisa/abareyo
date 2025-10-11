@@ -50,10 +50,7 @@ export class AdminMembershipService {
     }
     if (params.search) {
       const term = params.search.trim();
-      where.OR = [
-        { user: { email: { contains: term, mode: 'insensitive' } } },
-        { user: { phoneMask: { contains: term, mode: 'insensitive' } } },
-      ];
+      where.OR = [{ user: { is: { phoneMask: { contains: term, mode: 'insensitive' } } } }];
     }
 
     const [total, members] = await this.prisma.$transaction([
@@ -64,7 +61,7 @@ export class AdminMembershipService {
         skip: (page - 1) * pageSize,
         take: pageSize,
         include: {
-          user: { select: { id: true, email: true, phoneMask: true, locale: true } },
+          user: { select: { id: true, phoneMask: true, locale: true } },
           plan: true,
           payments: true,
         },
@@ -92,4 +89,3 @@ export class AdminMembershipService {
     return updated;
   }
 }
-

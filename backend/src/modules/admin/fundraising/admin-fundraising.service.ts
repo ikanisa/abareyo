@@ -56,8 +56,7 @@ export class AdminFundraisingService {
       const term = params.search.trim();
       where.OR = [
         { id: { contains: term, mode: 'insensitive' } },
-        { user: { email: { contains: term, mode: 'insensitive' } } },
-        { user: { phoneMask: { contains: term, mode: 'insensitive' } } },
+        { user: { is: { phoneMask: { contains: term, mode: 'insensitive' } } } },
       ];
     }
     const [total, donations] = await this.prisma.$transaction([
@@ -67,7 +66,7 @@ export class AdminFundraisingService {
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * pageSize,
         take: pageSize,
-        include: { user: { select: { id: true, email: true, phoneMask: true } }, project: { select: { id: true, title: true } }, payments: true },
+        include: { user: { select: { id: true, phoneMask: true } }, project: { select: { id: true, title: true } }, payments: true },
       }),
     ]);
     return { meta: { page, pageSize, total }, data: donations };
@@ -128,4 +127,3 @@ export class AdminFundraisingService {
     };
   }
 }
-

@@ -9,7 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { compare } from 'bcryptjs';
 
-import { PrismaService } from '../../prisma/prisma.service.js';
+import { PrismaService } from '../../../prisma/prisma.service.js';
 
 const HOURS_TO_MS = 60 * 60 * 1000;
 

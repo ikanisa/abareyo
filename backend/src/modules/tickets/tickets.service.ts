@@ -470,18 +470,19 @@ export class TicketsService {
     await Promise.all(
       order.payments
         .filter((payment) => payment.kind === 'ticket' && payment.status === 'pending')
-        .map((payment) =>
-          this.prisma.payment.update({
+        .map((payment) => {
+          const baseMeta =
+            typeof payment.metadata === 'object' && payment.metadata !== null && !Array.isArray(payment.metadata)
+              ? (payment.metadata as Record<string, unknown>)
+              : {};
+          return this.prisma.payment.update({
             where: { id: payment.id },
             data: {
               status: 'failed',
-              metadata: {
-                ...(payment.metadata ?? {}),
-                cancelledBy: 'user',
-              },
+              metadata: { ...baseMeta, cancelledBy: 'user' } as unknown as import('@prisma/client').Prisma.InputJsonValue,
             },
-          }),
-        ),
+          });
+        }),
     );
 
     const updated = await this.prisma.ticketOrder.update({

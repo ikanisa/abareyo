@@ -36,10 +36,10 @@ export class AdminMembershipController {
       action: body.id ? 'membership.plan.update' : 'membership.plan.create',
       entityType: 'membership_plan',
       entityId: data.id,
-      before,
-      after: data,
+      before: before ? (JSON.parse(JSON.stringify(before)) as any) : null,
+      after: JSON.parse(JSON.stringify(data)) as any,
       ip: req.ip,
-      userAgent: req.headers['user-agent'] as string | undefined,
+      userAgent: (req as any).headers?.['user-agent'] as string | undefined,
     });
     return { data };
   }
@@ -70,19 +70,20 @@ export class AdminMembershipController {
     @Body() body: { status: string; autoRenew?: boolean },
     @Req() req: FastifyRequest,
   ) {
-    const before = await this.service.listMembers({ page: 1, pageSize: 1 }).then((r) => r.data.find((m) => m.id === membershipId) ?? null);
+    const before = await this.service
+      .listMembers({ page: 1, pageSize: 1 })
+      .then((r) => r.data.find((m) => m.id === membershipId) ?? null);
     const data = await this.service.updateMemberStatus(membershipId, body);
     await this.audit.record({
       adminUserId: req.adminUser?.id ?? null,
       action: 'membership.member.update',
       entityType: 'membership',
       entityId: membershipId,
-      before,
-      after: data,
+      before: before ? (JSON.parse(JSON.stringify(before)) as any) : null,
+      after: JSON.parse(JSON.stringify(data)) as any,
       ip: req.ip,
-      userAgent: req.headers['user-agent'] as string | undefined,
+      userAgent: (req as any).headers?.['user-agent'] as string | undefined,
     });
     return { status: 'ok', data };
   }
 }
-

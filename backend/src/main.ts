@@ -10,20 +10,19 @@ import fastifyHelmet, { type FastifyHelmetOptions } from '@fastify/helmet';
 import fastifyCors, { type FastifyCorsOptions } from '@fastify/cors';
 import pino from 'pino';
 import pinoHttp from 'pino-http';
-import type { FastifyRequest } from 'fastify';
 
 import { AppModule } from './app.module.js';
 import { MetricsService } from './modules/metrics/metrics.service.js';
 
 const normaliseOrigin = (value: string) => value.replace(/\/$/, '');
 
-const extractMetricsToken = (request: FastifyRequest): string | undefined => {
-  const headerToken = request.headers['x-metrics-token'];
+const extractMetricsToken = (request: any): string | undefined => {
+  const headerToken = request?.headers?.['x-metrics-token'];
   if (typeof headerToken === 'string' && headerToken.trim().length) {
     return headerToken.trim();
   }
 
-  const authHeader = request.headers.authorization;
+  const authHeader = request?.headers?.authorization;
   if (typeof authHeader === 'string') {
     const [scheme, token] = authHeader.split(/\s+/);
     if (scheme?.toLowerCase() === 'bearer' && token) {
@@ -31,7 +30,7 @@ const extractMetricsToken = (request: FastifyRequest): string | undefined => {
     }
   }
 
-  const query = request.query as Record<string, unknown> | undefined;
+  const query = request?.query as Record<string, unknown> | undefined;
   const queryToken = typeof query?.token === 'string' ? query.token.trim() : undefined;
   if (queryToken) {
     return queryToken;
@@ -85,10 +84,10 @@ async function bootstrap() {
 
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, fastifyAdapter, {
     bufferLogs: true,
-    logger: baseLogger,
+    logger: false,
   });
 
-  app.useLogger(baseLogger);
+  app.useLogger(baseLogger as unknown as any);
 
   const fastifyInstance = fastifyAdapter.getInstance();
   fastifyInstance.addHook('onRequest', async (request) => {

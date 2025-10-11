@@ -45,10 +45,10 @@ export class AdminShopController {
       action: 'shop.order.update-status',
       entityType: 'order',
       entityId: orderId,
-      before,
-      after,
+      before: before ? (JSON.parse(JSON.stringify(before)) as any) : null,
+      after: after ? (JSON.parse(JSON.stringify(after)) as any) : null,
       ip: req.ip,
-      userAgent: req.headers['user-agent'] as string | undefined,
+      userAgent: (req as any).headers?.['user-agent'] as string | undefined,
     });
     return { status: 'ok', data: after };
   }
@@ -66,10 +66,10 @@ export class AdminShopController {
       action: 'shop.order.add-note',
       entityType: 'order',
       entityId: orderId,
-      before,
-      after,
+      before: before ? (JSON.parse(JSON.stringify(before)) as any) : null,
+      after: after ? (JSON.parse(JSON.stringify(after)) as any) : null,
       ip: req.ip,
-      userAgent: req.headers['user-agent'] as string | undefined,
+      userAgent: (req as any).headers?.['user-agent'] as string | undefined,
     });
     return { status: 'ok', data: after };
   }
@@ -87,10 +87,10 @@ export class AdminShopController {
       action: 'shop.order.update-tracking',
       entityType: 'order',
       entityId: orderId,
-      before,
-      after,
+      before: before ? (JSON.parse(JSON.stringify(before)) as any) : null,
+      after: after ? (JSON.parse(JSON.stringify(after)) as any) : null,
       ip: req.ip,
-      userAgent: req.headers['user-agent'] as string | undefined,
+      userAgent: (req as any).headers?.['user-agent'] as string | undefined,
     });
     return { status: 'ok', data: after };
   }
@@ -109,10 +109,10 @@ export class AdminShopController {
         action: 'shop.order.batch-update-status',
         entityType: 'order',
         entityId: (r.after as any)?.id ?? null,
-        before: r.before,
-        after: r.after,
+        before: r.before ? (JSON.parse(JSON.stringify(r.before)) as any) : null,
+        after: r.after ? (JSON.parse(JSON.stringify(r.after)) as any) : null,
         ip: req.ip,
-        userAgent: req.headers['user-agent'] as string | undefined,
+        userAgent: (req as any).headers?.['user-agent'] as string | undefined,
       });
     }
     return { status: 'ok', data: results.map((r) => r.after) };
@@ -126,4 +126,3 @@ export class AdminShopController {
     return { data: { ...data, range: { from: range.from?.toISOString() ?? null, to: range.to?.toISOString() ?? null } } };
   }
 }
-

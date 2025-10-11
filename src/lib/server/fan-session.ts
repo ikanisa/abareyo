@@ -24,6 +24,12 @@ export const fetchFanSessionServer = async (): Promise<FanSessionServer | null> 
     return null;
   }
 
+  // If the backend URL is relative (e.g. "/api" on Vercel without a proxy),
+  // skip the server-side call and treat as no session to avoid 404/500.
+  if (BASE_URL.startsWith('/')) {
+    return null;
+  }
+
   const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/auth/fan/me`, {
     headers: {
       cookie: cookieHeader,

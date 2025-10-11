@@ -7,6 +7,7 @@ import { RealtimeService } from '../realtime/realtime.service.js';
 import { SmsWebhookDto, SmsWebhookMeta } from './sms.dto.js';
 import { SmsQueueService } from './sms.queue.js';
 import { ManualSmsResolution } from '../admin/sms/dto/manual-dismiss.dto.js';
+import type { Prisma } from '@prisma/client';
 
 @Injectable()
 export class SmsService {
@@ -115,7 +116,7 @@ export class SmsService {
       where: { id: smsId },
       data: {
         ingestStatus: 'received',
-        metadata,
+        metadata: metadata as unknown as Prisma.InputJsonValue,
       },
       include: { parsed: true },
     });
@@ -161,7 +162,7 @@ export class SmsService {
       where: { id: smsId },
       data: {
         ingestStatus,
-        metadata,
+        metadata: metadata as unknown as Prisma.InputJsonValue,
       },
       include: { parsed: true },
     });

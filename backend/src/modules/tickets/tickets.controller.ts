@@ -11,7 +11,7 @@ import {
   Query,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ParseUUIDPipe } from '@nestjs/common/pipes/parse-uuid.pipe';
+import { ParseUUIDPipe } from '@nestjs/common';
 import { TicketsService } from './tickets.service.js';
 import { TicketCheckoutDto } from './dto/create-checkout.dto.js';
 import { TicketPassVerifyDto } from './dto/ticket-pass-verify.dto.js';
