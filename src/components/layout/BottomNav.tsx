@@ -17,6 +17,7 @@ const navItems = [
 
 export const BottomNav = () => {
   const pathname = usePathname();
+  const bare = (pathname || '/').replace(/^\/(en|fr|rw)(?=\/|$)/, '') || '/';
   const { t } = useI18n();
 
   return (
@@ -25,7 +26,7 @@ export const BottomNav = () => {
         <div className="grid grid-cols-6 gap-1 px-2 py-3">
           {navItems.map((item) => {
             const isActive =
-              pathname === item.path || (item.path !== "/" && pathname.startsWith(`${item.path}/`));
+              bare === item.path || (item.path !== "/" && bare.startsWith(`${item.path}/`));
             const Icon = item.icon;
             
             return (

@@ -22,7 +22,7 @@ export const viewport: Viewport = {
 };
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => (
-  <html lang="rw" suppressHydrationWarning>
+  <html lang="en" suppressHydrationWarning>
     <body className="bg-background text-foreground">
       <Providers>{children}</Providers>
     </body>
