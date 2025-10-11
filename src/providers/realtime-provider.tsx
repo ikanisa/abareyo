@@ -112,7 +112,7 @@ export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     const instance = io(origin, {
-      path: "/ws",
+      path: process.env.NEXT_PUBLIC_SOCKET_PATH ?? "/ws",
       transports: ["websocket"],
       withCredentials: true,
     });
