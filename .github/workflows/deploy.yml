@@ -41,6 +41,10 @@ jobs:
         working-directory: backend
         run: npm ci
 
+      - name: Validate required env
+        working-directory: backend
+        run: npm run env:check
+
       - name: Prisma generate
         working-directory: backend
         run: npx prisma generate
