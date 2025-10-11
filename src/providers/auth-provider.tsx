@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     },
   });
 
-  const value = useMemo<AuthContextValue>(() => {
+  const value = useMemo(() => {
     const data = sessionQuery.data ?? null;
     return {
       session: data,
@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     sessionQuery.data,
     sessionQuery.isFetching,
     sessionQuery.isLoading,
-  ]);
+  ]) as AuthContextValue;
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
