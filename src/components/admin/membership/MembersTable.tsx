@@ -89,19 +89,26 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
     setMeta(initial.meta);
   }, [initial]);
 
-  const updateStatus = async (membershipId: string, nextStatus: string, autoRenew?: boolean) => {
-    try {
-      const updated = await updateAdminMembershipStatus(membershipId, {
-        status: nextStatus,
-        ...(typeof autoRenew === 'boolean' ? { autoRenew } : {}),
-      });
-      setData((prev) => prev.map((m) => (m.id === membershipId ? { ...m, status: updated.status, autoRenew: updated.autoRenew } : m)));
-      toast({ title: 'Member updated' });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Update failed';
-      toast({ title: 'Failed to update member', description: msg, variant: 'destructive' });
-    }
-  };
+  const updateStatus = useCallback(
+    async (membershipId: string, nextStatus: string, autoRenew?: boolean) => {
+      try {
+        const updated = await updateAdminMembershipStatus(membershipId, {
+          status: nextStatus,
+          ...(typeof autoRenew === 'boolean' ? { autoRenew } : {}),
+        });
+        setData((prev) =>
+          prev.map((m) =>
+            m.id === membershipId ? { ...m, status: updated.status, autoRenew: updated.autoRenew } : m,
+          ),
+        );
+        toast({ title: 'Member updated' });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Update failed';
+        toast({ title: 'Failed to update member', description: msg, variant: 'destructive' });
+      }
+    },
+    [toast],
+  );
 
   const columns = useMemo<ColumnDef<AdminMembershipRecord, unknown>[]>(
     () => [

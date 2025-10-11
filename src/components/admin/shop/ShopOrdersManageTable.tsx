@@ -97,42 +97,55 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
     setMeta(initial.meta);
   }, [initial]);
 
-  const applyStatus = async (orderId: string, nextStatus: string) => {
-    try {
-      const note = noteDrafts[orderId]?.trim();
-      const updated = await updateAdminShopStatus(orderId, { status: nextStatus, note: note || undefined });
-      setData((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: updated.status, fulfillmentNotes: updated.fulfillmentNotes } : o)));
-      toast({ title: 'Order updated' });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Update failed';
-      toast({ title: 'Failed to update order', description: msg, variant: 'destructive' });
-    }
-  };
+  const applyStatus = useCallback(
+    async (orderId: string, nextStatus: string) => {
+      try {
+        const note = noteDrafts[orderId]?.trim();
+        const updated = await updateAdminShopStatus(orderId, { status: nextStatus, note: note || undefined });
+        setData((prev) =>
+          prev.map((o) =>
+            o.id === orderId ? { ...o, status: updated.status, fulfillmentNotes: updated.fulfillmentNotes } : o,
+          ),
+        );
+        toast({ title: 'Order updated' });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Update failed';
+        toast({ title: 'Failed to update order', description: msg, variant: 'destructive' });
+      }
+    },
+    [noteDrafts, toast],
+  );
 
-  const saveNote = async (orderId: string) => {
-    try {
-      const note = noteDrafts[orderId]?.trim();
-      if (!note) return;
-      const updated = await addAdminShopFulfillmentNote(orderId, note);
-      setData((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
-      setNoteDrafts((m) => ({ ...m, [orderId]: '' }));
-      toast({ title: 'Note added' });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to add note';
-      toast({ title: 'Failed to add note', description: msg, variant: 'destructive' });
-    }
-  };
+  const saveNote = useCallback(
+    async (orderId: string) => {
+      try {
+        const note = noteDrafts[orderId]?.trim();
+        if (!note) return;
+        const updated = await addAdminShopFulfillmentNote(orderId, note);
+        setData((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
+        setNoteDrafts((m) => ({ ...m, [orderId]: '' }));
+        toast({ title: 'Note added' });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Failed to add note';
+        toast({ title: 'Failed to add note', description: msg, variant: 'destructive' });
+      }
+    },
+    [noteDrafts, toast],
+  );
 
-  const saveTracking = async (orderId: string) => {
-    try {
-      const updated = await updateAdminShopTracking(orderId, trackingDrafts[orderId] ?? undefined);
-      setData((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
-      toast({ title: 'Tracking updated' });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to update tracking';
-      toast({ title: 'Failed to update tracking', description: msg, variant: 'destructive' });
-    }
-  };
+  const saveTracking = useCallback(
+    async (orderId: string) => {
+      try {
+        const updated = await updateAdminShopTracking(orderId, trackingDrafts[orderId] ?? undefined);
+        setData((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
+        toast({ title: 'Tracking updated' });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Failed to update tracking';
+        toast({ title: 'Failed to update tracking', description: msg, variant: 'destructive' });
+      }
+    },
+    [trackingDrafts, toast],
+  );
 
   const columns = useMemo<ColumnDef<AdminShopOrder, unknown>[]>(
     () => [

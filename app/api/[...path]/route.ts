@@ -1,8 +1,36 @@
+import { randomUUID } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
+import type { OnboardingMessageDto, OnboardingSessionDto } from '@rayon/contracts/onboarding';
 
 const BACKEND_BASE = (process.env.BACKEND_BASE_URL || '').replace(/\/$/, '');
 
 type MockContext = { params: { path?: string[] } };
+
+type FanSession = {
+  user: {
+    id: string;
+    status: string;
+    locale: string;
+    whatsappNumber?: string | null;
+    momoNumber?: string | null;
+  };
+  session: {
+    id: string;
+    expiresAt: string | null;
+  };
+  onboardingStatus: string;
+};
+
+type MockOnboardingSession = OnboardingSessionDto & {
+  locale: string;
+  profile: {
+    whatsappNumber?: string;
+    momoNumber?: string;
+  };
+};
+
+const onboardingSessions = new Map<string, MockOnboardingSession>();
+let activeFanSession: FanSession | null = null;
 
 const paginatedSkeleton = {
   page: 1,
@@ -14,10 +42,182 @@ function json(data: unknown, init?: ResponseInit) {
   return NextResponse.json(data, init);
 }
 
+const isoNow = (offsetMs = 0) => new Date(Date.now() + offsetMs).toISOString();
+
+function publicSession(session: MockOnboardingSession): OnboardingSessionDto {
+  const { locale: _locale, profile: _profile, ...rest } = session;
+  return rest;
+}
+
+function createOnboardingSession(locale?: string): MockOnboardingSession {
+  const createdAt = isoNow();
+  const session: MockOnboardingSession = {
+    id: randomUUID(),
+    userId: 'fan-demo',
+    status: 'collecting_profile',
+    createdAt,
+    updatedAt: createdAt,
+    messages: [
+      {
+        id: randomUUID(),
+        role: 'assistant',
+        kind: 'text',
+        text: 'Muraho neza! Turimo kugufasha kwinjira mu Rayon fan club. Ohereza nimero ya WhatsApp na ya MoMo ukoresha gushyigikira ikipe.',
+        createdAt,
+      },
+    ],
+    locale: typeof locale === 'string' && locale.trim() ? locale : 'rw',
+    profile: {},
+  };
+  onboardingSessions.set(session.id, session);
+  return session;
+}
+
+function normalizeNumber(raw: string, fallback: string) {
+  const digits = raw.replace(/\D/g, '');
+  if (!digits) return fallback;
+  if (digits.startsWith('0') && digits.length >= 9) {
+    return `+250${digits.slice(1).padStart(9, '0')}`;
+  }
+  if (digits.startsWith('250')) {
+    return `+${digits}`;
+  }
+  if (digits.length === 9) {
+    return `+250${digits}`;
+  }
+  return fallback;
+}
+
+function deriveNumberPair(text: string) {
+  const matches = text.match(/\d[\d\s+()-]{5,}/g) ?? [];
+  const whatsapp = normalizeNumber(matches[0] ?? '', '+250780000000');
+  const momo = normalizeNumber(matches[1] ?? matches[0] ?? '', '+250780000001');
+  return { whatsapp, momo };
+}
+
+function ensureFanSessionFromOnboarding(session: MockOnboardingSession): FanSession {
+  const expiresAt = isoNow(1000 * 60 * 60 * 24);
+  const whatsappNumber = session.profile.whatsappNumber ?? '+250780000000';
+  const momoNumber = session.profile.momoNumber ?? '+250780000001';
+  activeFanSession = {
+    user: {
+      id: session.userId,
+      status: 'active',
+      locale: session.locale,
+      whatsappNumber,
+      momoNumber,
+    },
+    session: {
+      id: randomUUID(),
+      expiresAt,
+    },
+    onboardingStatus: session.status,
+  };
+  return activeFanSession;
+}
+
 async function mockResponse(req: NextRequest, ctx: MockContext) {
   const segments = ctx.params.path ?? [];
   const path = segments.join('/');
   const method = req.method.toUpperCase();
+
+  if (segments[0] === 'auth' && segments[1] === 'fan') {
+    if (method === 'GET' && segments[2] === 'me') {
+      if (!activeFanSession) {
+        return new Response('Unauthenticated', { status: 401 });
+      }
+      return json({ data: activeFanSession });
+    }
+
+    if (method === 'POST' && segments[2] === 'from-onboarding') {
+      const payload = (await req.json().catch(() => ({}))) as { sessionId?: string };
+      const sessionId = payload?.sessionId;
+      if (!sessionId) {
+        return new Response('sessionId is required', { status: 400 });
+      }
+
+      const session = onboardingSessions.get(sessionId);
+      if (!session || session.status !== 'completed') {
+        return new Response('Onboarding session not ready', { status: 400 });
+      }
+
+      const fanSession = ensureFanSessionFromOnboarding(session);
+      return json({ data: fanSession });
+    }
+
+    if (method === 'POST' && segments[2] === 'logout') {
+      activeFanSession = null;
+      return json({ data: { status: 'signed_out' } });
+    }
+  }
+
+  if (segments[0] === 'onboarding' && segments[1] === 'sessions') {
+    if (method === 'POST' && segments.length === 2) {
+      const body = (await req.json().catch(() => ({}))) as { locale?: string };
+      const session = createOnboardingSession(body?.locale);
+      return json({ data: publicSession(session) });
+    }
+
+    const sessionId = segments[2];
+    if (!sessionId) {
+      return new Response('Session not found', { status: 404 });
+    }
+
+    const session = onboardingSessions.get(sessionId);
+    if (!session) {
+      return new Response('Session not found', { status: 404 });
+    }
+
+    if (method === 'GET' && segments.length === 3) {
+      return json({ data: publicSession(session) });
+    }
+
+    if (method === 'POST' && segments[3] === 'messages') {
+      const body = (await req.json().catch(() => ({}))) as { message?: string };
+      const message = typeof body?.message === 'string' ? body.message.trim() : '';
+      const baseTime = Date.now();
+
+      const userMessage: OnboardingMessageDto = {
+        id: randomUUID(),
+        role: 'user',
+        kind: 'text',
+        text: message || 'Ndiko gukomeza onboarding',
+        createdAt: new Date(baseTime).toISOString(),
+      };
+
+      session.messages = [...session.messages, userMessage];
+
+      const { whatsapp, momo } = deriveNumberPair(message);
+      session.profile.whatsappNumber = whatsapp;
+      session.profile.momoNumber = momo;
+      session.status = 'completed';
+
+      const toolResult: OnboardingMessageDto = {
+        id: randomUUID(),
+        role: 'tool',
+        kind: 'tool_result',
+        payload: {
+          whatsappNumber: whatsapp,
+          momoNumber: momo,
+        },
+        createdAt: new Date(baseTime + 200).toISOString(),
+      };
+
+      const assistantReply: OnboardingMessageDto = {
+        id: randomUUID(),
+        role: 'assistant',
+        kind: 'text',
+        text: `Byiza cyane! Tuzakomeza kukumenyesha kuri WhatsApp ${whatsapp} kandi ukoreshe MoMo ${momo} gushyigikira ikipe. Uri kumwe natwe!`,
+        createdAt: new Date(baseTime + 400).toISOString(),
+      };
+
+      session.messages = [...session.messages, toolResult, assistantReply];
+      session.updatedAt = assistantReply.createdAt;
+      onboardingSessions.set(session.id, session);
+
+      return json({ data: publicSession(session) });
+    }
+  }
 
   // Sample data used across responses
   const sampleProject = {
