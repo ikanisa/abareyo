@@ -1,41 +1,12 @@
 {
-  "name": "Rayon Sports - Fan App",
-  "short_name": "Rayon Sports",
-  "description": "Official Rayon Sports fan app for tickets, membership, shop and community",
+  "name": "Abareyo",
+  "short_name": "Abareyo",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#001A66",
+  "background_color": "#ffffff",
   "theme_color": "#0033FF",
-  "orientation": "portrait",
   "icons": [
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-  "categories": [
-    "sports",
-    "entertainment"
-  ],
-  "shortcuts": [
-    {
-      "name": "Buy Tickets",
-      "url": "/tickets",
-      "description": "Get match tickets"
-    },
-    {
-      "name": "Match Centre",
-      "url": "/matches",
-      "description": "Live scores and stats"
-    }
-  ],
-  "scope": "/"
+    { "src": "/icon-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512x512.png", "sizes": "512x512", "type": "image/png" }
+  ]
 }

@@ -12,6 +12,7 @@
     "cap:android": "npm run cap:sync && npx cap open android",
     "cap:ios": "npm run cap:sync && npx cap open ios",
     "start": "next start",
+    "health": "node -e \"fetch('http://localhost:3000/api/health').then(r=>r.text()).then(console.log).catch(console.error)\"",
     "type-check": "tsc --noEmit",
     "test": "npm run type-check && npm run test:unit",
     "test:unit": "vitest run",
