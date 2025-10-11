@@ -111,9 +111,11 @@ export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
       // Realtime backend not configured in this environment
       return;
     }
+    const prefer = (process.env.NEXT_PUBLIC_SOCKET_TRANSPORT || 'polling').toLowerCase();
+    const transports = prefer === 'polling' ? (['polling','websocket'] as const) : (['websocket','polling'] as const);
     const instance = io(origin, {
       path: process.env.NEXT_PUBLIC_SOCKET_PATH ?? "/ws",
-      transports: ["websocket"],
+      transports: transports as any,
       withCredentials: true,
     });
 
