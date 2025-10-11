@@ -13,7 +13,9 @@ export type FanSession = {
   onboardingStatus: string;
 };
 
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api';
+// Default to Next.js local API (/api). In production, set NEXT_PUBLIC_BACKEND_URL
+// to your external API base (e.g., https://api.example.com/api).
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? '/api';
 
 const request = async <T>(path: string, init?: RequestInit) => {
   const response = await fetch(`${BASE_URL.replace(/\/$/, '')}${path}`, {

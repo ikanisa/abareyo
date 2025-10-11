@@ -4,7 +4,9 @@ import type {
   StartOnboardingSessionRequest,
 } from '@rayon/contracts/onboarding';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api';
+// Default to Next.js local API (/api). In production, set NEXT_PUBLIC_BACKEND_URL
+// to your external API base (e.g., https://api.example.com/api).
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? '/api';
 
 const buildUrl = (path: string) => `${BASE_URL.replace(/\/$/, '')}${path}`;
 
