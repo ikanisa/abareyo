@@ -113,7 +113,7 @@ type Locale = keyof typeof dictionaries;
 
 type I18nContextValue = {
   locale: Locale;
-  t: <T extends string>(path: string, fallback?: T) => string;
+  t: (path: string, fallback?: string) => string;
   setLocale: (locale: Locale) => void;
 };
 
@@ -145,20 +145,21 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
 
   const value = useMemo<I18nContextValue>(() => ({
     locale,
-    t: (path: string, fallback = path) => {
+    t: (path: string, fallback?: string) => {
+      const defaultFallback = typeof fallback === 'string' ? fallback : path;
       const segments = path.split('.');
       let current: unknown = dictionaries[locale];
       for (const segment of segments) {
         if (!current || typeof current !== 'object') {
-          return fallback;
+          return defaultFallback;
         }
         const record = current as Record<string, unknown>;
         if (!(segment in record)) {
-          return fallback;
+          return defaultFallback;
         }
         current = record[segment];
       }
-      return typeof current === 'string' ? current : fallback;
+      return typeof current === 'string' ? current : defaultFallback;
     },
     setLocale,
   }), [locale, setLocale]);
