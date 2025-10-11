@@ -7,9 +7,13 @@ import { useToast } from "@/components/ui/use-toast";
 
 const RealtimeContext = createContext<{ socket: Socket | null }>({ socket: null });
 
-const deriveBaseUrl = () => {
-  const base = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000/api";
-  return base.replace(/\/?api\/?$/, "");
+const deriveBackendOrigin = () => {
+  const base = process.env.NEXT_PUBLIC_BACKEND_URL;
+  if (base && /^https?:\/\//.test(base)) {
+    return base.replace(/\/?api\/?$/, "");
+  }
+  // No external backend configured: use same-origin and disable socket
+  return null;
 };
 
 type RealtimeEventDefinition = {
@@ -102,8 +106,13 @@ export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    const url = deriveBaseUrl();
-    const instance = io(`${url}/ws`, {
+    const origin = deriveBackendOrigin();
+    if (!origin) {
+      // Realtime backend not configured in this environment
+      return;
+    }
+    const instance = io(origin, {
+      path: "/ws",
       transports: ["websocket"],
       withCredentials: true,
     });
