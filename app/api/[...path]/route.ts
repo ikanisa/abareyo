@@ -1,13 +1,171 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 const BACKEND_BASE = (process.env.BACKEND_BASE_URL || '').replace(/\/$/, '');
 
-async function proxy(req: NextRequest, ctx: { params: { path?: string[] } }) {
+type MockContext = { params: { path?: string[] } };
+
+const paginatedSkeleton = {
+  page: 1,
+  pageSize: 50,
+  total: 0,
+};
+
+function json(data: unknown, init?: ResponseInit) {
+  return NextResponse.json(data, init);
+}
+
+async function mockResponse(req: NextRequest, ctx: MockContext) {
+  const segments = ctx.params.path ?? [];
+  const path = segments.join('/');
+  const method = req.method.toUpperCase();
+
+  // Sample data used across responses
+  const sampleProject = {
+    id: 'demo-project',
+    title: 'Stadium Upgrade Fund',
+    description: 'Help Rayon Sports renovate the home stands.',
+    goal: 50000000,
+    progress: 12500000,
+    status: 'active',
+    coverImage: null,
+    coverImageUrl: null,
+  };
+
+  const sampleMatch = {
+    id: 'match-demo',
+    opponent: 'APR FC',
+    kickoff: new Date(Date.now() + 1000 * 60 * 60 * 24 * 3).toISOString(),
+    venue: 'Kigali Stadium',
+    competition: 'Rwanda Premier League',
+    status: 'scheduled',
+    score: null,
+  };
+
+  switch (method) {
+    case 'GET': {
+      if (path === 'fundraising/projects') {
+        return json({ data: [sampleProject] });
+      }
+
+      if (path === 'tickets/catalog') {
+        return json({
+          data: [
+            {
+              ...sampleMatch,
+              zones: [
+                { zone: 'VIP', price: 15000, capacity: 500, remaining: 420, gate: 'A' },
+                { zone: 'REGULAR', price: 5000, capacity: 4000, remaining: 3510, gate: 'C' },
+              ],
+            },
+          ],
+        });
+      }
+
+      if (path === 'matches/summaries') {
+        return json({ data: [sampleMatch] });
+      }
+
+      if (path === 'tickets/analytics') {
+        return json({
+          data: {
+            totals: {
+              revenue: 12500000,
+              orders: 420,
+              paid: 320,
+              pending: 80,
+              cancelled: 20,
+              expired: 0,
+              averageOrderValue: 29762,
+            },
+            matchBreakdown: [],
+            recentSales: [],
+            paymentStatus: [],
+          },
+        });
+      }
+
+      if (path === 'tickets/gate/history') {
+        return json({ data: [] });
+      }
+
+      if (path === 'fundraising/donations') {
+        return json({ data: [], meta: paginatedSkeleton });
+      }
+
+      if (path.startsWith('admin/')) {
+        return json({ data: [], meta: paginatedSkeleton });
+      }
+
+      if (segments[0] === 'health') {
+        return json({ status: 'ok', source: 'mock' });
+      }
+
+      return json({ data: [] });
+    }
+
+    case 'POST': {
+      if (path === 'fundraising/donate') {
+        const payload = await req.json().catch(() => ({}));
+        return json({
+          data: {
+            donationId: 'demo-donation',
+            paymentId: 'demo-payment',
+            amount: payload?.amount ?? 10000,
+            ussdCode: '*182*8*1#',
+            expiresAt: new Date(Date.now() + 1000 * 60 * 10).toISOString(),
+            project: sampleProject,
+          },
+        });
+      }
+
+      if (path === 'tickets/checkout') {
+        return json({
+          data: {
+            orderId: 'order-demo',
+            total: 10000,
+            ussdCode: '*182*8*1#',
+            expiresAt: new Date(Date.now() + 1000 * 60 * 10).toISOString(),
+            paymentId: 'payment-demo',
+          },
+        });
+      }
+
+      if (path === 'tickets/verify-pass') {
+        return json({
+          data: { status: 'verified', passId: 'pass-demo', orderId: 'order-demo', zone: 'VIP' },
+        });
+      }
+
+      if (path === 'tickets/passes/initiate-transfer') {
+        return json({
+          data: { transferCode: '123456', passId: 'pass-demo', targetUserId: null },
+        });
+      }
+
+      if (path === 'tickets/passes/claim-transfer') {
+        return json({ data: { passId: 'pass-demo', recipientUserId: 'user-demo' } });
+      }
+
+      if (path === 'wallet/transactions') {
+        return json({ data: { acknowledged: true } });
+      }
+
+      return json({ data: { ok: true } });
+    }
+
+    case 'PUT':
+    case 'PATCH':
+    case 'DELETE':
+      return json({ data: { ok: true } });
+
+    default:
+      return new Response('Method not supported in mock backend.', { status: 405 });
+  }
+}
+
+async function proxy(req: NextRequest, ctx: MockContext) {
   if (!BACKEND_BASE) {
-    return new Response(
-      'Backend not configured. Set BACKEND_BASE_URL in Vercel to your API base (e.g., https://api.example.com).',
-      { status: 503 }
-    );
+    return mockResponse(req, ctx);
   }
 
   const segments = (ctx.params.path || []).join('/');
@@ -49,4 +207,3 @@ export const PUT = proxy;
 export const PATCH = proxy;
 export const DELETE = proxy;
 export const OPTIONS = proxy;
-
