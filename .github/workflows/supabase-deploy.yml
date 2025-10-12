@@ -1,0 +1,61 @@
+name: Supabase DB + Functions Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies (frontend sanity)
+        run: npm ci
+
+      - name: Build (sanity)
+        run: npm run build
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link Supabase project
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$SUPABASE_PROJECT_REF" ]; then
+            echo "SUPABASE_PROJECT_REF secret is not set" >&2
+            exit 1
+          fi
+          supabase link --project-ref "$SUPABASE_PROJECT_REF"
+
+      - name: Push database migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase db push --debug
+
+      - name: Deploy Edge Functions
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          shopt -s nullglob
+          for d in supabase/functions/*; do
+            n=$(basename "$d")
+            if [ "$n" = "_shared" ]; then
+              continue
+            fi
+            echo "Deploying function: $n"
+            supabase functions deploy "$n" --project-ref "$SUPABASE_PROJECT_REF"
+          done
+
