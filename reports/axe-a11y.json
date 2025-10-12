@@ -1,0 +1,4 @@
+{
+  "error": "not_executed",
+  "reason": "Axe CLI requires running server; not started during audit"
+}

@@ -54,12 +54,18 @@ export default function OnboardingModal({ open, onClose }: OnboardingModalProps)
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const value = inputRef.current?.value?.trim();
+
+    const inputEl = inputRef.current;
+    if (!inputEl) {
+      return;
+    }
+
+    const value = inputEl.value.trim();
     if (!value) {
       return;
     }
 
-    inputRef.current.value = "";
+    inputEl.value = "";
     setMessages((prev) => [...prev, { role: "user", text: value }]);
     const reply = composeReply(value);
     if (!reply) {

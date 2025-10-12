@@ -446,8 +446,15 @@ async function onboardingGateway(req: NextRequest, ctx: MockContext) {
     if (!OPENAI_API_KEY || !AGENT_ID) {
       return NextResponse.json({ error: 'service_unavailable', message: 'Agent not configured' }, { status: 503 });
     }
-    const body = await req.json().catch(() => ({}) as any);
-    const { sessionId, text } = body || {};
+    let body: unknown = {};
+    try {
+      body = await req.json();
+    } catch {
+      body = {};
+    }
+    const payload = (typeof body === 'object' && body !== null ? body : {}) as Record<string, unknown>;
+    const sessionId = typeof payload.sessionId === 'string' ? payload.sessionId : '';
+    const text = typeof payload.text === 'string' ? payload.text : '';
     if (!sessionId || !text) {
       return NextResponse.json({ error: 'bad_request', message: 'sessionId and text are required' }, { status: 400 });
     }
@@ -471,8 +478,9 @@ async function onboardingGateway(req: NextRequest, ctx: MockContext) {
       const data = await resp.json();
       const reply = data?.output?.[0]?.content?.[0]?.text ?? "Muraho! Let's get started.";
       return NextResponse.json({ ok: true, reply });
-    } catch (e: any) {
-      return NextResponse.json({ error: 'internal_error', message: e?.message ?? 'Unknown error' }, { status: 500 });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      return NextResponse.json({ error: 'internal_error', message }, { status: 500 });
     }
   }
 

@@ -56,3 +56,8 @@ jobs:
           E2E_API_MOCKS: '1'
           NEXT_PUBLIC_BACKEND_URL: 'http://localhost:3000/api/e2e'
         run: npm run test:e2e
+      - name: Run accessibility audits (axe)
+        env:
+          E2E_API_MOCKS: '1'
+          NEXT_PUBLIC_BACKEND_URL: 'http://localhost:3000/api/e2e'
+        run: npm run test:e2e:a11y

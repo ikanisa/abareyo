@@ -98,7 +98,7 @@ export default function Membership() {
   const activePlanId = useMemo(() => activeStatus?.plan.id ?? null, [activeStatus]);
   const isActive = activeStatus?.status === "active";
   const isPending = activeStatus?.status === "pending";
-  const ussdDisplay = pendingUpgrade?.ussdCode?.replaceAll("%23", "#");
+  const ussdDisplay = pendingUpgrade?.ussdCode?.replace(/%23/g, "#");
 
   useEffect(() => {
     if (typeof window === "undefined") return;

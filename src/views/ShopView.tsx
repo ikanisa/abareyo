@@ -99,7 +99,7 @@ export default function Shop() {
     return sum + product.price * qty;
   }, 0);
 
-  const ussdDisplay = order?.ussdCode?.replaceAll("%23", "#");
+  const ussdDisplay = order?.ussdCode?.replace(/%23/g, "#");
 
   const checkoutMutation = useMutation({
     mutationFn: async () => {

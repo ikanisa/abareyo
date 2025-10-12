@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { clientConfig } from "@/config/client";
+import { recordAppStateEvent } from "@/lib/observability";
 import { AuthProvider } from "@/providers/auth-provider";
 import { I18nProvider } from "@/providers/i18n-provider";
 import { RealtimeProvider } from "@/providers/realtime-provider";
@@ -44,6 +45,7 @@ const hasPwaOptIn = () => {
 
 export const Providers = ({ children }: { children: ReactNode }) => {
   const [queryClient] = useState(() => new QueryClient());
+  const telemetryEndpoint = clientConfig.telemetryEndpoint;
 
   useEffect(() => {
     if (!hasWindow()) {
@@ -93,7 +95,7 @@ export const Providers = ({ children }: { children: ReactNode }) => {
       try {
         const { App } = await import('@capacitor/app');
         const handle = await App.addListener('appStateChange', ({ isActive }) => {
-          recordTelemetry({ type: 'app-state', isActive });
+          void recordAppStateEvent({ type: 'app-state', isActive }, telemetryEndpoint);
         });
         removeListener = () => {
           handle.remove();
@@ -127,21 +129,3 @@ export const Providers = ({ children }: { children: ReactNode }) => {
 
 const isNotificationSupported = () => hasWindow() && 'Notification' in window;
 
-const recordTelemetry = (event: { type: string; isActive?: boolean }) => {
-  try {
-    const body = JSON.stringify({ ...event, timestamp: Date.now() });
-    const endpoint = clientConfig.telemetryEndpoint;
-    if (hasWindow() && typeof navigator.sendBeacon === 'function') {
-      navigator.sendBeacon(endpoint, body);
-    } else if (typeof fetch === 'function') {
-      fetch(endpoint, {
-        method: 'POST',
-        body,
-        headers: { 'content-type': 'application/json' },
-        keepalive: true,
-      }).catch(() => {});
-    }
-  } catch (error) {
-    console.info('Telemetry dispatch skipped', error);
-  }
-};

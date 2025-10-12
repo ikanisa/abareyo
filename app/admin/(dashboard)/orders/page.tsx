@@ -1,10 +1,10 @@
+import dynamic from 'next/dynamic';
 import { cookies } from 'next/headers';
-import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 
-import { TicketOrdersTable } from '@/components/admin/orders/TicketOrdersTable';
-import { ShopOrdersTable } from '@/components/admin/orders/ShopOrdersTable';
-import { DonationsTable } from '@/components/admin/orders/DonationsTable';
+import type { TicketOrdersTableProps } from '@/components/admin/orders/TicketOrdersTable';
+import type { ShopOrdersTableProps } from '@/components/admin/orders/ShopOrdersTable';
+import type { DonationsTableProps } from '@/components/admin/orders/DonationsTable';
 import type {
   PaginatedResponse,
   AdminTicketOrder,
@@ -30,6 +30,21 @@ async function fetchWithSession<T>(path: string, deniedKey: string) {
   return (await response.json()) as T;
 }
 
+const TicketOrdersTable = dynamic<TicketOrdersTableProps>(
+  () => import('@/components/admin/orders/TicketOrdersTable').then((mod) => mod.TicketOrdersTable),
+  { ssr: false, loading: () => <div className="text-sm text-slate-300">Loading ticket orders…</div> },
+);
+
+const ShopOrdersTable = dynamic<ShopOrdersTableProps>(
+  () => import('@/components/admin/orders/ShopOrdersTable').then((mod) => mod.ShopOrdersTable),
+  { ssr: false, loading: () => <div className="text-sm text-slate-300">Loading shop orders…</div> },
+);
+
+const DonationsTable = dynamic<DonationsTableProps>(
+  () => import('@/components/admin/orders/DonationsTable').then((mod) => mod.DonationsTable),
+  { ssr: false, loading: () => <div className="text-sm text-slate-300">Loading donations…</div> },
+);
+
 const AdminOrdersPage = async () => {
   const [ticketOrders, shopOrders, donations] = await Promise.all([
     fetchWithSession<PaginatedResponse<AdminTicketOrder>>('/admin/ticket-orders', 'orders'),
@@ -44,27 +59,21 @@ const AdminOrdersPage = async () => {
           <h1 className="text-2xl font-semibold text-slate-100">Ticket Orders</h1>
           <p className="text-sm text-slate-400">Manage ticket purchases, resend passes, and issue logical refunds.</p>
         </header>
-        <Suspense fallback={<div className="text-sm text-slate-300">Loading ticket orders…</div>}>
-          <TicketOrdersTable initial={ticketOrders} />
-        </Suspense>
+        <TicketOrdersTable initial={ticketOrders} />
       </section>
       <section className="space-y-3">
         <header>
           <h2 className="text-xl font-semibold text-slate-100">Shop Orders</h2>
           <p className="text-sm text-slate-400">Monitor pick/pack status and courier updates.</p>
         </header>
-        <Suspense fallback={<div className="text-sm text-slate-300">Loading shop orders…</div>}>
-          <ShopOrdersTable initial={shopOrders} />
-        </Suspense>
+        <ShopOrdersTable initial={shopOrders} />
       </section>
       <section className="space-y-3">
         <header>
           <h2 className="text-xl font-semibold text-slate-100">Donations</h2>
           <p className="text-sm text-slate-400">Track contribution flow per fundraising project.</p>
         </header>
-        <Suspense fallback={<div className="text-sm text-slate-300">Loading donations…</div>}>
-          <DonationsTable initial={donations} />
-        </Suspense>
+        <DonationsTable initial={donations} />
       </section>
     </div>
   );

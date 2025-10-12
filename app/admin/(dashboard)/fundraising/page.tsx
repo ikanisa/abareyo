@@ -1,13 +1,13 @@
+import dynamic from 'next/dynamic';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { FundraisingActions } from '@/components/admin/fundraising/FundraisingActions';
-import { FundraisingDonationsTable } from '@/components/admin/fundraising/FundraisingDonationsTable';
 import type {
   AdminFundraisingDonation as Donation,
   AdminFundraisingProject as FundProject,
   AdminFundraisingSummary as FundraisingSummary,
   PaginatedResponse,
 } from '@/lib/api/admin/fundraising';
+import type { FundraisingDonationsTableProps } from '@/components/admin/fundraising/FundraisingDonationsTable';
 
 // Types come from admin API clients
 
@@ -27,6 +27,17 @@ async function fetchWithSession<T>(path: string, deniedKey: string) {
   }
   return (await response.json()) as T;
 }
+
+const FundraisingDonationsTable = dynamic<FundraisingDonationsTableProps>(
+  () =>
+    import('@/components/admin/fundraising/FundraisingDonationsTable').then((mod) => mod.FundraisingDonationsTable),
+  { ssr: false, loading: () => <div className="text-sm text-slate-300">Loading donations…</div> },
+);
+
+const FundraisingActions = dynamic(
+  () => import('@/components/admin/fundraising/FundraisingActions').then((mod) => mod.FundraisingActions),
+  { ssr: false, loading: () => <div className="text-sm text-slate-300">Loading fundraising actions…</div> },
+);
 
 export default async function AdminFundraisingPage() {
   const [summary, projects, donations] = await Promise.all([

@@ -1,0 +1,175 @@
+{
+  "generatedAt": "2025-10-12T18:19:19.317Z",
+  "routes": [
+    {
+      "type": "page",
+      "path": "/",
+      "file": "app/(routes)/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/",
+      "file": "app/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin",
+      "file": "app/admin/(dashboard)/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/community",
+      "file": "app/admin/(dashboard)/community/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/community/missions",
+      "file": "app/admin/(dashboard)/community/missions/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/fundraising",
+      "file": "app/admin/(dashboard)/fundraising/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/login",
+      "file": "app/admin/(auth)/login/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/match-ops",
+      "file": "app/admin/(dashboard)/match-ops/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/membership",
+      "file": "app/admin/(dashboard)/membership/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/orders",
+      "file": "app/admin/(dashboard)/orders/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/realtime",
+      "file": "app/admin/(dashboard)/realtime/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/settings",
+      "file": "app/admin/(dashboard)/settings/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/shop",
+      "file": "app/admin/(dashboard)/shop/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/sms",
+      "file": "app/admin/(dashboard)/sms/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/tickets",
+      "file": "app/admin/(dashboard)/tickets/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/translations",
+      "file": "app/admin/(dashboard)/translations/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/ussd",
+      "file": "app/admin/(dashboard)/ussd/page.tsx"
+    },
+    {
+      "type": "api",
+      "path": "/api/[...path]",
+      "file": "app/api/[...path]/route.ts"
+    },
+    {
+      "type": "page",
+      "path": "/api/chat",
+      "file": "pages/api/chat.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/e2e/[...path]",
+      "file": "app/api/e2e/[...path]/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/health",
+      "file": "app/api/health/route.ts"
+    },
+    {
+      "type": "page",
+      "path": "/api/onboarding/message",
+      "file": "pages/api/onboarding/message.ts"
+    },
+    {
+      "type": "page",
+      "path": "/api/onboarding/sessions",
+      "file": "pages/api/onboarding/sessions.ts"
+    },
+    {
+      "type": "page",
+      "path": "/community",
+      "file": "app/(routes)/community/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/fundraising",
+      "file": "app/(routes)/fundraising/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/gate",
+      "file": "app/gate/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/matches",
+      "file": "app/(routes)/matches/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/membership",
+      "file": "app/(routes)/membership/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/more",
+      "file": "app/(routes)/more/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/onboarding",
+      "file": "app/onboarding/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/shop",
+      "file": "app/(routes)/shop/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/tickets",
+      "file": "app/(routes)/tickets/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/tickets/transfer",
+      "file": "app/(routes)/tickets/transfer/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/wallet",
+      "file": "app/(routes)/wallet/page.tsx"
+    }
+  ]
+}

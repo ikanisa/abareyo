@@ -76,17 +76,19 @@ const Wallet = () => {
     persistTokens(passTokens);
   }, [passTokens]);
 
+  const sessionUserId = user?.id ?? null;
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const cached = window.localStorage.getItem(LAST_USER_STORAGE_KEY);
     if (cached) {
       setUserIdInput(cached);
       setActiveUserId(cached);
-    } else if ((user as any)?.id) {
-      setUserIdInput((user as any).id);
-      setActiveUserId((user as any).id);
+    } else if (sessionUserId) {
+      setUserIdInput(sessionUserId);
+      setActiveUserId(sessionUserId);
     }
-  }, [(user as any)?.id]);
+  }, [sessionUserId]);
 
   useEffect(() => {
     setReceipt(null);

@@ -1,0 +1,35 @@
+{
+  "generatedAt": "2025-10-12T18:22:29.663Z",
+  "codeHealth": {
+    "typeErrors": 5,
+    "lintErrors": 16,
+    "notes": [
+      "TypeScript flagged null safety and regex target issues",
+      "ESLint reports pervasive any usage in critical views"
+    ]
+  },
+  "build": {
+    "status": "failed",
+    "blockingEnv": "NEXT_PUBLIC_SOCKET_PATH",
+    "details": "Production build aborts because client config throws when socket path env is empty"
+  },
+  "pwa": {
+    "manifest": true,
+    "serviceWorker": true,
+    "optInRequired": true
+  },
+  "security": {
+    "headers": "missing hardened defaults",
+    "notes": [
+      "CSP not configured",
+      "Next config ignores type/lint errors hiding regressions"
+    ]
+  },
+  "ux": {
+    "homeCoverage": "partial",
+    "gaps": [
+      "No stories/live ticker/upcoming fixtures",
+      "Quick tiles lack analytics or loading states"
+    ]
+  }
+}
