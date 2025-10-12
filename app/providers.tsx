@@ -3,35 +3,73 @@
 import { ReactNode, useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Capacitor } from "@capacitor/core";
+
+import { PWA_OPT_IN_EVENT, PWA_OPT_IN_KEY } from "@/app/_lib/pwa";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/providers/auth-provider";
-import { I18nProvider } from "@/providers/i18n-provider";
-import { ThemeProvider } from "@/providers/theme-provider";
-import { RealtimeProvider } from "@/providers/realtime-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { clientConfig } from "@/config/client";
+import { AuthProvider } from "@/providers/auth-provider";
+import { I18nProvider } from "@/providers/i18n-provider";
+import { RealtimeProvider } from "@/providers/realtime-provider";
+import { ThemeProvider } from "@/providers/theme-provider";
+
+const hasWindow = () => typeof window !== 'undefined';
+
+let serviceWorkerRegistered = false;
+const registerServiceWorker = async () => {
+  if (!hasWindow() || !('serviceWorker' in navigator) || serviceWorkerRegistered) {
+    return;
+  }
+
+  try {
+    await navigator.serviceWorker.register('/service-worker.js');
+    serviceWorkerRegistered = true;
+  } catch (error) {
+    console.warn('Service worker registration failed', error);
+  }
+};
+
+const hasPwaOptIn = () => {
+  if (!hasWindow()) {
+    return false;
+  }
+  try {
+    return window.localStorage.getItem(PWA_OPT_IN_KEY) === 'true';
+  } catch (error) {
+    console.warn('Unable to read stored PWA opt-in preference', error);
+    return false;
+  }
+};
 
 export const Providers = ({ children }: { children: ReactNode }) => {
   const [queryClient] = useState(() => new QueryClient());
 
   useEffect(() => {
-    if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+    if (!hasWindow()) {
       return;
     }
 
-    const register = async () => {
-      try {
-        await navigator.serviceWorker.register('/service-worker.js');
-      } catch (error) {
-        console.warn('Service worker registration failed', error);
+    const maybeRegister = () => {
+      if (hasPwaOptIn()) {
+        registerServiceWorker();
       }
     };
 
-    register();
+    maybeRegister();
+
+    const onOptIn = () => {
+      registerServiceWorker();
+    };
+
+    window.addEventListener(PWA_OPT_IN_EVENT, onOptIn);
+    return () => {
+      window.removeEventListener(PWA_OPT_IN_EVENT, onOptIn);
+    };
   }, []);
 
   useEffect(() => {
-    if (!isNotificationSupported()) {
+    if (!hasWindow() || !isNotificationSupported() || !hasPwaOptIn()) {
       return;
     }
 
@@ -87,15 +125,16 @@ export const Providers = ({ children }: { children: ReactNode }) => {
   );
 };
 
-const isNotificationSupported = () => typeof window !== 'undefined' && 'Notification' in window;
+const isNotificationSupported = () => hasWindow() && 'Notification' in window;
 
 const recordTelemetry = (event: { type: string; isActive?: boolean }) => {
   try {
     const body = JSON.stringify({ ...event, timestamp: Date.now() });
-    if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
-      navigator.sendBeacon('/api/telemetry/app-state', body);
+    const endpoint = clientConfig.telemetryEndpoint;
+    if (hasWindow() && typeof navigator.sendBeacon === 'function') {
+      navigator.sendBeacon(endpoint, body);
     } else if (typeof fetch === 'function') {
-      fetch('/api/telemetry/app-state', {
+      fetch(endpoint, {
         method: 'POST',
         body,
         headers: { 'content-type': 'application/json' },

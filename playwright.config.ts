@@ -1,4 +1,4 @@
-import type { PlaywrightTestConfig } from '@playwright/test';
+import { devices, type PlaywrightTestConfig } from '@playwright/test';
 
 const PORT = Number(process.env.PORT ?? 3000);
 
@@ -19,7 +19,31 @@ const config: PlaywrightTestConfig = {
       NEXT_PUBLIC_BACKEND_URL: `http://localhost:${PORT}/api/e2e`,
     },
   },
-  testDir: 'tests/e2e',
+  projects: [
+    {
+      name: 'desktop-chromium',
+      testDir: 'tests/e2e',
+      testIgnore: ['mobile/**'],
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 720 },
+      },
+    },
+    {
+      name: 'mobile-small',
+      testDir: 'tests/e2e/mobile',
+      use: {
+        ...devices['Pixel 5'],
+      },
+    },
+    {
+      name: 'mobile-medium',
+      testDir: 'tests/e2e/mobile',
+      use: {
+        ...devices['iPad Mini'],
+      },
+    },
+  ],
 };
 
 export default config;
