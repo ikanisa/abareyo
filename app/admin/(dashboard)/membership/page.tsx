@@ -1,7 +1,7 @@
+import dynamic from 'next/dynamic';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { MembershipActions } from '@/components/admin/membership/MembershipActions';
-import { MembersTable } from '@/components/admin/membership/MembersTable';
+import type { MembersTableProps } from '@/components/admin/membership/MembersTable';
 import type {
   AdminMembershipPlan as MembershipPlan,
   AdminMembershipRecord as MembershipRecord,
@@ -26,6 +26,16 @@ async function fetchWithSession<T>(path: string, deniedKey: string) {
   }
   return (await response.json()) as T;
 }
+
+const MembersTable = dynamic<MembersTableProps>(
+  () => import('@/components/admin/membership/MembersTable').then((mod) => mod.MembersTable),
+  { ssr: false, loading: () => <div className="text-sm text-slate-300">Loading members…</div> },
+);
+
+const MembershipActions = dynamic(
+  () => import('@/components/admin/membership/MembershipActions').then((mod) => mod.MembershipActions),
+  { ssr: false, loading: () => <div className="text-sm text-slate-300">Preparing actions…</div> },
+);
 
 export default async function AdminMembershipPage() {
   const [plansResp, members] = await Promise.all([

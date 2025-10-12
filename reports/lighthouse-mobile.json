@@ -1,0 +1,4 @@
+{
+  "error": "not_executed",
+  "reason": "Lighthouse requires running dev server; skipped in CI container to avoid flake"
+}
