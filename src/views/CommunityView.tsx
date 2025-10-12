@@ -28,13 +28,11 @@ import {
   reactToCommunityPost,
   recordCommunityPostView,
   voteCommunityPoll,
+  type CommunityPost,
+  type PollContract,
+  type LeaderboardEntryContract,
+  type CommunityMissionsContract,
 } from "@/lib/api/community";
-import type {
-  CommunityPost,
-  PollContract,
-  LeaderboardEntryContract,
-  CommunityMissionsContract,
-} from "@rayon/contracts";
 
 type PostCardProps = {
   post: CommunityPost;

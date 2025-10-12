@@ -12,8 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
 import { fetchWalletSummary, fetchWalletTransactions } from "@/lib/api/wallet";
-import { fetchActivePasses, fetchTicketReceipt, rotateTicketPass } from "@/lib/api/tickets";
-import type { ActiveTicketPassContract, TicketOrderReceiptContract } from "@rayon/contracts";
+import { fetchActivePasses, fetchTicketReceipt, rotateTicketPass, type ActiveTicketPassContract, type TicketOrderReceiptContract } from "@/lib/api/tickets";
 import { useAuth } from "@/providers/auth-provider";
 
 const formatter = new Intl.NumberFormat("en-RW", { style: "currency", currency: "RWF" });
@@ -83,11 +82,11 @@ const Wallet = () => {
     if (cached) {
       setUserIdInput(cached);
       setActiveUserId(cached);
-    } else if (user?.id) {
-      setUserIdInput(user.id);
-      setActiveUserId(user.id);
+    } else if ((user as any)?.id) {
+      setUserIdInput((user as any).id);
+      setActiveUserId((user as any).id);
     }
-  }, [user?.id]);
+  }, [(user as any)?.id]);
 
   useEffect(() => {
     setReceipt(null);
@@ -346,7 +345,7 @@ const Wallet = () => {
                     </div>
                     <div className="flex items-center justify-between gap-3 mt-2">
                       <Badge variant={statusVariant(tx.status)}>{tx.status.replace(/_/g, " ")}</Badge>
-                      {tx.metadata?.ref && (
+                      {!!tx.metadata?.ref && (
                         <span className="text-xs text-muted-foreground">Ref: {String(tx.metadata.ref)}</span>
                       )}
                     </div>

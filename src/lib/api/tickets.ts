@@ -1,13 +1,148 @@
-import type {
-  ActiveTicketPassContract,
-  RotateTicketPassResponseContract,
-  TicketCheckoutRequestContract,
-  TicketCheckoutResponseContract,
-  TicketCatalogResponseContract,
-  TicketAnalyticsContract,
-  TicketOrderReceiptContract,
-  TicketOrderSummaryContract,
-} from '@rayon/contracts';
+// Type definitions inlined from contracts
+export enum TicketZoneContract {
+  VIP = 'VIP',
+  REGULAR = 'REGULAR',
+  GENERAL = 'GENERAL',
+}
+
+export type TicketCheckoutItemContract = {
+  zone: TicketZoneContract;
+  quantity: number;
+  price: number;
+};
+
+export type TicketCheckoutRequestContract = {
+  matchId: string;
+  items: TicketCheckoutItemContract[];
+  channel?: 'mtn' | 'airtel';
+};
+
+export type TicketCheckoutResponseContract = {
+  orderId: string;
+  total: number;
+  ussdCode: string;
+  expiresAt: string;
+  paymentId?: string;
+};
+
+export type TicketZoneMetaContract = {
+  zone: TicketZoneContract;
+  price: number;
+  capacity: number;
+  remaining: number;
+  gate: string;
+};
+
+export type TicketCatalogMatchContract = {
+  id: string;
+  opponent: string;
+  kickoff: string;
+  venue: string;
+  competition?: string | null;
+  status: string;
+  zones: TicketZoneMetaContract[];
+};
+
+export type TicketCatalogResponseContract = {
+  matches: TicketCatalogMatchContract[];
+};
+
+export type TicketAnalyticsContract = {
+  totals: {
+    revenue: number;
+    orders: number;
+    paid: number;
+    pending: number;
+    cancelled: number;
+    expired: number;
+    averageOrderValue: number;
+  };
+  matchBreakdown: {
+    matchId: string;
+    opponent: string;
+    kickoff: string;
+    venue: string;
+    totalRevenue: number;
+    paidOrders: number;
+    seatsSold: number;
+    capacity: number;
+  }[];
+  recentSales: {
+    date: string;
+    revenue: number;
+    orders: number;
+  }[];
+  paymentStatus: {
+    status: string;
+    count: number;
+  }[];
+};
+
+export type TicketOrderMatchContract = {
+  id: string;
+  opponent: string;
+  kickoff: string;
+  venue: string;
+};
+
+export type TicketOrderItemContract = {
+  id: string;
+  zone: TicketZoneContract | string;
+  quantity: number;
+  price: number;
+};
+
+export type TicketOrderPaymentSummaryContract = {
+  id: string;
+  status: string;
+  amount: number;
+  createdAt: string;
+};
+
+export type TicketOrderSummaryContract = {
+  id: string;
+  status: string;
+  total: number;
+  createdAt: string;
+  expiresAt: string;
+  ussdCode: string;
+  smsRef?: string | null;
+  match: TicketOrderMatchContract | null;
+  items: TicketOrderItemContract[];
+  payments: TicketOrderPaymentSummaryContract[];
+};
+
+export type TicketOrderReceiptContract = TicketOrderSummaryContract & {
+  payments: (TicketOrderPaymentSummaryContract & {
+    confirmedAt: string | null;
+    metadata: Record<string, unknown> | null;
+  })[];
+  passes: {
+    id: string;
+    zone: TicketZoneContract | string;
+    gate?: string | null;
+    state: string;
+    updatedAt: string;
+    transferredToUserId?: string | null;
+  }[];
+};
+
+export type ActiveTicketPassContract = {
+  passId: string;
+  matchId: string;
+  matchOpponent: string;
+  kickoff: string;
+  zone: TicketZoneContract;
+  gate?: string | null;
+  updatedAt: string;
+};
+
+export type RotateTicketPassResponseContract = {
+  passId: string;
+  token: string;
+  rotatedAt: string;
+  validForSeconds: number;
+};
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api';
 const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_API_TOKEN ?? '';
