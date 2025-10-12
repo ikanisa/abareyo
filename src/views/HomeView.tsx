@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, MapPin, Ticket, CreditCard, ShoppingBag, Heart } from "lucide-react";
+import { Calendar, MapPin, Ticket, CreditCard, ShoppingBag, Heart, User2 } from "lucide-react";
 
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
@@ -64,6 +64,15 @@ export default function Home() {
     <div className="min-h-screen pb-24 px-4">
       {/* Hero Section */}
       <section className="pt-8 pb-6 animate-fade-in">
+        <div className="mb-3 flex justify-end">
+          <Link
+            href="/admin/login"
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-200 transition hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+          >
+            <User2 className="h-4 w-4" />
+            Admin Console
+          </Link>
+        </div>
         <GlassCard variant="hero" className="overflow-hidden">
           <div className="bg-gradient-hero p-6 space-y-4">
             {catalogQuery.isLoading ? (
