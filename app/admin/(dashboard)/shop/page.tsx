@@ -1,8 +1,12 @@
+import dynamic from 'next/dynamic';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { ShopActions } from '@/components/admin/shop/ShopActions';
-import { ShopOrdersManageTable } from '@/components/admin/shop/ShopOrdersManageTable';
-import type { PaginatedResponse, AdminShopOrder as ShopOrder, AdminShopSummary as ShopSummary } from '@/lib/api/admin/shop';
+import type {
+  PaginatedResponse,
+  AdminShopOrder as ShopOrder,
+  AdminShopSummary as ShopSummary,
+} from '@/lib/api/admin/shop';
+import type { ShopOrdersManageTableProps } from '@/components/admin/shop/ShopOrdersManageTable';
 
 // Types come from admin API clients
 
@@ -22,6 +26,16 @@ async function fetchWithSession<T>(path: string, deniedKey: string) {
   }
   return (await response.json()) as T;
 }
+
+const ShopOrdersManageTable = dynamic<ShopOrdersManageTableProps>(
+  () => import('@/components/admin/shop/ShopOrdersManageTable').then((mod) => mod.ShopOrdersManageTable),
+  { ssr: false, loading: () => <div className="text-sm text-slate-300">Loading shop orders…</div> },
+);
+
+const ShopActions = dynamic(
+  () => import('@/components/admin/shop/ShopActions').then((mod) => mod.ShopActions),
+  { ssr: false, loading: () => <div className="text-sm text-slate-300">Loading shop actions…</div> },
+);
 
 export default async function AdminShopPage() {
   const [summary, orders] = await Promise.all([

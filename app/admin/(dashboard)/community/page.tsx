@@ -1,4 +1,9 @@
-import AdminCommunityView from "@/views/AdminCommunityView";
+import { lazyAdminView } from "../_components/admin-view-loader";
+
+const AdminCommunityView = lazyAdminView(
+  () => import("@/views/AdminCommunityView"),
+  { title: "Loading community analytics" },
+);
 
 const AdminCommunityPage = () => <AdminCommunityView />;
 

@@ -25,19 +25,34 @@ export default function OnboardingSwitcher() {
       if (stored === "new" || stored === "legacy") {
         setMode(stored);
       }
-    } catch {}
+    } catch (error) {
+      console.warn("Unable to read onboarding mode preference", error);
+    }
   }, []);
+
+  const persistMode = (nextMode: Mode) => {
+    setMode(nextMode);
+    try {
+      localStorage.setItem(STORAGE_KEY, nextMode);
+    } catch (error) {
+      console.warn("Unable to store onboarding mode preference", error);
+    }
+  };
 
   return (
     <div className="mx-auto w-full max-w-3xl px-3 py-4">
       <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
         <button
           className={`rounded px-2 py-1 border ${mode === 'legacy' ? 'bg-primary/10 border-primary/30' : 'border-white/10 hover:bg-white/5'}`}
-          onClick={() => { setMode('legacy'); try { localStorage.setItem(STORAGE_KEY, 'legacy'); } catch {} }}
+          onClick={() => {
+            persistMode('legacy');
+          }}
         >Legacy chat</button>
         <button
           className={`rounded px-2 py-1 border ${mode === 'new' ? 'bg-primary/10 border-primary/30' : 'border-white/10 hover:bg-white/5'}`}
-          onClick={() => { setMode('new'); try { localStorage.setItem(STORAGE_KEY, 'new'); } catch {} }}
+          onClick={() => {
+            persistMode('new');
+          }}
         >New chat (beta)</button>
       </div>
       {mode === 'new' ? <NewOnboarding /> : <LegacyOnboarding />}

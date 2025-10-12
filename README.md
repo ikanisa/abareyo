@@ -105,4 +105,10 @@ In development, you can run a local MinIO instance and point the `S3_PUBLIC_BASE
 
 - Runbooks & Manifests
   - Deploy: `docs/runbooks/deploy.md`; Rollback: `docs/runbooks/rollback.md`; Cutover: `docs/cutover-readiness.md`.
+  - **Operations**: `docs/runbooks/operations.md` covers daily checks, telemetry smokes, and the new offline/empty-state playbook.
   - K8s examples under `k8s/` and `docs/k8s/README.md`.
+
+## Resilience Enhancements (P3)
+
+- Home now renders skeleton placeholders while data loads and surfaces copy-led empty states when CMS content is unavailable.
+- Fans see an accessible offline banner whenever connectivity drops; the UI recovers automatically when the network returns.

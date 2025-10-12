@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import AdminMatchOpsView from '@/views/AdminMatchOpsView';
+import { lazyAdminView } from '../_components/admin-view-loader';
 import type { AdminMatch } from '@/lib/api/admin/match';
 
 const BACKEND_BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api';
@@ -25,9 +25,14 @@ async function fetchAdminMatchesServer() {
   return payload.data ?? [];
 }
 
+const MatchOpsView = lazyAdminView(
+  () => import('@/views/AdminMatchOpsView'),
+  { title: 'Loading match operations' },
+);
+
 const AdminMatchOpsPage = async () => {
   const matches = await fetchAdminMatchesServer();
-  return <AdminMatchOpsView initialMatches={matches} />;
+  return <MatchOpsView initialMatches={matches} />;
 };
 
 export default AdminMatchOpsPage;

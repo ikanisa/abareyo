@@ -65,11 +65,13 @@ export default function Tickets() {
     }
   }, [matches, activeMatchId]);
 
+  const sessionUserId = user?.id ?? "";
+
   useEffect(() => {
-    if ((user as any)?.id && userId.trim().length === 0) {
-      setUserId((user as any).id);
+    if (sessionUserId && userId.trim().length === 0) {
+      setUserId(sessionUserId);
     }
-  }, [(user as any)?.id, userId]);
+  }, [sessionUserId, userId]);
 
 
   const matchIndex = useMemo(
@@ -235,7 +237,7 @@ export default function Tickets() {
     checkoutMutation.reset();
   };
 
-  const ussdDisplay = order?.ussdCode?.replaceAll("%23", "#");
+  const ussdDisplay = order?.ussdCode?.replace(/%23/g, "#");
 
   const launchDialer = () => {
     if (!order) return;

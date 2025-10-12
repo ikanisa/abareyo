@@ -8,6 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+.next
 dist
 dist-ssr
 *.local
@@ -29,3 +30,5 @@ supabase/supabase/.temp/
 *.sln
 *.sw?
 .vercel
+test-results
+playwright-report

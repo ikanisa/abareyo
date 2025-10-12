@@ -1,3 +1,20 @@
+const DEFAULT_SOCKET_PATH = '/ws';
+const DEFAULT_TELEMETRY_ENDPOINT = '/api/telemetry/app-state';
+
+const warnings: string[] = [];
+
+const logWarning = (message: string) => {
+  if (process.env.NODE_ENV === 'production') {
+    console.error(message);
+  } else {
+    console.warn(message);
+  }
+};
+
+const captureWarning = (message: string) => {
+  warnings.push(message);
+};
+
 const normaliseOrigin = (value: string) => value.replace(/\/+$/u, '');
 
 const resolveRealtimeOrigin = (backendUrl: string | null) => {
@@ -6,7 +23,7 @@ const resolveRealtimeOrigin = (backendUrl: string | null) => {
   }
 
   if (!/^https?:\/\//iu.test(backendUrl)) {
-    console.warn('NEXT_PUBLIC_BACKEND_URL must be an absolute URL to derive realtime origin.');
+    logWarning('NEXT_PUBLIC_BACKEND_URL must be an absolute URL to derive realtime origin.');
     return null;
   }
 
@@ -20,59 +37,48 @@ const isAbsoluteUrl = (value: string) => /^https?:\/\//iu.test(value);
 
 const isRelativeUrl = (value: string) => value.startsWith('/');
 
-const environment = process.env.NEXT_PUBLIC_ENVIRONMENT_LABEL ?? process.env.NODE_ENV ?? 'development';
-
 const rawBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || null;
 const rawSocketPathEnv = process.env.NEXT_PUBLIC_SOCKET_PATH;
-const rawSocketPath = (rawSocketPathEnv ?? '/ws').trim();
 const rawTelemetryUrl = process.env.NEXT_PUBLIC_TELEMETRY_URL?.trim();
 
-if (!rawSocketPathEnv || rawSocketPath.length === 0) {
-  const message = 'NEXT_PUBLIC_SOCKET_PATH must be provided and non-empty.';
-  if (environment === 'production') {
-    throw new Error(message);
-  }
-  console.warn(`${message} Falling back to /ws for this build.`);
-}
-
+let backendBaseUrl: string | null = rawBackendUrl;
 if (!rawBackendUrl) {
-  const message = 'NEXT_PUBLIC_BACKEND_URL is not set; realtime features will be disabled.';
-  if (environment === 'production') {
-    throw new Error('NEXT_PUBLIC_BACKEND_URL must be provided in production deployments.');
-  }
-  console.warn(message);
+  captureWarning('NEXT_PUBLIC_BACKEND_URL is not set; realtime features will be disabled.');
+  backendBaseUrl = null;
 } else if (!isAbsoluteUrl(rawBackendUrl)) {
-  const message = 'NEXT_PUBLIC_BACKEND_URL must be an absolute URL including protocol (https://...).';
-  if (environment === 'production') {
-    throw new Error(message);
-  }
-  console.warn(message);
+  captureWarning('NEXT_PUBLIC_BACKEND_URL must be an absolute URL including protocol (https://...).');
+  backendBaseUrl = null;
 }
 
-const socketPathSource = rawSocketPath.length > 0 ? rawSocketPath : '/ws';
-const socketPath = ensureLeadingSlash(socketPathSource);
-if (socketPath !== socketPathSource) {
-  const message = 'NEXT_PUBLIC_SOCKET_PATH must start with a `/`. Auto-correcting for this build.';
-  if (environment === 'production') {
-    throw new Error(message);
+let socketPath = DEFAULT_SOCKET_PATH;
+if (typeof rawSocketPathEnv === 'string') {
+  const trimmed = rawSocketPathEnv.trim();
+  if (!trimmed) {
+    captureWarning('NEXT_PUBLIC_SOCKET_PATH was provided but empty; using /ws.');
+  } else {
+    socketPath = ensureLeadingSlash(trimmed);
+    if (socketPath !== trimmed) {
+      captureWarning('NEXT_PUBLIC_SOCKET_PATH should start with `/`; auto-correcting.');
+    }
   }
-  console.warn(message);
+} else {
+  captureWarning('NEXT_PUBLIC_SOCKET_PATH is not set; defaulting to /ws.');
 }
 
-const telemetryEndpoint = rawTelemetryUrl || '/api/telemetry/app-state';
+let telemetryEndpoint = DEFAULT_TELEMETRY_ENDPOINT;
 if (!rawTelemetryUrl) {
-  const message = 'NEXT_PUBLIC_TELEMETRY_URL is not set; defaulting to /api/telemetry/app-state.';
-  if (environment === 'production') {
-    throw new Error('NEXT_PUBLIC_TELEMETRY_URL must be provided in production deployments.');
-  }
-  console.warn(message);
-} else if (!isAbsoluteUrl(rawTelemetryUrl) && !isRelativeUrl(rawTelemetryUrl)) {
-  throw new Error('NEXT_PUBLIC_TELEMETRY_URL must be an absolute URL or begin with `/`.');
+  captureWarning('NEXT_PUBLIC_TELEMETRY_URL is not set; defaulting to /api/telemetry/app-state.');
+} else if (isAbsoluteUrl(rawTelemetryUrl) || isRelativeUrl(rawTelemetryUrl)) {
+  telemetryEndpoint = rawTelemetryUrl;
+} else {
+  captureWarning('NEXT_PUBLIC_TELEMETRY_URL must be an absolute URL or begin with `/`; defaulting to safe endpoint.');
 }
+
+warnings.forEach(logWarning);
 
 export const clientConfig = Object.freeze({
-  backendBaseUrl: rawBackendUrl,
-  realtimeOrigin: resolveRealtimeOrigin(rawBackendUrl),
+  backendBaseUrl,
+  realtimeOrigin: resolveRealtimeOrigin(backendBaseUrl),
   socketPath,
   telemetryEndpoint,
 });

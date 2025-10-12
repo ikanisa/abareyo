@@ -4,9 +4,10 @@ import { createContext, ReactNode, useContext, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { fetchFanSession, finalizeFanOnboarding, logoutFan } from "@/lib/api/fan";
+import type { FanSession } from "@/lib/api/fan";
 
 type FanSessionData = Awaited<ReturnType<typeof fetchFanSession>>;
-type FanUser = FanSessionData extends { user: infer U } ? U : null;
+type FanUser = FanSession["user"];
 
 type AuthContextValue = {
   session: FanSessionData;
