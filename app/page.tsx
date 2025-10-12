@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import TopAppBar from "./_components/ui/TopAppBar";
 import QuickTiles from "./_components/ui/QuickTiles";
@@ -9,6 +9,14 @@ import OnboardingModal from "./_components/onboarding/OnboardingModal";
 
 export default function Home(){
   const [onboardingOpen, setOnboardingOpen] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('onboarding') === '1') {
+        setOnboardingOpen(true);
+      }
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-rs-gradient text-white">
