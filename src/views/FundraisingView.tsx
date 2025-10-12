@@ -89,7 +89,7 @@ export default function Fundraising() {
 
   const projects = projectsQuery.data ?? [];
   const currentProject = projects.find((project) => project.id === selectedProject) ?? null;
-  const ussdDisplay = receipt?.ussdCode?.replaceAll("%23", "#");
+  const ussdDisplay = receipt?.ussdCode?.replace(/%23/g, "#");
 
   useEffect(() => {
     if (!socket || !currentProject) {

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "@/index.css";
 import "./globals.css";
+import ClientErrorBoundary from "./_components/telemetry/ClientErrorBoundary";
 import { Providers } from "./providers";
 import { InstallPrompt, OfflineBanner } from "./_components/pwa/PwaHelpers";
 
@@ -41,7 +42,9 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => (
   <html lang="en" suppressHydrationWarning>
     <body className="bg-background text-foreground">
       <OfflineBanner />
-      <Providers>{children}</Providers>
+      <ClientErrorBoundary>
+        <Providers>{children}</Providers>
+      </ClientErrorBoundary>
       <InstallPrompt />
     </body>
   </html>

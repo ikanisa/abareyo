@@ -1,6 +1,6 @@
+import dynamic from 'next/dynamic';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { FeatureFlagsTable } from '@/components/admin/settings/FeatureFlagsTable';
 import type { AdminFeatureFlag } from '@/lib/api/admin/feature-flags';
 
 const BACKEND_BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api';
@@ -19,6 +19,13 @@ async function fetchWithSession<T>(path: string, deniedKey: string) {
   }
   return (await response.json()) as T;
 }
+
+type FeatureFlagsTableProps = { initial: AdminFeatureFlag[] };
+
+const FeatureFlagsTable = dynamic<FeatureFlagsTableProps>(
+  () => import('@/components/admin/settings/FeatureFlagsTable').then((mod) => mod.FeatureFlagsTable),
+  { ssr: false, loading: () => <div className="text-sm text-slate-300">Loading feature flags…</div> },
+);
 
 export default async function AdminSettingsPage() {
   const flags = await fetchWithSession<{ data: AdminFeatureFlag[] }>(`/admin/feature-flags`, 'settings');

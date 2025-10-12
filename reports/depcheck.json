@@ -1,0 +1,4 @@
+{
+  "error": "depcheck not executed",
+  "detail": "npx depcheck requires interactive confirmation in this environment"
+}

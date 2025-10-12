@@ -1,0 +1,88 @@
+Root contents
+- [file] .env
+- [dir] .githooks
+- [dir] .github
+  - workflows
+
+- [file] .gitignore
+- [file] Dockerfile
+- [file] Makefile
+- [file] README.md
+- [dir] app
+  - (onboarding)
+  - (routes)
+  - _components
+  - _config
+  - _lib
+  - admin
+  - api
+  - gate
+  - onboarding
+
+- [dir] backend
+  - prisma
+  - src
+  - test
+  - tools
+
+- [file] bun.lockb
+- [file] capacitor.config.ts
+- [dir] changelogs
+- [file] components.json
+- [file] docker-compose.yml
+- [dir] docs
+  - architecture
+  - grafana
+  - k8s
+  - mobile
+  - observability
+  - runbooks
+  - workshops
+
+- [file] eslint.config.js
+- [dir] k8s
+- [file] middleware.ts
+- [file] next-env.d.ts
+- [file] next.config.mjs
+- [file] package-lock.json
+- [file] package.json
+- [dir] packages
+  - contracts
+
+- [dir] pages
+  - api
+
+- [dir] plans
+- [file] playwright.config.ts
+- [file] postcss.config.js
+- [dir] public
+  - workbox-v6.5.4
+
+- [dir] reports
+- [dir] scripts
+- [dir] src
+  - components
+  - config
+  - hooks
+  - integrations
+  - lib
+  - providers
+  - views
+
+- [dir] supabase
+  - .temp
+  - functions
+  - migrations
+  - supabase
+
+- [file] tailwind.config.ts
+- [dir] tests
+  - e2e
+  - unit
+
+- [dir] tools
+  - gsm-emulator
+
+- [file] tsconfig.json
+- [file] tsconfig.tsbuildinfo
+- [file] vitest.config.ts
