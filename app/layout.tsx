@@ -3,6 +3,7 @@ import "@/index.css";
 import "./globals.css";
 import ClientErrorBoundary from "./_components/telemetry/ClientErrorBoundary";
 import { Providers } from "./providers";
+import BottomNavContainer from "./_components/BottomNavContainer";
 import { InstallPrompt, OfflineBanner } from "./_components/pwa/PwaHelpers";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
@@ -43,7 +44,12 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => (
     <body className="bg-background text-foreground">
       <OfflineBanner />
       <ClientErrorBoundary>
-        <Providers>{children}</Providers>
+        <Providers>
+          <>
+            {children}
+            <BottomNavContainer />
+          </>
+        </Providers>
       </ClientErrorBoundary>
       <InstallPrompt />
     </body>
