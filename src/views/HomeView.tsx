@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchTicketCatalog } from "@/lib/api/tickets";
 
-const OnboardingChat = dynamic(() => import("@/app/(onboarding)/_components/OnboardingChat"), {
+const OnboardingChat = dynamic(() => import("../../app/(onboarding)/_components/OnboardingChat"), {
   ssr: false,
 });
 
