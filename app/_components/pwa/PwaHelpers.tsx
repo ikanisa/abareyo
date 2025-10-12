@@ -20,13 +20,21 @@ export function InstallPrompt(){
 }
 
 export function OfflineBanner(){
-  const [offline, setOffline] = useState(!navigator.onLine);
+  const [offline, setOffline] = useState(false);
   useEffect(()=>{
-    const on = ()=>setOffline(false), off=()=>setOffline(true);
-    window.addEventListener("online", on); window.addEventListener("offline", off);
-    return ()=>{ window.removeEventListener("online", on); window.removeEventListener("offline", off); };
+    const on = () => setOffline(false);
+    const off = () => setOffline(true);
+    if (typeof window !== "undefined") {
+      setOffline(!navigator.onLine);
+      window.addEventListener("online", on);
+      window.addEventListener("offline", off);
+      return () => {
+        window.removeEventListener("online", on);
+        window.removeEventListener("offline", off);
+      };
+    }
+    return () => {};
   },[]);
   if(!offline) return null;
   return <div className="fixed top-14 inset-x-0 text-center p-2 bg-yellow-500/20 text-yellow-100">You’re offline. We’ll sync when you’re back.</div>;
 }
-

@@ -1,4 +1,9 @@
-export const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent);
+export const isIOS = () => {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+  return /iPad|iPhone|iPod/.test(navigator.userAgent);
+};
 
 export const launchUssdDialer = (
   ussdCode: string,
