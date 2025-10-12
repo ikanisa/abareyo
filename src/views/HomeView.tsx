@@ -1,14 +1,31 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useMemo } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, MapPin, Ticket, CreditCard, ShoppingBag, Heart, User2 } from "lucide-react";
+import {
+  Calendar,
+  MapPin,
+  Ticket,
+  CreditCard,
+  ShoppingBag,
+  Heart,
+  User2,
+  Bot,
+  X,
+  Newspaper,
+  Flag,
+} from "lucide-react";
 
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchTicketCatalog } from "@/lib/api/tickets";
+
+const OnboardingChat = dynamic(() => import("@/app/(onboarding)/_components/OnboardingChat"), {
+  ssr: false,
+});
 
 const quickLinks = [
   {
@@ -42,6 +59,7 @@ const quickLinks = [
 ] as const;
 
 export default function Home() {
+  const [chatOpen, setChatOpen] = useState(false);
   const catalogQuery = useQuery({
     queryKey: ["tickets", "catalog", "home"],
     queryFn: fetchTicketCatalog,
@@ -61,18 +79,34 @@ export default function Home() {
     : null;
 
   return (
-    <div className="min-h-screen pb-24 px-4">
-      {/* Hero Section */}
-      <section className="pt-8 pb-6 animate-fade-in">
-        <div className="mb-3 flex justify-end">
-          <Link
-            href="/admin/login"
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-200 transition hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
-          >
-            <User2 className="h-4 w-4" />
-            Admin Console
-          </Link>
-        </div>
+    <Fragment>
+      <div className="min-h-screen pb-32 px-4">
+        {/* Top bar */}
+        <header className="flex items-center justify-between pt-6">
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-primary/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
+              Rayon Sports
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+              <Link href="/community">
+                <Newspaper className="mr-2 h-4 w-4" />
+                Stories
+              </Link>
+            </Button>
+            <Link
+              href="/admin/login"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.08] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-100 transition hover:border-primary hover:bg-primary/20 hover:text-primary-foreground"
+            >
+              <User2 className="h-4 w-4" />
+              Admin
+            </Link>
+          </div>
+        </header>
+
+        {/* Hero */}
+        <section className="pt-6 pb-6 animate-fade-in">
         <GlassCard variant="hero" className="overflow-hidden">
           <div className="bg-gradient-hero p-6 space-y-4">
             {catalogQuery.isLoading ? (
@@ -155,9 +189,12 @@ export default function Home() {
         </GlassCard>
       </section>
 
-      {/* Quick Actions */}
-      <section className="py-6 animate-slide-up">
-        <div className="grid grid-cols-2 gap-3">
+        {/* Quick Actions */}
+        <section className="py-6 animate-slide-up">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Explore
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
           {quickLinks.map((link) => {
             const Icon = link.icon;
             return (
@@ -175,30 +212,86 @@ export default function Home() {
             );
           })}
         </div>
-      </section>
+        </section>
 
-      {/* Latest News placeholder */}
-      <section className="py-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-black gradient-text">Latest News</h2>
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/community">Go to Community</Link>
-          </Button>
-        </div>
+        {/* Spotlight + Missions */}
+        <section className="py-6 space-y-4">
+          <div className="grid gap-4 lg:grid-cols-2">
+            <GlassCard className="overflow-hidden">
+              <div className="h-44 bg-gradient-to-br from-primary/60 via-primary to-primary/80" aria-hidden />
+              <div className="p-5 space-y-3">
+                <h3 className="text-lg font-bold text-primary">Fan Spotlight</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Download the official app or check out the community feed for new behind-the-scenes stories, match
+                  previews, and supporter missions. Your voice powers Abareyo.
+                </p>
+                <Button asChild size="sm" variant="ghost" className="w-full">
+                  <Link href="/community">
+                    <Newspaper className="mr-2 h-4 w-4" />
+                    Open Community feed
+                  </Link>
+                </Button>
+              </div>
+            </GlassCard>
 
-        <GlassCard className="overflow-hidden">
-          <div className="h-44 bg-gradient-hero" aria-hidden />
-          <div className="p-5 space-y-2">
-            <h3 className="font-bold text-lg text-foreground">Catch up with the latest stories</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Dive into match previews, training updates, and fan missions in the community hub.
-            </p>
-            <Button asChild variant="ghost" size="sm" className="w-full">
-              <Link href="/community">Open Community feed</Link>
-            </Button>
+            <GlassCard className="p-5 space-y-3 border-primary/20 bg-primary/5">
+              <div className="flex items-center gap-2 text-primary">
+                <Flag className="h-5 w-5" />
+                <h3 className="text-lg font-semibold">Fan Missions</h3>
+              </div>
+              <p className="text-sm text-primary/80">
+                Collect points by completing weekly missions, attend matchday events, and unlock exclusive rewards.
+                Missions launch soon—stay tuned!
+              </p>
+              <div className="grid grid-cols-2 gap-2 text-xs text-primary/80">
+                <div className="rounded-xl border border-primary/30 bg-primary/10 p-3">
+                  Attend match watch party
+                  <span className="mt-2 block font-semibold text-primary">+250 pts</span>
+                </div>
+                <div className="rounded-xl border border-primary/30 bg-primary/10 p-3">
+                  Share match recap
+                  <span className="mt-2 block font-semibold text-primary">+150 pts</span>
+                </div>
+              </div>
+            </GlassCard>
           </div>
-        </GlassCard>
-      </section>
-    </div>
+        </section>
+      </div>
+
+      {/* Floating AI assistant button */}
+      <button
+        type="button"
+        onClick={() => setChatOpen(true)}
+        className="fixed bottom-24 right-4 z-40 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/50 transition hover:bg-primary/90"
+      >
+        <Bot className="h-5 w-5" />
+        Fan Assist
+      </button>
+
+      {/* Chat overlay */}
+      {chatOpen ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/70 backdrop-blur">
+          <div className="w-full max-w-lg rounded-t-3xl bg-slate-900 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-100">
+                <Bot className="h-4 w-4" />
+                Abareyo Assist
+              </div>
+              <button
+                type="button"
+                onClick={() => setChatOpen(false)}
+                className="rounded-full p-1 text-slate-400 transition hover:bg-slate-800 hover:text-slate-100"
+                aria-label="Close chat"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="max-h-[70vh] overflow-hidden">
+              <OnboardingChat />
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </Fragment>
   );
 }
