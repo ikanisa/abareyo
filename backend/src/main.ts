@@ -14,7 +14,16 @@ import pinoHttp from 'pino-http';
 import { AppModule } from './app.module.js';
 import { MetricsService } from './modules/metrics/metrics.service.js';
 
-const normaliseOrigin = (value: string) => value.replace(/\/$/, '');
+const normaliseOrigin = (value: string) => value.replace(/\/+$/u, '');
+const addSocketOrigins = (target: Set<string>, origin: string) => {
+  try {
+    const parsed = new URL(origin);
+    const protocol = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
+    target.add(`${protocol}//${parsed.host}`);
+  } catch (error) {
+    // Ignore malformed origins; validation happens during bootstrap.
+  }
+};
 
 const extractMetricsToken = (request: any): string | undefined => {
   const headerToken = request?.headers?.['x-metrics-token'];
@@ -162,6 +171,21 @@ async function bootstrap() {
       hook: 'onRequest',
     });
     const enableCsp = process.env.APP_ENABLE_CSP === '1';
+    const connectSrc = new Set<string>(["'self'"]);
+    const baseUrl = config.get<string>('app.baseUrl');
+    if (baseUrl) {
+      const baseOrigin = normaliseOrigin(baseUrl);
+      connectSrc.add(baseOrigin);
+      addSocketOrigins(connectSrc, baseOrigin);
+    }
+
+    if (!allowAllOrigins) {
+      allowedOrigins.forEach((origin) => {
+        connectSrc.add(origin);
+        addSocketOrigins(connectSrc, origin);
+      });
+    }
+
     await instance.register(fastifyHelmet, {
       contentSecurityPolicy: enableCsp
         ? {
@@ -170,7 +194,7 @@ async function bootstrap() {
               imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
               styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
               scriptSrc: ["'self'", "'unsafe-inline'", 'https:'],
-              connectSrc: ["'self'", '*'],
+              connectSrc: Array.from(connectSrc),
               fontSrc: ["'self'", 'https:', 'data:'],
             },
           }
