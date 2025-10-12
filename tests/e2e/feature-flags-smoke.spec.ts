@@ -8,16 +8,15 @@ test('feature flag toggle updates UI', async ({ page }) => {
   await expect(page).toHaveURL(/\/admin$/);
 
   await page.goto('/admin/settings');
-  // Find the UI row by key label
-  const row = page.getByText('ui.new_shop_flow');
+  const row = page.getByRole('row', { name: /ui\.new_shop_flow/i });
   await expect(row).toBeVisible();
-  // Toggle the first switch on the page
-  const switchEl = page.getByRole('switch').first();
-  const checkedBefore = await switchEl.getAttribute('aria-checked');
+
+  const switchEl = row.getByRole('switch');
+  const stateBefore = await switchEl.getAttribute('data-state');
+  const expectedState = stateBefore === 'checked' ? 'unchecked' : 'checked';
+
   await switchEl.click();
-  // Wait for optimistic update and toast
   await expect(page.getByText('Updated')).toBeVisible();
-  const checkedAfter = await switchEl.getAttribute('aria-checked');
-  expect(checkedAfter).not.toBe(checkedBefore);
+  await expect(switchEl).toHaveAttribute('data-state', expectedState);
 });
 

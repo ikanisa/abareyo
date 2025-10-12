@@ -4,7 +4,21 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { InstallPrompt, OfflineBanner } from "./_components/pwa/PwaHelpers";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+const metadataBase = (() => {
+  if (!siteUrl) {
+    return undefined;
+  }
+  try {
+    return new URL(siteUrl);
+  } catch (error) {
+    console.warn('Invalid NEXT_PUBLIC_SITE_URL value skipped for metadataBase', error);
+    return undefined;
+  }
+})();
+
 export const metadata: Metadata = {
+  metadataBase,
   title: "Rayon Sports - Fan App",
   description: "Official Rayon Sports fan experience.",
   icons: {

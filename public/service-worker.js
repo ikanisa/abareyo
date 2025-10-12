@@ -1,7 +1,8 @@
 /* eslint-disable no-undef */
-importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
+importScripts('/workbox-v6.5.4/workbox-sw.js');
 
 if (self.workbox) {
+  workbox.setConfig({ modulePathPrefix: '/workbox-v6.5.4' });
   workbox.core.setCacheNameDetails({ prefix: 'rayon' });
   workbox.precaching.cleanupOutdatedCaches();
 

@@ -1,0 +1,25 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Abareyo//Navigation Workshop//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:nav-onboarding-workshop-20250219@abareyo.local
+DTSTAMP:20250214T100000Z
+DTSTART:20250219T120000Z
+DTEND:20250219T133000Z
+SUMMARY:Navigation & Onboarding Remediation Workshop
+DESCRIPTION:Cross-functional working session to prioritise navigation shell and onboarding fixes ahead of the fan launch.\nObjec
+tives: align IA updates, accessibility fixes, and analytics instrumentation.\nPre-work: review nav gaps, closed beta analytics,
+and latest mobile Playwright run.
+LOCATION:Product squad war-room; Google Meet https://meet.google.com/abc-defg-hij
+ORGANIZER;CN=Rudo (Design Lead):mailto:rudo@abareyo.com
+ATTENDEE;CN=Tino (Engineering Manager);ROLE=REQ-PARTICIPANT:mailto:tino@abareyo.com
+ATTENDEE;CN=Neo (Product);ROLE=REQ-PARTICIPANT:mailto:neo@abareyo.com
+ATTENDEE;CN=Tariro (Frontend Platform);ROLE=REQ-PARTICIPANT:mailto:tariro@abareyo.com
+ATTENDEE;CN=Sifa (Frontend);ROLE=REQ-PARTICIPANT:mailto:sifa@abareyo.com
+ATTENDEE;CN=Brighton (Backend);ROLE=REQ-PARTICIPANT:mailto:brighton@abareyo.com
+ATTENDEE;CN=Chido (QA);ROLE=REQ-PARTICIPANT:mailto:chido@abareyo.com
+ATTENDEE;CN=Mercy (Support Ops);ROLE=OPT-PARTICIPANT:mailto:mercy@abareyo.com
+END:VEVENT
+END:VCALENDAR

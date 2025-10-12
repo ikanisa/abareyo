@@ -4,17 +4,10 @@ import { createContext, ReactNode, useContext, useEffect, useMemo, useState } fr
 import { io, Socket } from "socket.io-client";
 
 import { useToast } from "@/components/ui/use-toast";
+import { clientConfig } from "@/config/client";
+import { useAuth } from "@/providers/auth-provider";
 
 const RealtimeContext = createContext<{ socket: Socket | null }>({ socket: null });
-
-const deriveBackendOrigin = () => {
-  const base = process.env.NEXT_PUBLIC_BACKEND_URL;
-  if (base && /^https?:\/\//.test(base)) {
-    return base.replace(/\/?api\/?$/, "");
-  }
-  // No external backend configured: use same-origin and disable socket
-  return null;
-};
 
 type RealtimeEventDefinition = {
   event: string;
@@ -101,35 +94,49 @@ export const REALTIME_EVENTS: RealtimeEventDefinition[] = [
 
 export const REALTIME_EVENT_NAMES = REALTIME_EVENTS.map((item) => item.event);
 
+const buildTransportPreference = () => {
+  const prefer = (process.env.NEXT_PUBLIC_SOCKET_TRANSPORT || 'polling').toLowerCase();
+  return prefer === 'polling' ? (['polling', 'websocket'] as const) : (['websocket', 'polling'] as const);
+};
+
 export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
+  const { session } = useAuth();
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    const origin = deriveBackendOrigin();
-    if (!origin) {
-      // Realtime backend not configured in this environment
+    const origin = clientConfig.realtimeOrigin;
+    const sessionId = session?.session?.id;
+
+    if (!origin || !sessionId) {
       return;
     }
-    const prefer = (process.env.NEXT_PUBLIC_SOCKET_TRANSPORT || 'polling').toLowerCase();
-    const transports = prefer === 'polling' ? (['polling','websocket'] as const) : (['websocket','polling'] as const);
+
+    const transports = buildTransportPreference();
     const instance = io(origin, {
-      path: process.env.NEXT_PUBLIC_SOCKET_PATH ?? "/ws",
-      transports: transports as any,
+      path: clientConfig.socketPath,
+      transports: [...transports],
       withCredentials: true,
+      auth: { token: sessionId },
     });
 
     REALTIME_EVENTS.forEach(({ event, handler }) => {
       instance.on(event, (payload) => handler(payload, toast));
     });
 
+    instance.on('connect_error', (error) => {
+      console.warn('Realtime connection failed', error.message);
+    });
+
     setSocket(instance);
 
     return () => {
       REALTIME_EVENTS.forEach(({ event }) => instance.off(event));
+      instance.off('connect_error');
       instance.disconnect();
+      setSocket(null);
     };
-  }, [toast]);
+  }, [session?.session?.id, toast]);
 
   const value = useMemo(() => ({ socket }), [socket]);
 
