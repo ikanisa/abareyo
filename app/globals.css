@@ -1,0 +1,21 @@
+:root{
+  --rs-blue:#0033FF; --rs-azure:#00A1DE; --rs-yellow:#FAD201; --rs-green:#20603D; --rs-gold:#E5BE01;
+  --glass-bg:rgba(255,255,255,.14); --glass-stroke:rgba(255,255,255,.22); --shadow:0 8px 24px rgba(0,0,0,.25);
+  --radius-2xl:24px;
+}
+.bg-rs-gradient{
+  background: linear-gradient(135deg,var(--rs-blue),var(--rs-azure),var(--rs-yellow),var(--rs-green));
+}
+.glass{
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-stroke);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow);
+}
+.card{ @apply glass p-4 md:p-6; }
+.tile{ @apply glass py-4 px-5 font-medium text-white/90 hover:bg-white/20 transition; }
+.btn{ @apply px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white transition; }
+.btn-primary{ @apply px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white; }
+.muted{ @apply text-white/70; }
