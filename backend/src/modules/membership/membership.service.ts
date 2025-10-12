@@ -1,15 +1,41 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { MembershipUpgradeDto } from './dto/membership-upgrade.dto.js';
 
 @Injectable()
-export class MembershipService {
+export class MembershipService implements OnModuleInit {
+  private readonly logger = new Logger(MembershipService.name);
+  private readonly environment: string;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
-  ) {}
+  ) {
+    this.environment = this.configService.get<string>('app.env', 'development');
+  }
+
+  onModuleInit() {
+    const issues: string[] = [];
+    const mtn = this.configService.get<string>('payments.mtnPayCode', '').trim();
+    const airtel = this.configService.get<string>('payments.airtelPayCode', '').trim();
+
+    if (!this.isValidShortcode(mtn)) {
+      issues.push('MTN_MOMO_PAY_CODE');
+    }
+    if (!this.isValidShortcode(airtel)) {
+      issues.push('AIRTEL_MONEY_PAY_CODE');
+    }
+
+    if (issues.length > 0) {
+      const message = `Missing or invalid payment shortcode configuration: ${issues.join(', ')}`;
+      if (this.environment === 'production') {
+        throw new Error(message);
+      }
+      this.logger.warn(message);
+    }
+  }
 
   async listPlans() {
     return this.prisma.membershipPlan.findMany({
@@ -95,9 +121,14 @@ export class MembershipService {
 
   private buildUssdString(channel: 'mtn' | 'airtel', amount: number) {
     const payments = this.configService.get('payments');
-    const shortcode = channel === 'airtel' ? payments.airtelPayCode : payments.mtnPayCode;
+    const shortcodeRaw = channel === 'airtel' ? payments.airtelPayCode : payments.mtnPayCode;
+    const shortcode = this.isValidShortcode(shortcodeRaw) ? shortcodeRaw : '';
     const formattedAmount = Math.max(amount, 0);
     const hash = '%23';
     return `*182*1*${shortcode}*${formattedAmount}${hash}`;
+  }
+
+  private isValidShortcode(value: string | undefined | null) {
+    return typeof value === 'string' && /^[0-9]{3,}$/u.test(value.trim());
   }
 }

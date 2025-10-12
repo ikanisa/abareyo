@@ -8,8 +8,11 @@ test('membership page renders and shows members table', async ({ page }) => {
   await expect(page).toHaveURL(/\/admin$/);
 
   await page.goto('/admin/membership');
-  await expect(page.getByRole('heading', { name: 'Members' })).toBeVisible();
-  // Auto‑renew toggle should exist in table
-  await expect(page.getByRole('switch')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Members', level: 2 })).toBeVisible();
+
+  const memberRow = page.getByRole('row', { name: /user1@example.com/i });
+  await expect(memberRow).toBeVisible();
+  await expect(memberRow.getByRole('switch')).toBeVisible();
+  await expect(page.getByRole('switch', { name: /auto.?renew/i })).toBeVisible();
 });
 

@@ -1,17 +1,19 @@
 "use client";
-import { useRouter } from "next/navigation";
-const items = [
-  { label: "🎟️ Tickets", href: "/tickets" },
-  { label: "⭐ Membership", href: "/membership" },
-  { label: "🛍️ Shop", href: "/shop" },
-  { label: "💙 Donate", href: "/fundraising" },
-];
-export default function QuickTiles(){
-  const router = useRouter();
+
+import Link from "next/link";
+
+import { quickActionTiles } from "@/app/_config/home";
+
+export default function QuickTiles() {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-      {items.map(it => (
-        <button key={it.label} className="tile text-center" onClick={()=>router.push(it.href)}>{it.label}</button>
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
+      {quickActionTiles.map((tile) => (
+        <Link key={tile.id} href={tile.href} className="tile flex flex-col items-center gap-1 text-center" aria-label={tile.ariaLabel}>
+          <span aria-hidden="true" className="text-xl">
+            {tile.emoji}
+          </span>
+          <span className="font-medium">{tile.label}</span>
+        </Link>
       ))}
     </div>
   );
