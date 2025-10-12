@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "@/index.css";
 import "./globals.css";
 import { Providers } from "./providers";
+import { InstallPrompt, OfflineBanner } from "./_components/pwa/PwaHelpers";
 
 export const metadata: Metadata = {
   title: "Rayon Sports - Fan App",
@@ -25,7 +26,9 @@ export const viewport: Viewport = {
 const RootLayout = ({ children }: { children: React.ReactNode }) => (
   <html lang="en" suppressHydrationWarning>
     <body className="bg-background text-foreground">
+      <OfflineBanner />
       <Providers>{children}</Providers>
+      <InstallPrompt />
     </body>
   </html>
 );
