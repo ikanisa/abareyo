@@ -13,9 +13,9 @@ import {
   fetchMembershipPlans,
   fetchMembershipStatus,
   upgradeMembership,
+  type MembershipPlanContract,
 } from "@/lib/api/membership";
 import { launchUssdDialer } from "@/lib/ussd";
-import type { MembershipPlanContract } from "@rayon/contracts";
 import { useRealtime } from "@/providers/realtime-provider";
 
 const formatter = new Intl.NumberFormat("en-RW", { style: "currency", currency: "RWF" });

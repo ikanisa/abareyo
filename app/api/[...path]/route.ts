@@ -1,6 +1,30 @@
 import { randomUUID } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import type { OnboardingMessageDto, OnboardingSessionDto } from '@rayon/contracts/onboarding';
+
+// Type definitions inlined from contracts
+export type OnboardingMessageRole = 'user' | 'assistant' | 'tool';
+export type OnboardingMessageKind = 'text' | 'tool_call' | 'tool_result';
+
+export interface OnboardingMessageDto {
+  id: string;
+  role: OnboardingMessageRole;
+  kind: OnboardingMessageKind;
+  text?: string;
+  callId?: string;
+  toolName?: string;
+  arguments?: Record<string, unknown>;
+  payload?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface OnboardingSessionDto {
+  id: string;
+  status: 'collecting_profile' | 'awaiting_confirmation' | 'completed';
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  messages: OnboardingMessageDto[];
+}
 
 const BACKEND_BASE = (process.env.BACKEND_BASE_URL || '').replace(/\/$/, '');
 

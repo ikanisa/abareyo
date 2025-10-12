@@ -1,9 +1,28 @@
-import type {
-  MembershipPlanContract,
-  MembershipStatusContract,
-  MembershipUpgradeRequestContract,
-  MembershipUpgradeResponseContract,
-} from '@rayon/contracts';
+// Type definitions inlined from contracts
+export type MembershipPlanContract = {
+  id: string;
+  name: string;
+  price: number;
+  perks: Record<string, unknown>;
+};
+
+export type MembershipStatusContract = 'pending' | 'active' | 'expired' | 'cancelled';
+
+export type MembershipUpgradeRequestContract = {
+  userId: string;
+  planId: string;
+  channel: 'mtn' | 'airtel';
+};
+
+export type MembershipUpgradeResponseContract = {
+  membershipId?: string;
+  paymentId?: string;
+  ussdCode?: string;
+  amount?: number;
+  expiresAt?: string;
+  status?: MembershipStatusContract;
+  message?: string;
+};
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api';
 

@@ -16,19 +16,17 @@ import {
   fetchTicketCatalog,
   fetchTicketOrders,
   fetchTicketReceipt,
-} from "@/lib/api/tickets";
-import { useToast } from "@/components/ui/use-toast";
-import { launchUssdDialer } from "@/lib/ussd";
-import { useRealtime } from "@/providers/realtime-provider";
-import { useAuth } from "@/providers/auth-provider";
-import {
   TicketZoneContract,
   type TicketCheckoutItemContract,
   type TicketCheckoutResponseContract,
   type TicketCatalogMatchContract,
   type TicketOrderSummaryContract,
   type TicketOrderReceiptContract,
-} from "@rayon/contracts";
+} from "@/lib/api/tickets";
+import { useToast } from "@/components/ui/use-toast";
+import { launchUssdDialer } from "@/lib/ussd";
+import { useRealtime } from "@/providers/realtime-provider";
+import { useAuth } from "@/providers/auth-provider";
 
 type Channel = "mtn" | "airtel";
 
@@ -68,10 +66,10 @@ export default function Tickets() {
   }, [matches, activeMatchId]);
 
   useEffect(() => {
-    if (user?.id && userId.trim().length === 0) {
-      setUserId(user.id);
+    if ((user as any)?.id && userId.trim().length === 0) {
+      setUserId((user as any).id);
     }
-  }, [user?.id, userId]);
+  }, [(user as any)?.id, userId]);
 
 
   const matchIndex = useMemo(

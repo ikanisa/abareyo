@@ -3,10 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bot, RefreshCw, Send, UserRound } from 'lucide-react';
-import type { OnboardingMessageDto, OnboardingSessionDto } from '@rayon/contracts/onboarding';
 import { useRouter } from 'next/navigation';
 
-import { startOnboardingSession, fetchOnboardingSession, sendOnboardingMessage } from '@/lib/api/onboarding';
+import { startOnboardingSession, fetchOnboardingSession, sendOnboardingMessage, type OnboardingMessageDto, type OnboardingSessionDto } from '@/lib/api/onboarding';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

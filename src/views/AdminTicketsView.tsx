@@ -3,13 +3,12 @@
 import { useMemo, type ComponentType } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Activity, BarChart3, Clock3, DollarSign, Ticket, TrendingUp } from "lucide-react";
-import type { TicketAnalyticsContract } from "@rayon/contracts";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { GlassCard } from "@/components/ui/glass-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { fetchTicketAnalytics } from "@/lib/api/tickets";
+import { fetchTicketAnalytics, type TicketAnalyticsContract } from "@/lib/api/tickets";
 
 const currencyFormatter = new Intl.NumberFormat("en-RW", {
   style: "currency",

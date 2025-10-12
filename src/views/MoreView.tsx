@@ -122,8 +122,8 @@ export default function More() {
             <User className="w-8 h-8 text-primary-foreground" />
           </div>
           <div className="flex-1">
-            <h3 className="font-bold text-lg text-foreground">{user?.id ?? 'Guest fan'}</h3>
-            <p className="text-sm text-muted-foreground">Status: {user?.status ?? 'anonymous'}</p>
+            <h3 className="font-bold text-lg text-foreground">{(user as any)?.id ?? 'Guest fan'}</h3>
+            <p className="text-sm text-muted-foreground">Status: {(user as any)?.status ?? 'anonymous'}</p>
           </div>
           <div className="flex gap-2">
             <LanguageSwitcher />

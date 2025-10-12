@@ -16,8 +16,9 @@ import {
   closeAdminQuiz,
   createAdminPrediction,
   closeAdminPrediction,
+  type AdminQuizContract,
+  type AdminPredictionContract,
 } from "@/lib/api/community";
-import type { AdminQuizContract, AdminPredictionContract } from "@rayon/contracts";
 
 const DEFAULT_REWARD = 20;
 

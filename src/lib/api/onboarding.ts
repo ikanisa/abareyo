@@ -1,8 +1,35 @@
-import type {
-  OnboardingSessionDto,
-  SendOnboardingMessageRequest,
-  StartOnboardingSessionRequest,
-} from '@rayon/contracts/onboarding';
+// Type definitions inlined from contracts
+export type OnboardingMessageRole = 'user' | 'assistant' | 'tool';
+export type OnboardingMessageKind = 'text' | 'tool_call' | 'tool_result';
+
+export interface OnboardingMessageDto {
+  id: string;
+  role: OnboardingMessageRole;
+  kind: OnboardingMessageKind;
+  text?: string;
+  callId?: string;
+  toolName?: string;
+  arguments?: Record<string, unknown>;
+  payload?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface OnboardingSessionDto {
+  id: string;
+  status: 'collecting_profile' | 'awaiting_confirmation' | 'completed';
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  messages: OnboardingMessageDto[];
+}
+
+export interface StartOnboardingSessionRequest {
+  locale?: string;
+}
+
+export interface SendOnboardingMessageRequest {
+  message: string;
+}
 
 // Default to Next.js local API (/api). In production, set NEXT_PUBLIC_BACKEND_URL
 // to your external API base (e.g., https://api.example.com/api).

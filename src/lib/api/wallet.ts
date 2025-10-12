@@ -1,4 +1,10 @@
-import type { PaymentStatusContract } from '@rayon/contracts';
+// Type definitions inlined from contracts
+export enum PaymentStatusContract {
+  Pending = 'pending',
+  Confirmed = 'confirmed',
+  Failed = 'failed',
+  ManualReview = 'manual_review',
+}
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api';
 
