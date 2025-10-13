@@ -66,12 +66,14 @@ serve(async (_req) => {
             .select("id")
             .single();
           if (order && !orderError) {
+            const rawToken = crypto.randomUUID();
             const { data: pass, error: passError } = await db
               .from("ticket_passes")
               .insert({
                 order_id: order.id,
                 zone: "Blue",
                 gate: "G3",
+                qr_token_hash: rawToken,
               })
               .select("id")
               .single();
