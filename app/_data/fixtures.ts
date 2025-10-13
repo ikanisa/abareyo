@@ -26,6 +26,7 @@ export type Order = {
   total: number;
   status: "pending" | "paid" | "used" | "cancelled";
   qrCode: string;
+  momoRef?: string;
 };
 
 export const fixtures: Fixture[] = [
@@ -112,5 +113,15 @@ export const orders: Order[] = [
     total: 24000,
     status: "cancelled",
     qrCode: "/tickets/qr-cancelled.svg",
+  },
+  {
+    id: "ORD-99941",
+    fixtureId: "rcl-2024-11-03",
+    zoneId: "fan-blue",
+    qty: 1,
+    total: 0,
+    status: "paid",
+    qrCode: "/tickets/qr-active.svg",
+    momoRef: "FREE-TICKET-PERK",
   },
 ];
