@@ -1,6 +1,6 @@
 import { buildRouteMetadata } from "@/app/_lib/navigation";
 
-import MatchesClient from "./MatchesClient";
+import MatchesClient from "../(routes)/matches/MatchesClient";
 import {
   highlightClips,
   leagueTable,
