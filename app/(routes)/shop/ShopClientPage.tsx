@@ -22,8 +22,9 @@ import ShopOnboarding from "./_components/ShopOnboarding";
 // Pull prop types explicitly so that dynamic imports retain type safety.
 import type { FilterSheetProps } from "./_components/FilterSheet";
 import type { SortSheetProps } from "./_components/SortSheet";
-import { SHOP_TABS, useCart, useCatalog } from "./_logic/useShop";
+import { CatalogProvider, SHOP_TABS, useCart, useCatalog } from "./_logic/useShop";
 import { ShopLocaleProvider, useShopLocale, type ShopLocale } from "./_hooks/useShopLocale";
+import type { Product } from "./_data/products";
 
 // Provide explicit generic types for the dynamic imports.  Without this, type inference
 // falls back to `any` and prop hints are lost.
@@ -36,11 +37,13 @@ const SortSheet = dynamic<SortSheetProps>(
   { ssr: false },
 );
 
-type ShopClientPageProps = { initialLocale?: ShopLocale };
+type ShopClientPageProps = { initialLocale?: ShopLocale; initialProducts: Product[] };
 
-const ShopClientPage = ({ initialLocale }: ShopClientPageProps) => (
+const ShopClientPage = ({ initialLocale, initialProducts }: ShopClientPageProps) => (
   <ShopLocaleProvider initialLocale={initialLocale}>
-    <ShopClientPageContent />
+    <CatalogProvider products={initialProducts}>
+      <ShopClientPageContent />
+    </CatalogProvider>
   </ShopLocaleProvider>
 );
 

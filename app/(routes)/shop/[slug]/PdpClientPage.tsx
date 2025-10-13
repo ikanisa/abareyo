@@ -11,7 +11,14 @@ import ProductRail from "../_components/ProductRail";
 import type { SizeGuideModalProps } from "../_components/SizeGuideModal";
 // Explicitly import the modal prop type once for type safety on dynamic import
 import type { Product } from "../_data/products";
-import { formatPrice, getCrossSell, recordRecentlyViewed, useCart, useRecentlyViewed } from "../_logic/useShop";
+import {
+  CatalogProvider,
+  formatPrice,
+  getCrossSell,
+  recordRecentlyViewed,
+  useCart,
+  useRecentlyViewed,
+} from "../_logic/useShop";
 import { ShopLocaleProvider, useShopLocale, type ShopLocale } from "../_hooks/useShopLocale";
 
 const SizeGuideModal = dynamic<SizeGuideModalProps>(
@@ -22,11 +29,14 @@ const SizeGuideModal = dynamic<SizeGuideModalProps>(
 type Props = {
   product: Product;
   initialLocale?: ShopLocale;
+  initialProducts: Product[];
 };
 
-const PdpClientPage = ({ product, initialLocale }: Props) => (
+const PdpClientPage = ({ product, initialLocale, initialProducts }: Props) => (
   <ShopLocaleProvider initialLocale={initialLocale}>
-    <PdpContent product={product} />
+    <CatalogProvider products={initialProducts}>
+      <PdpContent product={product} />
+    </CatalogProvider>
   </ShopLocaleProvider>
 );
 

@@ -1,6 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import {
+  createContext,
+  createElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import type { ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
@@ -86,6 +96,27 @@ const SORT_LABELS: Record<SortOption, string> = {
 };
 
 export type PaymentMethod = "mtn" | "airtel";
+
+let catalogSnapshot = PRODUCTS;
+
+const CatalogContext = createContext<Product[]>(PRODUCTS);
+
+type CatalogProviderProps = {
+  products: Product[];
+  children: ReactNode;
+};
+
+export const CatalogProvider = ({ products, children }: CatalogProviderProps) => {
+  const value = useMemo(() => products, [products]);
+  catalogSnapshot = value;
+  return createElement(CatalogContext.Provider, { value }, children);
+};
+
+const useCatalogProducts = () => {
+  const products = useContext(CatalogContext);
+  catalogSnapshot = products;
+  return products;
+};
 
 export const PAYMENT_METHODS: {
   id: PaymentMethod;
@@ -195,6 +226,7 @@ export const useCatalog = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const products = useCatalogProducts();
 
   // Derive the current search string from the router.  We treat it as the source of truth for
   // all URL-derived state (filters, sort, search input, etc.).
@@ -384,8 +416,8 @@ export const useCatalog = () => {
 
   const items = useMemo(() => {
     const base = filters.category
-      ? PRODUCTS.filter((product) => product.category === filters.category)
-      : PRODUCTS.slice();
+      ? products.filter((product) => product.category === filters.category)
+      : products.slice();
 
     const searchFiltered = query
       ? base.filter((product) =>
@@ -434,7 +466,7 @@ export const useCatalog = () => {
       sorted.sort((a, b) => (b.badges?.includes("new") ? 1 : 0) - (a.badges?.includes("new") ? 1 : 0));
 
     return sorted;
-  }, [filters, query, sort]);
+  }, [filters, products, query, sort]);
 
   const [isLoading, setLoading] = useState(true);
   useEffect(() => {
@@ -481,13 +513,13 @@ export const useCatalog = () => {
   }, [filters, query]);
 
   const sections = useMemo(() => {
-    const hero = PRODUCTS.find((product) => product.slug === FEATURED_SLUG) ?? PRODUCTS[0];
-    const topPicks = PRODUCTS.filter(
+    const hero = products.find((product) => product.slug === FEATURED_SLUG) ?? products[0];
+    const topPicks = products.filter(
       (product) => product.badges?.includes("limited") || product.badges?.includes("official"),
     ).slice(0, 5);
-    const newArrivals = PRODUCTS.filter((product) => product.badges?.includes("new"));
-    const deals = PRODUCTS.filter((product) => product.badges?.includes("sale"));
-    const fanFavorites = PRODUCTS.filter(
+    const newArrivals = products.filter((product) => product.badges?.includes("new"));
+    const deals = products.filter((product) => product.badges?.includes("sale"));
+    const fanFavorites = products.filter(
       (product) => product.badges?.includes("official") || product.badges?.includes("limited"),
     ).slice(0, 4);
     return {
@@ -519,10 +551,10 @@ export const useCatalog = () => {
       deals: RailSection;
       fanFavorites: RailSection;
     };
-  }, []);
+  }, [products]);
 
   const categories = useMemo(() => {
-    const counts = PRODUCTS.reduce<Record<string, number>>((accumulator, product) => {
+    const counts = products.reduce<Record<string, number>>((accumulator, product) => {
       accumulator[product.category] = (accumulator[product.category] ?? 0) + 1;
       return accumulator;
     }, {});
@@ -531,13 +563,13 @@ export const useCatalog = () => {
       labelKey: tab.labelKey,
       descriptionKey: tab.descriptionKey,
       category: tab.category,
-      count: tab.category ? counts[tab.category] ?? 0 : PRODUCTS.length,
+      count: tab.category ? counts[tab.category] ?? 0 : products.length,
     }));
-  }, []);
+  }, [products]);
 
   return {
     list: items,
-    all: PRODUCTS,
+    all: products,
     items,
     isLoading: isLoading && !hydrated,
     sort,
@@ -563,10 +595,11 @@ export const useCatalog = () => {
   };
 };
 
-export const getProductBySlug = (slug: string) => PRODUCTS.find((product) => product.slug === slug);
+export const getProductBySlug = (slug: string) =>
+  catalogSnapshot.find((product) => product.slug === slug);
 
 export const getVariantById = (variantId: string) => {
-  for (const product of PRODUCTS) {
+  for (const product of catalogSnapshot) {
     const match = product.variants.find((variant) => variant.id === variantId);
     if (match) return { product, variant: match } as const;
   }
@@ -574,7 +607,9 @@ export const getVariantById = (variantId: string) => {
 };
 
 export const getCrossSell = (product: Product) =>
-  PRODUCTS.filter((candidate) => candidate.id !== product.id && candidate.category === product.category).slice(0, 3);
+  catalogSnapshot
+    .filter((candidate) => candidate.id !== product.id && candidate.category === product.category)
+    .slice(0, 3);
 
 export const getRecentlyViewedSlugs = (): string[] => {
   if (typeof window === "undefined") return [];
@@ -609,7 +644,7 @@ export const useRecentlyViewed = (currentSlug?: string) => {
   useEffect(() => {
     const slugs = getRecentlyViewedSlugs().filter((slug) => slug !== currentSlug);
     const items = slugs
-      .map((slug) => PRODUCTS.find((product) => product.slug === slug))
+      .map((slug) => catalogSnapshot.find((product) => product.slug === slug))
       .filter((product): product is Product => Boolean(product));
     setRecent(items.slice(0, 4));
   }, [currentSlug]);
