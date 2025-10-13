@@ -9,7 +9,7 @@ const normalizeMatch = (match: Record<string, unknown> | null | undefined): Tick
   const id = typeof match.id === "string" ? match.id : String(match.id ?? "");
   const title = typeof match.title === "string" ? match.title : "Match ticket";
   const comp = typeof match.comp === "string" ? match.comp : null;
-  const date = typeof match.date === "string" ? match.date : null;
+  const date = typeof match.date === "string" ? match.date : "";
   const venue = typeof match.venue === "string" ? match.venue : null;
   return { id, title, comp, date, venue };
 };
