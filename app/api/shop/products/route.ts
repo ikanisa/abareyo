@@ -101,6 +101,7 @@ async function resolveProductIdByName(
 ): Promise<string | null> {
   const trimmed = name.trim();
   if (!trimmed) return null;
+  if (!supabase) return null;
 
   const { data: existing } = await supabase
     .from("shop_products")
