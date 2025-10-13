@@ -3,11 +3,17 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Play, MessageCircle, TrendingUp, Ticket } from "lucide-react";
+
+import PageShell from "@/app/_components/shell/PageShell";
+import TopAppBar from "@/app/_components/ui/TopAppBar";
+import HeroBlock from "@/app/_components/widgets/HeroBlock";
+import { SectionHeader } from "@/app/_components/widgets/SectionHeader";
+import { EmptyState as WidgetEmptyState } from "@/app/_components/widgets/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, MessageCircle, TrendingUp, Ticket } from "lucide-react";
 
 import { fetchMatchSummaries, type TicketMatchSummary } from "@/lib/api/tickets";
 
@@ -122,12 +128,27 @@ export default function Matches() {
     [matchesQuery.data],
   );
 
+  const heroSubtitle = "Live scores, stats & fan chat";
+  const heroCtas = (
+    <div className="flex flex-wrap gap-2">
+      <Link className="btn" href="/tickets">
+        Buy tickets
+      </Link>
+      <Link className="btn" href="/community">
+        Join community
+      </Link>
+    </div>
+  );
+  const topBarActions = (
+    <Link className="btn" href="/more">
+      More
+    </Link>
+  );
+
   return (
-    <div className="min-h-screen pb-24 px-4">
-      <div className="pt-8 pb-6">
-        <h1 className="text-3xl font-black gradient-text mb-2">Match Centre</h1>
-        <p className="text-muted-foreground">Live scores, stats & fan chat</p>
-      </div>
+    <PageShell mainClassName="space-y-6 pb-24">
+      <TopAppBar right={topBarActions} />
+      <HeroBlock title="Match Centre" subtitle={heroSubtitle} ctas={heroCtas} />
 
       {matchesQuery.isLoading ? (
         <div className="space-y-4">
@@ -139,17 +160,25 @@ export default function Matches() {
         <>
           {liveMatch ? <LiveMatchCard match={liveMatch} /> : null}
 
-          <section className="space-y-3 mb-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-foreground">Upcoming Fixtures</h2>
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/tickets">View all</Link>
-              </Button>
-            </div>
+          <section className="space-y-3">
+            <SectionHeader
+              title="Upcoming fixtures"
+              action={
+                <Button asChild variant="glass" size="sm">
+                  <Link href="/tickets">View all</Link>
+                </Button>
+              }
+            />
             {upcomingMatches.length === 0 ? (
-              <GlassCard className="p-5 text-sm text-muted-foreground">
-                No scheduled fixtures right now. Check back soon!
-              </GlassCard>
+              <WidgetEmptyState
+                title="No scheduled fixtures"
+                desc="Federation dates are pending. Check back soon."
+                action={
+                  <Link className="btn" href="/tickets">
+                    Open tickets
+                  </Link>
+                }
+              />
             ) : (
               <div className="space-y-3">
                 {upcomingMatches.map((match) => (
@@ -161,17 +190,17 @@ export default function Matches() {
 
           {finishedMatches.length ? (
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-foreground">Recent results</h2>
+              <SectionHeader title="Recent results" />
               <div className="grid gap-3">
                 {finishedMatches.map((match) => (
-                  <GlassCard key={match.id} className="p-4 flex items-center justify-between">
+                  <GlassCard key={match.id} className="flex items-center justify-between p-4">
                     <div>
                       <p className="font-semibold text-foreground">Rayon Sports vs {match.opponent}</p>
                       <p className="text-xs text-muted-foreground">{formatKickoff(match.kickoff)}</p>
                     </div>
                     <div className="text-right">
-                      <div className="font-black text-lg">
-                        {match.score?.home ?? '-'} - {match.score?.away ?? '-'}
+                      <div className="text-lg font-black">
+                        {match.score?.home ?? "-"} - {match.score?.away ?? "-"}
                       </div>
                       <Button asChild variant="glass" size="sm">
                         <Link href={`/matches/${match.id}`}>View details</Link>
@@ -184,6 +213,6 @@ export default function Matches() {
           ) : null}
         </>
       )}
-    </div>
+    </PageShell>
   );
 }
