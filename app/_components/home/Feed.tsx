@@ -32,7 +32,7 @@ const Feed = () => {
   return (
     <div className="grid gap-4 md:grid-cols-2" role="list">
       {feedItems.map((item) => (
-        <article key={item.id} className="card space-y-3" role="listitem">
+        <article key={item.id} className="card break-words whitespace-normal space-y-3" role="listitem">
           <header className="space-y-2">
             <span className={`inline-flex rounded-full px-3 py-1 text-xs uppercase tracking-wide ${typeStyles[item.type]}`}>
               {typeLabels[item.type]}

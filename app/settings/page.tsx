@@ -11,10 +11,10 @@ const SettingsPage = () => (
         <p className="text-sm uppercase tracking-[0.3em] text-white/60">Control center</p>
         <h1 className="text-3xl font-semibold">Settings & preferences</h1>
         <p className="text-sm text-white/80">
-          Tune language, theme, notifications, and support options for your Gikundiro experience.
+          Tune language, theme, notifications, and support options for your GIKUNDIRO experience.
         </p>
       </header>
-      <section className="card space-y-4 text-sm text-white/80">
+      <section className="card break-words whitespace-normal space-y-4 text-sm text-white/80">
         <div>
           <h2 className="text-lg font-semibold text-white">Language</h2>
           <p>Switch between Kinyarwanda, English, and French inside the More → Control Center screen.</p>

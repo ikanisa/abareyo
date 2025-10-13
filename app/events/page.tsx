@@ -16,7 +16,7 @@ const EventsPage = () => (
   <div className="min-h-screen bg-rs-gradient px-4 py-12 text-white">
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-6">
       <header className="glass space-y-3 rounded-3xl px-6 py-8 text-center">
-        <p className="text-sm uppercase tracking-[0.3em] text-white/60">Gikundiro calendar</p>
+        <p className="text-sm uppercase tracking-[0.3em] text-white/60">GIKUNDIRO calendar</p>
         <h1 className="text-3xl font-semibold">Club events & match activations</h1>
         <p className="text-sm text-white/80">
           Track Rayon Sports appearances, fan festivals, and premium experiences. Tap any event to secure tickets or add to your calendar.
@@ -25,7 +25,7 @@ const EventsPage = () => (
 
       <section className="space-y-4">
         {eventsSchedule.map((event) => (
-          <article key={event.id} className="card flex flex-col gap-2" aria-label={event.title}>
+          <article key={event.id} className="card break-words whitespace-normal flex flex-col gap-2" aria-label={event.title}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-lg font-semibold text-white">{event.title}</h2>
             </div>

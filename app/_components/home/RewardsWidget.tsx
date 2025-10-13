@@ -16,7 +16,7 @@ type RewardsSummaryResponse = RewardsSummary | { error: string };
 
 function Skeleton() {
   return (
-    <div className="card" aria-busy="true" aria-label="Loading rewards">
+    <div className="card break-words whitespace-normal" aria-busy="true" aria-label="Loading rewards">
       <div className="mb-2 h-5 w-32 animate-pulse rounded bg-white/10" />
       <div className="mb-3 h-4 w-20 animate-pulse rounded bg-white/10" />
       <div className="flex gap-2">
@@ -98,7 +98,7 @@ export default function RewardsWidget({ userId }: { userId?: string }) {
 
   if (!data) {
     return (
-      <div className="card" aria-live="polite">
+      <div className="card break-words whitespace-normal" aria-live="polite">
         <div className="font-semibold text-white/90">Rewards</div>
         <div className="muted text-sm">No rewards info yet.</div>
       </div>
@@ -110,7 +110,7 @@ export default function RewardsWidget({ userId }: { userId?: string }) {
   const redeemLabel = latestPerk?.type === "free_ticket" ? "Redeem in Tickets" : "Redeem in Shop";
 
   return (
-    <section className="card" aria-label="Rewards widget" aria-live="polite">
+    <section className="card break-words whitespace-normal" aria-label="Rewards widget" aria-live="polite">
       <div className="flex items-center justify-between gap-4">
         <div>
           <div className="font-semibold text-white/90">Rewards</div>

@@ -14,8 +14,8 @@ const SupportPage = () => (
           Get help with tickets, membership, partner services, and shop orders.
         </p>
       </header>
-      <section className="card space-y-3 text-sm text-white/80">
-        <p>Dial <span className="font-semibold text-white">*651#</span> for the Gikundiro hotline available 08:00–21:00 CAT.</p>
+      <section className="card break-words whitespace-normal space-y-3 text-sm text-white/80">
+        <p>Dial <span className="font-semibold text-white">*651#</span> for the GIKUNDIRO hotline available 08:00–21:00 CAT.</p>
         <p>Email <a className="underline" href="mailto:support@gikundiro.rw">support@gikundiro.rw</a> for order or membership issues.</p>
         <div className="flex flex-wrap gap-3">
           <Link href="/tickets" className="btn-primary">

@@ -21,7 +21,7 @@ const Loading = () => {
   return (
     <div className="min-h-screen bg-rs-gradient px-4 pb-24 pt-8 text-white">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-        <div className="card space-y-4">
+        <div className="card break-words whitespace-normal space-y-4">
           <div className="space-y-3">
             <div className="h-6 w-1/2 rounded-full bg-white/10" />
             <div className="h-4 w-1/3 rounded-full bg-white/10" />
@@ -109,7 +109,7 @@ const Loading = () => {
         </SectionSkeleton>
 
         <SectionSkeleton title="Sponsors">
-          <div className="card space-y-4">
+          <div className="card break-words whitespace-normal space-y-4">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {Array.from({ length: 6 }).map((_, index) => (
                 <div key={index} className="h-16 rounded-2xl bg-white/10" />

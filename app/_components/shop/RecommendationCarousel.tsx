@@ -18,7 +18,7 @@ type RecommendationCarouselProps = {
 const RecommendationCarousel = ({ items }: RecommendationCarouselProps) => {
   if (items.length === 0) {
     return (
-      <div className="card text-white/80" role="status">
+      <div className="card break-words whitespace-normal text-white/80" role="status">
         No personalised drops yet — explore featured gear while we learn your style.
       </div>
     );
@@ -27,7 +27,7 @@ const RecommendationCarousel = ({ items }: RecommendationCarouselProps) => {
   return (
     <div className="h-scroll flex gap-4" role="list">
       {items.map(({ product, reason }) => (
-        <article key={product.id} className="card min-w-[220px] space-y-4" role="listitem">
+        <article key={product.id} className="card break-words whitespace-normal min-w-[220px] space-y-4" role="listitem">
           <div className="relative aspect-square overflow-hidden rounded-2xl bg-white/10 p-4">
             <Image src={product.images[0]} alt={product.name} width={180} height={180} className="h-full w-full object-contain" />
             {product.badges?.includes("exclusive") ? (

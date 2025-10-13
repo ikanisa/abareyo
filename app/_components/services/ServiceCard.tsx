@@ -26,7 +26,7 @@ const ServiceCard = ({ partner, anchorId }: Props) => {
     <article
       id={anchorId}
       data-partner-id={partner.id}
-      className="card space-y-4"
+      className="card break-words whitespace-normal space-y-4"
       aria-labelledby={`${contentId}-title`}
       role="listitem"
     >

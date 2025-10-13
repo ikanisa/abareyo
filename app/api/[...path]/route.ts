@@ -86,7 +86,7 @@ function createOnboardingSession(locale?: string): MockOnboardingSession {
         id: randomUUID(),
         role: 'assistant',
         kind: 'text',
-        text: 'Muraho neza! Turimo kugufasha kwinjira mu Rayon fan club. Ohereza nimero ya WhatsApp na ya MoMo ukoresha gushyigikira ikipe.',
+        text: 'Hello neza! Turimo kugufasha kwinjira mu Rayon fan club. Ohereza nimero ya WhatsApp na ya MoMo ukoresha gushyigikira ikipe.',
         createdAt,
       },
     ],
@@ -476,7 +476,7 @@ async function onboardingGateway(req: NextRequest, ctx: MockContext) {
         return NextResponse.json({ error: 'upstream_error', detail }, { status: 502 });
       }
       const data = await resp.json();
-      const reply = data?.output?.[0]?.content?.[0]?.text ?? "Muraho! Let's get started.";
+      const reply = data?.output?.[0]?.content?.[0]?.text ?? "Hello! Let's get started.";
       return NextResponse.json({ ok: true, reply });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';

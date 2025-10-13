@@ -36,7 +36,7 @@ export type Order = {
 
 type ViewerProfile = {
   name: string;
-  tier: "Gikundiro" | "Gikundiro+" | "Legends";
+  tier: "GIKUNDIRO" | "GIKUNDIRO+" | "Legends";
   walletBalance: number;
   points: number;
   preferredCategory: string;
@@ -47,7 +47,7 @@ const currency = "RWF";
 
 export const viewerProfile: ViewerProfile = {
   name: "Aline",
-  tier: "Gikundiro+",
+  tier: "GIKUNDIRO+",
   walletBalance: 82000,
   points: 5400,
   preferredCategory: "Jerseys",

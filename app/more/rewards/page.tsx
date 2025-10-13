@@ -15,7 +15,7 @@ const RewardsPage = () => {
     <div className="min-h-screen bg-rs-gradient px-4 py-12 text-white">
       <main className="mx-auto flex w-full max-w-4xl flex-col gap-8">
         <header className="glass space-y-4 rounded-3xl px-6 py-8">
-          <p className="text-sm uppercase tracking-[0.3em] text-white/60">Gikundiro Rewards</p>
+          <p className="text-sm uppercase tracking-[0.3em] text-white/60">GIKUNDIRO Rewards</p>
           <h1 className="text-3xl font-semibold">Your supporter rewards</h1>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl bg-white/10 p-4 text-left">
@@ -48,7 +48,7 @@ const RewardsPage = () => {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {perks.map((perk) => (
-              <article key={perk.id} className="card h-full space-y-3">
+              <article key={perk.id} className="card break-words whitespace-normal h-full space-y-3">
                 <h3 className="text-lg font-semibold text-white">{perk.title}</h3>
                 <p className="text-sm text-white/70">{perk.description}</p>
                 <Link href={perk.cta.href} className="btn-primary w-full justify-center">
@@ -65,7 +65,7 @@ const RewardsPage = () => {
             {history.map((entry) => (
               <article
                 key={entry.id}
-                className="card flex flex-col gap-2 text-left"
+                className="card break-words whitespace-normal flex flex-col gap-2 text-left"
                 aria-label={`${entry.title} on ${entry.date}`}
               >
                 <div className="flex items-center justify-between">

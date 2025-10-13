@@ -9,7 +9,7 @@ const MembershipUpgradePage = () => (
   <div className="min-h-screen bg-rs-gradient px-4 py-12 text-white">
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       <header className="glass space-y-3 rounded-3xl px-6 py-8 text-center">
-        <p className="text-sm uppercase tracking-[0.3em] text-white/60">Gikundiro+</p>
+        <p className="text-sm uppercase tracking-[0.3em] text-white/60">GIKUNDIRO+</p>
         <h1 className="text-3xl font-semibold">Upgrade your membership</h1>
         <p className="text-sm text-white/80">
           Unlock premium match access, shop discounts, and SACCO bonuses by upgrading to the next tier.
@@ -17,7 +17,7 @@ const MembershipUpgradePage = () => (
       </header>
       <section className="grid gap-4 md:grid-cols-2">
         {["Fan", "Gold", "Platinum"].map((tier) => (
-          <article key={tier} className="card space-y-2">
+          <article key={tier} className="card break-words whitespace-normal space-y-2">
             <h2 className="text-lg font-semibold text-white">{tier} tier</h2>
             <p className="text-sm text-white/70">
               {tier === 'Fan'

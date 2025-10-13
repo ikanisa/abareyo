@@ -6,13 +6,13 @@ const TermsPage = () => (
   <div className="min-h-screen bg-rs-gradient px-4 py-12 text-white">
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       <header className="glass space-y-3 rounded-3xl px-6 py-8">
-        <p className="text-sm uppercase tracking-[0.3em] text-white/60">Gikundiro policies</p>
+        <p className="text-sm uppercase tracking-[0.3em] text-white/60">GIKUNDIRO policies</p>
         <h1 className="text-3xl font-semibold">Terms & conditions</h1>
         <p className="text-sm text-white/80">
           These terms govern your use of the official Rayon Sports digital platforms including match tickets, shop orders, and partner services.
         </p>
       </header>
-      <article className="card space-y-4 text-sm text-white/80">
+      <article className="card break-words whitespace-normal space-y-4 text-sm text-white/80">
         <section>
           <h2 className="text-lg font-semibold text-white">1. Fan account</h2>
           <p>Keep your login secure and only claim tickets for personal use or approved transfers.</p>

@@ -29,7 +29,7 @@ const UssdPayPanel = ({ amount, onSuccess }: { amount: number; onSuccess: () => 
   );
 
   return (
-    <div className="card space-y-3" aria-live="polite">
+    <div className="card break-words whitespace-normal space-y-3" aria-live="polite">
       <div className="flex items-center justify-between text-sm text-white/80">
         <span>Total</span>
         <strong className="text-white">{formatRWF(Math.max(0, Math.round(amount)))}</strong>

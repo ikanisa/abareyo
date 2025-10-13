@@ -136,7 +136,7 @@ const CartContent = () => {
           </Link>
         </header>
 
-        <section className="card space-y-3 bg-white/10">
+        <section className="card break-words whitespace-normal space-y-3 bg-white/10">
           {items.length === 0 ? (
             <p className="text-sm text-white/70">
               {t("cart.empty").primary}
@@ -269,7 +269,7 @@ const CartContent = () => {
         </section>
 
         {items.length > 0 && (
-          <section className="card space-y-4 bg-white/10">
+          <section className="card break-words whitespace-normal space-y-4 bg-white/10">
             <div>
               <h2 className="text-lg font-semibold text-white">
                 {t("cart.promoTitle").primary}
@@ -330,7 +330,7 @@ const CartContent = () => {
         )}
 
         {items.length > 0 && (
-          <section className="card space-y-4 bg-white/10">
+          <section className="card break-words whitespace-normal space-y-4 bg-white/10">
             <div>
               <h2 className="text-lg font-semibold text-white">
                 {t("cart.summaryTitle").primary}
@@ -367,7 +367,7 @@ const CartContent = () => {
         )}
 
         {items.length > 0 && (
-          <section className="card space-y-4 bg-white/10">
+          <section className="card break-words whitespace-normal space-y-4 bg-white/10">
             <div>
               <h2 className="text-lg font-semibold text-white">
                 {t("cart.pickupTitle").primary}
@@ -410,7 +410,7 @@ const CartContent = () => {
         )}
 
         {capturedReference && (
-          <section className="card space-y-2 bg-white/10 text-xs text-white/80">
+          <section className="card break-words whitespace-normal space-y-2 bg-white/10 text-xs text-white/80">
             <p>
               {t("cart.referenceNotice").primary}: <span className="font-semibold text-white">{capturedReference}</span>.
               <span className="block text-[10px] text-white/60">{t("cart.referenceNotice").secondary}</span>
@@ -445,7 +445,7 @@ const CartContent = () => {
           </section>
         )}
 
-        <section className="card space-y-2 bg-white/10 text-xs text-white/70">
+        <section className="card break-words whitespace-normal space-y-2 bg-white/10 text-xs text-white/70">
           <p>
             {t("cart.checkoutNoteOne").primary}
             <span className="block text-[10px] text-white/60">{t("cart.checkoutNoteOne").secondary}</span>
