@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 type LatestPerk =
   | { type: "free_ticket"; ticket_id: string; label: string }
@@ -38,8 +39,19 @@ export default function RewardsWidget({ userId }: { userId?: string }) {
       setLoading(true);
 
       try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData.session?.access_token;
+
+        if (!accessToken) {
+          setData(null);
+          return;
+        }
+
         const url = userId ? `/api/rewards/summary?user_id=${encodeURIComponent(userId)}` : "/api/rewards/summary";
-        const response = await fetch(url, { signal: controller.signal });
+        const response = await fetch(url, {
+          signal: controller.signal,
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
         if (!response.ok) {
           throw new Error("Failed to load rewards summary");
         }
