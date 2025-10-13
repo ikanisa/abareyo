@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         input: body?.input ?? 'hello',
-        metadata: { app: 'abareyo', stage: process.env.NODE_ENV }
+        metadata: { app: 'gikundiro', stage: process.env.NODE_ENV }
       })
     })
     const data = await r.json()

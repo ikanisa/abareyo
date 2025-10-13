@@ -7,7 +7,7 @@ import { Smartphone, Sparkles, Tags, X } from "lucide-react";
 import useDialogFocusTrap from "../_hooks/useDialogFocusTrap";
 import { useShopLocale } from "../_hooks/useShopLocale";
 
-const STORAGE_KEY = "abareyo:shop-onboarded";
+const STORAGE_KEY = "gikundiro:shop-onboarded";
 
 const ShopOnboarding = () => {
   const { t } = useShopLocale();

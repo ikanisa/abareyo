@@ -403,7 +403,7 @@ async function onboardingGateway(req: NextRequest, ctx: MockContext) {
       return NextResponse.json({ error: 'unauthorized', message: 'Missing or invalid token.' }, { status: 401 });
     }
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-    const AGENT_ID = process.env.AGENT_ID || 'abareyo-onboarding';
+    const AGENT_ID = process.env.AGENT_ID || 'gikundiro-onboarding';
     const ALLOW_MOCK = (
       process.env.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK === '1' ||
       process.env.ONBOARDING_ALLOW_MOCK === '1'
@@ -433,7 +433,7 @@ async function onboardingGateway(req: NextRequest, ctx: MockContext) {
       return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
     }
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-    const AGENT_ID = process.env.AGENT_ID || 'abareyo-onboarding';
+    const AGENT_ID = process.env.AGENT_ID || 'gikundiro-onboarding';
     const ALLOW_MOCK = (
       process.env.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK === '1' ||
       process.env.ONBOARDING_ALLOW_MOCK === '1'
@@ -468,7 +468,7 @@ async function onboardingGateway(req: NextRequest, ctx: MockContext) {
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           input: `Agent:${AGENT_ID}\nUser:${text}\nReturn a short onboarding reply.`,
-          metadata: { app: 'abareyo', sessionId },
+          metadata: { app: 'gikundiro', sessionId },
         }),
       });
       if (!resp.ok) {

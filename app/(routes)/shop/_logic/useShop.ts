@@ -516,7 +516,7 @@ export const getCrossSell = (product: Product) =>
 export const getRecentlyViewedSlugs = (): string[] => {
   if (typeof window === "undefined") return [];
   try {
-    const raw = window.localStorage.getItem("abareyo:recently-viewed");
+    const raw = window.localStorage.getItem("gikundiro:recently-viewed");
     if (!raw) return [];
     const parsed = JSON.parse(raw) as string[];
     return Array.isArray(parsed) ? parsed : [];
@@ -529,7 +529,7 @@ export const getRecentlyViewedSlugs = (): string[] => {
 const persistRecentlyViewed = (slugs: string[]) => {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem("abareyo:recently-viewed", JSON.stringify(slugs.slice(0, 10)));
+    window.localStorage.setItem("gikundiro:recently-viewed", JSON.stringify(slugs.slice(0, 10)));
   } catch (error) {
     console.warn("Unable to persist recently viewed", error);
   }
@@ -559,7 +559,7 @@ export type CartItem = {
   qty: number;
 };
 
-const CART_KEY = "abareyo:marketplace-cart";
+const CART_KEY = "gikundiro:marketplace-cart";
 
 type CartState = CartItem[];
 
