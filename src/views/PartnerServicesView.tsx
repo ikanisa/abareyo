@@ -274,6 +274,7 @@ const PartnerServicesView = () => {
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [insuranceStatus, setInsuranceStatus] = useState<"idle" | "pending" | "confirmed">("idle");
+  const [isClaimingTicket, setIsClaimingTicket] = useState(false);
   const [manualInsuranceRef, setManualInsuranceRef] = useState("");
   const [showInsuranceFallback, setShowInsuranceFallback] = useState(false);
   const [dismissedInsuranceOverlay, setDismissedInsuranceOverlay] = useState(false);
@@ -452,6 +453,42 @@ const PartnerServicesView = () => {
       title: "Reference received",
       description: "We will match the reference to your quote and issue the policy shortly.",
     });
+  };
+
+  const handleClaimTicket = async () => {
+    if (!activePolicy || isClaimingTicket) {
+      return;
+    }
+
+    setIsClaimingTicket(true);
+    try {
+      const response = await fetch("/api/rewards/claimTicket", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ policy_id: activePolicy.id, user_id: null }),
+      });
+
+      const result = (await response.json().catch(() => null)) as
+        | { ok?: boolean; already?: boolean; error?: string | null }
+        | null;
+
+      if (!response.ok || (!result?.ok && !result?.already)) {
+        const message = result?.error ? result.error.replaceAll("_", " ") : "Could not claim the ticket.";
+        throw new Error(message);
+      }
+
+      setIsClaimingTicket(false);
+      window.location.href = "/tickets?claimed=1";
+    } catch (error) {
+      console.error("claim_ticket_failed", error);
+      const message = error instanceof Error ? error.message : "Could not claim the free ticket.";
+      toast({
+        title: "Ticket claim failed",
+        description: message,
+        variant: "destructive",
+      });
+      setIsClaimingTicket(false);
+    }
   };
 
   const handleStartDepositPayment = () => {
@@ -775,24 +812,50 @@ const PartnerServicesView = () => {
                   <PhoneCall className="h-4 w-4" /> Dial {formatUssdDisplay(insuranceUssdCode)}
                 </Button>
                 <UssdNetworkTiles ussdCode={formatUssdDisplay(insuranceUssdCode)} />
-                <InsuranceStatus status={insuranceStatus} />
-                {showInsuranceFallback ? (
-                  <div className="space-y-3">
-                    <p className="text-sm text-white/70">
-                      Didn’t receive the SMS? Enter the mobile money reference and we will verify manually.
+                {insuranceStatus === "confirmed" ? (
+                  <div className="card space-y-3 bg-emerald-500/10 text-emerald-50">
+                    <div className="text-base font-semibold text-white">Payment received</div>
+                    <p className="text-sm text-emerald-100/80">
+                      Your policy will be issued shortly. Claim your free ticket from My Tickets.
                     </p>
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                      <Input
-                        placeholder="MM reference"
-                        value={manualInsuranceRef}
-                        onChange={(event) => setManualInsuranceRef(event.target.value)}
-                      />
-                      <Button variant="secondary" onClick={handleSubmitInsuranceReference}>
-                        Submit
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          setInsuranceStatus("idle");
+                          setShowInsuranceFallback(false);
+                          setManualInsuranceRef("");
+                        }}
+                      >
+                        Done
+                      </Button>
+                      <Button asChild variant="hero">
+                        <Link href="/tickets">Go to Tickets</Link>
                       </Button>
                     </div>
                   </div>
-                ) : null}
+                ) : (
+                  <>
+                    <InsuranceStatus status={insuranceStatus} />
+                    {showInsuranceFallback ? (
+                      <div className="space-y-3">
+                        <p className="text-sm text-white/70">
+                          Didn’t receive the SMS? Enter the mobile money reference and we will verify manually.
+                        </p>
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <Input
+                            placeholder="MM reference"
+                            value={manualInsuranceRef}
+                            onChange={(event) => setManualInsuranceRef(event.target.value)}
+                          />
+                          <Button variant="secondary" onClick={handleSubmitInsuranceReference}>
+                            Submit
+                          </Button>
+                        </div>
+                      </div>
+                    ) : null}
+                  </>
+                )}
                 <p className="text-xs text-white/60" id="motor-insurance-terms">
                   Payments processed via MTN MoMo & Airtel Money. Provide accurate details to avoid policy delays.
                 </p>
@@ -825,14 +888,18 @@ const PartnerServicesView = () => {
               </div>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button asChild variant="glass" className="w-full sm:w-auto">
-                <Link href="/tickets/perks">
-                  <Ticket className="h-4 w-4" /> Claim ticket
-                </Link>
+              <Button
+                className="w-full sm:w-auto"
+                variant="glass"
+                onClick={handleClaimTicket}
+                disabled={isClaimingTicket}
+              >
+                <Ticket className="h-4 w-4" />
+                {isClaimingTicket ? "Claiming…" : "Claim free ticket"}
               </Button>
               <Button asChild variant="outline" className="w-full sm:w-auto">
-                <Link href="/support">
-                  <ShieldCheck className="h-4 w-4" /> Contact support
+                <Link href="/tickets">
+                  <ArrowUpRight className="h-4 w-4" /> Go to tickets
                 </Link>
               </Button>
             </div>

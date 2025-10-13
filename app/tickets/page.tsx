@@ -26,6 +26,17 @@ const TicketsPage = () => {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    if (searchParams.get("claimed") === "1") {
+      alert("🎉 Free BLUE ticket added to your tickets!");
+      const el = document.querySelector("[data-ticket-free='1']");
+      if (el instanceof HTMLElement) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      window.history.replaceState(null, "", "/tickets");
+    }
+  }, [searchParams]);
+
   const filteredFixtures = useMemo(() => {
     if (activeTab === "upcoming") {
       return fixtures.filter((fixture) => fixture.status === "upcoming");
