@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 
 import { PWA_OPT_IN_EVENT, PWA_OPT_IN_KEY, recordPwaOptIn } from "@/app/_lib/pwa";
 
+// Types for the beforeinstallprompt event
+// See: https://developer.mozilla.org/en-US/docs/Web/API/BeforeInstallPromptEvent
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
 };
@@ -16,7 +18,40 @@ export function InstallPrompt() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    if (!hasWindow()) {
+    if (!hasWindow()) return;
+
+    // Detect iOS Safari (no beforeinstallprompt event) and show a custom message
+    const ua = window.navigator.userAgent.toLowerCase();
+    const isiOS = /iphone|ipad|ipod/.test(ua);
+    const inStandalone = ('standalone' in window.navigator) && (window.navigator as any).standalone;
+    if (isiOS && !inStandalone) {
+      setShowIosPrompt(true);
+    }
+
+    const onBeforeInstallPrompt = (event: BeforeInstallPromptEvent) => {
+      event.preventDefault();
+      setDeferredPrompt(event);
+      setShow(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hasWindow()) return;
+    try {
+      if (window.localStorage.getItem(PWA_OPT_IN_KEY) === 'true') {
+        setShow(false);
+      }
+    } catch (error) {
+      console.warn('Unable to read stored PWA preference', error);
+    }
+  }, []);
+
+  // Render iOS guidance if necessary
   if (showIosPrompt) {
     return (
       <div className="card fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
@@ -30,52 +65,17 @@ export function InstallPrompt() {
       </div>
     );
   }
-  return (
-    }
 
-    const onBeforeInstallPrompt = (event: BeforeInstallPromptEvent) => {
-      event.preventDefault();
-      setDeferredPrompt(event);
-      setShow(true);
-    };
-
-    window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
-    // Detect iOS Safari and show guidance
-    {
-      const ua = window.navigator.userAgent.toLowerCase();
-      const isiOS = /iphone|ipad|ipod/.test(ua);
-      const inStandalone = ('standalone' in window.navigator) && window.navigator.standalone;
-      if (isiOS && !inStandalone) {
-        setShowIosPrompt(true);
-      }
-    }
-    return () => window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
-  }, []);
-
-  useEffect(() => {
-    if (!hasWindow()) {
-      return;
-    }
-
-    try {
-      if (window.localStorage.getItem(PWA_OPT_IN_KEY) === "true") {
-        setShow(false);
-      }
-    } catch (error) {
-      console.warn("Unable to read stored PWA preference", error);
-    }
-  }, []);
-
-  if (!show && !showIosPrompt) {
+  if (!show) {
     return null;
   }
 
   const handleInstall = async () => {
-    recordPwaOptIn({ reason: "install" });
+    recordPwaOptIn({ reason: 'install' });
     try {
       await deferredPrompt?.prompt();
     } catch (error) {
-      console.warn("PWA installation prompt failed", error);
+      console.warn('PWA installation prompt failed', error);
     } finally {
       setShow(false);
     }
@@ -83,7 +83,7 @@ export function InstallPrompt() {
 
   return (
     <div className="card fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
-      <span>Install GIKUNDIRO App??</span>
+      <span>Install GIKUNDIRO App?</span>
       <button className="btn-primary" onClick={handleInstall}>
         Install
       </button>
@@ -111,12 +111,12 @@ export function OfflineBanner() {
     const handleOffline = () => setOffline(true);
 
     setOffline(!navigator.onLine);
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
     return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
   }, []);
 
@@ -129,10 +129,4 @@ export function OfflineBanner() {
       You’re offline. We’ll sync when you’re back.
     </div>
   );
-}
-
-declare global {
-  interface WindowEventMap {
-    [PWA_OPT_IN_EVENT]: CustomEvent;
-  }
 }
