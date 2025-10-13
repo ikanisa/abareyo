@@ -11,12 +11,26 @@ type BeforeInstallPromptEvent = Event & {
 const hasWindow = () => typeof window !== "undefined";
 
 export function InstallPrompt() {
+  const [showIosPrompt, setShowIosPrompt] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [show, setShow] = useState(false);
 
   useEffect(() => {
     if (!hasWindow()) {
-      return () => {};
+  if (showIosPrompt) {
+    return (
+      <div className="card fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
+        <span>Install GIKUNDIRO App to your Home Screen</span>
+        <p className="text-xs text-white/70">
+          Tap the Share icon and select “Add to Home Screen”.
+        </p>
+        <button className="btn" onClick={() => setShowIosPrompt(false)}>
+          Close
+        </button>
+      </div>
+    );
+  }
+  return (
     }
 
     const onBeforeInstallPrompt = (event: BeforeInstallPromptEvent) => {
@@ -26,6 +40,15 @@ export function InstallPrompt() {
     };
 
     window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+    // Detect iOS Safari and show guidance
+    {
+      const ua = window.navigator.userAgent.toLowerCase();
+      const isiOS = /iphone|ipad|ipod/.test(ua);
+      const inStandalone = ('standalone' in window.navigator) && window.navigator.standalone;
+      if (isiOS && !inStandalone) {
+        setShowIosPrompt(true);
+      }
+    }
     return () => window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
   }, []);
 
@@ -43,7 +66,7 @@ export function InstallPrompt() {
     }
   }, []);
 
-  if (!show) {
+  if (!show && !showIosPrompt) {
     return null;
   }
 
