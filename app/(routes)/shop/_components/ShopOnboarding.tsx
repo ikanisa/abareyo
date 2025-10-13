@@ -6,11 +6,12 @@ import { Smartphone, Sparkles, Tags, X } from "lucide-react";
 
 import useDialogFocusTrap from "../_hooks/useDialogFocusTrap";
 import { useShopLocale } from "../_hooks/useShopLocale";
+import { reportMarketplaceEvent } from "../_logic/telemetry";
 
 const STORAGE_KEY = "abareyo:shop-onboarded";
 
 const ShopOnboarding = () => {
-  const { t } = useShopLocale();
+  const { t, locale } = useShopLocale();
   const prefersReducedMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
 
@@ -24,11 +25,16 @@ const ShopOnboarding = () => {
     return undefined;
   }, []);
 
-  const close = (persist = true) => {
+  const close = (persist = true, reason: "dismiss" | "skip" | "cta" = "dismiss") => {
     if (persist && typeof window !== "undefined") {
       window.localStorage.setItem(STORAGE_KEY, "1");
     }
     setOpen(false);
+    reportMarketplaceEvent({
+      event: "marketplace.onboarding.closed",
+      locale,
+      payload: { reason, persisted: persist },
+    });
   };
 
   const containerRef = useDialogFocusTrap<HTMLDivElement>(open, {
@@ -127,7 +133,7 @@ const ShopOnboarding = () => {
               <button
                 type="button"
                 className="btn flex-1 min-h-[44px]"
-                onClick={() => close(true)}
+                onClick={() => close(true, "skip")}
               >
                 {t("onboarding.skip").primary}
                 <span className="block text-xs text-white/60">{t("onboarding.skip").secondary}</span>
@@ -135,7 +141,7 @@ const ShopOnboarding = () => {
               <button
                 type="button"
                 className="btn-primary flex-1 min-h-[44px]"
-                onClick={() => close(true)}
+                onClick={() => close(true, "cta")}
               >
                 {t("onboarding.cta").primary}
                 <span className="block text-xs text-white/70">{t("onboarding.cta").secondary}</span>

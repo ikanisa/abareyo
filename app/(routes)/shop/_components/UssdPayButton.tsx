@@ -11,6 +11,7 @@ import {
 } from "../_logic/useShop";
 import useDialogFocusTrap from "../_hooks/useDialogFocusTrap";
 import { useShopLocale } from "../_hooks/useShopLocale";
+import { reportMarketplaceEvent } from "../_logic/telemetry";
 
 type UssdPayButtonProps = {
   amount: number;
@@ -27,7 +28,7 @@ const UssdPayButton = ({ amount, phoneNumber, onReferenceCaptured }: UssdPayButt
   const [referenceInput, setReferenceInput] = useState("");
   const [referenceError, setReferenceError] = useState(false);
   const [submittedReference, setSubmittedReference] = useState<string | null>(null);
-  const { t } = useShopLocale();
+  const { t, locale } = useShopLocale();
 
   const closeOverlay = () => {
     setShowOverlay(false);
@@ -64,6 +65,11 @@ const UssdPayButton = ({ amount, phoneNumber, onReferenceCaptured }: UssdPayButt
     }
     setDialing(true);
     setShowOverlay(true);
+    reportMarketplaceEvent({
+      event: "marketplace.ussd.dial",
+      locale,
+      payload: { method: selectedMethod, amount },
+    });
   };
 
   const handleReferenceSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -76,6 +82,11 @@ const UssdPayButton = ({ amount, phoneNumber, onReferenceCaptured }: UssdPayButt
     setReferenceError(false);
     setSubmittedReference(value);
     onReferenceCaptured?.(value);
+    reportMarketplaceEvent({
+      event: "marketplace.ussd.reference_submitted",
+      locale,
+      payload: { method: selectedMethod, amount },
+    });
   };
 
   return (

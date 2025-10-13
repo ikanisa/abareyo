@@ -10,10 +10,10 @@
 - **Localisation & onboarding.** A locale toggle and dual-language copy span header, hero, cards, PDP, cart, and USSD flows, backed by a dismissible onboarding sheet for first-time shoppers. 【F:app/(routes)/shop/_hooks/useShopLocale.tsx†L1-L210】【F:app/(routes)/shop/_components/ShopOnboarding.tsx†L1-L108】【F:app/(routes)/shop/_components/ShopHeader.tsx†L18-L97】
 
 ## Outstanding Gaps vs Spec
-1. **Content management**
-   - Catalogue strings are now bilingual at the data layer, but they remain hard-coded. Aligning with a CMS or translation pipeline would enable non-dev updates, versioning, and pluralisation rules. 【F:app/(routes)/shop/_data/products.ts†L1-L230】【F:app/(routes)/shop/_hooks/useShopLocale.tsx†L1-L960】
-2. **Operational follow-up**
-   - Locale preference now syncs via cookie/localStorage for client routes, but downstream services (order emails, SMS receipts) still need bilingual coverage and telemetry to confirm onboarding completion rates before graduation to GA.
+1. **Checkout integrations**
+   - Front-end telemetry now captures locale switches, onboarding dismissals, and USSD payment references via the new `/api/marketplace/events` endpoint, but back-office tooling still needs to consume these events alongside SMS confirmations to fully automate order reconciliation. 【F:app/api/marketplace/events/route.ts†L1-L47】【F:app/(routes)/shop/_components/UssdPayButton.tsx†L18-L142】【F:app/(routes)/shop/_components/ShopOnboarding.tsx†L8-L116】
+2. **Asset pipeline**
+   - Product imagery and copy live in JSON catalogues for non-dev edits, yet they still require a manual deployment to publish; wiring a CMS or storage bucket hook-in would unlock content ops autonomy. 【F:app/(routes)/shop/_data/catalogue.json†L1-L410】【F:app/(routes)/shop/_data/copy.json†L1-L526】【F:app/(routes)/shop/_data/products.ts†L1-L44】【F:app/(routes)/shop/_hooks/useShopLocale.tsx†L1-L118】
 
 ## Recommended Phased Plan
 - **Phase 1 – Media & merchandising polish (est. 2–3 days)**
