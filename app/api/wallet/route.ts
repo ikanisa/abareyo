@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
-import { getSupabase } from '../_lib/supabase';
-import { errorResponse, successResponse } from '../_lib/responses';
-import { requireAuthUser } from '../_lib/auth';
+import { getSupabase } from '@/app/_lib/supabase';
+import { errorResponse, successResponse } from '@/app/_lib/responses';
+import { requireAuthUser } from '@/app/_lib/auth';
 import type { TablesInsert } from '@/integrations/supabase/types';
 
 export async function GET(req: NextRequest) {
