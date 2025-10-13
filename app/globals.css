@@ -1,80 +1,164 @@
-:root{
-  --rs-blue:#0033FF;
-  --rs-azure:#00A1DE;
-  --rs-yellow:#FAD201;
-  --rs-green:#20603D;
-  --rs-gold:#E5BE01;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  --glass-bg:rgba(255,255,255,.14);
-  --glass-stroke:rgba(255,255,255,.22);
-  --shadow-lg:0 8px 24px rgba(0,0,0,.25);
+:root {
+  --rs-blue: #0033ff;
+  --rs-azure: #00a1de;
+  --rs-yellow: #fad201;
+  --rs-green: #20603d;
+  --rs-night: #050b27;
 
-  --radius-xl:16px;
-  --radius-2xl:24px;
+  --glass-surface: rgba(255, 255, 255, 0.14);
+  --glass-stroke: rgba(255, 255, 255, 0.22);
+  --glass-shadow: 0 24px 60px rgba(5, 11, 39, 0.35);
+
+  --rs-radius-xl: 18px;
+  --rs-radius-2xl: 26px;
 }
-.bg-rs-gradient{
-  background:linear-gradient(135deg,var(--rs-blue),var(--rs-azure),var(--rs-yellow),var(--rs-green));
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
 }
-.glass{
-  background:var(--glass-bg);
-  backdrop-filter:blur(24px);
-  -webkit-backdrop-filter:blur(24px);
-  border:1px solid var(--glass-stroke);
-  border-radius:var(--radius-2xl);
-  box-shadow:var(--shadow-lg);
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
 }
-.card{ @apply glass p-4 md:p-6; }
-.tile{
-  @apply glass px-4 py-3 text-white/90 text-sm font-medium transition hover:bg-white/20 inline-flex items-center justify-center gap-2 text-center rounded-2xl;
-  min-height:44px;
-  @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80;
+
+@layer components {
+  .bg-rs-gradient {
+    background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.12), transparent 55%),
+      linear-gradient(135deg, var(--rs-blue), var(--rs-azure), var(--rs-yellow), var(--rs-green));
+  }
+
+  .glass {
+    background: var(--glass-surface);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--glass-stroke);
+    border-radius: var(--rs-radius-2xl);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .card {
+    @apply glass p-5 md:p-6;
+  }
+
+  .tile {
+    @apply glass px-4 py-3 text-sm font-medium text-white/90 transition;
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl text-center;
+    @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80;
+  }
+
+  .btn {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold text-white;
+    @apply bg-white/15 transition hover:bg-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80;
+    @apply disabled:pointer-events-none disabled:opacity-60;
+  }
+
+  .btn-primary {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold text-white;
+    @apply bg-[#0051ff] transition hover:bg-[#0041cc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80;
+    @apply disabled:pointer-events-none disabled:opacity-60;
+  }
+
+  .muted {
+    @apply text-white/70;
+  }
+
+  .section-title {
+    @apply text-lg font-semibold text-white md:text-xl;
+  }
+
+  .h-scroll {
+    @apply scroll-smooth overflow-x-auto whitespace-nowrap;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs text-white;
+  }
 }
-.btn{
-  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-white/15 px-4 py-2 text-white transition hover:bg-white/25;
-  min-height:44px;
-  @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 disabled:opacity-60 disabled:pointer-events-none;
-}
-.btn-primary{
-  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-blue-500 px-4 py-2 text-white transition hover:bg-blue-600;
-  min-height:44px;
-  @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 disabled:opacity-60 disabled:pointer-events-none;
-}
-.muted{ @apply text-white/70; }
-.section-title{ @apply text-lg md:text-xl font-semibold text-white; }
-.h-scroll{ @apply overflow-x-auto whitespace-nowrap scroll-smooth; }
-.chip{ @apply inline-flex items-center gap-1 rounded-full px-3 py-1 bg-white/15 text-white text-xs; }
 
 @keyframes ticket-sheet {
-  from { transform: translateY(32px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(32px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes ticket-overlay {
-  from { opacity: 0; }
-  to { opacity: .95; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.95;
+  }
 }
 
 @keyframes ticket-wallet {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes ticket-waiting {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
-.animate-ticket-sheet{ animation: ticket-sheet .25s ease-out forwards; }
-.animate-ticket-overlay{ animation: ticket-overlay .25s ease-out forwards; }
-.animate-ticket-wallet{ animation: ticket-wallet .45s ease-out forwards; }
-.animate-ticket-waiting{ animation: ticket-waiting 2.4s ease-in-out infinite; }
+.animate-ticket-sheet {
+  animation: ticket-sheet 0.25s ease-out forwards;
+}
+
+.animate-ticket-overlay {
+  animation: ticket-overlay 0.25s ease-out forwards;
+}
+
+.animate-ticket-wallet {
+  animation: ticket-wallet 0.45s ease-out forwards;
+}
+
+.animate-ticket-waiting {
+  animation: ticket-waiting 2.4s ease-in-out infinite;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  *{ animation:none !important; transition:none !important; }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
-:focus-visible{
-  outline:2px solid #fff;
-  outline-offset:2px;
+:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
 }

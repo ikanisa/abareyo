@@ -54,6 +54,10 @@ export const PARTNERS: Partner[] = [
   },
 ];
 
+export const perks = {
+  highlight: "Earn a bonus BLUE stand ticket when you insure your moto or deposit 50k RWF into SACCO+ today.",
+};
+
 export const SACCO_LIST: Sacco[] = [
   { id: "skigali", name: "Kigali SACCO", branch: "CBD" },
   { id: "shuye", name: "Huye SACCO", branch: "Huye" },

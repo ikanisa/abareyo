@@ -143,7 +143,12 @@ export async function GET(req: Request) {
     const first = await getDefaultUser(db);
     if (!first) return NextResponse.json({ error: "no_user" }, { status: 404 });
 
-    user = { id: first.id, name: (first as any).name, tier: (first as any).tier, points: (first as any).points ?? 0 };
+    user = {
+      id: first.id,
+      name: first.name,
+      tier: first.tier,
+      points: first.points ?? 0,
+    };
   }
 
   const { data: freeTickets } = await db
