@@ -11,9 +11,10 @@ import ProductRail from "../_components/ProductRail";
 import type { Product } from "../_data/products";
 import { formatPrice, getCrossSell, recordRecentlyViewed, useCart, useRecentlyViewed } from "../_logic/useShop";
 import { ShopLocaleProvider, useShopLocale, type ShopLocale } from "../_hooks/useShopLocale";
+import type { SizeGuideModalProps } from "../_components/SizeGuideModal";
 
-const SizeGuideModal = dynamic<typeof import("../_components/SizeGuideModal")["default"]>(
-  () => import("../_components/SizeGuideModal"),
+const SizeGuideModal = dynamic<SizeGuideModalProps>(
+  () => import("../_components/SizeGuideModal").then((mod) => mod.default),
   { ssr: false },
 );
 
