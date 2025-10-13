@@ -115,22 +115,35 @@ const buildFixtureFromMatch = (match: ApiMatch): Fixture => {
 const TicketsPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [loadingFixtures, setLoadingFixtures] = useState(true);
+
   const [fixtures, setFixtures] = useState<Fixture[]>(fallbackFixtures);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("upcoming");
   const [selectedFixture, setSelectedFixture] = useState<Fixture | null>(null);
   const [selectedZone, setSelectedZone] = useState<TicketZone | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [reservation, setReservation] = useState<TicketReservationState>({ status: "idle" });
 
+  // Respect ?tab=past
   useEffect(() => {
-    const requestedTab = searchParams.get("tab");
-    if (requestedTab === "past") {
-      setActiveTab("past");
+    const requestedTab = searchParams?.get("tab");
+    if (requestedTab === "past") setActiveTab("past");
+  }, [searchParams]);
+
+  // Handle claimed free ticket UX (from main)
+  useEffect(() => {
+    if (searchParams?.get("claimed") === "1") {
+      alert("🎉 Free BLUE ticket added to your tickets!");
+      const el = document.querySelector("[data-ticket-free='1']");
+      if (el instanceof HTMLElement) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      window.history.replaceState(null, "", "/tickets");
     }
   }, [searchParams]);
 
+  // Load fixtures from API with safe fallback
   useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -150,9 +163,7 @@ const TicketsPage = () => {
         setLoadError(error instanceof Error ? error.message : "Unable to load fixtures");
         setFixtures(fallbackFixtures);
       } finally {
-        if (mounted) {
-          setLoadingFixtures(false);
-        }
+        if (mounted) setLoading(false);
       }
     };
     load();
@@ -166,12 +177,8 @@ const TicketsPage = () => {
   }, [selectedFixture?.id]);
 
   const filteredFixtures = useMemo(() => {
-    if (activeTab === "upcoming") {
-      return fixtures.filter((fixture) => fixture.status === "upcoming");
-    }
-    if (activeTab === "past") {
-      return fixtures.filter((fixture) => fixture.status === "completed");
-    }
+    if (activeTab === "upcoming") return fixtures.filter((f) => f.status === "upcoming");
+    if (activeTab === "past") return fixtures.filter((f) => f.status === "completed");
     return fixtures;
   }, [activeTab, fixtures]);
 
@@ -185,9 +192,7 @@ const TicketsPage = () => {
 
   const scrollToCheckout = () => {
     const checkoutAnchor = document.getElementById("checkout-panel");
-    if (checkoutAnchor) {
-      checkoutAnchor.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    if (checkoutAnchor) checkoutAnchor.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const reserveTicket = async (fixture: Fixture, zone: TicketZone) => {
@@ -259,11 +264,12 @@ const TicketsPage = () => {
               Tap a match card to choose your zone.
             </p>
           </div>
-          {loadingFixtures ? (
-            <div className="grid gap-4" role="status" aria-live="polite">
-              <div className="h-56 w-64 animate-pulse rounded-3xl bg-white/10" />
-              <div className="h-56 w-64 animate-pulse rounded-3xl bg-white/10" />
-            </div>
+          {loading ? (
+            <EmptyState
+              title="Loading fixtures"
+              description="Fetching the latest fixtures from Supabase."
+              icon="⏳"
+            />
           ) : filteredFixtures.length === 0 ? (
             <EmptyState
               title="No fixtures to show"
@@ -283,6 +289,7 @@ const TicketsPage = () => {
             </p>
           ) : null}
         </section>
+
         <section aria-live="polite" aria-atomic="true" role="region" aria-label="Checkout summary">
           {selectedFixture && selectedZone ? (
             <CheckoutCard

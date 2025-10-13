@@ -1,5 +1,5 @@
 import { buildRouteMetadata } from "@/app/_lib/navigation";
-import { shopData, type Product } from "@/app/_data/shop_v2";
+import { shopData, type Product, type ProductBadge } from "@/app/_data/shop_v2";
 
 import ShopExperience from "./ShopExperience";
 
@@ -22,6 +22,9 @@ type SupabaseProduct = {
   badge: string | null;
 };
 
+const isProductBadge = (value: string | null): value is ProductBadge =>
+  value === "official" || value === "new" || value === "sale" || value === "exclusive";
+
 const mapRemoteProduct = (record: SupabaseProduct): Product => {
   const fallbackImage = "/shop/home1.png";
   return {
@@ -30,7 +33,7 @@ const mapRemoteProduct = (record: SupabaseProduct): Product => {
     slug: slugify(record.name ?? record.id ?? "product"),
     images: record.image_url ? [record.image_url] : [fallbackImage],
     price: Number(record.price) || 0,
-    badges: record.badge ? [record.badge as Product["badges"][number]] : undefined,
+    badges: isProductBadge(record.badge) ? [record.badge] : undefined,
     description: record.description ?? undefined,
     category:
       typeof record.category === "string"
@@ -42,16 +45,15 @@ const mapRemoteProduct = (record: SupabaseProduct): Product => {
 const fetchProducts = async (): Promise<Product[]> => {
   const base = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") ?? "";
   const endpoint = `${base}/api/shop/products`;
+  if (!base) {
+    return [];
+  }
   try {
     const response = await fetch(endpoint, { next: { revalidate: 60 } });
-    if (!response.ok) {
-      return [];
-    }
-    const payload = (await response.json()) as SupabaseProduct[] | unknown;
-    if (!Array.isArray(payload)) {
-      return [];
-    }
-    return payload.map((entry) => mapRemoteProduct(entry as SupabaseProduct));
+    if (!response.ok) return [];
+    const payload = (await response.json()) as unknown;
+    if (!Array.isArray(payload)) return [];
+    return (payload as SupabaseProduct[]).map(mapRemoteProduct);
   } catch (error) {
     console.error("Failed to fetch shop products", error);
     return [];

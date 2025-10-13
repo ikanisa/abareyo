@@ -7,7 +7,7 @@ import type { SortOption } from "../_logic/useShop";
 import useDialogFocusTrap from "../_hooks/useDialogFocusTrap";
 import { useShopLocale } from "../_hooks/useShopLocale";
 
-type SortSheetProps = {
+export type SortSheetProps = {
   open: boolean;
   onClose: () => void;
   value: SortOption;

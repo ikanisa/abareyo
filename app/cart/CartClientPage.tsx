@@ -77,7 +77,7 @@ const CartContent = () => {
         user: {
           name: fanProfile.name,
           phone: sanitizedPhone || fanProfile.phone,
-          momo_number: fanProfile.momo ?? sanitizedPhone || fanProfile.phone,
+          momo_number: fanProfile.momo ?? (sanitizedPhone || fanProfile.phone),
         },
         items: items.map((item) => ({
           product_id: item.product.id,
@@ -124,7 +124,7 @@ const CartContent = () => {
 
   return (
     <div className="min-h-screen bg-rs-gradient pb-24 text-white">
-        <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 pb-16 pt-8">
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 pb-16 pt-8">
         <header className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">
             {t("cart.title").primary}
