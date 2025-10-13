@@ -1,0 +1,18 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hoodieFrontGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B1F3A" />
+      <stop offset="0.6" stop-color="#1E3A8A" />
+      <stop offset="1" stop-color="#2563EB" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1200" rx="80" fill="url(#hoodieFrontGradient)" />
+  <g fill="#60A5FA" fill-opacity="0.3">
+    <rect x="360" y="320" width="480" height="420" rx="80" />
+    <circle cx="600" cy="760" r="210" />
+  </g>
+  <g fill="#BFDBFE" font-family="'Inter', sans-serif" text-anchor="middle">
+    <text x="600" y="930" font-size="62" font-weight="700">Everyday Crest Hoodie</text>
+    <text x="600" y="1006" font-size="36" font-weight="500" opacity="0.85">Ultra-soft fleece</text>
+  </g>
+</svg>

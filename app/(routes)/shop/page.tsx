@@ -1,8 +1,15 @@
+import { cookies } from "next/headers";
+
+import ShopClientPage from "./ShopClientPage";
 import { buildRouteMetadata } from "@/app/_lib/navigation";
-import ShopView from "@/views/ShopView";
+import type { ShopLocale } from "./_hooks/useShopLocale";
 
 export const metadata = buildRouteMetadata("/shop");
 
-const ShopPage = () => <ShopView />;
+const ShopPage = () => {
+  const localeCookie = cookies().get("abareyo:shop-locale")?.value;
+  const initialLocale: ShopLocale = localeCookie === "rw" ? "rw" : "en";
+  return <ShopClientPage initialLocale={initialLocale} />;
+};
 
 export default ShopPage;
