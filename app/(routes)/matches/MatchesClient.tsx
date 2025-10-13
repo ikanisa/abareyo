@@ -28,6 +28,14 @@ type MatchesClientProps = {
   updatedAt?: string;
 };
 
+const parseKickoff = (match: Match) => {
+  const timestamp = new Date(match.kickoff).getTime();
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+};
+
+const sortByKickoffAsc = (a: Match, b: Match) => parseKickoff(a) - parseKickoff(b);
+const sortByKickoffDesc = (a: Match, b: Match) => parseKickoff(b) - parseKickoff(a);
+
 const MatchesClient = ({ matches, highlights, standings, updatedAt }: MatchesClientProps) => {
   const reduceMotion = useReducedMotion();
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
@@ -44,15 +52,28 @@ const MatchesClient = ({ matches, highlights, standings, updatedAt }: MatchesCli
   );
 
   const liveMatches = useMemo(
-    () => feed.matches.filter((match) => match.status === "live"),
+    () =>
+      feed.matches
+        .filter((match) => match.status === "live")
+        .slice()
+        .sort(sortByKickoffAsc),
     [feed.matches],
   );
   const upcomingMatches = useMemo(
-    () => feed.matches.filter((match) => match.status === "upcoming"),
+    () =>
+      feed.matches
+        .filter((match) => match.status === "upcoming")
+        .slice()
+        .sort(sortByKickoffAsc),
     [feed.matches],
   );
   const finishedMatches = useMemo(
-    () => feed.matches.filter((match) => match.status === "ft"),
+    () =>
+      feed.matches
+        .filter((match) => match.status === "ft")
+        .slice()
+        .sort(sortByKickoffDesc)
+        .slice(0, 3),
     [feed.matches],
   );
 
