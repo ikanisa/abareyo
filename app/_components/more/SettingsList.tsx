@@ -79,22 +79,16 @@ export function SettingsList({ groups, onToggle, onAction }: SettingsListProps) 
                       exit={{ opacity: 0, y: -6 }}
                       transition={{ duration: 0.2, ease: "easeOut" }}
                     >
-                      <motion.div
-                        role="group"
-                        tabIndex={0}
-                        className="card flex items-center gap-3 bg-white/5 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/90 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+                      <motion.button
+                        type="button"
+                        className="card flex w-full items-center gap-3 bg-white/5 p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/90 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
                         whileHover={prefersReducedMotion ? undefined : { scale: 1.01 }}
                         whileTap={prefersReducedMotion ? undefined : { scale: 0.99 }}
                         onClick={() => handleToggle(item.id, !checked)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            handleToggle(item.id, !checked);
-                          }
-                        }}
                         aria-label={item.ariaLabel}
                         aria-labelledby={labelId}
                         aria-describedby={descriptionId}
+                        aria-pressed={checked}
                       >
                         <span className="rounded-2xl bg-white/15 p-3 text-white">
                           <Icon className="h-5 w-5" aria-hidden />
@@ -117,7 +111,7 @@ export function SettingsList({ groups, onToggle, onAction }: SettingsListProps) 
                           aria-labelledby={labelId}
                           aria-describedby={descriptionId}
                         />
-                      </motion.div>
+                      </motion.button>
                     </motion.li>
                   );
                 }
