@@ -6,7 +6,8 @@ import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle, ShoppingBag } from "lucide-react";
 
-import { formatPrice, minPrice, type Product, useCart } from "../_logic/useShop";
+import { formatPrice, minPrice, useCart } from "../_logic/useShop";
+import type { Product, Variant } from "../_data/products";
 import { useShopLocale, type CopyKey } from "../_hooks/useShopLocale";
 
 const swatchColor: Record<string, string> = {
@@ -24,7 +25,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const prefersReducedMotion = useReducedMotion();
   const [showSizes, setShowSizes] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
-  const pressTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pressTimeout = useRef<number | null>(null);
   const { t } = useShopLocale();
   const officialCopy = t("product.genuine");
   const fallbackBadge = t("product.badgeFallback");
@@ -39,8 +40,12 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const saleBadgeCopy = discountPercent
     ? t("product.savePercent", { percent: discountPercent })
     : t("product.saleBadge");
-  const colors = useMemo(() => Array.from(new Set(product.variants.map((variant) => variant.color))), [product.variants]);
-  const sizes = useMemo(() => Array.from(new Set(product.variants.map((variant) => variant.size))), [product.variants]);
+  const colors = useMemo<Variant["color"][]>(() => {
+    return Array.from(new Set<Variant["color"]>(product.variants.map((variant) => variant.color)));
+  }, [product.variants]);
+  const sizes = useMemo<Variant["size"][]>(() => {
+    return Array.from(new Set<Variant["size"]>(product.variants.map((variant) => variant.size)));
+  }, [product.variants]);
   const hasMultipleVariants = sizes.length > 1 || colors.length > 1;
   const hasMultipleImages = product.images.length > 1;
   const displayImage = product.images[imageIndex] ?? product.images[0];

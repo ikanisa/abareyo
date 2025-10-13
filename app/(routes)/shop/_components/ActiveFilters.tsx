@@ -13,49 +13,57 @@ type ActiveFiltersProps = {
 type Translator = ReturnType<typeof useShopLocale>["t"];
 
 export const formatActiveFilterCopy = (filter: ActiveFilter, t: Translator): BilingualString => {
-  switch (filter.kind) {
-    case "category": {
-      const tab = SHOP_TABS.find((entry) => entry.category === filter.value);
-      const valueCopy = tab ? t(tab.labelKey) : { primary: filter.value, secondary: filter.value };
-      return t("chip.category", { value: valueCopy });
-    }
-    case "size":
-      return t("chip.size", { value: filter.value });
-    case "color": {
-      const colorKey = `color.${filter.value}` as CopyKey;
-      const colorCopy = t(colorKey);
-      return t("chip.color", { value: colorCopy });
-    }
-    case "tag": {
-      const tagKey = `tag.${filter.value}` as CopyKey;
-      const tagCopy = t(tagKey);
-      return t("chip.tag", { value: tagCopy });
-    }
-    case "price": {
-      const english: string[] = [];
-      const kinyarwanda: string[] = [];
-      if (filter.min != null) {
-        const value = formatPrice(filter.min);
-        english.push(`from ${value}`);
-        kinyarwanda.push(`uva kuri ${value}`);
-      }
-      if (filter.max != null) {
-        const value = formatPrice(filter.max);
-        english.push(`to ${value}`);
-        kinyarwanda.push(`ugeza kuri ${value}`);
-      }
-      return {
-        primary: [`Price`, ...english].join(" ").trim(),
-        secondary: [`Igiciro`, ...kinyarwanda].join(" ").trim(),
-      };
-    }
-    case "stock":
-      return t("chip.stock");
-    case "search":
-      return t("chip.search", { query: filter.value });
-    default:
-      return { primary: filter.label, secondary: filter.label };
+  const fallbackLabel = filter.label;
+  if (filter.kind === "category") {
+    const tab = SHOP_TABS.find((entry) => entry.category === filter.value);
+    const valueCopy = tab ? t(tab.labelKey) : { primary: filter.value, secondary: filter.value };
+    return t("chip.category", { value: valueCopy });
   }
+
+  if (filter.kind === "size") {
+    return t("chip.size", { value: filter.value });
+  }
+
+  if (filter.kind === "color") {
+    const colorKey = `color.${filter.value}` as CopyKey;
+    const colorCopy = t(colorKey);
+    return t("chip.color", { value: colorCopy });
+  }
+
+  if (filter.kind === "tag") {
+    const tagKey = `tag.${filter.value}` as CopyKey;
+    const tagCopy = t(tagKey);
+    return t("chip.tag", { value: tagCopy });
+  }
+
+  if (filter.kind === "price") {
+    const english: string[] = [];
+    const kinyarwanda: string[] = [];
+    if (filter.min != null) {
+      const value = formatPrice(filter.min);
+      english.push(`from ${value}`);
+      kinyarwanda.push(`uva kuri ${value}`);
+    }
+    if (filter.max != null) {
+      const value = formatPrice(filter.max);
+      english.push(`to ${value}`);
+      kinyarwanda.push(`ugeza kuri ${value}`);
+    }
+    return {
+      primary: [`Price`, ...english].join(" ").trim(),
+      secondary: [`Igiciro`, ...kinyarwanda].join(" ").trim(),
+    };
+  }
+
+  if (filter.kind === "stock") {
+    return t("chip.stock");
+  }
+
+  if (filter.kind === "search") {
+    return t("chip.search", { query: filter.value });
+  }
+
+  return { primary: fallbackLabel, secondary: fallbackLabel };
 };
 
 const ActiveFilters = ({ filters, onClear, onClearAll }: ActiveFiltersProps) => {
