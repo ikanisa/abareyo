@@ -15,9 +15,9 @@
   box-shadow:var(--shadow);
 }
 .card{ @apply glass p-4 md:p-6; }
-.tile{ @apply glass py-3 px-3 text-white/90 rounded-2xl text-sm font-medium transition hover:bg-white/20; }
-.btn{ @apply px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white transition; }
-.btn-primary{ @apply px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white; }
+.tile{ @apply glass py-3 px-3 text-white/90 rounded-2xl text-sm font-medium transition hover:bg-white/20 inline-flex items-center justify-center text-center min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80; }
+.btn{ @apply px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white transition inline-flex items-center justify-center min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 disabled:opacity-60 disabled:pointer-events-none; }
+.btn-primary{ @apply px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white inline-flex items-center justify-center min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 disabled:opacity-60 disabled:pointer-events-none; }
 .muted{ @apply text-white/70; }
 .section-title{ @apply text-lg md:text-xl font-semibold text-white; }
 .h-scroll{ @apply overflow-x-auto whitespace-nowrap scroll-smooth; }
