@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 
 import PdpClientPage from "./PdpClientPage";
-import { getProductBySlug } from "../_logic/useShop";
+import { getProductBySlug } from "../_logic/serverShop";
 import type { ShopLocale } from "../_hooks/useShopLocale";
 
 const PDPPage = ({ params }: { params: { slug: string } }) => {
