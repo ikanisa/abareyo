@@ -10,6 +10,7 @@ export type ConsumerNavigationItem = {
     | 'fundraising'
     | 'membership'
     | 'wallet'
+    | 'services'
     | 'more';
   href: string;
   title: string;
@@ -140,6 +141,20 @@ export const appNavigation: AppNavigation = {
       meta: {
         title: 'Fan Wallet',
         description: 'Stored passes, loyalty points, and balances.',
+      },
+    },
+    {
+      id: 'services',
+      href: '/services',
+      title: 'Partner Services',
+      labelKey: 'nav.services',
+      description: 'Insurance, SACCO deposits, and partner offers.',
+      icon: 'bag',
+      analyticsId: 'nav-services',
+      surfaces: ['drawer', 'sidebar'],
+      meta: {
+        title: 'Partner Services Hub',
+        description: 'Insurance quotes, SACCO deposits, and perks from Rayon partners.',
       },
     },
     {

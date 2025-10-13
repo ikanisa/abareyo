@@ -1,6 +1,7 @@
 "use client";
 
-import { GlassCard } from "@/components/ui/glass-card";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Wallet,
   CreditCard,
@@ -18,10 +19,13 @@ import {
   BarChart3,
   Flag,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+
+import PageShell from "@/app/_components/shell/PageShell";
+import TopAppBar from "@/app/_components/ui/TopAppBar";
+import HeroBlock from "@/app/_components/widgets/HeroBlock";
+import { SectionHeader } from "@/app/_components/widgets/SectionHeader";
+import { GlassCard } from "@/components/ui/glass-card";
 import { cn } from "@/lib/utils";
-import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useI18n } from "@/providers/i18n-provider";
 import { useAuth } from "@/providers/auth-provider";
 import { useToast } from "@/components/ui/use-toast";
@@ -29,20 +33,20 @@ import { useToast } from "@/components/ui/use-toast";
 const useMenuLabels = () => {
   const { t } = useI18n();
   return {
-    wallet: t('nav.wallet', 'Wallet'),
-    membership: t('nav.membership', 'Membership'),
-    fundraising: t('nav.fundraising', 'Fundraising'),
-    events: t('nav.events', 'Events'),
-    transfer: t('nav.transfer', 'Transfer Ticket'),
-    profile: t('nav.profile', 'Profile'),
-    settings: t('nav.settings', 'Settings'),
-    language: t('nav.language', 'Language'),
-    support: t('nav.support', 'Help & Support'),
-    moderation: t('nav.moderation', 'Admin Moderation'),
-    realtime: t('nav.realtime', 'Realtime Monitor'),
-    missions: t('nav.missions', 'Fan Missions'),
-    ticketAnalytics: t('nav.ticketAnalytics', 'Ticket Analytics'),
-  };
+    wallet: t("nav.wallet", "Wallet"),
+    membership: t("nav.membership", "Membership"),
+    fundraising: t("nav.fundraising", "Fundraising"),
+    events: t("nav.events", "Events"),
+    transfer: t("nav.transfer", "Transfer Ticket"),
+    profile: t("nav.profile", "Profile"),
+    settings: t("nav.settings", "Settings"),
+    language: t("nav.language", "Language"),
+    support: t("nav.support", "Help & Support"),
+    moderation: t("nav.moderation", "Admin Moderation"),
+    realtime: t("nav.realtime", "Realtime Monitor"),
+    missions: t("nav.missions", "Fan Missions"),
+    ticketAnalytics: t("nav.ticketAnalytics", "Ticket Analytics"),
+  } as const;
 };
 
 const baseMenuItems = [
@@ -59,7 +63,7 @@ const baseMenuItems = [
   { icon: Flag, label: "Fan Missions", path: "/admin/community/missions", color: "accent" },
   { icon: Activity, label: "Realtime Monitor", path: "/admin/realtime", color: "accent" },
   { icon: BarChart3, label: "Ticket Analytics", path: "/admin/tickets", color: "accent" },
-];
+] as const;
 
 const colorStyles: Record<string, { container: string; icon: string }> = {
   primary: { container: "bg-primary/10", icon: "text-primary" },
@@ -72,141 +76,169 @@ const colorStyles: Record<string, { container: string; icon: string }> = {
 export default function More() {
   const router = useRouter();
   const { t } = useI18n();
-  const { user, logout, loading } = useAuth();
+  const { user, logout } = useAuth();
   const { toast } = useToast();
+
   const labels = useMenuLabels();
   const menuItems = baseMenuItems.map((item) => {
     switch (item.path) {
-      case '/wallet':
+      case "/wallet":
         return { ...item, label: labels.wallet };
-      case '/membership':
+      case "/membership":
         return { ...item, label: labels.membership };
-      case '/fundraising':
+      case "/fundraising":
         return { ...item, label: labels.fundraising };
-      case '/events':
+      case "/events":
         return { ...item, label: labels.events };
-      case '/tickets/transfer':
+      case "/tickets/transfer":
         return { ...item, label: labels.transfer };
-      case '/profile':
+      case "/profile":
         return { ...item, label: labels.profile };
-      case '/settings':
+      case "/settings":
         return { ...item, label: labels.settings };
-      case '/language':
+      case "/language":
         return { ...item, label: labels.language };
-      case '/support':
+      case "/support":
         return { ...item, label: labels.support };
-      case '/admin/community':
+      case "/admin/community":
         return { ...item, label: labels.moderation };
-      case '/admin/community/missions':
+      case "/admin/community/missions":
         return { ...item, label: labels.missions };
-      case '/admin/realtime':
+      case "/admin/realtime":
         return { ...item, label: labels.realtime };
-      case '/admin/tickets':
+      case "/admin/tickets":
         return { ...item, label: labels.ticketAnalytics };
       default:
         return item;
     }
   });
+
+  const heroSubtitle = t("copy.moreSubtitle", "Account & settings");
+  const heroCtas = (
+    <Link className="btn-primary" href="/membership">
+      {t("nav.membership", "Membership")}
+    </Link>
+  );
+
+  const topBarActions = (
+    <>
+      <Link className="btn" href="/support">
+        {t("nav.support", "Support")}
+      </Link>
+      <Link className="btn" href="/wallet">
+        {t("nav.wallet", "Wallet")}
+      </Link>
+    </>
+  );
+
   return (
-    <div className="min-h-screen pb-24 px-4">
-      {/* Header */}
-      <div className="pt-8 pb-6">
-        <h1 className="text-3xl font-black gradient-text mb-2">{t('nav.more', 'More')}</h1>
-        <p className="text-muted-foreground">{t('copy.moreSubtitle', 'Account & settings')}</p>
-      </div>
+    <PageShell mainClassName="space-y-6 pb-24">
+      <TopAppBar right={topBarActions} />
+      <HeroBlock title={t("nav.more", "More")} subtitle={heroSubtitle} ctas={heroCtas} />
 
-      {/* Profile Card */}
-      <GlassCard className="mb-6 p-5">
-        <div className="flex flex-wrap items-center gap-4 justify-between">
-          <div className="w-16 h-16 rounded-full bg-gradient-hero flex items-center justify-center">
-            <User className="w-8 h-8 text-primary-foreground" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-bold text-lg text-foreground">{user?.id ?? 'Guest fan'}</h3>
-            <p className="text-sm text-muted-foreground">Status: {user?.status ?? 'anonymous'}</p>
-          </div>
-          <div className="flex gap-2">
-            <LanguageSwitcher />
-            <ThemeToggle />
-          </div>
-        </div>
-      </GlassCard>
-
-      {/* Menu Items */}
-      <div className="space-y-2">
-        {menuItems.map((item, index) => {
-          const Icon = item.icon;
-          return (
-            <GlassCard 
-              key={item.path}
-              role="button"
-              tabIndex={0}
-              onClick={() => router.push(item.path)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  router.push(item.path);
-                }
-              }}
-              className="p-4 cursor-pointer hover:border-primary/40 transition-all animate-slide-up"
-              style={{ animationDelay: `${index * 50}ms` }}
-            >
-              <div className="flex items-center gap-4">
-                <div
-                  className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center",
-                    colorStyles[item.color]?.container ?? "bg-muted/10",
-                  )}
-                >
-                  <Icon className={cn("w-5 h-5", colorStyles[item.color]?.icon ?? "text-muted-foreground")} />
-                </div>
-                <span className="flex-1 font-medium text-foreground">{item.label}</span>
-                <ChevronRight className="w-5 h-5 text-muted-foreground" />
+      <section className="space-y-3">
+        <SectionHeader title={t("copy.profileOverview", "Your profile")} />
+        <GlassCard className="p-5">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-hero">
+                <User className="h-8 w-8 text-primary-foreground" />
               </div>
-            </GlassCard>
-          );
-        })}
-      </div>
-
-      {/* Logout */}
-      <GlassCard
-        className="mt-6 p-4 cursor-pointer hover:border-destructive/40 transition-all"
-        role="button"
-        tabIndex={0}
-        onClick={async () => {
-          try {
-            await logout();
-            toast({ title: t('auth.loggedOut', 'Signed out') });
-            router.replace('/onboarding');
-            router.refresh();
-          } catch (error) {
-            toast({
-              title: t('auth.logoutFailed', 'Logout failed'),
-              description: error instanceof Error ? error.message : t('auth.tryAgain', 'Please try again.'),
-              variant: 'destructive',
-            });
-          }
-        }}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            (event.currentTarget as HTMLDivElement).click();
-          }
-        }}
-      >
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
-            <LogOut className="w-5 h-5 text-destructive" />
+              <div>
+                <h3 className="text-lg font-bold text-foreground">{user?.id ?? "Guest fan"}</h3>
+                <p className="text-sm text-muted-foreground">Status: {user?.status ?? "anonymous"}</p>
+              </div>
+            </div>
+            <div className="flex flex-1 flex-wrap justify-end gap-2">
+              <Link className="btn" href="/settings">
+                {t("nav.settings", "Settings")}
+              </Link>
+              <Link className="btn" href="/profile">
+                {t("nav.profile", "Profile")}
+              </Link>
+            </div>
           </div>
-          <span className="flex-1 font-medium text-destructive">{loading ? t('auth.loggingOut', 'Signing out…') : t('auth.logout', 'Log Out')}</span>
-        </div>
-      </GlassCard>
+        </GlassCard>
+      </section>
 
-      {/* App Info */}
-      <div className="mt-8 text-center space-y-2">
-        <p className="text-sm text-muted-foreground">Rayon Sports Fan App</p>
-        <p className="text-xs text-muted-foreground">Version 1.0.0</p>
-      </div>
-    </div>
+      <section className="space-y-3">
+        <SectionHeader title={t("copy.quickLinks", "Quick links")} />
+        <div className="space-y-2">
+          {menuItems.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <GlassCard
+                key={item.path}
+                role="button"
+                tabIndex={0}
+                onClick={() => router.push(item.path)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    router.push(item.path);
+                  }
+                }}
+                className="p-4 transition-all hover:border-primary/40"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <div className="flex items-center gap-4">
+                  <div
+                    className={cn(
+                      "flex h-10 w-10 items-center justify-center rounded-xl",
+                      colorStyles[item.color]?.container ?? "bg-muted/10",
+                    )}
+                  >
+                    <Icon className={cn("h-5 w-5", colorStyles[item.color]?.icon ?? "text-muted-foreground")} />
+                  </div>
+                  <span className="flex-1 font-medium text-foreground">{item.label}</span>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </div>
+              </GlassCard>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <SectionHeader title={t("auth.logout", "Log out")} />
+        <GlassCard
+          className="p-4 transition-all hover:border-destructive/40"
+          role="button"
+          tabIndex={0}
+          onClick={async () => {
+            try {
+              await logout();
+              toast({ title: t("auth.loggedOut", "Signed out") });
+              router.replace("/onboarding");
+              router.refresh();
+            } catch (error) {
+              toast({
+                title: t("auth.logoutFailed", "Logout failed"),
+                description:
+                  error instanceof Error ? error.message : t("auth.tryAgain", "Please try again."),
+                variant: "destructive",
+              });
+            }
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              (event.currentTarget as HTMLDivElement).click();
+            }
+          }}
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10">
+              <LogOut className="h-5 w-5 text-destructive" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-foreground">{t("auth.logout", "Log out")}</p>
+              <p className="text-xs text-muted-foreground">{t("copy.logoutSubtitle", "Switch accounts or exit the app")}</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          </div>
+        </GlassCard>
+      </section>
+    </PageShell>
   );
 }

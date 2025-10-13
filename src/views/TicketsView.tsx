@@ -1,9 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Calendar, MapPin, Users, Ticket, PhoneCall, Copy, CheckCircle2, Loader2 } from "lucide-react";
 
+import PageShell from "@/app/_components/shell/PageShell";
+import TopAppBar from "@/app/_components/ui/TopAppBar";
+import HeroBlock from "@/app/_components/widgets/HeroBlock";
+import { SectionHeader } from "@/app/_components/widgets/SectionHeader";
+import { EmptyState as WidgetEmptyState } from "@/app/_components/widgets/EmptyState";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +48,7 @@ export default function Tickets() {
   const { toast } = useToast();
   const { socket } = useRealtime();
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   const catalogQuery = useQuery({
     queryKey: ["tickets", "catalog"],
     queryFn: fetchTicketCatalog,
@@ -72,6 +80,26 @@ export default function Tickets() {
       setUserId(sessionUserId);
     }
   }, [sessionUserId, userId]);
+
+  useEffect(() => {
+    if (!searchParams) {
+      return;
+    }
+
+    if (searchParams.get("claimed") === "1") {
+      toast({
+        title: "Free ticket added",
+        description: "We saved the complimentary Blue Zone ticket to your wallet.",
+      });
+      const perkTicket = document.querySelector("[data-ticket-free='1']");
+      if (perkTicket instanceof HTMLElement) {
+        perkTicket.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      const url = new URL(window.location.href);
+      url.searchParams.delete("claimed");
+      window.history.replaceState(null, "", url.toString());
+    }
+  }, [searchParams, toast]);
 
 
   const matchIndex = useMemo(
@@ -338,333 +366,441 @@ export default function Tickets() {
     );
   };
 
+  const heroSubtitle = "Pick your zone, pay via USSD, and get instant access.";
+  const heroCtas = (
+    <div className="flex flex-wrap gap-2">
+      <Link className="btn" href="/tickets/transfer">
+        Transfer ticket
+      </Link>
+      <Link className="btn" href="/matches">
+        Match centre
+      </Link>
+    </div>
+  );
+  const topBarActions = (
+    <Link className="btn" href="/wallet">
+      Wallet
+    </Link>
+  );
+
   return (
-    <div className="min-h-screen pb-28 px-4">
-      <div className="pt-8 pb-6 space-y-2">
-        <h1 className="text-3xl font-black gradient-text">Match Tickets</h1>
-        <p className="text-muted-foreground">Pick your zone, pay via USSD, and get instant access.</p>
-      </div>
+    <PageShell mainClassName="space-y-6 pb-28">
+      <TopAppBar right={topBarActions} />
+      <HeroBlock title="Match Tickets" subtitle={heroSubtitle} ctas={heroCtas} />
 
-      {catalogQuery.isLoading && (
-        <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <GlassCard key={index} className="p-6">
-              <Skeleton className="h-6 w-32 mb-4" />
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-4 w-2/3" />
-            </GlassCard>
-          ))}
-        </div>
-      )}
-
-      {!catalogQuery.isLoading && matches.length === 0 && (
-        <GlassCard className="p-6 text-center text-sm text-muted-foreground">
-          No upcoming matches available. Check back soon!
-        </GlassCard>
-      )}
-
-      <GlassCard className="mt-6 p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-lg text-foreground">Fan details</h3>
-            <p className="text-xs text-muted-foreground">Attach orders to a wallet and optional receipt contact.</p>
+      <section className="space-y-3">
+        <SectionHeader
+          title="Upcoming fixtures"
+          action={
+            <Button
+              variant="glass"
+              size="sm"
+              onClick={() => catalogQuery.refetch()}
+              disabled={catalogQuery.isFetching}
+            >
+              {catalogQuery.isFetching ? "Refreshing…" : "Refresh"}
+            </Button>
+          }
+        />
+        {catalogQuery.isLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <GlassCard key={index} className="p-6">
+                <Skeleton className="mb-4 h-6 w-32" />
+                <Skeleton className="mb-2 h-4 w-full" />
+                <Skeleton className="h-4 w-2/3" />
+              </GlassCard>
+            ))}
           </div>
-          <Button variant="ghost" size="sm" onClick={() => {
-            setUserId("");
-            setContactName("");
-            setContactPhone("");
-          }}>
-            Clear
-          </Button>
-        </div>
-        <div className="grid gap-3 md:grid-cols-2">
-          <Input
-            value={userId}
-            onChange={(event) => setUserId(event.target.value)}
-            placeholder="User ID (required)"
-            className="font-mono"
+        ) : matches.length === 0 ? (
+          <WidgetEmptyState
+            title="No upcoming matches"
+            desc="Check back soon for the next Rayon kickoff."
+            action={
+              <Link className="btn" href="/matches">
+                Browse matches
+              </Link>
+            }
           />
-          <Input
-            value={contactName}
-            onChange={(event) => setContactName(event.target.value)}
-            placeholder="Contact name (optional)"
-          />
-          <Input
-            value={contactPhone}
-            onChange={(event) => setContactPhone(event.target.value)}
-            placeholder="Mobile number, e.g. 07xxxxxxxx"
-          />
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Use the same user ID when viewing the Wallet so payments and passes surface automatically.
-        </p>
-        {validationError && (
-          <p className="text-xs text-destructive">{validationError}</p>
+        ) : (
+          <div className="space-y-4">
+            {matches.map((match, index) => renderMatchCard(match, index))}
+          </div>
         )}
-      </GlassCard>
+      </section>
 
-      <div className="space-y-4 mt-6">
-        {matches.map((match, index) => renderMatchCard(match, index))}
-      </div>
-
-      {activeMatch && (
-        <GlassCard className="mt-6 p-5 space-y-5">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-lg text-foreground">Your Selection</h3>
-            <Button variant="ghost" size="sm" onClick={() => setActiveMatchId(null)}>
+      <section className="space-y-3">
+        <SectionHeader
+          title="Fan details"
+          action={
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setUserId("");
+                setContactName("");
+                setContactPhone("");
+              }}
+            >
               Clear
             </Button>
+          }
+        />
+        <GlassCard className="space-y-4 p-5">
+          <div className="grid gap-3 md:grid-cols-2">
+            <Input
+              value={userId}
+              onChange={(event) => setUserId(event.target.value)}
+              placeholder="User ID (required)"
+              className="font-mono"
+            />
+            <Input
+              value={contactName}
+              onChange={(event) => setContactName(event.target.value)}
+              placeholder="Contact name (optional)"
+            />
+            <Input
+              value={contactPhone}
+              onChange={(event) => setContactPhone(event.target.value)}
+              placeholder="Mobile number, e.g. 07xxxxxxxx"
+            />
           </div>
-
-          <div className="space-y-4">
-            {(Object.keys(zoneMatrix) as TicketZoneContract[]).map((zoneKey) => {
-              const meta = zoneMatrix[zoneKey];
-              const value = quantities[zoneKey] ?? 0;
-              return (
-                <div key={zoneKey} className="flex items-center gap-3 p-3 rounded-xl bg-muted/10">
-                  <div className="flex-1">
-                    <p className="font-semibold text-foreground">{meta.label}</p>
-                    <p className="text-xs text-muted-foreground">Gate {meta.gate} · {formatPrice(meta.price)} · {meta.remaining} remaining</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="glass" size="sm" onClick={() => handleZoneChange(zoneKey, -1)}>-</Button>
-                    <span className="w-6 text-center font-semibold">{value}</span>
-                    <Button variant="glass" size="sm" onClick={() => handleZoneChange(zoneKey, 1)}>+</Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">Choose your mobile money network:</p>
-            <div className="grid grid-cols-2 gap-3">
-              {(Object.keys(channelConfig) as Channel[]).map((option) => (
-                <button
-                  key={option}
-                  onClick={() => setChannel(option)}
-                  className={cn(
-                    "rounded-xl border px-4 py-3 text-left transition-all",
-                    channel === option ? "border-primary bg-primary/10" : "border-border hover:border-primary/30",
-                  )}
-                >
-                  <p className="font-semibold text-foreground">{channelConfig[option].label}</p>
-                  <p className="text-xs text-muted-foreground">{channelConfig[option].helper}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-muted-foreground">Total</p>
-              <p className="text-2xl font-black text-primary">{formatPrice(total)}</p>
-            </div>
-            <Button
-              variant="hero"
-              size="lg"
-              disabled={total === 0 || checkoutMutation.isPending}
-              onClick={() => checkoutMutation.mutate()}
-            >
-              {checkoutMutation.isPending ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Generating USSD
-                </>
-              ) : (
-                "Pay via USSD"
-              )}
-            </Button>
-          </div>
-
           <p className="text-xs text-muted-foreground">
-            We auto-detect the confirmation SMS through the GSM gateway; your passes appear in the Wallet once paid.
+            Use the same user ID when viewing the Wallet so payments and passes surface automatically.
           </p>
+          {validationError ? <p className="text-xs text-destructive">{validationError}</p> : null}
         </GlassCard>
-      )}
+      </section>
 
-      {order && (
-      <GlassCard className="mt-6 p-5 space-y-4 border-primary/40">
-        <div className="flex items-center gap-3">
-          <CheckCircle2 className="w-6 h-6 text-success" />
-          <div>
-            <h3 className="font-bold text-foreground">USSD Ready</h3>
-              <p className="text-xs text-muted-foreground">Dial now to complete payment.</p>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-muted/20 border border-muted/40 text-center">
-            <p className="text-xs text-muted-foreground mb-1">Dial this code</p>
-            <p className="font-mono text-lg tracking-wider text-foreground select-all">{ussdDisplay}</p>
-          </div>
-
-          <div className="glass-card p-3 text-xs text-muted-foreground space-y-1">
-            <p>Order: <span className="font-mono text-foreground">{order.orderId}</span></p>
-            {order.paymentId && (
-              <p>Payment Ref: <span className="font-mono text-foreground">{order.paymentId.slice(0, 8)}…</span></p>
-            )}
-            <p>
-              Expires at {new Date(order.expiresAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Button variant="hero" onClick={launchDialer}>
-              <PhoneCall className="w-4 h-4" />
-              Open Dialer
-            </Button>
-            <Button variant="glass" onClick={copyCode}>
-              <Copy className="w-4 h-4" />
-              Copy Code
-            </Button>
-          </div>
-
-          <p className="text-xs text-muted-foreground">
-            Leave this screen open while we wait for the SMS confirmation. You can start another order afterwards.
-          </p>
-
-        <Button variant="ghost" size="sm" onClick={resetFlow}>
-          Start a new purchase
-        </Button>
-      </GlassCard>
-      )}
-
-      {trimmedUserId && (
-        <GlassCard className="mt-6 p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-bold text-lg text-foreground">Recent orders</h3>
-              <p className="text-xs text-muted-foreground">Attached to user {trimmedUserId.slice(0, 8)}…</p>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => ordersQuery.refetch()} disabled={ordersQuery.isFetching}>
-              {ordersQuery.isFetching ? "Refreshing…" : "Refresh"}
-            </Button>
-          </div>
-
-          {ordersQuery.isLoading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 2 }).map((_, index) => (
-                <Skeleton key={`order-skeleton-${index}`} className="h-24" />
-              ))}
-            </div>
-          ) : ordersQuery.isError ? (
-            <div className="text-sm text-destructive">
-              Unable to load orders. Try refreshing.
-            </div>
-          ) : orders.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No orders yet. Start a checkout to see it here.</p>
-          ) : (
-            <div className="space-y-3">
-              {orders.map((orderSummary: TicketOrderSummaryContract) => (
-                <div key={orderSummary.id} className="rounded-xl border border-border/40 p-4 space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <p className="font-semibold text-foreground">Order {orderSummary.id.slice(0, 8)}…</p>
-                      {orderSummary.match ? (
-                        <p className="text-xs text-muted-foreground">
-                          Rayon Sports vs {orderSummary.match.opponent} · {new Date(orderSummary.match.kickoff).toLocaleString()}
-                        </p>
-                      ) : null}
-                    </div>
-                    <Badge variant={orderSummary.status === 'paid' ? 'success' : orderSummary.status === 'pending' ? 'secondary' : 'outline'}>
-                      {orderSummary.status}
-                    </Badge>
-                  </div>
-                  <div className="grid gap-2 text-xs text-muted-foreground">
-                    <p>Total {formatPrice(orderSummary.total)} · Created {new Date(orderSummary.createdAt).toLocaleString()}</p>
-                    {orderSummary.status === 'pending' && (
-                      <p>Expires {new Date(orderSummary.expiresAt).toLocaleTimeString()}</p>
-                    )}
-                    <p>
-                      Items:{' '}
-                      {orderSummary.items.map((item) => `${item.quantity} × ${item.zone}`).join(', ')}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="glass"
-                      size="sm"
-                      onClick={() => receiptMutation.mutate(orderSummary.id)}
-                      disabled={receiptMutation.isPending}
-                    >
-                      View receipt
-                    </Button>
-                    {orderSummary.status === 'pending' && (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => cancelOrderMutation.mutate(orderSummary.id)}
-                        disabled={cancelOrderMutation.isPending}
-                      >
-                        Cancel order
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </GlassCard>
-      )}
-
-      {receipt && (
-        <GlassCard className="mt-6 p-5 space-y-4 border-border/60">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-bold text-foreground">Receipt</h3>
-              <p className="text-xs text-muted-foreground">Order {receipt.id}</p>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => setReceipt(null)}>
-              Close
-            </Button>
-          </div>
-          {receipt.match ? (
-            <div className="text-sm text-muted-foreground">
-              <p className="font-semibold text-foreground">Rayon Sports vs {receipt.match.opponent}</p>
-              <p>{new Date(receipt.match.kickoff).toLocaleString()} · {receipt.match.venue}</p>
-            </div>
-          ) : null}
-          <div className="text-sm text-muted-foreground space-y-1">
-            <p>Status: <Badge variant={receipt.status === 'paid' ? 'success' : receipt.status === 'pending' ? 'secondary' : 'outline'}>{receipt.status}</Badge></p>
-            <p>Total: {formatPrice(receipt.total)}</p>
-            {receipt.smsRef ? <p>SMS Ref: {receipt.smsRef}</p> : null}
-          </div>
-          <div className="space-y-2">
-            <h4 className="text-sm font-semibold text-foreground">Items</h4>
-            <ul className="text-xs text-muted-foreground space-y-1">
-              {receipt.items.map((item) => (
-                <li key={item.id}>{item.quantity} × {item.zone} @ {formatPrice(item.price)}</li>
-              ))}
-            </ul>
-          </div>
-          <div className="space-y-2">
-            <h4 className="text-sm font-semibold text-foreground">Payments</h4>
-            <ul className="text-xs text-muted-foreground space-y-1">
-              {receipt.payments.map((payment) => {
-                const enriched = payment as (typeof receipt.payments)[number];
+      {activeMatch ? (
+        <section className="space-y-3">
+          <SectionHeader
+            title="Your selection"
+            action={
+              <Button variant="ghost" size="sm" onClick={() => setActiveMatchId(null)}>
+                Clear
+              </Button>
+            }
+          />
+          <GlassCard className="space-y-5 p-5">
+            <div className="space-y-4">
+              {(Object.keys(zoneMatrix) as TicketZoneContract[]).map((zoneKey) => {
+                const meta = zoneMatrix[zoneKey];
+                const value = quantities[zoneKey] ?? 0;
                 return (
-                  <li key={enriched.id}>
-                    {enriched.status} · {formatPrice(enriched.amount)} · created {new Date(enriched.createdAt).toLocaleString()}
-                    {enriched.confirmedAt ? ` · confirmed ${new Date(enriched.confirmedAt).toLocaleString()}` : ''}
-                  </li>
+                  <div key={zoneKey} className="flex items-center gap-3 rounded-xl bg-muted/10 p-3">
+                    <div className="flex-1">
+                      <p className="font-semibold text-foreground">{meta.label}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Gate {meta.gate} · {formatPrice(meta.price)} · {meta.remaining} remaining
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="glass" size="sm" onClick={() => handleZoneChange(zoneKey, -1)}>
+                        -
+                      </Button>
+                      <span className="w-6 text-center font-semibold">{value}</span>
+                      <Button variant="glass" size="sm" onClick={() => handleZoneChange(zoneKey, 1)}>
+                        +
+                      </Button>
+                    </div>
+                  </div>
                 );
               })}
-            </ul>
-          </div>
-          {receipt.passes.length ? (
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">Choose your mobile money network:</p>
+              <div className="grid grid-cols-2 gap-3">
+                {(Object.keys(channelConfig) as Channel[]).map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => setChannel(option)}
+                    className={cn(
+                      "rounded-xl border px-4 py-3 text-left transition-all",
+                      channel === option ? "border-primary bg-primary/10" : "border-border hover:border-primary/30",
+                    )}
+                  >
+                    <p className="font-semibold text-foreground">{channelConfig[option].label}</p>
+                    <p className="text-xs text-muted-foreground">{channelConfig[option].helper}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Total</p>
+                <p className="text-2xl font-black text-primary">{formatPrice(total)}</p>
+              </div>
+              <Button
+                variant="hero"
+                size="lg"
+                disabled={total === 0 || checkoutMutation.isPending}
+                onClick={() => checkoutMutation.mutate()}
+              >
+                {checkoutMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Generating USSD
+                  </>
+                ) : (
+                  "Pay via USSD"
+                )}
+              </Button>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              We auto-detect the confirmation SMS through the GSM gateway; your passes appear in the Wallet once paid.
+            </p>
+          </GlassCard>
+        </section>
+      ) : null}
+
+      {order ? (
+        <section className="space-y-3">
+          <SectionHeader
+            title="Complete your payment"
+            action={
+              <Button variant="ghost" size="sm" onClick={resetFlow}>
+                Start a new purchase
+              </Button>
+            }
+          />
+          <GlassCard className="space-y-4 border-primary/40 p-5">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-6 w-6 text-success" />
+              <div>
+                <h3 className="font-bold text-foreground">USSD Ready</h3>
+                <p className="text-xs text-muted-foreground">Dial now to complete payment.</p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-muted/40 bg-muted/20 p-4 text-center">
+              <p className="mb-1 text-xs text-muted-foreground">Dial this code</p>
+              <p className="select-all font-mono text-lg tracking-wider text-foreground">{ussdDisplay}</p>
+            </div>
+
+            <div className="glass-card space-y-1 p-3 text-xs text-muted-foreground">
+              <p>
+                Order: <span className="font-mono text-foreground">{order.orderId}</span>
+              </p>
+              {order.paymentId ? (
+                <p>
+                  Payment Ref: <span className="font-mono text-foreground">{order.paymentId.slice(0, 8)}…</span>
+                </p>
+              ) : null}
+              <p>
+                Expires at {new Date(order.expiresAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Button variant="hero" onClick={launchDialer}>
+                <PhoneCall className="h-4 w-4" />
+                Open Dialer
+              </Button>
+              <Button variant="glass" onClick={copyCode}>
+                <Copy className="h-4 w-4" />
+                Copy Code
+              </Button>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Leave this screen open while we wait for the SMS confirmation. You can start another order afterwards.
+            </p>
+          </GlassCard>
+        </section>
+      ) : null}
+
+      {trimmedUserId ? (
+        <section className="space-y-3">
+          <SectionHeader
+            title="Recent orders"
+            action={
+              <Button
+                variant="glass"
+                size="sm"
+                onClick={() => ordersQuery.refetch()}
+                disabled={ordersQuery.isFetching}
+              >
+                {ordersQuery.isFetching ? "Refreshing…" : "Refresh"}
+              </Button>
+            }
+          />
+          <GlassCard className="space-y-4 p-5">
+            <p className="text-xs text-muted-foreground">
+              Attached to user {trimmedUserId.slice(0, 8)}…
+            </p>
+
+            {ordersQuery.isLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 2 }).map((_, index) => (
+                  <Skeleton key={`order-skeleton-${index}`} className="h-24" />
+                ))}
+              </div>
+            ) : ordersQuery.isError ? (
+              <div className="text-sm text-destructive">Unable to load orders. Try refreshing.</div>
+            ) : orders.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No orders yet. Start a checkout to see it here.</p>
+            ) : (
+              <div className="space-y-3">
+                {orders.map((orderSummary: TicketOrderSummaryContract) => {
+                  const isFreeTicket =
+                    orderSummary.total === 0 || orderSummary.items.some((item) => item.price === 0);
+
+                  return (
+                    <div
+                      key={orderSummary.id}
+                      className="rounded-xl border border-border/40 p-4 space-y-3"
+                      data-ticket-free={isFreeTicket ? "1" : undefined}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="font-semibold text-foreground">Order {orderSummary.id.slice(0, 8)}…</p>
+                          {orderSummary.match ? (
+                            <p className="text-xs text-muted-foreground">
+                              Rayon Sports vs {orderSummary.match.opponent} · {new Date(orderSummary.match.kickoff).toLocaleString()}
+                            </p>
+                          ) : null}
+                        </div>
+                        <Badge
+                          variant={
+                            orderSummary.status === "paid"
+                              ? "success"
+                              : orderSummary.status === "pending"
+                                ? "secondary"
+                                : "outline"
+                          }
+                        >
+                          {orderSummary.status}
+                        </Badge>
+                      </div>
+                      <div className="grid gap-2 text-xs text-muted-foreground">
+                        <p>Total {formatPrice(orderSummary.total)} · Created {new Date(orderSummary.createdAt).toLocaleString()}</p>
+                        {orderSummary.status === "pending" ? (
+                          <p>Expires {new Date(orderSummary.expiresAt).toLocaleTimeString()}</p>
+                        ) : null}
+                        <p>
+                          Items:{' '}
+                          {orderSummary.items.map((item) => `${item.quantity} × ${item.zone}`).join(', ')}
+                        </p>
+                        {isFreeTicket ? (
+                          <p className="font-medium text-foreground">Includes free Blue Zone perk ticket</p>
+                        ) : null}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant="glass"
+                          size="sm"
+                          onClick={() => receiptMutation.mutate(orderSummary.id)}
+                          disabled={receiptMutation.isPending}
+                        >
+                          View receipt
+                        </Button>
+                        {orderSummary.status === "pending" ? (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => cancelOrderMutation.mutate(orderSummary.id)}
+                            disabled={cancelOrderMutation.isPending}
+                          >
+                            Cancel order
+                          </Button>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </GlassCard>
+        </section>
+      ) : null}
+
+      {receipt ? (
+        <section className="space-y-3">
+          <SectionHeader
+            title="Receipt"
+            action={
+              <Button variant="ghost" size="sm" onClick={() => setReceipt(null)}>
+                Close
+              </Button>
+            }
+          />
+          <GlassCard className="space-y-4 border-border/60 p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-foreground">Order {receipt.id}</h3>
+                <p className="text-xs text-muted-foreground">Payment summary</p>
+              </div>
+            </div>
+            {receipt.match ? (
+              <div className="text-sm text-muted-foreground">
+                <p className="font-semibold text-foreground">Rayon Sports vs {receipt.match.opponent}</p>
+                <p>
+                  {new Date(receipt.match.kickoff).toLocaleString()} · {receipt.match.venue}
+                </p>
+              </div>
+            ) : null}
+            <div className="space-y-1 text-sm text-muted-foreground">
+              <p>
+                Status:{' '}
+                <Badge
+                  variant={
+                    receipt.status === "paid"
+                      ? "success"
+                      : receipt.status === "pending"
+                        ? "secondary"
+                        : "outline"
+                  }
+                >
+                  {receipt.status}
+                </Badge>
+              </p>
+              <p>Total: {formatPrice(receipt.total)}</p>
+              {receipt.smsRef ? <p>SMS Ref: {receipt.smsRef}</p> : null}
+            </div>
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-foreground">Passes</h4>
-              <ul className="text-xs text-muted-foreground space-y-1">
-                {receipt.passes.map((pass) => (
-                  <li key={pass.id}>
-                    {pass.zone} · Gate {pass.gate ?? 'TBD'} · {pass.state} · updated {new Date(pass.updatedAt).toLocaleString()}
+              <h4 className="text-sm font-semibold text-foreground">Items</h4>
+              <ul className="space-y-1 text-xs text-muted-foreground">
+                {receipt.items.map((item) => (
+                  <li key={item.id}>
+                    {item.quantity} × {item.zone} @ {formatPrice(item.price)}
                   </li>
                 ))}
               </ul>
             </div>
-          ) : null}
-        </GlassCard>
-      )}
-    </div>
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-foreground">Payments</h4>
+              <ul className="space-y-1 text-xs text-muted-foreground">
+                {receipt.payments.map((payment) => {
+                  const enriched = payment as (typeof receipt.payments)[number];
+                  return (
+                    <li key={enriched.id}>
+                      {enriched.status} · {formatPrice(enriched.amount)} · created {new Date(enriched.createdAt).toLocaleString()}
+                      {enriched.confirmedAt ? ` · confirmed ${new Date(enriched.confirmedAt).toLocaleString()}` : ''}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+            {receipt.passes.length ? (
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-foreground">Passes</h4>
+                <ul className="space-y-1 text-xs text-muted-foreground">
+                  {receipt.passes.map((pass) => (
+                    <li key={pass.id}>
+                      {pass.zone} · Gate {pass.gate ?? 'TBD'} · {pass.state} · updated {new Date(pass.updatedAt).toLocaleString()}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </GlassCard>
+        </section>
+      ) : null}
+
+    </PageShell>
   );
 }

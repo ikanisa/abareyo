@@ -1,8 +1,9 @@
 import { buildRouteMetadata } from "@/app/_lib/navigation";
-import CommunityView from "@/views/CommunityView";
+
+import CommunityClient from "./CommunityClient";
 
 export const metadata = buildRouteMetadata("/community");
 
-const CommunityPage = () => <CommunityView />;
+const CommunityPage = () => <CommunityClient />;
 
 export default CommunityPage;

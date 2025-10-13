@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="384" viewBox="0 0 512 384">
+  <defs>
+    <linearGradient id="legends-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#20603d" />
+      <stop offset="50%" stop-color="#00a1de" />
+      <stop offset="100%" stop-color="#fad201" />
+    </linearGradient>
+    <radialGradient id="legends-glow" cx="35%" cy="60%" r="70%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.65)" />
+      <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+    </radialGradient>
+  </defs>
+  <rect width="512" height="384" fill="url(#legends-bg)" />
+  <g opacity="0.4">
+    <circle cx="120" cy="120" r="110" fill="#0033ff" />
+    <circle cx="400" cy="260" r="130" fill="#ffffff" />
+  </g>
+  <g transform="translate(80 80)">
+    <rect x="0" y="0" width="352" height="224" rx="48" ry="48" fill="rgba(0,0,0,0.2)" stroke="rgba(255,255,255,0.25)" stroke-width="6" />
+    <rect x="56" y="48" width="240" height="128" rx="36" ry="36" fill="rgba(255,255,255,0.18)" />
+    <rect x="120" y="84" width="112" height="56" rx="24" ry="24" fill="rgba(0,51,255,0.45)" />
+    <circle cx="176" cy="112" r="20" fill="rgba(255,255,255,0.95)" />
+  </g>
+  <rect width="512" height="384" fill="url(#legends-glow)" />
+</svg>

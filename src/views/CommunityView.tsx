@@ -1,10 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Heart, MessageCircle, Share2, Trophy, AlertOctagon, Send, BarChart3, Plus, X, Check } from "lucide-react";
+import { Heart, MessageCircle, Share2, Trophy, Send, BarChart3, Plus, X, Check } from "lucide-react";
 
-import { GlassCard } from "@/components/ui/glass-card";
+import PageShell from "@/app/_components/shell/PageShell";
+import TopAppBar from "@/app/_components/ui/TopAppBar";
+import HeroBlock from "@/app/_components/widgets/HeroBlock";
+import { SectionHeader } from "@/app/_components/widgets/SectionHeader";
+import { WidgetRow } from "@/app/_components/widgets/WidgetRow";
+import { EmptyState as WidgetEmptyState } from "@/app/_components/widgets/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +20,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
 
 import {
   createCommunityComment,
@@ -160,7 +167,7 @@ function PostCard({
   }, [post.content, post.riskTerms]);
 
   return (
-    <GlassCard className="p-5 space-y-3">
+    <div className="card space-y-3 p-5">
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-full bg-gradient-hero flex items-center justify-center font-bold text-primary-foreground">
           {(post.author?.id ?? "FAN").slice(0, 2).toUpperCase()}
@@ -238,14 +245,12 @@ function PostCard({
           <div className="flex justify-end gap-2">
             <Button
               variant="glass"
-              size="sm"
               onClick={() => setCommentDraft(post.id, '')}
             >
               Clear
             </Button>
             <Button
               variant="hero"
-              size="sm"
               onClick={() => onCommentSubmit(post.id, commentDraft)}
               disabled={!commentDraft.trim()}
             >
@@ -255,7 +260,7 @@ function PostCard({
           </div>
         </div>
       )}
-    </GlassCard>
+    </div>
   );
 }
 
@@ -276,6 +281,7 @@ export default function Community() {
   const [quizAnswer, setQuizAnswer] = useState("");
   const [predictionMatchId, setPredictionMatchId] = useState("");
   const [predictionPick, setPredictionPick] = useState("Win");
+  const composerRef = useRef<HTMLTextAreaElement | null>(null);
 
   const trimmedUserId = userId.trim();
 
@@ -527,238 +533,300 @@ export default function Community() {
     },
   });
 
+  const topBarActions = (
+    <>
+      <Link className="btn" href="/wallet">
+        Wallet
+      </Link>
+      <Link className="btn" href="/more">
+        Profile
+      </Link>
+    </>
+  );
+
+  const heroSubtitle = "Share matchday energy, polls, and missions with Rayon Nation.";
+  const heroSubtitleRw = "Sangiza Rayon Nation ibyishimo by'umukino, amatora, n'ubutumwa.";
+  const heroCtas = (
+    <>
+      <Button variant="hero" onClick={() => composerRef.current?.focus()}>
+        Start a post
+      </Button>
+      <Link className="btn" href="#community-missions">
+        Earn fan points
+      </Link>
+    </>
+  );
+
+  const communityNav = [
+    { id: "community-feed", label: "Feed", description: "Stories & posts" },
+    { id: "community-leaderboard", label: "Leaderboard", description: "Top fans" },
+    { id: "community-missions", label: "Missions", description: "Earn rewards" },
+    { id: "community-polls", label: "Polls", description: "Vote & win" },
+  ];
+
   return (
-    <div className="min-h-screen pb-24 px-4">
-      <div className="pt-8 pb-6">
-        <h1 className="text-3xl font-black gradient-text mb-2">Community</h1>
-        <p className="text-muted-foreground">Share moments, polls, and support the Rayon family.</p>
-      </div>
+    <PageShell mainClassName="space-y-6 pb-28">
+      <TopAppBar right={topBarActions} />
+      <HeroBlock title="Community" subtitle={`${heroSubtitle} / ${heroSubtitleRw}`} ctas={heroCtas} />
 
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2 hide-scrollbar">
-        <Button variant="hero" size="sm">Feed</Button>
-        <Button variant="glass" size="sm">Leaderboard</Button>
-        <Button variant="glass" size="sm">Fan Clubs</Button>
-        <Button variant="glass" size="sm">Polls</Button>
-      </div>
-
-      <GlassCard variant="accent" className="mb-6 overflow-hidden">
-        <div className="bg-gradient-accent p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-bold text-accent-foreground">Your Fan Score</h3>
-              <p className="text-3xl font-black text-accent-foreground">1,250 pts</p>
-            </div>
-            <Trophy className="w-12 h-12 text-accent-foreground opacity-80" />
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <Button variant="glass" size="sm" className="text-accent-foreground border-accent-foreground/30">
-              Check-in
-            </Button>
-            <Button variant="glass" size="sm" className="text-accent-foreground border-accent-foreground/30">
-              Quiz
-            </Button>
-            <Button variant="glass" size="sm" className="text-accent-foreground border-accent-foreground/30">
-              Predict
-            </Button>
-          </div>
-        </div>
-      </GlassCard>
-
-      <GlassCard className="mb-6 p-5 space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="font-semibold text-foreground">Fan Leaderboard</h2>
-            <p className="text-xs text-muted-foreground">Top cheers this {leaderboardPeriod === 'weekly' ? 'week' : 'month'}.</p>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant={leaderboardPeriod === 'weekly' ? 'hero' : 'glass'}
-              size="sm"
-              onClick={() => setLeaderboardPeriod('weekly')}
+      <section className="space-y-3" aria-label="Community shortcuts">
+        <SectionHeader title="Explore sections" />
+        <WidgetRow>
+          {communityNav.map((item) => (
+            <Link
+              key={item.id}
+              href={`#${item.id}`}
+              className={cn(
+                "tile min-w-[160px] flex-col items-start text-left",
+                "hover:bg-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white",
+              )}
             >
-              Weekly
-            </Button>
-            <Button
-              variant={leaderboardPeriod === 'monthly' ? 'hero' : 'glass'}
-              size="sm"
-              onClick={() => setLeaderboardPeriod('monthly')}
-            >
-              Monthly
-            </Button>
-          </div>
-        </div>
-        {leaderboardQuery.isLoading ? (
-          <div className="space-y-2">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <Skeleton key={`leaderboard-skeleton-${index}`} className="h-12 w-full" />
-            ))}
-          </div>
-        ) : leaderboard.length > 0 ? (
-          <div className="space-y-2">
-            {leaderboard.map((entry: LeaderboardEntryContract) => (
-              <div key={entry.userId} className="flex items-center justify-between rounded-xl border border-border/40 px-3 py-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
-                    #{entry.rank}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Fan {entry.userId.slice(0, 6)}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {entry.user?.preferredZone ? `Zone ${entry.user.preferredZone}` : 'Global supporter'}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-foreground">{entry.points} pts</p>
-                  <p className="text-xs text-muted-foreground">{entry.user?.status ?? 'guest'}</p>
-                </div>
+              <span className="text-base font-semibold text-white">{item.label}</span>
+              <span className="text-xs text-white/70">{item.description}</span>
+            </Link>
+          ))}
+        </WidgetRow>
+      </section>
+
+      <section id="community-score" className="space-y-3">
+        <SectionHeader title="Fan score spotlight" />
+        <div className="card overflow-hidden p-0">
+          <div className="bg-gradient-accent p-5 text-white">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-white/80">Your fan score</p>
+                <p className="text-3xl font-black">1,250 pts</p>
+                <p className="text-xs text-white/80">Grow your streak with daily missions and matchday check-ins.</p>
               </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">No points yet. Join a poll or check-in to climb the board.</p>
-        )}
-      </GlassCard>
-
-      <GlassCard className="mb-6 p-5 space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-foreground">Fan Missions</h2>
-            <p className="text-xs text-muted-foreground">Complete quick actions to climb the leaderboard.</p>
+              <Trophy className="h-14 w-14 text-white/90" />
+            </div>
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              <Link className="btn bg-white/20 text-center text-white hover:bg-white/25" href="#community-missions">
+                Matchday check-in
+              </Link>
+              <Link className="btn bg-white/20 text-center text-white hover:bg-white/25" href="#community-missions">
+                Weekly quiz
+              </Link>
+              <Link className="btn bg-white/20 text-center text-white hover:bg-white/25" href="#community-missions">
+                Predict &amp; win
+              </Link>
+            </div>
           </div>
         </div>
+        <p className="muted text-xs">{heroSubtitleRw}</p>
+      </section>
+
+      <section id="community-leaderboard" className="space-y-3">
+        <SectionHeader
+          title="Leaderboard"
+          action={
+            <div className="flex gap-2">
+              <Button
+                variant={leaderboardPeriod === "weekly" ? "hero" : "glass"}
+                onClick={() => setLeaderboardPeriod("weekly")}
+              >
+                Weekly
+              </Button>
+              <Button
+                variant={leaderboardPeriod === "monthly" ? "hero" : "glass"}
+                onClick={() => setLeaderboardPeriod("monthly")}
+              >
+                Monthly
+              </Button>
+            </div>
+          }
+        />
+        {(leaderboardQuery.isLoading || leaderboard.length > 0) && (
+          <div className="card space-y-4 p-5">
+            <p className="text-sm text-white/80">
+              Top cheers this {leaderboardPeriod === "weekly" ? "week" : "month"}.
+            </p>
+            {leaderboardQuery.isLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <Skeleton key={`leaderboard-skeleton-${index}`} className="h-12 w-full" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {leaderboard.map((entry) => (
+                  <div
+                    key={entry.userId}
+                    className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-sm font-bold text-white">
+                        #{entry.rank}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-white">Fan {entry.userId.slice(0, 6)}</p>
+                        <p className="text-xs text-white/70">
+                          {entry.user?.preferredZone ? `Zone ${entry.user.preferredZone}` : "Global supporter"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-white">{entry.points} pts</p>
+                      <p className="text-xs text-white/70">{entry.user?.status ?? "guest"}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        {!leaderboardQuery.isLoading && leaderboard.length === 0 ? (
+          <WidgetEmptyState
+            title="Leaderboard will unlock soon"
+            desc="Complete polls and missions to earn your first fan points."
+            action={
+              <Link className="btn" href="#community-missions">
+                Explore missions
+              </Link>
+            }
+          />
+        ) : null}
+      </section>
+
+      <section id="community-missions" className="space-y-3">
+        <SectionHeader
+          title="Fan missions"
+          action={
+            <Button
+              variant="glass"
+              onClick={() => missionsQuery.refetch()}
+              disabled={missionsQuery.isFetching}
+            >
+              {missionsQuery.isFetching ? "Refreshing…" : "Refresh"}
+            </Button>
+          }
+        />
         {missionsQuery.isLoading ? (
-          <div className="space-y-3">
+          <div className="card space-y-3 p-5">
             {Array.from({ length: 3 }).map((_, index) => (
               <Skeleton key={`missions-skeleton-${index}`} className="h-20 w-full" />
             ))}
           </div>
         ) : missionsQuery.isError ? (
-          <p className="text-sm text-destructive">Unable to load missions right now.</p>
+          <WidgetEmptyState
+            title="Missions unavailable"
+            desc="We couldn’t load the mission list. Try again shortly."
+            action={
+              <Button variant="glass" onClick={() => missionsQuery.refetch()}>
+                Retry
+              </Button>
+            }
+          />
         ) : (
-          <div className="space-y-4">
-            <div className="space-y-2">
+          <div className="card space-y-5 p-5">
+            <div className="space-y-3">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-semibold text-foreground">Matchday check-in</p>
-                <span className="text-xs text-muted-foreground">+{CHECK_IN_POINTS} pts</span>
+                <p className="text-sm font-semibold text-white">Matchday check-in</p>
+                <span className="text-xs text-white/70">+{CHECK_IN_POINTS} pts</span>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col gap-3 md:flex-row">
                 <Input
                   value={checkInLocation}
                   onChange={(event) => setCheckInLocation(event.target.value)}
                   placeholder="Stadium or viewing party (optional)"
-                  className="sm:flex-1"
+                  className="md:flex-1"
                 />
                 <Button
                   variant="hero"
-                  size="sm"
                   onClick={() => checkInMutation.mutate()}
                   disabled={checkInMutation.isPending || !trimmedUserId}
                 >
-                  {checkInMutation.isPending ? 'Checking in…' : 'Check in'}
+                  {checkInMutation.isPending ? "Checking in…" : "Check in"}
                 </Button>
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-semibold text-foreground">Quiz of the week</p>
-                <span className="text-xs text-muted-foreground">
-                  {quizMission ? `+${quizMission.rewardPoints} pts` : 'Unavailable'}
+                <p className="text-sm font-semibold text-white">Quiz of the week</p>
+                <span className="text-xs text-white/70">
+                  {quizMission ? `+${quizMission.rewardPoints} pts` : "Unavailable"}
                 </span>
               </div>
-              <div className="text-xs text-muted-foreground">
-                {quizMission ? quizMission.prompt : 'No quiz active at the moment.'}
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <p className="text-xs text-white/70">
+                {quizMission ? quizMission.prompt : "No quiz active at the moment."}
+              </p>
+              <div className="flex flex-col gap-3 md:flex-row">
                 <Input
                   value={quizAnswer}
                   onChange={(event) => setQuizAnswer(event.target.value)}
-                  placeholder={quizMission ? 'Your answer' : 'Quiz unavailable'}
-                  className="sm:flex-1"
+                  placeholder={quizMission ? "Your answer" : "Quiz unavailable"}
+                  className="md:flex-1"
                   disabled={!quizMission}
                 />
                 <Button
                   variant="hero"
-                  size="sm"
                   onClick={() => quizMutation.mutate()}
                   disabled={quizMutation.isPending || !quizMission || !trimmedUserId}
                 >
-                  {quizMutation.isPending ? 'Submitting…' : 'Submit'}
+                  {quizMutation.isPending ? "Submitting…" : "Submit"}
                 </Button>
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-semibold text-foreground">Match prediction</p>
-                <span className="text-xs text-muted-foreground">
-                  {predictionMission ? `+${predictionMission.rewardPoints} pts` : 'Unavailable'}
+                <p className="text-sm font-semibold text-white">Match prediction</p>
+                <span className="text-xs text-white/70">
+                  {predictionMission ? `+${predictionMission.rewardPoints} pts` : "Unavailable"}
                 </span>
               </div>
-              <div className="text-xs text-muted-foreground">
-                {predictionMission
-                  ? predictionMission.question
-                  : 'No fixture is open for predictions right now.'}
-              </div>
-              {predictionMission && predictionMission.match ? (
-                <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-white/70">
+                {predictionMission ? predictionMission.question : "No fixture is open for predictions right now."}
+              </p>
+              {predictionMission?.match ? (
+                <p className="text-[11px] text-white/60">
                   vs {predictionMission.match.opponent} · {new Date(predictionMission.match.kickoff).toLocaleString()}
-                  {predictionMission.match.venue ? ` · ${predictionMission.match.venue}` : ''}
+                  {predictionMission.match.venue ? ` · ${predictionMission.match.venue}` : ""}
                 </p>
               ) : null}
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3 md:grid-cols-2">
                 <Input
                   value={predictionPick}
                   onChange={(event) => setPredictionPick(event.target.value)}
-                  placeholder={predictionMission ? 'Your pick (e.g. Rayon 2-0)' : 'Prediction unavailable'}
+                  placeholder={predictionMission ? "Your pick (e.g. Rayon 2-0)" : "Prediction unavailable"}
                   disabled={!predictionMission}
                 />
-                <Input
-                  value={predictionMatchId}
-                  readOnly
-                  placeholder="Match ID"
-                  className="font-mono"
-                  disabled
-                />
+                <Input value={predictionMatchId} readOnly placeholder="Match ID" className="font-mono" disabled />
               </div>
               <Button
                 variant="hero"
-                size="sm"
                 onClick={() => predictionMutation.mutate()}
                 disabled={predictionMutation.isPending || !predictionMission || !trimmedUserId}
               >
-                {predictionMutation.isPending ? 'Saving…' : 'Save prediction'}
+                {predictionMutation.isPending ? "Saving…" : "Save prediction"}
               </Button>
             </div>
 
-            {!trimmedUserId && (
-              <p className="text-xs text-muted-foreground">
+            {!trimmedUserId ? (
+              <p className="text-xs text-white/70">
                 Tip: add your user ID above so actions sync to your wallet and leaderboard profile.
               </p>
-            )}
+            ) : null}
           </div>
         )}
-      </GlassCard>
+      </section>
 
-      <GlassCard className="mb-6 p-5 space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="font-semibold text-foreground">Fan Polls</h2>
-            <p className="text-xs text-muted-foreground">Vote and see how the Rayon family is feeling.</p>
-          </div>
-          <BarChart3 className="w-5 h-5 text-accent" />
-        </div>
+      <section id="community-polls" className="space-y-3">
+        <SectionHeader
+          title="Fan polls"
+          action={<BarChart3 className="h-5 w-5 text-white/80" aria-hidden />}
+        />
         {pollsQuery.isLoading ? (
-          <div className="space-y-2">
+          <div className="card space-y-2 p-5">
             {Array.from({ length: 2 }).map((_, index) => (
               <Skeleton key={`poll-skeleton-${index}`} className="h-24 w-full" />
             ))}
           </div>
         ) : polls.length > 0 ? (
-          <div className="space-y-4">
+          <div className="card space-y-4 p-5">
             {polls.map((poll) => (
-              <div key={poll.id} className="rounded-xl border border-border/40 bg-background/40 p-4">
+              <div key={poll.id} className="rounded-2xl bg-white/5 p-4">
                 <PollBlock
                   poll={poll}
                   onVote={(pollId, optionId) => voteMutation.mutate({ pollId, optionId })}
@@ -770,131 +838,160 @@ export default function Community() {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">No polls yet. Attach one to your next post.</p>
+          <WidgetEmptyState
+            title="No polls yet"
+            desc="Launch a poll from your next post to spark the conversation."
+            action={
+              <Button variant="glass" onClick={() => setPollEnabled(true)}>
+                Add a poll
+              </Button>
+            }
+          />
         )}
-      </GlassCard>
+      </section>
 
-      <GlassCard className="mb-6 p-5 space-y-3">
-        <h2 className="font-semibold text-foreground">Post to the feed</h2>
-        <Textarea
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          placeholder="Celebrate the team, share matchday vibes, or cheer on your favourite player."
-          rows={4}
-        />
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Switch id="attach-poll" checked={pollEnabled} onCheckedChange={handlePollToggle} />
-            <Label htmlFor="attach-poll" className="text-sm text-muted-foreground">
-              Attach a poll
-            </Label>
+      <section id="community-compose" className="space-y-3">
+        <SectionHeader title="Post to the feed" />
+        <div className="card space-y-4 p-5">
+          <Textarea
+            ref={composerRef}
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            placeholder="Celebrate the team, share matchday vibes, or cheer on your favourite player."
+            rows={4}
+          />
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Switch id="attach-poll" checked={pollEnabled} onCheckedChange={handlePollToggle} />
+              <Label htmlFor="attach-poll" className="text-sm text-white/80">
+                Attach a poll
+              </Label>
+            </div>
+            {pollEnabled ? (
+              <span className="text-xs text-white/70">
+                {pollOptions.length} / {MAX_POLL_OPTIONS} options
+              </span>
+            ) : null}
           </div>
           {pollEnabled ? (
-            <span className="text-xs text-muted-foreground">
-              {pollOptions.length} / {MAX_POLL_OPTIONS} options
-            </span>
-          ) : null}
-        </div>
-        {pollEnabled ? (
-          <div className="space-y-2">
-            {pollOptions.map((option, index) => (
-              <div key={`poll-option-${index}`} className="flex items-center gap-2">
-                <Input
-                  value={option}
-                  onChange={(event) => handlePollOptionChange(index, event.target.value)}
-                  placeholder={`Option ${index + 1}`}
-                />
-                {pollOptions.length > 2 ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removePollOption(index)}
-                    className="text-muted-foreground"
-                    aria-label="Remove poll option"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                ) : null}
+            <div className="space-y-2">
+              {pollOptions.map((option, index) => (
+                <div key={`poll-option-${index}`} className="flex items-center gap-2">
+                  <Input
+                    value={option}
+                    onChange={(event) => handlePollOptionChange(index, event.target.value)}
+                    placeholder={`Option ${index + 1}`}
+                  />
+                  {pollOptions.length > 2 ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removePollOption(index)}
+                      className="text-white/70"
+                      aria-label="Remove poll option"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  ) : null}
+                </div>
+              ))}
+              <div className="flex items-center justify-between text-xs text-white/70">
+                <Button
+                  type="button"
+                  variant="glass"
+                  onClick={addPollOption}
+                  disabled={pollOptions.length >= MAX_POLL_OPTIONS}
+                  className="flex items-center gap-1"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add option
+                </Button>
+                <span>Poll question reuses your post text.</span>
               </div>
-            ))}
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <Button
-                type="button"
-                variant="glass"
-                size="sm"
-                onClick={addPollOption}
-                disabled={pollOptions.length >= MAX_POLL_OPTIONS}
-                className="flex items-center gap-1"
-              >
-                <Plus className="w-4 h-4" />
-                Add option
-              </Button>
-              <span>Poll question reuses your post text.</span>
             </div>
+          ) : null}
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <Input
+              value={userId}
+              onChange={(event) => setUserId(event.target.value)}
+              placeholder="User ID (optional)"
+              className="font-mono md:w-64"
+            />
+            <Input
+              value={mediaUrl}
+              onChange={(event) => setMediaUrl(event.target.value)}
+              placeholder="Image URL (optional)"
+              className="md:w-64"
+            />
+            <Button onClick={() => createMutation.mutate()} disabled={createMutation.isPending} variant="hero">
+              {createMutation.isPending ? (
+                "Posting…"
+              ) : (
+                <>
+                  <Send className="h-4 w-4" /> Post
+                </>
+              )}
+            </Button>
           </div>
-        ) : null}
-        <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-          <Input
-            value={userId}
-            onChange={(event) => setUserId(event.target.value)}
-            placeholder="User ID (optional)"
-            className="font-mono sm:w-64"
-          />
-          <Input
-            value={mediaUrl}
-            onChange={(event) => setMediaUrl(event.target.value)}
-            placeholder="Image URL (optional)"
-            className="sm:w-64"
-          />
-          <Button onClick={() => createMutation.mutate()} disabled={createMutation.isPending} variant="hero">
-            {createMutation.isPending ? "Posting..." : <><Send className="w-4 h-4" /> Post</>}
-          </Button>
+          <p className="text-xs text-white/70">
+            Posts are auto-flagged if they contain suspicious links; moderators review flagged items before publishing.
+          </p>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Posts are auto-flagged if they contain suspicious links; moderators review flagged items before publishing.
-        </p>
-      </GlassCard>
+      </section>
 
-      {feedQuery.isLoading && (
-        <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <Skeleton key={index} className="h-32 w-full" />
-          ))}
-        </div>
-      )}
-
-      {!feedQuery.isLoading && feed.length === 0 && (
-        <GlassCard className="p-6 text-center space-y-2">
-          <AlertOctagon className="w-6 h-6 text-accent mx-auto" />
-          <p className="text-sm text-muted-foreground">No posts yet. Be the first to start the conversation!</p>
-        </GlassCard>
-      )}
-
-      <div className="space-y-4">
-        {feed.map((post) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            onReact={(postId, kind) => reactMutation.mutate({ postId, kind })}
-            isReacting={reactMutation.isPending}
-            expanded={Boolean(expandedComments[post.id])}
-            onCommentToggle={(postId) =>
-              setExpandedComments((prev) => ({ ...prev, [postId]: !prev[postId] }))
+      <section id="community-feed" className="space-y-3">
+        <SectionHeader
+          title="Community feed"
+          action={
+            <Button variant="glass" onClick={() => feedQuery.refetch()} disabled={feedQuery.isFetching}>
+              {feedQuery.isFetching ? "Refreshing…" : "Refresh"}
+            </Button>
+          }
+        />
+        {feedQuery.isLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Skeleton key={`feed-skeleton-${index}`} className="h-32 w-full" />
+            ))}
+          </div>
+        ) : feed.length === 0 ? (
+          <WidgetEmptyState
+            title="No posts yet"
+            desc="Be the first to celebrate the club and share your matchday story."
+            action={
+              <Button variant="hero" onClick={() => composerRef.current?.focus()}>
+                Start posting
+              </Button>
             }
-            commentDraft={commentDrafts[post.id] ?? ''}
-            setCommentDraft={(postId, value) =>
-              setCommentDrafts((prev) => ({ ...prev, [postId]: value }))
-            }
-            onCommentSubmit={(postId, message) =>
-              commentMutation.mutate({ postId, content: message.trim() })
-            }
-            onPollVote={(pollId, optionId) => voteMutation.mutate({ pollId, optionId })}
-            isPollVoting={voteMutation.isPending}
-            pollSelection={post.poll ? userVotes[post.poll.id] : undefined}
           />
-        ))}
-      </div>
-    </div>
+        ) : (
+          <div className="space-y-4">
+            {feed.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                onReact={(postId, kind) => reactMutation.mutate({ postId, kind })}
+                isReacting={reactMutation.isPending}
+                expanded={Boolean(expandedComments[post.id])}
+                onCommentToggle={(postId) =>
+                  setExpandedComments((prev) => ({ ...prev, [postId]: !prev[postId] }))
+                }
+                commentDraft={commentDrafts[post.id] ?? ""}
+                setCommentDraft={(postId, value) =>
+                  setCommentDrafts((prev) => ({ ...prev, [postId]: value }))
+                }
+                onCommentSubmit={(postId, message) =>
+                  commentMutation.mutate({ postId, content: message.trim() })
+                }
+                onPollVote={(pollId, optionId) => voteMutation.mutate({ pollId, optionId })}
+                isPollVoting={voteMutation.isPending}
+                pollSelection={post.poll ? userVotes[post.poll.id] : undefined}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+    </PageShell>
   );
 }

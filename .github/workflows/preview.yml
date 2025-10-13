@@ -1,0 +1,97 @@
+name: CI (Preview)
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ feat/**, fix/**, chore/** ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-preview-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Next.js Typecheck • Lint • Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      # Safe env injection (OPTIONAL — only include what your build actually needs)
+      NEXT_PUBLIC_ENVIRONMENT_LABEL: ${{ secrets.NEXT_PUBLIC_ENVIRONMENT_LABEL }}
+      NEXT_PUBLIC_BACKEND_URL: ${{ secrets.NEXT_PUBLIC_BACKEND_URL }}
+      # Never echo secrets; do not write .env files.
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: |
+          if npm run -s typecheck; then
+            echo "Typecheck OK"
+          else
+            echo "::error::Type errors detected"; exit 1
+          fi
+
+      - name: Lint
+        run: |
+          if npm run -s lint; then
+            echo "Lint OK"
+          else
+            echo "::error::Lint issues detected"; exit 1
+          fi
+
+      - name: Build (Next.js)
+        run: npm run build
+        # ⚠️ This uses Next.js defaults (.next/). No 'out/' or 'dist/' assumptions.
+        # ⚠️ Does NOT parse/copy favicon binaries — avoids your previous CI failure.
+
+      - name: Upload Build Artifact (optional)
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build
+          path: .next
+
+  # ---------- OPTIONAL Vercel Preview Deploy ----------
+  vercel-preview:
+    name: Vercel Preview Deploy
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ secrets.VERCEL_TOKEN != '' && secrets.VERCEL_PROJECT_ID != '' && secrets.VERCEL_ORG_ID != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel
+
+      - name: Deploy (Preview)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+        run: |
+          vercel pull --yes --environment=preview --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID"
+          vercel build --token "$VERCEL_TOKEN"
+          vercel deploy --prebuilt --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID"
