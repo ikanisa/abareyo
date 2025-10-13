@@ -78,27 +78,42 @@ const TicketWalletCard = ({ ticket, animationDelay }: TicketWalletCardProps) => 
     }
   }, [schedule.date, schedule.time, ticket.match?.title, ticket.zone]);
 
+  const isFreeTicket = ticket.price === 0;
+
   return (
     <article
       className="card space-y-5 bg-white/5 text-white animate-ticket-wallet"
       role="listitem"
       style={animationDelay ? { animationDelay: `${animationDelay}s` } : undefined}
+      data-ticket-free={isFreeTicket ? "1" : undefined}
     >
       <header className="flex items-start justify-between gap-3">
         <div className="space-y-1">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/60">{ticket.match?.comp ?? "Rayon Sports"}</p>
-          <h2 className="text-xl font-semibold leading-snug">{ticket.match?.title ?? "Match ticket"}</h2>
+          <p className="text-xs uppercase tracking-[0.2em] text-white/60">
+            {ticket.match?.comp ?? "Rayon Sports"}
+          </p>
+          <h2 className="text-xl font-semibold leading-snug">
+            {ticket.match?.title ?? "Match ticket"}
+          </h2>
           <p className="text-sm text-white/70">
             {schedule.date} · {schedule.time} · {ticket.match?.venue ?? "TBC"}
           </p>
           <p className="text-sm font-semibold text-white">Zone {ticket.zone} · 1 seat</p>
         </div>
-        <span className={`chip ${status.className}`}>{status.label}</span>
+
+        <span className={`chip ${status.className}`}>
+          {status.label}
+          {isFreeTicket ? (
+            <span className="ml-2 rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs">Perk</span>
+          ) : null}
+        </span>
       </header>
+
       <div className="flex flex-col gap-4 md:flex-row">
         <div className="flex h-40 w-full max-w-[180px] items-center justify-center overflow-hidden rounded-3xl bg-black/40">
           <Image alt="Ticket QR code" src={status.qr} width={160} height={160} className="rounded-2xl" />
         </div>
+
         <div className="flex flex-1 flex-col justify-between gap-4">
           <div className="grid gap-2 text-sm text-white/75">
             <div className="flex items-center justify-between">
@@ -110,9 +125,10 @@ const TicketWalletCard = ({ ticket, animationDelay }: TicketWalletCardProps) => 
               <span className="font-semibold text-white">{status.label}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span>Total</span>
+              <span>{isFreeTicket ? "Perk value" : "Total paid"}</span>
               <span className="font-semibold text-white">{ticket.price.toLocaleString()} RWF</span>
             </div>
+
             {ticket.momo_ref ? (
               <div className="flex items-center justify-between">
                 <span>MoMo ref</span>
@@ -120,6 +136,7 @@ const TicketWalletCard = ({ ticket, animationDelay }: TicketWalletCardProps) => 
               </div>
             ) : null}
           </div>
+
           <div className="flex flex-wrap gap-3">
             <button type="button" onClick={handleShare} className="btn inline-flex h-12 items-center justify-center">
               Share ticket
@@ -128,6 +145,7 @@ const TicketWalletCard = ({ ticket, animationDelay }: TicketWalletCardProps) => 
               Add to Wallet
             </button>
           </div>
+
           {shareError ? (
             <p className="text-xs text-amber-200" role="status" aria-live="polite">
               {shareError}
