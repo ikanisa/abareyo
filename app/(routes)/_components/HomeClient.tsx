@@ -18,6 +18,7 @@ import {
 } from "@/app/_config/home";
 
 import Feed from "@/app/_components/home/Feed";
+import PartnerTiles from "@/app/_components/home/PartnerTiles";
 import GamificationStrip from "@/app/_components/ui/GamificationStrip";
 import QuickTiles from "@/app/_components/ui/QuickTiles";
 import EmptyState from "@/app/_components/ui/EmptyState";
@@ -480,6 +481,10 @@ const HomeClient = () => (
 
     <Section title="Quick Actions">
       <QuickTiles />
+    </Section>
+
+    <Section title="Partner Services">
+      <PartnerTiles />
     </Section>
 
     <Section title="Stories">
