@@ -19,7 +19,7 @@ type OrderTrackerProps = {
 const OrderTracker = ({ orders }: OrderTrackerProps) => {
   if (orders.length === 0) {
     return (
-      <div className="card text-white/80" role="status">
+      <div className="card break-words whitespace-normal text-white/80" role="status">
         No orders yet — track your pickups here once you complete a drop.
       </div>
     );
@@ -31,7 +31,7 @@ const OrderTracker = ({ orders }: OrderTrackerProps) => {
         const statusIndex = statusOrder.indexOf(order.status);
         const progressWidth = Math.max(0, (statusIndex / (statusOrder.length - 1)) * 100);
         return (
-          <article key={order.id} className="card space-y-4" aria-live="polite">
+          <article key={order.id} className="card break-words whitespace-normal space-y-4" aria-live="polite">
             <header className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-sm uppercase tracking-wide text-white/60">Order {order.id}</p>

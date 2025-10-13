@@ -1,0 +1,134 @@
+*** Begin Patch
+*** Update File: app/_components/pwa/PwaHelpers.tsx
+@@
+-      const [showIosPrompt, setShowIosPrompt] = useState(false);
+-      const [deferredPrompt, setDeferredPrompt] = 
+- useState<BeforeInstallPromptEvent | null>(null);
+-      const [show, setShow] = useState(false);
++      // Show a custom install message on iOS devices that don't support the
++      // beforeinstallprompt event. This state is separate from the normal
++      // install prompt that appears on Android/desktop.
++      const [showIosPrompt, setShowIosPrompt] = useState(false);
++      const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
++      const [show, setShow] = useState(false);
+@@
+-      useEffect(() => {
+-         if (!hasWindow()) {
+-       if (showIosPrompt) {
+-         return (
+-           <div className="card fixed inset-x-0 bottom-24 mx-auto flex w-fit 
+- items-center gap-2">
+-             <span>Install GIKUNDIRO App to your Home Screen</span>
+-             <p className="text-xs text-white/70">
+-               Tap the Share icon and select “Add to Home Screen”.
+-             </p>
+-             <button className="btn" onClick={() => setShowIosPrompt(false)}>
+-               Close
+-             </button>
+-           </div>
+-         );
+-       }
+-       return (
+-         }
+-
+-         const onBeforeInstallPrompt = (event: BeforeInstallPromptEvent) => {
+-           event.preventDefault();
+-           setDeferredPrompt(event);
+-           setShow(true);
+-         };
+-
+-         window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+-         // Detect iOS Safari and show guidance
+-         {
+-           const ua = window.navigator.userAgent.toLowerCase();
+-           const isiOS = /iphone|ipad|ipod/.test(ua);
+-           const inStandalone = ('standalone' in window.navigator) && 
+- window.navigator.standalone;
+-           if (isiOS && !inStandalone) {
+-             setShowIosPrompt(true);
+-           }
+-         }
+-         return () => window.removeEventListener("beforeinstallprompt", 
+- onBeforeInstallPrompt);
+-       }, []);
++      useEffect(() => {
++        if (!hasWindow()) {
++          return;
++        }
++
++        // Detect iOS Safari (no beforeinstallprompt event) and show a custom message
++        const ua = window.navigator.userAgent.toLowerCase();
++        const isiOS = /iphone|ipad|ipod/.test(ua);
++        const inStandalone = ("standalone" in window.navigator) && (window.navigator as any).standalone;
++        if (isiOS && !inStandalone) {
++          setShowIosPrompt(true);
++        }
++
++        const onBeforeInstallPrompt = (event: BeforeInstallPromptEvent) => {
++          event.preventDefault();
++          setDeferredPrompt(event);
++          setShow(true);
++        };
++
++        window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
++        return () => {
++          window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
++        };
++      }, []);
+@@
+-       if (!show && !showIosPrompt) {
+-         return null;
+-       }
++      // If we're on iOS and showing the custom guidance, render that first
++      if (showIosPrompt) {
++        return (
++          <div className="card fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
++            <span>Install GIKUNDIRO App to your Home Screen</span>
++            <p className="text-xs text-white/70">
++              Tap the Share icon and select “Add to Home Screen”.
++            </p>
++            <button className="btn" onClick={() => setShowIosPrompt(false)}>
++              Close
++            </button>
++          </div>
++        );
++      }
++
++      if (!show) {
++        return null;
++      }
+@@
+-       return (
+-         <div className="card fixed inset-x-0 bottom-24 mx-auto flex w-fit items-
+- center gap-2">
+-           <span>Install GIKUNDIRO App??</span>
+-           <button className="btn-primary" onClick={handleInstall}>
+-             Install
+-           </button>
+-           <button
+-             className="btn"
+-             onClick={() => {
+-               setShow(false);
+-             }}
+-           >
+-             Later
+-           </button>
+-         </div>
+-       );
++       return (
++         <div className="card fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
++           <span>Install GIKUNDIRO App?</span>
++           <button className="btn-primary" onClick={handleInstall}>
++             Install
++           </button>
++           <button
++             className="btn"
++             onClick={() => {
++               setShow(false);
++             }}
++           >
++             Later
++           </button>
++         </div>
++       );
+*** End Patch

@@ -21,7 +21,7 @@ const OrdersPage = () => {
 
         <OrderTracker orders={orders} />
 
-        <section className="card space-y-4">
+        <section className="card break-words whitespace-normal space-y-4">
           <div>
             <h2 className="section-title">Need to complete a payment?</h2>
             <p className="text-sm text-white/70">

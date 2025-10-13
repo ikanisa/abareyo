@@ -11,9 +11,9 @@ const ProfilePage = () => (
       <header className="glass space-y-3 rounded-3xl px-6 py-8 text-center">
         <p className="text-sm uppercase tracking-[0.3em] text-white/60">Supporter profile</p>
         <h1 className="text-3xl font-semibold">{profile.name}</h1>
-        <p className="text-sm text-white/80">Gikundiro ID {profile.id} · {profile.tier} tier · {profile.points} points</p>
+        <p className="text-sm text-white/80">GIKUNDIRO ID {profile.id} · {profile.tier} tier · {profile.points} points</p>
       </header>
-      <section className="card space-y-3 text-sm text-white/80">
+      <section className="card break-words whitespace-normal space-y-3 text-sm text-white/80">
         <p>Manage personal information, secure your account, and control app notifications from the dashboard.</p>
         <p>Need to update contact info? Tap edit below to jump into the More → My Account surface.</p>
         <div className="flex flex-wrap gap-3">

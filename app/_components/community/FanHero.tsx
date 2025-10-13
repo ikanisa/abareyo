@@ -35,7 +35,7 @@ type FanHeroProps = {
   missions: Mission[];
 };
 
-const FanHero = ({ score, rank, tierLabel = "Gikundiro+", missions }: FanHeroProps) => {
+const FanHero = ({ score, rank, tierLabel = "GIKUNDIRO+", missions }: FanHeroProps) => {
   const prefersReducedMotion = useReducedMotion();
   const [fanScore, setFanScore] = useState(score);
   const [missionState, setMissionState] = useState<Mission[]>(missions);
@@ -91,7 +91,7 @@ const FanHero = ({ score, rank, tierLabel = "Gikundiro+", missions }: FanHeroPro
   const closeSheet = () => setActiveSheet(null);
 
   return (
-    <section className="card relative overflow-hidden text-white" aria-labelledby="fan-hero-heading">
+    <section className="card break-words whitespace-normal relative overflow-hidden text-white" aria-labelledby="fan-hero-heading">
       <h2 id="fan-hero-heading" className="sr-only">
         Fan score and missions
       </h2>

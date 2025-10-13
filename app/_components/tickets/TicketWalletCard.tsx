@@ -82,7 +82,7 @@ const TicketWalletCard = ({ ticket, animationDelay }: TicketWalletCardProps) => 
 
   return (
     <article
-      className="card space-y-5 bg-white/5 text-white animate-ticket-wallet"
+      className="card break-words whitespace-normal space-y-5 bg-white/5 text-white animate-ticket-wallet"
       role="listitem"
       style={animationDelay ? { animationDelay: `${animationDelay}s` } : undefined}
       data-ticket-free={isFreeTicket ? "1" : undefined}

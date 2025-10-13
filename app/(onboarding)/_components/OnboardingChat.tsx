@@ -120,7 +120,7 @@ export default function OnboardingChat() {
     <div className="rounded-xl p-4 bg-white/5 border border-white/10">
       <div className="flex flex-col gap-2 max-h-64 overflow-auto">
         {messages.length === 0 && (
-          <p className="text-white/70">Muraho! Tell me your WhatsApp number so we can set up your fan profile.</p>
+          <p className="text-white/70">Hello! Tell me your WhatsApp number so we can set up your fan profile.</p>
         )}
         {messages.map((m, i) => (
           <div key={i} className={m.role === "user" ? "text-right" : "text-left"}>

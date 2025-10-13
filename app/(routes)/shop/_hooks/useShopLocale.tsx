@@ -345,7 +345,7 @@ const SHOP_COPY = {
   },
   "cart.pickupTitle": {
     en: "Pickup details",
-    rw: "Amakuru yo kwakira",
+    rw: " yo kwakira",
   },
   "cart.pickupDescription": {
     en: "Optional: add the number we should use to trigger USSD.",

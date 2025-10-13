@@ -25,7 +25,7 @@ const HistoryList = () => {
     <section className="space-y-3" aria-label="My Services history">
       <h2 className="section-title">My Services</h2>
       <div className="grid gap-3 md:grid-cols-2">
-        <div className="card space-y-2" aria-live="polite">
+        <div className="card break-words whitespace-normal space-y-2" aria-live="polite">
           <div className="text-white/90 font-medium">Policies</div>
           {policies.length === 0 ? (
             <p className="muted text-sm">No policies yet. Generate a quote to get started.</p>
@@ -56,7 +56,7 @@ const HistoryList = () => {
           )}
         </div>
 
-        <div className="card space-y-2" aria-live="polite">
+        <div className="card break-words whitespace-normal space-y-2" aria-live="polite">
           <div className="text-white/90 font-medium">Deposits</div>
           {deposits.length === 0 ? (
             <p className="muted text-sm">No deposits yet. Lock in double fan points today.</p>
@@ -82,7 +82,7 @@ const HistoryList = () => {
           )}
         </div>
 
-        <div className="card space-y-2" aria-live="polite">
+        <div className="card break-words whitespace-normal space-y-2" aria-live="polite">
           <div className="text-white/90 font-medium">Quotes</div>
           {quotes.length === 0 ? (
             <p className="muted text-sm">No saved quotes yet. Generate one above to view ticket perks.</p>
@@ -116,7 +116,7 @@ const HistoryList = () => {
         </div>
       </div>
 
-      <div className="card text-sm text-white/70" role="note">
+      <div className="card break-words whitespace-normal text-sm text-white/70" role="note">
         {latestPolicyNumber ? (
           <p>
             Latest policy {latestPolicyNumber}. Ticket status: {

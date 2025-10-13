@@ -1,4 +1,6 @@
-"use client";
+const fs = require('fs');
+const path = 'app/_components/pwa/PwaHelpers.tsx';
+const content = `"use client";
 
 import { useEffect, useState } from "react";
 
@@ -54,7 +56,7 @@ export function InstallPrompt() {
   // Render iOS guidance if necessary
   if (showIosPrompt) {
     return (
-      <div className="card break-words whitespace-normal fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
+      <div className="card fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
         <span>Install GIKUNDIRO App to your Home Screen</span>
         <p className="text-xs text-white/70">
           Tap the Share icon and select “Add to Home Screen”.
@@ -82,7 +84,7 @@ export function InstallPrompt() {
   };
 
   return (
-    <div className="card break-words whitespace-normal fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
+    <div className="card fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
       <span>Install GIKUNDIRO App?</span>
       <button className="btn-primary" onClick={handleInstall}>
         Install
@@ -130,3 +132,7 @@ export function OfflineBanner() {
     </div>
   );
 }
+`;
+
+fs.writeFileSync(path, content, 'utf8');
+console.log('Updated', path, 'with new mobile install prompt and GIKUNDIRO branding');

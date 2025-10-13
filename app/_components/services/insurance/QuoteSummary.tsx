@@ -74,7 +74,7 @@ const QuoteSummary = ({ plate, motoType, period, partnerId, onClose, onBack }: P
   };
 
   return (
-    <section className="card space-y-4" aria-label="Quote summary">
+    <section className="card break-words whitespace-normal space-y-4" aria-label="Quote summary">
       <header className="space-y-1">
         <h3 className="text-lg font-semibold text-white">Quote Summary</h3>
         <p className="muted text-sm">
@@ -82,7 +82,7 @@ const QuoteSummary = ({ plate, motoType, period, partnerId, onClose, onBack }: P
         </p>
       </header>
 
-      <div className="card bg-white/5">
+      <div className="card break-words whitespace-normal bg-white/5">
         <div className="flex items-center justify-between text-sm text-white/80">
           <span>Premium</span>
           <strong className="text-white">{formatRWF(premium)}</strong>
@@ -101,7 +101,7 @@ const QuoteSummary = ({ plate, motoType, period, partnerId, onClose, onBack }: P
           </div>
         </>
       ) : (
-        <div className="card space-y-3" role="status" aria-live="polite">
+        <div className="card break-words whitespace-normal space-y-3" role="status" aria-live="polite">
           <div className="text-white font-semibold">Payment received</div>
           <p className="muted text-sm">
             We are issuing your policy now. Use Claim perk to jump to My Tickets with your perk flagged.

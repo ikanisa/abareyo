@@ -18,7 +18,7 @@ export function FooterBrand() {
         <span aria-hidden>•</span>
         <span>Version 5.0.0</span>
       </div>
-      <p className="text-white/60">Made for Fans of Gikundiro 💙</p>
+      <p className="text-white/60">Made for Fans of GIKUNDIRO 💙</p>
       <div className="flex flex-wrap items-center justify-center gap-3 text-white/70">
         <Link
           href="/settings/about"
