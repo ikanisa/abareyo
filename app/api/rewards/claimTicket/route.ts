@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { randomUUID } from "crypto";
 
 export async function POST(req: Request) {
   const supabaseUrl = process.env.SUPABASE_URL;
@@ -42,10 +43,10 @@ export async function POST(req: Request) {
 
     // Already issued auto-perk ticket? Bail gracefully.
     const { data: existing, error: existingError } = await db
-      .from("tickets")
+      .from("ticket_orders")
       .select("id")
       .eq("user_id", quote.user_id)
-      .eq("momo_ref", "FREE-TICKET-PERK")
+      .eq("sms_ref", "FREE-TICKET-PERK")
       .limit(1);
     if (existingError) {
       return NextResponse.json({ error: "ticket_lookup_failed" }, { status: 500 });
@@ -58,8 +59,8 @@ export async function POST(req: Request) {
     const { data: m, error: matchError } = await db
       .from("matches")
       .select("id")
-      .gte("date", new Date().toISOString())
-      .order("date", { ascending: true })
+      .gte("kickoff", new Date().toISOString())
+      .order("kickoff", { ascending: true })
       .limit(1);
     if (matchError) {
       return NextResponse.json({ error: "match_lookup_failed" }, { status: 500 });
@@ -70,20 +71,35 @@ export async function POST(req: Request) {
     }
 
     // Create free BLUE ticket
-    const { data: inserted, error: insertError } = await db
-      .from("tickets")
+    const { data: order, error: orderError } = await db
+      .from("ticket_orders")
       .insert({
         user_id: quote.user_id,
         match_id: match.id,
-        zone: "Blue",
-        price: 0,
-        paid: true,
-        momo_ref: "FREE-TICKET-PERK",
+        total: 0,
+        status: "paid",
+        sms_ref: "FREE-TICKET-PERK",
       })
       .select("id")
       .single();
-    if (insertError) {
-      return NextResponse.json({ error: "ticket_insert_failed" }, { status: 500 });
+    if (orderError || !order) {
+      return NextResponse.json({ error: "ticket_order_failed" }, { status: 500 });
+    }
+
+    const rawToken = randomUUID();
+
+    const { data: pass, error: passError } = await db
+      .from("ticket_passes")
+      .insert({
+        order_id: order.id,
+        zone: "Blue",
+        gate: "G3",
+        qr_token_hash: rawToken,
+      })
+      .select("id")
+      .single();
+    if (passError || !pass) {
+      return NextResponse.json({ error: "ticket_pass_failed" }, { status: 500 });
     }
 
     await db.from("rewards_events").insert({
@@ -91,10 +107,10 @@ export async function POST(req: Request) {
       source: "policy_perk",
       ref_id: pol.id,
       points: 0,
-      meta: { perk: "free_blue_ticket_manual", match_id: match.id },
+      meta: { perk: "free_blue_ticket_manual", match_id: match.id, order_id: order.id, pass_id: pass.id },
     });
 
-    return NextResponse.json({ ok: true, match_id: match.id, ticket_id: inserted.id });
+    return NextResponse.json({ ok: true, match_id: match.id, ticket_id: pass.id });
   } catch (error) {
     console.error("claim_ticket_failed", error);
     return NextResponse.json({ error: "unexpected_error" }, { status: 500 });
