@@ -119,7 +119,12 @@ const ProductCard = ({ product }: ProductCardProps) => {
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
     >
-      <Link href={`/shop/${product.slug}`} className="group flex flex-col gap-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+      {/* Build a safe link: disable navigation if product.slug is missing */}
+           <Link
+             href={product.slug ? `/shop/${product.slug}` : "#"}
+             aria-disabled={!product.slug}
+             onClick={product.slug ? undefined : (e) => e.preventDefault()}
+             className="group flex flex-col gap-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
         <div className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-white/20 via-white/5 to-white/10">
           <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-blue-500/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white">
             <span>
