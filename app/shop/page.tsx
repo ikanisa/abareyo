@@ -50,14 +50,10 @@ const fetchProducts = async (): Promise<Product[]> => {
   }
   try {
     const response = await fetch(endpoint, { next: { revalidate: 60 } });
-    if (!response.ok) {
-      return [];
-    }
-    const payload = (await response.json()) as SupabaseProduct[] | unknown;
-    if (!Array.isArray(payload)) {
-      return [];
-    }
-    return payload.map((entry) => mapRemoteProduct(entry as SupabaseProduct));
+    if (!response.ok) return [];
+    const payload = (await response.json()) as unknown;
+    if (!Array.isArray(payload)) return [];
+    return (payload as SupabaseProduct[]).map(mapRemoteProduct);
   } catch (error) {
     console.error("Failed to fetch shop products", error);
     return [];

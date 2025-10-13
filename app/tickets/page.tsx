@@ -9,178 +9,129 @@ import TicketHero from "@/app/_components/tickets/TicketHero";
 import ZoneSheet from "@/app/_components/tickets/ZoneSheet";
 import EmptyState from "@/app/_components/ui/EmptyState";
 import type { Fixture, TicketZone } from "@/app/_data/fixtures";
-import { fixtures as defaultFixtures } from "@/app/_data/fixtures";
+import { fixtures as fallbackFixtures } from "@/app/_data/fixtures";
 import { fanProfile } from "@/app/_data/fanProfile";
 import { jsonFetch } from "@/app/_lib/api";
 
-const randomId = () => `fixture-${Math.random().toString(36).slice(2, 10)}`;
-
-type ApiMatchZone = {
-  id?: string | null;
-  zone?: string | null;
-  name?: string | null;
-  price?: number | null;
-  seatsLeft?: number | null;
-  remaining?: number | null;
-  totalSeats?: number | null;
-  capacity?: number | null;
-};
-
 type ApiMatch = {
-  id?: string | null;
-  title?: string | null;
-  home_team?: string | null;
-  away_team?: string | null;
-  comp?: string | null;
-  date?: string | null;
-  kickoff?: string | null;
-  venue?: string | null;
-  status?: "upcoming" | "live" | "ft" | null;
-  zones?: ApiMatchZone[] | null;
+  id: string;
+  title: string;
+  comp: string | null;
+  date: string;
+  venue: string | null;
+  status: string;
+  home_team: string | null;
+  away_team: string | null;
+  vip_price: number | null;
+  regular_price: number | null;
+  seats_vip: number | null;
+  seats_regular: number | null;
 };
 
-type ReservationState =
+type TicketReservationState =
   | { status: "idle" }
   | { status: "loading" }
-  | { status: "success"; ticket: { id: string; paid: boolean; momo_ref: string | null; created_at: string } }
-  | { status: "error"; message: string };
+  | { status: "error"; message: string }
+  | { status: "success"; ticket: { id: string; paid: boolean; momo_ref: string | null; created_at: string } };
 
-const fallbackFixtures = defaultFixtures;
+const formatMatchDate = (value: string) => {
+  try {
+    const date = new Date(value);
+    return {
+      date: date.toLocaleDateString("en-GB", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      }),
+      time: date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
+    };
+  } catch {
+    return { date: value, time: "" };
+  }
+};
 
-const toTicketZoneName = (value: string | null | undefined): TicketZone["name"] => {
-  if (!value) return "Fan";
-  const normalised = value.toLowerCase();
-  if (normalised.includes("vip")) return "VIP";
-  if (normalised.includes("regular")) return "Regular";
-  if (normalised.includes("blue")) return "Fan";
-  return "Fan";
+const heroImageForMatch = (home?: string | null, away?: string | null) => {
+  const combined = `${home ?? ""} ${away ?? ""}`.toLowerCase();
+  if (combined.includes("apr")) return "/tickets/rayon-apr.svg";
+  if (combined.includes("police")) return "/tickets/rayon-simba.svg";
+  return "/tickets/rayon-legends.svg";
+};
+
+const normaliseZoneName = (zone: TicketZone["name"]): "VIP" | "Regular" | "Blue" => {
+  if (zone === "Fan" || zone === "Blue") return "Blue";
+  return zone;
 };
 
 const buildFixtureFromMatch = (match: ApiMatch): Fixture => {
-  const kickoffSource = match.date ?? match.kickoff ?? new Date().toISOString();
-  const kickoff = new Date(kickoffSource);
-  const readableDate = kickoff.toLocaleDateString(undefined, {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-  const readableTime = kickoff.toLocaleTimeString(undefined, {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  const zones: TicketZone[] = (Array.isArray(match.zones) ? match.zones : []).map((zone) => ({
-    id: zone.id ?? `${match.id ?? randomId()}-${(zone.zone ?? "zone").toLowerCase()}`,
-    name: toTicketZoneName(zone.name ?? zone.zone),
-    price: typeof zone.price === "number" ? zone.price : 0,
-    seatsLeft: Math.max(Number(zone.seatsLeft ?? zone.remaining ?? 0), 0),
-    totalSeats: Math.max(Number(zone.totalSeats ?? zone.capacity ?? 0), 0),
-  }));
-  const status = match.status === "ft" ? "completed" : match.status === "live" ? "upcoming" : "upcoming";
-  return {
-    id: match.id ?? randomId(),
-    title:
-      match.title ??
-      [match.home_team ?? "Rayon Sports", match.away_team ?? "Opposition"].filter(Boolean).join(" vs "),
-    comp: match.comp ?? "",
-    date: readableDate,
-    time: readableTime,
-    venue: match.venue ?? "TBD",
-    zones,
-    status: zones.every((zone) => zone.seatsLeft === 0) ? "soldout" : status,
-    heroImage: "/tickets/default-match.svg",
-  } satisfies Fixture;
-};
+  const { date, time } = formatMatchDate(match.date);
+  const baseTitle = match.title?.trim()
+    ? match.title
+    : `${match.home_team ?? "Rayon"} vs ${match.away_team ?? "Opponent"}`;
+  const vipSeats = match.seats_vip ?? 420;
+  const regularSeats = match.seats_regular ?? 3510;
+  const blueSeats = Math.max(120, Math.round(regularSeats * 0.25));
+  const regularPrice = match.regular_price ?? 5000;
+  const bluePrice = Math.max(3000, Math.round(regularPrice * 0.65));
 
-const normaliseZoneName = (zone: TicketZone["name"]): "VIP" | "Regular" | "Blue" =>
-  zone === "Fan" ? "Blue" : zone;
+  const zones: TicketZone[] = [
+    {
+      id: `${match.id}-vip`,
+      name: "VIP",
+      price: Math.max(0, match.vip_price ?? 15000),
+      seatsLeft: vipSeats,
+      totalSeats: Math.max(vipSeats, 420),
+    },
+    {
+      id: `${match.id}-regular`,
+      name: "Regular",
+      price: Math.max(0, regularPrice),
+      seatsLeft: regularSeats,
+      totalSeats: Math.max(regularSeats, 3510),
+    },
+    {
+      id: `${match.id}-blue`,
+      name: "Blue",
+      price: bluePrice,
+      seatsLeft: blueSeats,
+      totalSeats: Math.max(blueSeats, 1200),
+    },
+  ];
+
+  const status: Fixture["status"] = match.status === "ft" ? "completed" : "upcoming";
+
+  return {
+    id: match.id,
+    title: baseTitle,
+    comp: match.comp ?? "Rayon Sports",
+    date,
+    time,
+    venue: match.venue ?? "TBC",
+    zones,
+    status,
+    heroImage: heroImageForMatch(match.home_team, match.away_team),
+  };
+};
 
 const TicketsPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [fixtures, setFixtures] = useState<Fixture[]>(defaultFixtures);
+
+  const [fixtures, setFixtures] = useState<Fixture[]>(fallbackFixtures);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("upcoming");
   const [selectedFixture, setSelectedFixture] = useState<Fixture | null>(null);
   const [selectedZone, setSelectedZone] = useState<TicketZone | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [reservation, setReservation] = useState<ReservationState>({ status: "idle" });
+  const [reservation, setReservation] = useState<TicketReservationState>({ status: "idle" });
 
-  useEffect(() => {
-    let isMounted = true;
-    const loadMatches = async () => {
-      try {
-        // Fetch ticketing fixtures from the dedicated tickets endpoint.
-        const response = await fetch("/api/matches/tickets");
-        if (!response.ok) {
-          throw new Error(await response.text());
-        }
-        const body = (await response.json()) as { data?: any[] };
-        if (!Array.isArray(body.data)) {
-          throw new Error("Invalid matches payload");
-        }
-        if (!isMounted) return;
-        const mapped: Fixture[] = body.data.map((match) => {
-          const kickoff = new Date(match.date ?? match.kickoff ?? Date.now());
-          const readableDate = kickoff.toLocaleDateString(undefined, {
-            weekday: "short",
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          });
-          const readableTime = kickoff.toLocaleTimeString(undefined, {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-          const zones: TicketZone[] = (Array.isArray(match.zones) ? match.zones : []).map((zone: any) => ({
-            id: zone.id ?? `${match.id}-${zone.zone}`,
-            name: zone.zone === "Blue" ? "Fan" : zone.name ?? zone.zone ?? "Zone",
-            price: typeof zone.price === "number" ? zone.price : 0,
-            seatsLeft: Math.max(Number(zone.seatsLeft ?? zone.remaining ?? 0), 0),
-            totalSeats: Math.max(Number(zone.totalSeats ?? zone.capacity ?? 0), 0),
-          }));
-          const status = match.status === "ft" ? "completed" : match.status === "live" ? "upcoming" : match.status ?? "upcoming";
-          return {
-            id: match.id ?? randomId(),
-            title:
-              match.title ??
-              [match.home_team ?? "Rayon Sports", match.away_team ?? "Opposition"].filter(Boolean).join(" vs "),
-            comp: match.comp ?? "", 
-            date: readableDate,
-            time: readableTime,
-            venue: match.venue ?? "TBD",
-            zones,
-            status: zones.every((zone) => zone.seatsLeft === 0) ? "soldout" : status,
-            heroImage: "/tickets/default-match.svg",
-          } satisfies Fixture;
-        });
-        setFixtures(mapped.length > 0 ? mapped : defaultFixtures);
-      } catch (error) {
-        console.warn("Failed to load matches", error);
-        if (isMounted) {
-          setFixtures(defaultFixtures);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadMatches();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
+  // Respect ?tab=past
   useEffect(() => {
     const requestedTab = searchParams?.get("tab");
-    if (requestedTab === "past") {
-      setActiveTab("past");
-    }
+    if (requestedTab === "past") setActiveTab("past");
   }, [searchParams]);
 
+  // Handle claimed free ticket UX (from main)
   useEffect(() => {
     if (searchParams?.get("claimed") === "1") {
       alert("🎉 Free BLUE ticket added to your tickets!");
@@ -192,6 +143,7 @@ const TicketsPage = () => {
     }
   }, [searchParams]);
 
+  // Load fixtures from API with safe fallback
   useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -211,9 +163,7 @@ const TicketsPage = () => {
         setLoadError(error instanceof Error ? error.message : "Unable to load fixtures");
         setFixtures(fallbackFixtures);
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        if (mounted) setLoading(false);
       }
     };
     load();
@@ -227,12 +177,8 @@ const TicketsPage = () => {
   }, [selectedFixture?.id]);
 
   const filteredFixtures = useMemo(() => {
-    if (activeTab === "upcoming") {
-      return fixtures.filter((fixture) => fixture.status === "upcoming");
-    }
-    if (activeTab === "past") {
-      return fixtures.filter((fixture) => fixture.status === "completed");
-    }
+    if (activeTab === "upcoming") return fixtures.filter((f) => f.status === "upcoming");
+    if (activeTab === "past") return fixtures.filter((f) => f.status === "completed");
     return fixtures;
   }, [activeTab, fixtures]);
 
@@ -246,9 +192,7 @@ const TicketsPage = () => {
 
   const scrollToCheckout = () => {
     const checkoutAnchor = document.getElementById("checkout-panel");
-    if (checkoutAnchor) {
-      checkoutAnchor.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    if (checkoutAnchor) checkoutAnchor.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const reserveTicket = async (fixture: Fixture, zone: TicketZone) => {
@@ -345,6 +289,7 @@ const TicketsPage = () => {
             </p>
           ) : null}
         </section>
+
         <section aria-live="polite" aria-atomic="true" role="region" aria-label="Checkout summary">
           {selectedFixture && selectedZone ? (
             <CheckoutCard
