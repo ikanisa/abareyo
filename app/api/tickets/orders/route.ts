@@ -2,12 +2,18 @@ import { NextRequest } from 'next/server';
 
 import { errorResponse, successResponse } from '../../_lib/responses';
 import { getSupabase } from '../../_lib/supabase';
+import { requireAuthUser } from '../../_lib/auth';
 
 export async function GET(req: NextRequest) {
   const supabase = getSupabase();
-  const userId = req.nextUrl.searchParams.get('userId');
-  if (!userId) {
-    return errorResponse('userId is required');
+  const auth = await requireAuthUser(req, supabase);
+  if ('response' in auth) {
+    return auth.response;
+  }
+  const userId = auth.user.id;
+  const requestedUserId = req.nextUrl.searchParams.get('userId');
+  if (requestedUserId && requestedUserId !== userId) {
+    return errorResponse('Forbidden', 403);
   }
 
   const { data: orders, error } = await supabase
