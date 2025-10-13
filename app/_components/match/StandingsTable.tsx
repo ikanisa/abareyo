@@ -37,7 +37,7 @@ const StandingsTable = ({ table, updatedAt }: StandingsTableProps) => {
   }
 
   return (
-    <div className="card break-words whitespace-normal overflow-hidden">
+    <div className="card break-words whitespace-normal break-words whitespace-normal overflow-hidden">
       <div className="flex items-center justify-between pb-3">
         <h3 className="text-lg font-semibold text-white">League table</h3>
         <span className="text-xs uppercase tracking-wide text-white/60">{formatUpdatedAt(updatedAt)}</span>

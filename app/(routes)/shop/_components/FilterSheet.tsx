@@ -84,7 +84,7 @@ const FilterSheet = ({
           />
           <motion.div
             ref={containerRef}
-            className="card break-words whitespace-normal relative w-full max-w-md rounded-t-3xl bg-[#0f1b4c] text-white shadow-2xl"
+            className="card break-words whitespace-normal break-words whitespace-normal relative w-full max-w-md rounded-t-3xl bg-[#0f1b4c] text-white shadow-2xl"
             initial={{ y: prefersReducedMotion ? 0 : 40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: prefersReducedMotion ? 0 : 40, opacity: 0 }}

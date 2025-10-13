@@ -13,7 +13,7 @@ const WalletHistoryPage = () => (
           Recent wallet activity will appear here once you purchase tickets or redeem shop offers.
         </p>
       </header>
-      <section className="card break-words whitespace-normal space-y-3 text-sm text-white/80">
+      <section className="card break-words whitespace-normal break-words whitespace-normal space-y-3 text-sm text-white/80">
         <p>Current balance: <span className="text-white font-semibold">{wallet.balance.toLocaleString('en-RW')} RWF</span>.</p>
         <p>No transactions yet. Buy tickets or make SACCO deposits to populate history.</p>
       </section>

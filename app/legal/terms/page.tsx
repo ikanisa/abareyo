@@ -12,7 +12,7 @@ const TermsPage = () => (
           These terms govern your use of the official Rayon Sports digital platforms including match tickets, shop orders, and partner services.
         </p>
       </header>
-      <article className="card break-words whitespace-normal space-y-4 text-sm text-white/80">
+      <article className="card break-words whitespace-normal break-words whitespace-normal space-y-4 text-sm text-white/80">
         <section>
           <h2 className="text-lg font-semibold text-white">1. Fan account</h2>
           <p>Keep your login secure and only claim tickets for personal use or approved transfers.</p>

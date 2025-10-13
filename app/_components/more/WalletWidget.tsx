@@ -31,7 +31,7 @@ export function WalletWidget({ wallet, onAddMoney }: WalletWidgetProps) {
 
   return (
     <motion.section
-      className="card break-words whitespace-normal flex h-full flex-col justify-between gap-4 bg-white/10 text-white"
+      className="card break-words whitespace-normal break-words whitespace-normal flex h-full flex-col justify-between gap-4 bg-white/10 text-white"
       initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
       whileInView={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.6 }}

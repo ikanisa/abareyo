@@ -8,7 +8,7 @@ const ServiceHero = ({ title, subtitle }: { title: string; subtitle?: string }) 
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.21, 0.84, 0.38, 0.99] }}
-      className="card break-words whitespace-normal relative overflow-hidden"
+      className="card break-words whitespace-normal break-words whitespace-normal relative overflow-hidden"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-white/5 to-transparent" aria-hidden />
       <div className="relative flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

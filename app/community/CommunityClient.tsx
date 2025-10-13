@@ -337,7 +337,7 @@ const CommunityClient = () => {
 
         <FanHero score={1250} rank={12} missions={mockMissions} />
 
-        <section className="card break-words whitespace-normal space-y-4 text-white" aria-labelledby="badges-heading">
+        <section className="card break-words whitespace-normal break-words whitespace-normal space-y-4 text-white" aria-labelledby="badges-heading">
           <div className="flex items-center justify-between">
             <h3 id="badges-heading" className="section-title">
               Your badges
@@ -385,7 +385,7 @@ const CommunityClient = () => {
         <div>
           {activeTab === "Feed" ? (
             <div className="space-y-4">
-              <section className="card break-words whitespace-normal space-y-4 text-white" aria-labelledby="composer-heading">
+              <section className="card break-words whitespace-normal break-words whitespace-normal space-y-4 text-white" aria-labelledby="composer-heading">
                 <div className="flex items-center gap-3">
                   <Image
                     src={fallbackAvatar}

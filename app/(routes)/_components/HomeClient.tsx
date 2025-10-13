@@ -95,7 +95,7 @@ const LiveTicker = () => {
   }
 
   return (
-    <div className="card break-words whitespace-normal space-y-3" aria-live="polite">
+    <div className="card break-words whitespace-normal break-words whitespace-normal space-y-3" aria-live="polite">
       {liveTicker.map((update) => (
         <div key={update.id} className="flex items-start gap-3">
           <span className={`rounded-full px-2 py-1 text-xs font-semibold ${tickerTypeStyles[update.type]}`}>
@@ -134,7 +134,7 @@ const UpcomingFixtures = () => {
   return (
     <div className="space-y-3">
       {upcomingFixtures.map((fixture) => (
-        <article key={fixture.id} className="card break-words whitespace-normal flex flex-col gap-3">
+        <article key={fixture.id} className="card break-words whitespace-normal break-words whitespace-normal flex flex-col gap-3">
           <div className="flex flex-col gap-1">
             <h3 className="text-lg font-semibold">Rayon Sports vs {fixture.opponent}</h3>
             <p className="text-sm text-white/70">{fixture.competition}</p>
@@ -163,7 +163,7 @@ const WalletSummary = () => {
   const formattedBalance = currencyFormatter.format(walletSummary.balance);
 
   return (
-    <div className="card break-words whitespace-normal space-y-5" aria-labelledby="wallet-balance-heading">
+    <div className="card break-words whitespace-normal break-words whitespace-normal space-y-5" aria-labelledby="wallet-balance-heading">
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <h3 id="wallet-balance-heading" className="text-lg font-semibold">
@@ -241,7 +241,7 @@ const PartnerServicesBanner = () => {
   return (
     <Link
       href={banner.href}
-      className="card break-words whitespace-normal relative flex flex-col gap-3 overflow-hidden bg-white/10"
+      className="card break-words whitespace-normal break-words whitespace-normal relative flex flex-col gap-3 overflow-hidden bg-white/10"
       aria-label={banner.message}
     >
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-transparent to-emerald-500/10" aria-hidden="true" />
@@ -272,7 +272,7 @@ const MembershipSection = () => {
   }
 
   return (
-    <div className="card break-words whitespace-normal space-y-4">
+    <div className="card break-words whitespace-normal break-words whitespace-normal space-y-4">
       <div>
         <h3 className="text-xl font-semibold">{membershipCta.heading}</h3>
         <p className="text-sm text-white/70">{membershipCta.description}</p>
@@ -315,7 +315,7 @@ const ShopPromotions = () => {
         <Link
           key={promo.id}
           href={promo.href}
-          className="card break-words whitespace-normal flex h-full flex-col justify-between gap-3"
+          className="card break-words whitespace-normal break-words whitespace-normal flex h-full flex-col justify-between gap-3"
           aria-label={`${promo.title} promotion`}
           role="listitem"
         >
@@ -354,7 +354,7 @@ const FundraisingSpotlight = () => {
           <Link
             key={campaign.id}
             href={campaign.href}
-            className="card break-words whitespace-normal space-y-4"
+            className="card break-words whitespace-normal break-words whitespace-normal space-y-4"
             aria-label={`${campaign.title} fundraising campaign`}
             role="listitem"
           >
@@ -400,7 +400,7 @@ const EventsSchedule = () => {
   }
 
   return (
-    <div className="card break-words whitespace-normal space-y-4">
+    <div className="card break-words whitespace-normal break-words whitespace-normal space-y-4">
       <h3 className="text-lg font-semibold">Upcoming club events</h3>
       <ul className="space-y-3">
         {eventsSchedule.map((event) => (
@@ -435,7 +435,7 @@ const CommunityHighlights = () => {
         <Link
           key={highlight.id}
           href={highlight.href}
-          className="card break-words whitespace-normal flex h-full flex-col justify-between gap-3"
+          className="card break-words whitespace-normal break-words whitespace-normal flex h-full flex-col justify-between gap-3"
           aria-label={highlight.title}
           role="listitem"
         >
@@ -463,7 +463,7 @@ const SponsorsGrid = () => {
   }
 
   return (
-    <div className="card break-words whitespace-normal space-y-4">
+    <div className="card break-words whitespace-normal break-words whitespace-normal space-y-4">
       <h3 className="text-lg font-semibold">Our partners</h3>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" role="list">
         {sponsors.map((sponsor) => (
@@ -525,7 +525,7 @@ const HeroActions = () => {
 };
 
 const Hero = () => (
-  <section className="card break-words whitespace-normal overflow-hidden animate-in fade-in slide-in-from-bottom-2 motion-reduce:animate-none">
+  <section className="card break-words whitespace-normal break-words whitespace-normal overflow-hidden animate-in fade-in slide-in-from-bottom-2 motion-reduce:animate-none">
     <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
       <HeroHeading />
       <HeroActions />

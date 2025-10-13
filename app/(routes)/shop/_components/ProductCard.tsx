@@ -112,7 +112,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
       layout={!prefersReducedMotion}
       whileHover={prefersReducedMotion ? undefined : { translateY: -4 }}
       transition={prefersReducedMotion ? { duration: 0 } : { type: "spring", stiffness: 260, damping: 24 }}
-      className="card break-words whitespace-normal relative flex h-full flex-col gap-3 bg-white/10 p-4"
+      className="card break-words whitespace-normal break-words whitespace-normal relative flex h-full flex-col gap-3 bg-white/10 p-4"
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
       onPointerDown={handlePointerDown}

@@ -26,7 +26,7 @@ const PostCard = ({ id, avatar, user, text, media, likes, comments, time, onOpen
   };
 
   return (
-    <article className="card break-words whitespace-normal flex flex-col gap-4 text-white" aria-label={`${user} post`}>
+    <article className="card break-words whitespace-normal break-words whitespace-normal flex flex-col gap-4 text-white" aria-label={`${user} post`}>
       <header className="flex items-center gap-3">
         <div className="h-12 w-12 overflow-hidden rounded-full border border-white/30 bg-white/10">
           <Image src={avatar} alt="" width={48} height={48} className="h-full w-full object-cover" />

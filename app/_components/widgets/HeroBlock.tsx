@@ -9,7 +9,7 @@ type HeroBlockProps = {
 };
 
 const HeroBlock = ({ title, subtitle, ctas }: HeroBlockProps) => (
-  <section className="card break-words whitespace-normal overflow-hidden">
+  <section className="card break-words whitespace-normal break-words whitespace-normal overflow-hidden">
     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
       <div>
         <h1 className="text-2xl font-bold md:text-3xl">{title}</h1>

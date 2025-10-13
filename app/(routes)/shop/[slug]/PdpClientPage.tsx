@@ -121,7 +121,7 @@ const PdpContent = ({ product }: { product: Product }) => {
 
         <UssdPayButton amount={variant.price} phoneNumber="0780000000" />
 
-        <section className="card break-words whitespace-normal space-y-3 bg-white/10">
+        <section className="card break-words whitespace-normal break-words whitespace-normal space-y-3 bg-white/10">
           <h2 className="text-lg font-semibold text-white">
             {detailsCopy.primary}
             <span className="block text-sm font-normal text-white/70">{detailsCopy.secondary}</span>

@@ -76,7 +76,7 @@ export function SettingsList({ groups, onToggle, onAction }: SettingsListProps) 
                       <motion.div
                         role="group"
                         tabIndex={0}
-                        className="card break-words whitespace-normal flex items-center gap-3 bg-white/5 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/90 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+                        className="card break-words whitespace-normal break-words whitespace-normal flex items-center gap-3 bg-white/5 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/90 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
                         whileHover={prefersReducedMotion ? undefined : { scale: 1.01 }}
                         whileTap={prefersReducedMotion ? undefined : { scale: 0.99 }}
                         onClick={() => handleToggle(item.id, !checked)}
@@ -126,7 +126,7 @@ export function SettingsList({ groups, onToggle, onAction }: SettingsListProps) 
                           onAction?.(item.id);
                         }
                       }}
-                      className="card break-words whitespace-normal flex w-full items-center gap-3 bg-white/5 p-4 text-left text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/90 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+                      className="card break-words whitespace-normal break-words whitespace-normal flex w-full items-center gap-3 bg-white/5 p-4 text-left text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/90 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
                       whileHover={prefersReducedMotion ? undefined : { scale: 1.01 }}
                       whileTap={prefersReducedMotion ? undefined : { scale: 0.99 }}
                       aria-label={item.ariaLabel}
