@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
@@ -42,6 +42,10 @@ export function SettingsList({ groups, onToggle, onAction }: SettingsListProps) 
 
   const [toggleState, setToggleState] = useState<Record<string, boolean>>(initialValues);
 
+  useEffect(() => {
+    setToggleState(initialValues);
+  }, [initialValues]);
+
   const handleToggle = (id: string, value: boolean) => {
     setToggleState((prev) => ({ ...prev, [id]: value }));
     onToggle?.(id, value);
@@ -65,6 +69,8 @@ export function SettingsList({ groups, onToggle, onAction }: SettingsListProps) 
                 const Icon = settingIcons[item.icon] ?? Info;
                 if (item.type === "toggle") {
                   const checked = toggleState[item.id] ?? item.defaultValue ?? false;
+                  const labelId = `setting-${item.id}-label`;
+                  const descriptionId = item.description ? `setting-${item.id}-description` : undefined;
                   return (
                     <motion.li
                       key={item.id}
@@ -87,14 +93,20 @@ export function SettingsList({ groups, onToggle, onAction }: SettingsListProps) 
                           }
                         }}
                         aria-label={item.ariaLabel}
+                        aria-labelledby={labelId}
+                        aria-describedby={descriptionId}
                       >
                         <span className="rounded-2xl bg-white/15 p-3 text-white">
                           <Icon className="h-5 w-5" aria-hidden />
                         </span>
                         <div className="flex-1 text-left">
-                          <p className="text-sm font-semibold text-white">{item.label}</p>
+                          <p id={labelId} className="text-sm font-semibold text-white">
+                            {item.label}
+                          </p>
                           {item.description ? (
-                            <p className="text-xs text-white/70">{item.description}</p>
+                            <p id={descriptionId} className="text-xs text-white/70">
+                              {item.description}
+                            </p>
                           ) : null}
                         </div>
                         <Switch
@@ -102,7 +114,8 @@ export function SettingsList({ groups, onToggle, onAction }: SettingsListProps) 
                           checked={checked}
                           onClick={(event) => event.stopPropagation()}
                           onCheckedChange={(value) => handleToggle(item.id, value)}
-                          aria-label={item.ariaLabel}
+                          aria-labelledby={labelId}
+                          aria-describedby={descriptionId}
                         />
                       </motion.div>
                     </motion.li>
