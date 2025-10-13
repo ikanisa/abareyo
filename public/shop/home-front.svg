@@ -1,0 +1,18 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="homeFrontGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0033FF" />
+      <stop offset="0.5" stop-color="#005BFF" />
+      <stop offset="1" stop-color="#00A1DE" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1200" fill="url(#homeFrontGradient)" rx="80" />
+  <g fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="24">
+    <path d="M320 220h560l-80 180H400z" />
+    <path d="M320 220c0 180 140 320 320 320s320-140 320-320" stroke-opacity="0.25" />
+  </g>
+  <g fill="#ffffff" font-family="'Inter', sans-serif" text-anchor="middle">
+    <text x="600" y="930" font-size="68" font-weight="700">Home Jersey 24/25</text>
+    <text x="600" y="1008" font-size="40" font-weight="500" opacity="0.85">Player issue • Crest included</text>
+  </g>
+</svg>
