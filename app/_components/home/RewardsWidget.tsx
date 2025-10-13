@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabaseClient } from "@/integrations/supabase/client";
 
 type LatestPerk =
   | { type: "free_ticket"; ticket_id: string; label: string }
@@ -39,7 +39,13 @@ export default function RewardsWidget({ userId }: { userId?: string }) {
       setLoading(true);
 
       try {
-        const { data: sessionData } = await supabase.auth.getSession();
+        const client = getSupabaseClient();
+        if (!client) {
+          setData(null);
+          return;
+        }
+
+        const { data: sessionData } = await client.auth.getSession();
         const accessToken = sessionData.session?.access_token;
 
         if (!accessToken) {

@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2025-10-13T17:09:58.194Z",
+  "routes": [
+    {
+      "pattern": "/api/[...path]"
+    },
+    {
+      "pattern": "/api/e2e/[...path]"
+    },
+    {
+      "pattern": "/api/tickets/orders/[orderId]/cancel"
+    },
+    {
+      "pattern": "/api/tickets/orders/[orderId]/receipt"
+    },
+    {
+      "pattern": "/shop/[slug]"
+    }
+  ]
+}

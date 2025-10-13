@@ -1,0 +1,15 @@
+{
+  "rewrites": [
+    {
+      "source": "/shop/:slug+",
+      "destination": "/shop/:slug"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/store",
+      "destination": "/shop",
+      "permanent": true
+    }
+  ]
+}

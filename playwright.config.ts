@@ -30,6 +30,15 @@ const config: PlaywrightTestConfig = {
       },
     },
     {
+      name: 'nav-audit',
+      testDir: 'tests',
+      testMatch: /nav\..*\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 720 },
+      },
+    },
+    {
       name: 'mobile-small',
       testDir: 'tests/e2e/mobile',
       use: {

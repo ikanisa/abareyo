@@ -123,6 +123,7 @@ export type ClubEvent = {
   date: string;
   location: string;
   href: string;
+  description?: string;
 };
 
 export type CommunityHighlight = {
