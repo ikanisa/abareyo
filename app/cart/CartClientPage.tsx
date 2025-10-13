@@ -71,13 +71,14 @@ const CartContent = () => {
     setOrderError(null);
     try {
       const sanitizedPhone = phone.replace(/[^0-9+]/g, "");
+      const preferredContact = sanitizedPhone || fanProfile.phone;
       const payload = {
         total: amountDue,
         momo_ref: reference,
         user: {
           name: fanProfile.name,
-          phone: sanitizedPhone || fanProfile.phone,
-          momo_number: fanProfile.momo ?? sanitizedPhone || fanProfile.phone,
+          phone: preferredContact,
+          momo_number: fanProfile.momo ?? preferredContact,
         },
         items: items.map((item) => ({
           product_id: item.product.id,

@@ -185,27 +185,30 @@ export const useCatalog = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  // Derive the current search string from the router.  We treat it as the source of truth for
+  // all URL-derived state (filters, sort, search input, etc.).
   const searchParamsString = searchParams?.toString() ?? "";
 
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
-  // Derive filters and other query params from the serialized search parameters.  This avoids
-  // triggering unnecessary re-renders when the searchParams object identity changes.
-  const filters = useMemo(
-    () => parseFilters(new URLSearchParams(searchParamsString)),
-    [searchParamsString],
-  );
-  const activeTabId = searchParams?.get("tab") ?? (filters.category ?? "featured");
-  const sort = (searchParams?.get("sort") as SortOption | null) ?? "recommended";
-  const query = (searchParams?.get("q") ?? "").toLowerCase();
+  // Create a stable URLSearchParams instance so downstream memoised calculations can re-use it
+  // instead of instantiating fresh objects on every render.
+  const currentParams = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
+
+  // Parse filters (category, price, etc.) from the current query parameters once.
+  const filters = useMemo(() => parseFilters(currentParams), [currentParams]);
+  const activeTabId = currentParams.get("tab") ?? (filters.category ?? "featured");
+  const sort = (currentParams.get("sort") as SortOption | null) ?? "recommended";
+  const query = (currentParams.get("q") ?? "").toLowerCase();
 
   // Keep a local copy of the `q` parameter for the search input.  Whenever the URL changes,
-  // rehydrate this state from the search string.
-  const [searchInput, setSearchInput] = useState(() => new URLSearchParams(searchParamsString).get("q") ?? "");
+  // rehydrate this state from the memoised params instance.
+  const [searchInput, setSearchInput] = useState(() => currentParams.get("q") ?? "");
   useEffect(() => {
-    setSearchInput(new URLSearchParams(searchParamsString).get("q") ?? "");
-  }, [searchParamsString]);
+    setSearchInput(currentParams.get("q") ?? "");
+  }, [currentParams]);
 
   const updateParams = useCallback(
     (updater: (params: URLSearchParams) => void) => {
