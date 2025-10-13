@@ -6,7 +6,8 @@ import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle, ShoppingBag } from "lucide-react";
 
-import { formatPrice, minPrice, type Product, useCart } from "../_logic/useShop";
+import { formatPrice, minPrice, useCart } from "../_logic/useShop";
+import type { Product } from "../_data/products";
 import { useShopLocale, type CopyKey } from "../_hooks/useShopLocale";
 
 const swatchColor: Record<string, string> = {
@@ -24,7 +25,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const prefersReducedMotion = useReducedMotion();
   const [showSizes, setShowSizes] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
-  const pressTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pressTimeout = useRef<number | null>(null);
   const { t } = useShopLocale();
   const officialCopy = t("product.genuine");
   const fallbackBadge = t("product.badgeFallback");

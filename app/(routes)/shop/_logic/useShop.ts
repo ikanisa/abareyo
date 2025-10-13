@@ -185,27 +185,29 @@ export const useCatalog = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const searchParamsString = searchParams?.toString() ?? "";
 
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
-  const filters = useMemo(() => parseFilters(new URLSearchParams(searchParams.toString())), [searchParams]);
-  const activeTabId = searchParams.get("tab") ?? (filters.category ?? "featured");
-  const sort = (searchParams.get("sort") as SortOption | null) ?? "recommended";
-  const query = (searchParams.get("q") ?? "").toLowerCase();
+  const filters = useMemo(() => parseFilters(new URLSearchParams(searchParamsString)), [searchParamsString]);
+  const activeTabId = searchParams?.get("tab") ?? (filters.category ?? "featured");
+  const sort = (searchParams?.get("sort") as SortOption | null) ?? "recommended";
+  const query = (searchParams?.get("q") ?? "").toLowerCase();
 
-  const [searchInput, setSearchInput] = useState(() => searchParams.get("q") ?? "");
+  const [searchInput, setSearchInput] = useState(() => new URLSearchParams(searchParamsString).get("q") ?? "");
   useEffect(() => {
-    setSearchInput(searchParams.get("q") ?? "");
-  }, [searchParams]);
+    const nextQuery = new URLSearchParams(searchParamsString).get("q") ?? "";
+    setSearchInput(nextQuery);
+  }, [searchParamsString]);
 
   const updateParams = useCallback(
     (updater: (params: URLSearchParams) => void) => {
-      const next = new URLSearchParams(searchParams.toString());
+      const next = new URLSearchParams(searchParamsString);
       updater(next);
       router.replace(`${pathname}${buildQueryString(next)}`, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParamsString],
   );
 
   useEffect(() => {

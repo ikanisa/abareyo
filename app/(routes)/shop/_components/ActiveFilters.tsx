@@ -53,8 +53,10 @@ export const formatActiveFilterCopy = (filter: ActiveFilter, t: Translator): Bil
       return t("chip.stock");
     case "search":
       return t("chip.search", { query: filter.value });
-    default:
-      return { primary: filter.label, secondary: filter.label };
+    default: {
+      const fallback = filter as ActiveFilter & { label: string };
+      return { primary: fallback.label, secondary: fallback.label };
+    }
   }
 };
 
