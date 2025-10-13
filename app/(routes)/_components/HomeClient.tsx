@@ -23,6 +23,12 @@ import QuickTiles from "@/app/_components/ui/QuickTiles";
 import EmptyState from "@/app/_components/ui/EmptyState";
 
 import HomeInteractiveLayer from "./HomeInteractiveLayer";
+import {
+  activePolicy,
+  insuranceQuoteTemplate,
+  partnerServicesPromo,
+  type PartnerServicesPromo,
+} from "@/app/_config/services";
 
 const heroButtonClasses = (variant: (typeof heroActions)[number]["variant"]) =>
   variant === "primary" ? "btn-primary" : "btn";
@@ -197,6 +203,57 @@ const WalletSummary = () => {
         )}
       </div>
     </div>
+  );
+};
+
+const resolvePartnerBanner = (): PartnerServicesPromo | null => {
+  const ticketPerk = insuranceQuoteTemplate.ticketPerk;
+  const hasUnlockedTicket =
+    Boolean(ticketPerk?.eligible) && Boolean(activePolicy) && !activePolicy.ticketPerkIssued;
+
+  if (hasUnlockedTicket) {
+    return {
+      id: "ticket-perk-unlocked",
+      badge: "Perk unlocked",
+      message: "Free Blue Zone ticket ready to claim",
+      description: "Your Akili Insurance policy unlocked a match ticket. Tap to confirm your seat.",
+      href: "/services?focus=insurance#policy-card",
+      cta: "Claim ticket",
+    } satisfies PartnerServicesPromo;
+  }
+
+  if (partnerServicesPromo) {
+    return partnerServicesPromo;
+  }
+
+  return null;
+};
+
+const PartnerServicesBanner = () => {
+  const banner = resolvePartnerBanner();
+
+  if (!banner) {
+    return null;
+  }
+
+  return (
+    <Link
+      href={banner.href}
+      className="card relative flex flex-col gap-3 overflow-hidden bg-white/10"
+      aria-label={banner.message}
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-transparent to-emerald-500/10" aria-hidden="true" />
+      <div className="relative flex flex-col gap-3">
+        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs uppercase tracking-wide text-white/80">
+          {banner.badge}
+        </span>
+        <div className="space-y-2">
+          <p className="text-lg font-semibold text-white">{banner.message}</p>
+          <p className="text-sm text-white/70">{banner.description}</p>
+        </div>
+        <span className="text-sm font-semibold text-white/90">{banner.cta} →</span>
+      </div>
+    </Link>
   );
 };
 
@@ -479,7 +536,10 @@ const HomeClient = () => (
     <Hero />
 
     <Section title="Quick Actions">
-      <QuickTiles />
+      <div className="space-y-3">
+        <QuickTiles />
+        <PartnerServicesBanner />
+      </div>
     </Section>
 
     <Section title="Stories">

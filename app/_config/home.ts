@@ -21,7 +21,14 @@ export type GamificationTile = {
 };
 
 export type QuickActionTile = {
-  id: "tickets" | "membership" | "shop" | "donate";
+  id:
+    | "tickets"
+    | "membership"
+    | "shop"
+    | "donate"
+    | "services-insurance"
+    | "services-sacco"
+    | "services-bank";
   emoji: string;
   label: string;
   href: string;
@@ -214,6 +221,27 @@ export const quickActionTiles: QuickActionTile[] = [
     label: "Donate",
     href: "/fundraising",
     ariaLabel: "Support fundraising campaigns",
+  },
+  {
+    id: "services-insurance",
+    emoji: "🛡️",
+    label: "Insurance",
+    href: "/services?focus=insurance",
+    ariaLabel: "Open partner motor insurance hub",
+  },
+  {
+    id: "services-sacco",
+    emoji: "🤝",
+    label: "SACCO Deposit",
+    href: "/services?focus=sacco",
+    ariaLabel: "Open SACCO deposit flow",
+  },
+  {
+    id: "services-bank",
+    emoji: "🏦",
+    label: "Bank Offers",
+    href: "/services?focus=bank",
+    ariaLabel: "Browse partner bank offers",
   },
 ];
 
