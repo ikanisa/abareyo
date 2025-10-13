@@ -12,6 +12,10 @@ type ActiveFiltersProps = {
 
 type Translator = ReturnType<typeof useShopLocale>["t"];
 
+const assertNever = (value: never): never => {
+  throw new Error(`Unhandled filter kind: ${String(value)}`);
+};
+
 export const formatActiveFilterCopy = (filter: ActiveFilter, t: Translator): BilingualString => {
   switch (filter.kind) {
     case "category": {
@@ -54,7 +58,7 @@ export const formatActiveFilterCopy = (filter: ActiveFilter, t: Translator): Bil
     case "search":
       return t("chip.search", { query: filter.value });
     default:
-      return { primary: filter.label, secondary: filter.label };
+      return assertNever(filter);
   }
 };
 

@@ -184,12 +184,16 @@ const buildQueryString = (params: URLSearchParams) => {
 export const useCatalog = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const rawSearchParams = useSearchParams();
+  const searchParams = rawSearchParams ?? new URLSearchParams();
 
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
-  const filters = useMemo(() => parseFilters(new URLSearchParams(searchParams.toString())), [searchParams]);
+  const filters = useMemo(
+    () => parseFilters(new URLSearchParams(searchParams.toString())),
+    [searchParams],
+  );
   const activeTabId = searchParams.get("tab") ?? (filters.category ?? "featured");
   const sort = (searchParams.get("sort") as SortOption | null) ?? "recommended";
   const query = (searchParams.get("q") ?? "").toLowerCase();
