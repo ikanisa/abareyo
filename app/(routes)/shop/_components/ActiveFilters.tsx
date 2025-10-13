@@ -54,6 +54,8 @@ export const formatActiveFilterCopy = (filter: ActiveFilter, t: Translator): Bil
     case "search":
       return t("chip.search", { query: filter.value });
     default: {
+      const exhaustiveCheck: never = filter;
+      throw new Error(`Unhandled filter kind: ${JSON.stringify(exhaustiveCheck)}`);
       const fallback = filter as ActiveFilter & { label: string };
       return { primary: fallback.label, secondary: fallback.label };
     }

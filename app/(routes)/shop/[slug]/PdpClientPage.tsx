@@ -8,6 +8,7 @@ import PDPGallery from "../_components/PDPGallery";
 import UssdPayButton from "../_components/UssdPayButton";
 import VariantSelector from "../_components/VariantSelector";
 import ProductRail from "../_components/ProductRail";
+import type { SizeGuideModalProps } from "../_components/SizeGuideModal";
 import type { Product } from "../_data/products";
 import { formatPrice, getCrossSell, recordRecentlyViewed, useCart, useRecentlyViewed } from "../_logic/useShop";
 import { ShopLocaleProvider, useShopLocale, type ShopLocale } from "../_hooks/useShopLocale";
