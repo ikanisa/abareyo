@@ -42,13 +42,15 @@ const ProductRail = ({ title, caption, href, items }: ProductRailProps) => {
           </Link>
         )}
       </div>
-      <motion.div className="h-scroll flex gap-3 pb-2" layoutScroll={!prefersReducedMotion}>
-        {items.map((product) => (
-          <div key={product.id} className="min-w-[220px] max-w-[220px] flex-shrink-0">
-            <ProductCard product={product} />
-          </div>
-        ))}
-      </motion.div>
+      <div className="card p-4">
+        <motion.div className="h-scroll flex gap-3 pb-2" layoutScroll={!prefersReducedMotion}>
+          {items.map((product) => (
+            <div key={product.id} className="min-w-[220px] max-w-[220px] flex-shrink-0">
+              <ProductCard product={product} />
+            </div>
+          ))}
+        </motion.div>
+      </div>
     </section>
   );
 };
