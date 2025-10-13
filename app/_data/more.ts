@@ -111,6 +111,14 @@ export const upcomingEvent: Event = {
 
 export const quickTiles: QuickTile[] = [
   {
+    id: "rewards",
+    label: "Rewards",
+    href: "/more/rewards",
+    icon: "events",
+    accent: "purple",
+    ariaLabel: "View supporter rewards",
+  },
+  {
     id: "wallet",
     label: "Wallet",
     href: "/wallet",
