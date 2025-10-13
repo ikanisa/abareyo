@@ -1,13 +1,19 @@
 import { NextRequest } from 'next/server';
 import { getSupabase } from '../_lib/supabase';
 import { errorResponse, successResponse } from '../_lib/responses';
+import { requireAuthUser } from '../_lib/auth';
 import type { TablesInsert } from '@/integrations/supabase/types';
 
 export async function GET(req: NextRequest) {
   const supabase = getSupabase();
-  const userId = req.nextUrl.searchParams.get('userId');
-  if (!userId) {
-    return errorResponse('userId is required');
+  const auth = await requireAuthUser(req, supabase);
+  if ('response' in auth) {
+    return auth.response;
+  }
+  const userId = auth.user.id;
+  const requestedUserId = req.nextUrl.searchParams.get('userId');
+  if (requestedUserId && requestedUserId !== userId) {
+    return errorResponse('Forbidden', 403);
   }
   const { data, error } = await supabase
     .from('wallet')
@@ -22,16 +28,23 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const supabase = getSupabase();
+  const auth = await requireAuthUser(req, supabase);
+  if ('response' in auth) {
+    return auth.response;
+  }
   const payload = (await req.json().catch(() => null)) as {
     userId?: string;
     amount?: number;
     ref?: string;
   } | null;
-  if (!payload?.userId || !payload.amount || payload.amount <= 0) {
-    return errorResponse('userId and positive amount are required');
+  if (!payload?.amount || payload.amount <= 0) {
+    return errorResponse('Positive amount is required');
   }
 
-  const userId = payload.userId;
+  const userId = auth.user.id;
+  if (payload.userId && payload.userId !== userId) {
+    return errorResponse('Forbidden', 403);
+  }
   const amount = payload.amount;
   const ref = payload.ref ?? null;
 
