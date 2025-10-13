@@ -42,7 +42,7 @@ const extractAccessToken = (req: NextRequest) => {
 
 export const requireAuthUser = async (
   req: NextRequest,
-  client?: ServiceClient,
+  client?: ServiceClient | null,
 ): Promise<RequireAuthSuccess | RequireAuthFailure> => {
   const accessToken = extractAccessToken(req);
   if (!accessToken) {
@@ -50,6 +50,10 @@ export const requireAuthUser = async (
   }
 
   const supabase = client ?? getSupabase();
+  if (!supabase) {
+    return { response: errorResponse('Authentication service unavailable', 500) };
+  }
+
   const { data, error } = await supabase.auth.getUser(accessToken);
   if (error || !data?.user) {
     return { response: errorResponse('Authentication required', 401) };
