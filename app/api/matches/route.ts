@@ -1,29 +1,53 @@
 import { NextResponse } from "next/server";
 
 // Match centre data is sourced from local fixtures defined in `/app/_data/matches`.
-// This API returns a snapshot of the current match centre including match summaries,
-// highlight clips, standings table and the last updated timestamp.  It mirrors
-// the behaviour introduced in PR #4 while co‑existing with the legacy tickets
-// API which now lives under `/api/matches/tickets`.
+// We optionally override `matches` with rows from Supabase if configured.
 import {
   highlightClips,
   leagueTable,
-  matches,
+  matches as fixtureMatches,
   matchFeedUpdatedAt,
 } from "@/app/_data/matches";
 
 export const runtime = "edge";
 
+async function fetchMatchesFromSupabase() {
+  const url = process.env.SUPABASE_URL;
+  const key =
+    process.env.SUPABASE_ANON_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) return null;
+
+  // Importing here keeps edge bundle smaller when not used.
+  const { createClient } = await import("@supabase/supabase-js");
+  const supabase = createClient(url, key, { auth: { persistSession: false } });
+
+  const { data, error } = await supabase
+    .from("matches")
+    .select("*")
+    .order("date");
+
+  if (error) {
+    // Swallow error and allow fallback to fixtures
+    console.error("Supabase matches fetch failed:", error.message);
+    return null;
+  }
+  return data ?? null;
+}
+
 /**
  * Returns the current match centre feed as JSON.
  *
  * The response includes:
- *  - `matches`: a list of Match objects summarising upcoming and live fixtures.
- *  - `highlights`: an array of highlight clips.
- *  - `standings`: the current league table.
- *  - `updatedAt`: an ISO date string indicating when the feed was last updated.
+ *  - `matches`: list of Match objects (DB if available, else fixtures)
+ *  - `highlights`: highlight clips (fixtures)
+ *  - `standings`: current league table (fixtures)
+ *  - `updatedAt`: ISO timestamp for last update (fixtures timestamp)
  */
 export async function GET() {
+  const dbMatches = await fetchMatchesFromSupabase();
+  const matches = dbMatches ?? fixtureMatches;
+
   return NextResponse.json({
     matches,
     highlights: highlightClips,
