@@ -197,8 +197,8 @@ const MatchesClient = ({ matches, highlights, standings }: MatchesClientProps) =
         const payload = (await response.json()) as MatchCentreFeed;
         if (!cancelled) {
           applyFeedUpdate(payload);
+          setIsOffline(false);
         }
-        setIsOffline(false);
       } catch (error) {
         if (!cancelled) {
           setIsOffline(true);
