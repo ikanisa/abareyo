@@ -1,3 +1,5 @@
+"use client";
+
 import type { Order, OrderStatus } from "@/app/_data/shop_v2";
 import { formatCurrency } from "@/app/_data/shop_v2";
 
