@@ -91,6 +91,11 @@ export async function POST(req: Request) {
       .select("id")
       .single();
     if (passError || !pass) {
+      // Clean up the orphaned order so future retries can succeed
+      const { error: cleanupError } = await db.from("ticket_orders").delete().eq("id", order.id);
+      if (cleanupError) {
+        console.error("cleanup_ticket_order_failed", cleanupError);
+      }
       return NextResponse.json({ error: "ticket_pass_failed" }, { status: 500 });
     }
 
