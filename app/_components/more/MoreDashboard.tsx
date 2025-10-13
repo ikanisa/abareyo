@@ -63,9 +63,7 @@ export function MoreDashboard({
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const displayProfile = useMemo(() => {
-    if (!user) {
-      return profile;
-    }
+    if (!user) return profile;
     return {
       ...profile,
       id: user.id,
@@ -95,9 +93,7 @@ export function MoreDashboard({
 
   const handleToggleSetting = (id: string, value: boolean) => {
     const copy = toggleMessages[id];
-    if (copy) {
-      toast({ title: value ? copy.on : copy.off });
-    }
+    if (copy) toast({ title: value ? copy.on : copy.off });
   };
 
   const handleLogout = async () => {
@@ -198,7 +194,11 @@ export function MoreDashboard({
             <h2 className="text-lg font-semibold">Control center</h2>
             <p className="text-sm text-white/70">Personalize language, appearance, and support options.</p>
           </div>
-          <SettingsList groups={settings} onToggle={handleToggleSetting} onAction={(id) => id === "logout" && handleLogout()} />
+          <SettingsList
+            groups={settings}
+            onToggle={handleToggleSetting}
+            onAction={(id) => id === "logout" && handleLogout()}
+          />
         </section>
 
         <AnimatePresence>
