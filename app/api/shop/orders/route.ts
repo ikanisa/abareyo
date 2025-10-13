@@ -3,9 +3,12 @@ import { getSupabase } from '../../_lib/supabase';
 import { errorResponse, successResponse } from '../../_lib/responses';
 
 export async function GET(req: NextRequest) {
-  const supabase = getSupabase();
   const id = req.nextUrl.searchParams.get('id');
   const userId = req.nextUrl.searchParams.get('userId');
+  const supabase = getSupabase();
+  if (!supabase) {
+    return successResponse(id ? null : []);
+  }
 
   let query = supabase.from('orders').select('*, order_items(*)').order('created_at', { ascending: false });
   if (id) {
@@ -27,6 +30,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const supabase = getSupabase();
+  if (!supabase) {
+    return errorResponse('supabase_config_missing', 500);
+  }
   const payload = (await req.json().catch(() => null)) as {
     userId?: string;
     items?: { productId: string; qty: number }[];

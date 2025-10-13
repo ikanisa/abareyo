@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import TicketHero from "@/app/_components/tickets/TicketHero";
@@ -22,11 +22,13 @@ const MyTicketsPage = () => {
         return { order, fixture: fixture ?? defaultFixtures[0], zone };
       }),
   );
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
     const loadOrders = async () => {
       try {
+        setError(null);
         const response = await fetch(`/api/tickets/orders?userId=${DEFAULT_USER_ID}`);
         if (!response.ok) {
           throw new Error(await response.text());
@@ -110,8 +112,14 @@ const MyTicketsPage = () => {
           return { order: orderSummary, fixture, zone };
         });
         setWalletTickets(mapped);
+        setError(null);
       } catch (error) {
         console.warn('Failed to load ticket orders', error);
+        if (error instanceof Error) {
+          setError(error.message);
+        } else {
+          setError("Failed to load ticket orders");
+        }
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -143,7 +151,7 @@ const MyTicketsPage = () => {
     }
   };
 
-  const orderedTickets = useMemo(() => tickets, [tickets]);
+  const orderedTickets = useMemo(() => walletTickets, [walletTickets]);
 
   return (
     <main className="min-h-screen bg-rs-gradient pb-24">
@@ -178,7 +186,13 @@ const MyTicketsPage = () => {
           ) : (
             <div className="space-y-4" role="list">
               {orderedTickets.map((ticket, index) => (
-                <TicketWalletCard key={ticket.id} ticket={ticket} animationDelay={index * 0.08} />
+                <TicketWalletCard
+                  key={ticket.order.id}
+                  fixture={ticket.fixture}
+                  order={ticket.order}
+                  zone={ticket.zone}
+                  animationDelay={index * 0.08}
+                />
               ))}
             </div>
           )}

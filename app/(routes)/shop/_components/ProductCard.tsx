@@ -7,7 +7,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle, ShoppingBag } from "lucide-react";
 
 import { formatPrice, minPrice, useCart } from "../_logic/useShop";
-import type { Product } from "../_data/products";
 import { useShopLocale, type CopyKey } from "../_hooks/useShopLocale";
 import type { Color, Product, Size } from "../_data/products";
 
