@@ -25,9 +25,10 @@ type MatchesClientProps = {
   matches: Match[];
   highlights: HighlightClip[];
   standings: StandingsRow[];
+  updatedAt?: string;
 };
 
-const MatchesClient = ({ matches, highlights, standings }: MatchesClientProps) => {
+const MatchesClient = ({ matches, highlights, standings, updatedAt }: MatchesClientProps) => {
   const reduceMotion = useReducedMotion();
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -35,8 +36,9 @@ const MatchesClient = ({ matches, highlights, standings }: MatchesClientProps) =
     matches,
     highlights,
     standings,
+    updatedAt,
   });
-  const [lastUpdated, setLastUpdated] = useState<string | undefined>(undefined);
+  const [lastUpdated, setLastUpdated] = useState<string | undefined>(updatedAt);
   const [isOffline, setIsOffline] = useState<boolean>(() =>
     typeof navigator !== "undefined" ? !navigator.onLine : false,
   );
@@ -137,23 +139,27 @@ const MatchesClient = ({ matches, highlights, standings }: MatchesClientProps) =
 
   useEffect(() => {
     if (!feed.matches.length) {
-      setFeed({ matches, highlights, standings });
+      setFeed({ matches, highlights, standings, updatedAt });
+      setLastUpdated(updatedAt);
     }
-  }, [feed.matches.length, highlights, matches, standings]);
+  }, [feed.matches.length, highlights, matches, standings, updatedAt]);
 
   const applyFeedUpdate = useCallback((payload: MatchCentreFeed) => {
-    setFeed({
+    const nextFeed: MatchCentreFeed = {
       matches: payload.matches ?? matches,
       highlights: payload.highlights ?? highlights,
       standings: payload.standings ?? standings,
-      updatedAt: payload.updatedAt,
-    });
-    setLastUpdated(payload.updatedAt);
+      updatedAt: payload.updatedAt ?? updatedAt,
+    };
+    setFeed(nextFeed);
+    if (payload.updatedAt) {
+      setLastUpdated(payload.updatedAt);
+    }
 
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("rs-match-centre-feed", JSON.stringify(payload));
+      window.localStorage.setItem("rs-match-centre-feed", JSON.stringify(nextFeed));
     }
-  }, [highlights, matches, standings]);
+  }, [highlights, matches, standings, updatedAt]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
