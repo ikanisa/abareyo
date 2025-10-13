@@ -190,6 +190,20 @@ export const useCatalog = () => {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
+  const searchParamsString = searchParams?.toString() ?? "";
+  const currentParams = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
+  const filters = useMemo(
+    () => parseFilters(new URLSearchParams(searchParamsString)),
+    [searchParamsString],
+  );
+  const activeTabId = currentParams.get("tab") ?? (filters.category ?? "featured");
+  const sort = (currentParams.get("sort") as SortOption | null) ?? "recommended";
+  const query = (currentParams.get("q") ?? "").toLowerCase();
+
+  const [searchInput, setSearchInput] = useState(() => currentParams.get("q") ?? "");
+  useEffect(() => {
+    setSearchInput(currentParams.get("q") ?? "");
+  }, [currentParams]);
   const filters = useMemo(() => parseFilters(new URLSearchParams(searchParamsString)), [searchParamsString]);
   const activeTabId = searchParams?.get("tab") ?? (filters.category ?? "featured");
   const sort = (searchParams?.get("sort") as SortOption | null) ?? "recommended";

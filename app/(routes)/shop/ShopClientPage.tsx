@@ -19,6 +19,8 @@ import ProductGrid from "./_components/ProductGrid";
 import ProductRail from "./_components/ProductRail";
 import TrustBanner from "./_components/TrustBanner";
 import ShopOnboarding from "./_components/ShopOnboarding";
+import type { FilterSheetProps } from "./_components/FilterSheet";
+import type { SortSheetProps } from "./_components/SortSheet";
 import { SHOP_TABS, useCart, useCatalog } from "./_logic/useShop";
 import { ShopLocaleProvider, useShopLocale, type ShopLocale } from "./_hooks/useShopLocale";
 import type { FilterSheetProps } from "./_components/FilterSheet";

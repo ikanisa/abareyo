@@ -9,6 +9,7 @@ import { CheckCircle, ShoppingBag } from "lucide-react";
 import { formatPrice, minPrice, useCart } from "../_logic/useShop";
 import type { Product } from "../_data/products";
 import { useShopLocale, type CopyKey } from "../_hooks/useShopLocale";
+import type { Color, Product, Size } from "../_data/products";
 
 const swatchColor: Record<string, string> = {
   blue: "#0033FF",
@@ -40,8 +41,20 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const saleBadgeCopy = discountPercent
     ? t("product.savePercent", { percent: discountPercent })
     : t("product.saleBadge");
-  const colors = useMemo(() => Array.from(new Set(product.variants.map((variant) => variant.color))), [product.variants]);
-  const sizes = useMemo(() => Array.from(new Set(product.variants.map((variant) => variant.size))), [product.variants]);
+  const colors = useMemo<Color[]>(() => {
+    const unique = new Set<Color>();
+    product.variants.forEach((variant) => {
+      if (variant.color) unique.add(variant.color);
+    });
+    return Array.from(unique);
+  }, [product.variants]);
+  const sizes = useMemo<Size[]>(() => {
+    const unique = new Set<Size>();
+    product.variants.forEach((variant) => {
+      if (variant.size) unique.add(variant.size);
+    });
+    return Array.from(unique);
+  }, [product.variants]);
   const hasMultipleVariants = sizes.length > 1 || colors.length > 1;
   const hasMultipleImages = product.images.length > 1;
   const displayImage = product.images[imageIndex] ?? product.images[0];

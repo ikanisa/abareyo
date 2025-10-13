@@ -1,0 +1,13 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Bank Plus logo</title>
+  <desc id="desc">Abstract stripes evoking financial growth</desc>
+  <defs>
+    <linearGradient id="grad-bank" x1="16" y1="16" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0033FF" />
+      <stop offset="1" stop-color="#00A1DE" />
+    </linearGradient>
+  </defs>
+  <rect x="16" y="20" width="64" height="56" rx="14" fill="url(#grad-bank)" stroke="white" stroke-width="4"/>
+  <path d="M32 60 44 36l12 20 8-12" stroke="#FAD201" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M28 32h40" stroke="white" stroke-width="4" stroke-linecap="round"/>
+</svg>
