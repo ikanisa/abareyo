@@ -1,7 +1,16 @@
 :root{
-  --rs-blue:#0033FF; --rs-azure:#00A1DE; --rs-yellow:#FAD201; --rs-green:#20603D; --rs-gold:#E5BE01;
-  --glass-bg:rgba(255,255,255,.14); --glass-stroke:rgba(255,255,255,.22); --shadow:0 8px 24px rgba(0,0,0,.25);
-  --radius-2xl:24px; --radius-xl:16px;
+  --rs-blue:#0033FF;
+  --rs-azure:#00A1DE;
+  --rs-yellow:#FAD201;
+  --rs-green:#20603D;
+  --rs-gold:#E5BE01;
+
+  --glass-bg:rgba(255,255,255,.14);
+  --glass-stroke:rgba(255,255,255,.22);
+  --shadow-lg:0 8px 24px rgba(0,0,0,.25);
+
+  --radius-xl:16px;
+  --radius-2xl:24px;
 }
 .bg-rs-gradient{
   background:linear-gradient(135deg,var(--rs-blue),var(--rs-azure),var(--rs-yellow),var(--rs-green));
@@ -12,12 +21,24 @@
   -webkit-backdrop-filter:blur(24px);
   border:1px solid var(--glass-stroke);
   border-radius:var(--radius-2xl);
-  box-shadow:var(--shadow);
+  box-shadow:var(--shadow-lg);
 }
 .card{ @apply glass p-4 md:p-6; }
-.tile{ @apply glass py-3 px-3 text-white/90 rounded-2xl text-sm font-medium transition hover:bg-white/20 inline-flex items-center justify-center text-center min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80; }
-.btn{ @apply px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white transition inline-flex items-center justify-center min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 disabled:opacity-60 disabled:pointer-events-none; }
-.btn-primary{ @apply px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white inline-flex items-center justify-center min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 disabled:opacity-60 disabled:pointer-events-none; }
+.tile{
+  @apply glass px-4 py-3 text-white/90 text-sm font-medium transition hover:bg-white/20 inline-flex items-center justify-center gap-2 text-center rounded-2xl;
+  min-height:44px;
+  @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80;
+}
+.btn{
+  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-white/15 px-4 py-2 text-white transition hover:bg-white/25;
+  min-height:44px;
+  @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 disabled:opacity-60 disabled:pointer-events-none;
+}
+.btn-primary{
+  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-blue-500 px-4 py-2 text-white transition hover:bg-blue-600;
+  min-height:44px;
+  @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 disabled:opacity-60 disabled:pointer-events-none;
+}
 .muted{ @apply text-white/70; }
 .section-title{ @apply text-lg md:text-xl font-semibold text-white; }
 .h-scroll{ @apply overflow-x-auto whitespace-nowrap scroll-smooth; }
