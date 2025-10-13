@@ -24,7 +24,8 @@
     "test:e2e:a11y": "playwright test tests/e2e/a11y",
     "test:e2e:mobile": "playwright test --project=mobile-small --project=mobile-medium",
     "test:e2e:headed": "playwright test --headed",
-    "setup:hooks": "git config core.hooksPath .githooks"
+    "setup:hooks": "git config core.hooksPath .githooks",
+    "seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
     "@capacitor/app": "^5.0.8",
@@ -72,6 +73,7 @@
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^11.2.6",
+    "hls.js": "^1.6.13",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
     "next": "^14.2.33",
@@ -114,6 +116,7 @@
     "postcss": "^8.5.6",
     "supertest": "^7.1.4",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.20.6",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",
     "vite-tsconfig-paths": "^5.1.4",

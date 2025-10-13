@@ -2,8 +2,8 @@
 
 import { ReactNode, useEffect, useState } from "react";
 
+import PageShell from "@/app/_components/shell/PageShell";
 import OnboardingModal from "@/app/_components/onboarding/OnboardingModal";
-import BottomNav from "@/app/_components/ui/BottomNav";
 import TopAppBar from "@/app/_components/ui/TopAppBar";
 
 const onboardingSearchParam = "onboarding";
@@ -26,7 +26,7 @@ const OfflineBanner = ({ offline }: { offline: boolean }) => {
     <div
       role="status"
       aria-live="assertive"
-      className="sticky top-0 z-20 flex items-center justify-center bg-amber-500/90 px-4 py-2 text-sm font-semibold text-black"
+      className="glass sticky top-0 z-30 mx-auto flex max-w-md items-center justify-center px-4 py-2 text-sm font-semibold text-black md:max-w-5xl"
     >
       You are offline. We&apos;ll refresh your feed automatically once you reconnect.
     </div>
@@ -69,18 +69,32 @@ const HomeInteractiveLayer = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
+  const rightActions = (
+    <>
+      <button className="btn" aria-label="Notifications">
+        🔔
+      </button>
+      <button className="btn" aria-label="Search">
+        🔍
+      </button>
+      <button className="btn" aria-label="Switch language">
+        RW/EN
+      </button>
+      <button className="btn" aria-label="Open onboarding" onClick={() => setOnboardingOpen(true)}>
+        💬
+      </button>
+    </>
+  );
+
   return (
-    <div className="min-h-screen bg-rs-gradient text-white">
-      <TopAppBar onOpenOnboarding={() => setOnboardingOpen(true)} />
-
-      <OfflineBanner offline={isOffline} />
-
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 pb-24 pt-8">{children}</main>
-
-      <BottomNav />
-
+    <>
+      <PageShell mainClassName="space-y-6 pb-24 pt-4">
+        <TopAppBar right={rightActions} />
+        <OfflineBanner offline={isOffline} />
+        {children}
+      </PageShell>
       <OnboardingModal open={onboardingOpen} onClose={() => setOnboardingOpen(false)} />
-    </div>
+    </>
   );
 };
 
