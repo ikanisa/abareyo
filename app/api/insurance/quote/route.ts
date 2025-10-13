@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
-import { getSupabase } from "../../_lib/supabase";
-import { errorResponse, successResponse } from "../../_lib/responses";
+import { getSupabase } from '@/app/_lib/supabase';
+import { errorResponse, successResponse } from '@/app/_lib/responses';
 
 /** Payloads we accept (both camelCase & snake_case supported) */
 type QuoteUser = {

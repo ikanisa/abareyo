@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 
-import { errorResponse, successResponse } from '../../_lib/responses';
-import { getSupabase } from '../../_lib/supabase';
+import { errorResponse, successResponse } from '@/app/_lib/responses';
+import { getSupabase } from '@/app/_lib/supabase';
 
 export async function GET(req: NextRequest) {
   const supabase = getSupabase();
@@ -27,18 +27,26 @@ export async function GET(req: NextRequest) {
     return errorResponse(error.message, 500);
   }
 
-  const formatted = (data ?? []).map((ticket) => ({
-    passId: ticket.id,
-    matchId: ticket.match_id,
-    matchOpponent: ticket.matches ? `${ticket.matches.home_team ?? 'Rayon'} vs ${ticket.matches.away_team ?? ''}`.trim() : null,
-    kickoff: ticket.matches?.date ?? null,
-    venue: ticket.matches?.venue ?? null,
-    zone: ticket.zone,
-    gate: ticket.gate,
-    updatedAt: ticket.updated_at,
-    qrToken: ticket.qr_token,
-    state: ticket.state,
-  }));
+  const formatted = (data ?? []).map((ticket) => {
+    const match = Array.isArray(ticket.matches)
+      ? ticket.matches[0]
+      : ticket.matches;
+
+    return {
+      passId: ticket.id,
+      matchId: ticket.match_id,
+      matchOpponent: match
+        ? `${match.home_team ?? 'Rayon'} vs ${match.away_team ?? ''}`.trim()
+        : null,
+      kickoff: match?.date ?? null,
+      venue: match?.venue ?? null,
+      zone: ticket.zone,
+      gate: ticket.gate,
+      updatedAt: ticket.updated_at,
+      qrToken: ticket.qr_token,
+      state: ticket.state,
+    };
+  });
 
   return successResponse(formatted);
 }
