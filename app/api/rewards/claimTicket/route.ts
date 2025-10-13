@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { randomUUID } from "crypto";
 
 export async function POST(req: Request) {
   const supabaseUrl = process.env.SUPABASE_URL;
@@ -85,12 +86,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "ticket_order_failed" }, { status: 500 });
     }
 
+    const rawToken = randomUUID();
+
     const { data: pass, error: passError } = await db
       .from("ticket_passes")
       .insert({
         order_id: order.id,
         zone: "Blue",
         gate: "G3",
+        qr_token_hash: rawToken,
       })
       .select("id")
       .single();
