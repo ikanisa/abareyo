@@ -41,36 +41,52 @@ serve(async (_req) => {
       const { data: m } = await db
         .from("matches")
         .select("*")
-        .gte("date", new Date().toISOString())
-        .order("date", { ascending: true })
+        .gte("kickoff", new Date().toISOString())
+        .order("kickoff", { ascending: true })
         .limit(1);
       const match = m?.[0];
       if (match) {
         const { data: existingPerk } = await db
-          .from("tickets")
+          .from("ticket_orders")
           .select("id")
           .eq("user_id", q.user_id)
-          .eq("momo_ref", "FREE-TICKET-PERK")
+          .eq("sms_ref", "FREE-TICKET-PERK")
           .limit(1);
         const alreadyHasPerk = Boolean(existingPerk && existingPerk.length);
         if (!alreadyHasPerk) {
-          await db.from("tickets").insert({
-            user_id: q.user_id,
-            match_id: match.id,
-            zone: "Blue",
-            price: 0,
-            paid: true,
-            momo_ref: "FREE-TICKET-PERK",
-          });
-          tickets++;
-          // optional: log event
-          await db.from("rewards_events").insert({
-            user_id: q.user_id,
-            source: "policy_perk",
-            ref_id: pol.id,
-            points: 0,
-            meta: { perk: "free_blue_ticket", match_id: match.id },
-          });
+          const { data: order, error: orderError } = await db
+            .from("ticket_orders")
+            .insert({
+              user_id: q.user_id,
+              match_id: match.id,
+              total: 0,
+              status: "paid",
+              sms_ref: "FREE-TICKET-PERK",
+            })
+            .select("id")
+            .single();
+          if (order && !orderError) {
+            const { data: pass, error: passError } = await db
+              .from("ticket_passes")
+              .insert({
+                order_id: order.id,
+                zone: "Blue",
+                gate: "G3",
+              })
+              .select("id")
+              .single();
+            if (pass && !passError) {
+              tickets++;
+              // optional: log event
+              await db.from("rewards_events").insert({
+                user_id: q.user_id,
+                source: "policy_perk",
+                ref_id: pol.id,
+                points: 0,
+                meta: { perk: "free_blue_ticket", match_id: match.id, order_id: order.id, pass_id: pass.id },
+              });
+            }
+          }
         }
       }
     }
