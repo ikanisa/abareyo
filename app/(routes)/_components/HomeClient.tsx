@@ -18,6 +18,7 @@ import {
 } from "@/app/_config/home";
 
 import Feed from "@/app/_components/home/Feed";
+import RewardsWidget from "@/app/_components/home/RewardsWidget";
 import GamificationStrip from "@/app/_components/ui/GamificationStrip";
 import QuickTiles from "@/app/_components/ui/QuickTiles";
 import EmptyState from "@/app/_components/ui/EmptyState";
@@ -538,6 +539,7 @@ const HomeClient = () => (
     <Section title="Quick Actions">
       <div className="space-y-3">
         <QuickTiles />
+        <RewardsWidget />
         <PartnerServicesBanner />
       </div>
     </Section>
