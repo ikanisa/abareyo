@@ -85,6 +85,12 @@ serve(async (_req) => {
                 points: 0,
                 meta: { perk: "free_blue_ticket", match_id: match.id, order_id: order.id, pass_id: pass.id },
               });
+            } else {
+              // Clean up the orphaned order so the next run can retry safely
+              const { error: cleanupError } = await db.from("ticket_orders").delete().eq("id", order.id);
+              if (cleanupError) {
+                console.error("cleanup_ticket_order_failed", cleanupError);
+              }
             }
           }
         }
