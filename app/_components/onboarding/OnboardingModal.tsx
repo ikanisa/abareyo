@@ -143,3 +143,6 @@ export function OnboardingModal({ open, onClose }: { open: boolean; onClose: () 
     </Dialog>
   );
 }
+
+
+export default OnboardingModal;
