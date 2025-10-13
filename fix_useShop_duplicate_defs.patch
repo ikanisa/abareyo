@@ -1,0 +1,57 @@
+*** Begin Patch
+*** Update File: app/(routes)/shop/_logic/useShop.ts
+@@
+ export const useCatalog = () => {
+@@
+-  const searchParamsString = searchParams?.toString() ?? "";
+-
+-  const [hydrated, setHydrated] = useState(false);
+-  useEffect(() => setHydrated(true), []);
+-
+-  const searchParamsString = searchParams?.toString() ?? "";
+-  const currentParams = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
+-  const filters = useMemo(
+-    () => parseFilters(new URLSearchParams(searchParamsString)),
+-    [searchParamsString],
+-  );
+-  const activeTabId = currentParams.get("tab") ?? (filters.category ?? "featured");
+-  const sort = (currentParams.get("sort") as SortOption | null) ?? "recommended";
+-  const query = (currentParams.get("q") ?? "").toLowerCase();
+-
+-  const [searchInput, setSearchInput] = useState(() => currentParams.get("q") ?? "");
+-  useEffect(() => {
+-    setSearchInput(currentParams.get("q") ?? "");
+-  }, [currentParams]);
+-  const filters = useMemo(() => parseFilters(new URLSearchParams(searchParamsString)), [searchParamsString]);
+-  const activeTabId = searchParams?.get("tab") ?? (filters.category ?? "featured");
+-  const sort = (searchParams?.get("sort") as SortOption | null) ?? "recommended";
+-  const query = (searchParams?.get("q") ?? "").toLowerCase();
+-
+-  const [searchInput, setSearchInput] = useState(() => new URLSearchParams(searchParamsString).get("q") ?? "");
+-  useEffect(() => {
+-    const nextQuery = new URLSearchParams(searchParamsString).get("q") ?? "";
+-    setSearchInput(nextQuery);
+-  }, [searchParamsString]);
++  // Derive the current search string from the router.
++  const searchParamsString = searchParams?.toString() ?? "";
++
++  const [hydrated, setHydrated] = useState(false);
++  useEffect(() => setHydrated(true), []);
++
++  // Derive a stable URLSearchParams instance from the current search string.
++  const currentParams = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
++  // Parse filters (category, size, color, tags, price range) once from the current params.
++  const filters = useMemo(() => parseFilters(currentParams), [currentParams]);
++  // Determine the active tab/category: explicit tab param wins, otherwise derive from category filter.
++  const activeTabId = currentParams.get("tab") ?? (filters.category ?? "featured");
++  // Determine the sort option: explicit sort param wins; default to "recommended".
++  const sort = (currentParams.get("sort") as SortOption | null) ?? "recommended";
++  // Determine the search query: use the "q" param lowercased.
++  const query = (currentParams.get("q") ?? "").toLowerCase();
++  // Locally controlled search input; initialised from the current "q" param.
++  const [searchInput, setSearchInput] = useState(() => currentParams.get("q") ?? "");
++  // Keep searchInput in sync with URL params when they change externally.
++  useEffect(() => {
++    setSearchInput(currentParams.get("q") ?? "");
++  }, [currentParams]);
+*** End Patch

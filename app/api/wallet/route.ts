@@ -6,37 +6,54 @@ import type { TablesInsert } from '@/integrations/supabase/types';
 
 export async function GET(req: NextRequest) {
   const supabase = getSupabase();
+
+  // Require session; only allow reading your own wallet
   const auth = await requireAuthUser(req, supabase);
   if ('response' in auth) {
     return auth.response;
   }
-  const userId = auth.user.id;
+
+  const authedUserId = auth.user.id;
   const requestedUserId = req.nextUrl.searchParams.get('userId');
-  if (requestedUserId && requestedUserId !== userId) {
+  // If a userId is provided, it must match the logged-in user
+  if (requestedUserId && requestedUserId !== authedUserId) {
     return errorResponse('Forbidden', 403);
   }
+  const userId = requestedUserId ?? authedUserId;
+
+  // If Supabase isn’t configured, return a harmless default
+  if (!supabase) {
+    return successResponse({ user_id: userId, balance: 0 });
+  }
+
   const { data, error } = await supabase
     .from('wallet')
     .select('*')
     .eq('user_id', userId)
     .maybeSingle();
+
   if (error) {
     return errorResponse(error.message, 500);
   }
+
   return successResponse(data ?? { user_id: userId, balance: 0 });
 }
 
 export async function POST(req: NextRequest) {
   const supabase = getSupabase();
+
+  // Require session; deposits apply to the logged-in user
   const auth = await requireAuthUser(req, supabase);
   if ('response' in auth) {
     return auth.response;
   }
+
   const payload = (await req.json().catch(() => null)) as {
     userId?: string;
     amount?: number;
-    ref?: string;
+    ref?: string | null;
   } | null;
+
   if (!payload?.amount || payload.amount <= 0) {
     return errorResponse('Positive amount is required');
   }
@@ -45,14 +62,20 @@ export async function POST(req: NextRequest) {
   if (payload.userId && payload.userId !== userId) {
     return errorResponse('Forbidden', 403);
   }
+
   const amount = payload.amount;
   const ref = payload.ref ?? null;
+
+  if (!supabase) {
+    return errorResponse('supabase_config_missing', 500);
+  }
 
   const existing = await supabase
     .from('wallet')
     .select('*')
     .eq('user_id', userId)
     .maybeSingle();
+
   if (existing.error) {
     return errorResponse(existing.error.message, 500);
   }
@@ -66,11 +89,13 @@ export async function POST(req: NextRequest) {
     user_id: userId,
     balance: newBalance,
   };
+
   const { error: upsertError, data: updatedWallet } = await supabase
     .from('wallet')
     .upsert(upsertPayload)
     .select('*')
     .single();
+
   if (upsertError) {
     return errorResponse(upsertError.message, 500);
   }
@@ -82,10 +107,12 @@ export async function POST(req: NextRequest) {
     type: 'deposit',
     status: 'confirmed',
   });
+
   if (txError) {
     return errorResponse(txError.message, 500);
   }
 
+  // best-effort points update (don’t fail request if rpc errors)
   await supabase.rpc('increment_user_points', {
     p_user_id: userId,
     p_points_delta: amount,

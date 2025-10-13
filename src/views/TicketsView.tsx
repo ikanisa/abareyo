@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Calendar, MapPin, Users, Ticket, PhoneCall, Copy, CheckCircle2, Loader2 } from "lucide-react";
 
@@ -47,6 +48,7 @@ export default function Tickets() {
   const { toast } = useToast();
   const { socket } = useRealtime();
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   const catalogQuery = useQuery({
     queryKey: ["tickets", "catalog"],
     queryFn: fetchTicketCatalog,
@@ -78,6 +80,26 @@ export default function Tickets() {
       setUserId(sessionUserId);
     }
   }, [sessionUserId, userId]);
+
+  useEffect(() => {
+    if (!searchParams) {
+      return;
+    }
+
+    if (searchParams.get("claimed") === "1") {
+      toast({
+        title: "Free ticket added",
+        description: "We saved the complimentary Blue Zone ticket to your wallet.",
+      });
+      const perkTicket = document.querySelector("[data-ticket-free='1']");
+      if (perkTicket instanceof HTMLElement) {
+        perkTicket.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      const url = new URL(window.location.href);
+      url.searchParams.delete("claimed");
+      window.history.replaceState(null, "", url.toString());
+    }
+  }, [searchParams, toast]);
 
 
   const matchIndex = useMemo(
@@ -623,61 +645,73 @@ export default function Tickets() {
               <p className="text-sm text-muted-foreground">No orders yet. Start a checkout to see it here.</p>
             ) : (
               <div className="space-y-3">
-                {orders.map((orderSummary: TicketOrderSummaryContract) => (
-                  <div key={orderSummary.id} className="rounded-xl border border-border/40 p-4 space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <p className="font-semibold text-foreground">Order {orderSummary.id.slice(0, 8)}…</p>
-                        {orderSummary.match ? (
-                          <p className="text-xs text-muted-foreground">
-                            Rayon Sports vs {orderSummary.match.opponent} · {new Date(orderSummary.match.kickoff).toLocaleString()}
-                          </p>
+                {orders.map((orderSummary: TicketOrderSummaryContract) => {
+                  const isFreeTicket =
+                    orderSummary.total === 0 || orderSummary.items.some((item) => item.price === 0);
+
+                  return (
+                    <div
+                      key={orderSummary.id}
+                      className="rounded-xl border border-border/40 p-4 space-y-3"
+                      data-ticket-free={isFreeTicket ? "1" : undefined}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="font-semibold text-foreground">Order {orderSummary.id.slice(0, 8)}…</p>
+                          {orderSummary.match ? (
+                            <p className="text-xs text-muted-foreground">
+                              Rayon Sports vs {orderSummary.match.opponent} · {new Date(orderSummary.match.kickoff).toLocaleString()}
+                            </p>
+                          ) : null}
+                        </div>
+                        <Badge
+                          variant={
+                            orderSummary.status === "paid"
+                              ? "success"
+                              : orderSummary.status === "pending"
+                                ? "secondary"
+                                : "outline"
+                          }
+                        >
+                          {orderSummary.status}
+                        </Badge>
+                      </div>
+                      <div className="grid gap-2 text-xs text-muted-foreground">
+                        <p>Total {formatPrice(orderSummary.total)} · Created {new Date(orderSummary.createdAt).toLocaleString()}</p>
+                        {orderSummary.status === "pending" ? (
+                          <p>Expires {new Date(orderSummary.expiresAt).toLocaleTimeString()}</p>
+                        ) : null}
+                        <p>
+                          Items:{' '}
+                          {orderSummary.items.map((item) => `${item.quantity} × ${item.zone}`).join(', ')}
+                        </p>
+                        {isFreeTicket ? (
+                          <p className="font-medium text-foreground">Includes free Blue Zone perk ticket</p>
                         ) : null}
                       </div>
-                      <Badge
-                        variant={
-                          orderSummary.status === "paid"
-                            ? "success"
-                            : orderSummary.status === "pending"
-                              ? "secondary"
-                              : "outline"
-                        }
-                      >
-                        {orderSummary.status}
-                      </Badge>
-                    </div>
-                    <div className="grid gap-2 text-xs text-muted-foreground">
-                      <p>Total {formatPrice(orderSummary.total)} · Created {new Date(orderSummary.createdAt).toLocaleString()}</p>
-                      {orderSummary.status === "pending" ? (
-                        <p>Expires {new Date(orderSummary.expiresAt).toLocaleTimeString()}</p>
-                      ) : null}
-                      <p>
-                        Items:{' '}
-                        {orderSummary.items.map((item) => `${item.quantity} × ${item.zone}`).join(', ')}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        variant="glass"
-                        size="sm"
-                        onClick={() => receiptMutation.mutate(orderSummary.id)}
-                        disabled={receiptMutation.isPending}
-                      >
-                        View receipt
-                      </Button>
-                      {orderSummary.status === "pending" ? (
+                      <div className="flex flex-wrap gap-2">
                         <Button
-                          variant="destructive"
+                          variant="glass"
                           size="sm"
-                          onClick={() => cancelOrderMutation.mutate(orderSummary.id)}
-                          disabled={cancelOrderMutation.isPending}
+                          onClick={() => receiptMutation.mutate(orderSummary.id)}
+                          disabled={receiptMutation.isPending}
                         >
-                          Cancel order
+                          View receipt
                         </Button>
-                      ) : null}
+                        {orderSummary.status === "pending" ? (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => cancelOrderMutation.mutate(orderSummary.id)}
+                            disabled={cancelOrderMutation.isPending}
+                          >
+                            Cancel order
+                          </Button>
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </GlassCard>

@@ -4,10 +4,14 @@ import { errorResponse, successResponse } from '../_lib/responses';
 import type { TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 export async function GET(req: NextRequest) {
-  const supabase = getSupabase();
   const searchParams = req.nextUrl.searchParams;
   const id = searchParams.get('id');
   const phone = searchParams.get('phone');
+
+  const supabase = getSupabase();
+  if (!supabase) {
+    return successResponse(id || phone ? null : []);
+  }
 
   let query = supabase.from('users').select('*');
   if (id) {
@@ -29,6 +33,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const supabase = getSupabase();
+  if (!supabase) {
+    return errorResponse('supabase_config_missing', 500);
+  }
   const payload = (await req.json().catch(() => null)) as TablesInsert<'users'> | null;
   if (!payload?.phone) {
     return errorResponse('phone is required');
@@ -50,6 +57,9 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   const supabase = getSupabase();
+  if (!supabase) {
+    return errorResponse('supabase_config_missing', 500);
+  }
   const payload = (await req.json().catch(() => null)) as TablesUpdate<'users'> & {
     id?: string;
   } | null;
@@ -70,7 +80,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 async function ensureWalletExists(
-  supabase: ReturnType<typeof getSupabase>,
+  supabase: NonNullable<ReturnType<typeof getSupabase>>,
   userId: string,
 ) {
   const { data } = await supabase.from('wallet').select('id').eq('user_id', userId).maybeSingle();

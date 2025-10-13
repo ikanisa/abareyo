@@ -41,7 +41,7 @@ jobs:
 
       - name: Typecheck
         run: |
-          if npm run -s typecheck; then
+          if npm run -s type-check; then
             echo "Typecheck OK"
           else
             echo "::error::Type errors detected"; exit 1

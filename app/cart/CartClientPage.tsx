@@ -12,6 +12,8 @@ import {
   type CopyKey,
 } from "@/app/(routes)/shop/_hooks/useShopLocale";
 import { formatPrice, useCart } from "@/app/(routes)/shop/_logic/useShop";
+import { jsonFetch } from "@/app/_lib/api";
+import { fanProfile } from "@/app/_data/fanProfile";
 
 const PROMO_CODES: Record<string, { percentOff: number; description: string }> = {
   FANS10: { percentOff: 0.1, description: "Members save 10%" },
@@ -29,11 +31,14 @@ const CartClientPage = ({ initialLocale }: CartClientPageProps) => (
 
 const CartContent = () => {
   const { items, total, updateItem, removeItem, clear, changeVariant } = useCart();
-  const [phone, setPhone] = useState("0780000000");
+  const [phone, setPhone] = useState(fanProfile.phone);
   const [promoInput, setPromoInput] = useState("");
   const [promoError, setPromoError] = useState<"empty" | "invalid" | null>(null);
   const [appliedPromo, setAppliedPromo] = useState<{ code: string; percentOff: number; description: string } | null>(null);
   const [capturedReference, setCapturedReference] = useState<string | null>(null);
+  const [orderSaving, setOrderSaving] = useState(false);
+  const [orderResult, setOrderResult] = useState<{ id: string; status: string } | null>(null);
+  const [orderError, setOrderError] = useState<string | null>(null);
   const { t } = useShopLocale();
   const promoPlaceholder = t("cart.promoPlaceholder");
   const phonePlaceholder = t("cart.phonePlaceholder");
@@ -52,6 +57,49 @@ const CartContent = () => {
   }, [appliedPromo, total]);
 
   const amountDue = Math.max(total - discount, 0);
+
+  useEffect(() => {
+    setOrderResult(null);
+    setOrderError(null);
+  }, [items.length]);
+
+  const submitOrder = async (reference: string) => {
+    if (items.length === 0 || amountDue <= 0) {
+      return;
+    }
+    setOrderSaving(true);
+    setOrderError(null);
+    try {
+      const sanitizedPhone = phone.replace(/[^0-9+]/g, "");
+      const payload = {
+        total: amountDue,
+        momo_ref: reference,
+        user: {
+          name: fanProfile.name,
+          phone: sanitizedPhone || fanProfile.phone,
+          momo_number: fanProfile.momo ?? (sanitizedPhone || fanProfile.phone),
+        },
+        items: items.map((item) => ({
+          product_id: item.product.id,
+          product_name: item.product.name,
+          qty: item.qty,
+          price: item.variant.price,
+        })),
+      };
+      const response = await jsonFetch<{
+        ok: boolean;
+        order: { id: string; status: string };
+      }>("/api/shop/orders", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      setOrderResult(response.order);
+    } catch (error) {
+      setOrderError(error instanceof Error ? error.message : "Failed to submit order");
+    } finally {
+      setOrderSaving(false);
+    }
+  };
 
   const handleApplyPromo = () => {
     const code = promoInput.trim().toUpperCase();
@@ -76,7 +124,7 @@ const CartContent = () => {
 
   return (
     <div className="min-h-screen bg-rs-gradient pb-24 text-white">
-        <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 pb-16 pt-8">
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 pb-16 pt-8">
         <header className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">
             {t("cart.title").primary}
@@ -352,7 +400,12 @@ const CartContent = () => {
           <UssdPayButton
             amount={amountDue}
             phoneNumber={phone}
-            onReferenceCaptured={(reference) => setCapturedReference(reference)}
+            onReferenceCaptured={(reference) => {
+              setCapturedReference(reference);
+              setOrderResult(null);
+              setOrderError(null);
+              void submitOrder(reference);
+            }}
           />
         )}
 
@@ -362,10 +415,29 @@ const CartContent = () => {
               {t("cart.referenceNotice").primary}: <span className="font-semibold text-white">{capturedReference}</span>.
               <span className="block text-[10px] text-white/60">{t("cart.referenceNotice").secondary}</span>
             </p>
+            {orderSaving ? (
+              <p className="text-[11px] text-white/70" role="status" aria-live="polite">
+                Submitting order…
+              </p>
+            ) : orderResult ? (
+              <p className="text-[11px] text-emerald-200" role="status" aria-live="polite">
+                Order {orderResult.id.slice(0, 8).toUpperCase()} saved. Status: {orderResult.status}.
+              </p>
+            ) : null}
+            {orderError ? (
+              <p className="text-[11px] text-amber-200" role="status" aria-live="polite">
+                {orderError}
+              </p>
+            ) : null}
             <button
               type="button"
-              onClick={() => setCapturedReference(null)}
-              className="self-start text-white/60 underline min-h-[44px]"
+              onClick={() => {
+                setCapturedReference(null);
+                setOrderResult(null);
+                setOrderError(null);
+              }}
+              className="self-start text-white/60 underline min-h-[44px] disabled:opacity-50"
+              disabled={orderSaving}
             >
               {t("cart.referenceClear").primary}
               <span className="block text-[10px] text-white/50">{t("cart.referenceClear").secondary}</span>

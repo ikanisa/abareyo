@@ -5,6 +5,9 @@ import { getSupabase } from '../../../../_lib/supabase';
 
 export async function POST(req: NextRequest, { params }: { params: { orderId?: string } }) {
   const supabase = getSupabase();
+  if (!supabase) {
+    return errorResponse('supabase_config_missing', 500);
+  }
   const orderId = params.orderId;
   if (!orderId) {
     return errorResponse('orderId is required');

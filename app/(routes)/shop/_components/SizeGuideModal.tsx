@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 
 import useDialogFocusTrap from "../_hooks/useDialogFocusTrap";
 
-type SizeGuideModalProps = {
+export type SizeGuideModalProps = {
   open: boolean;
   onClose: () => void;
 };

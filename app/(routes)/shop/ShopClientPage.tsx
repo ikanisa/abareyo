@@ -19,15 +19,20 @@ import ProductGrid from "./_components/ProductGrid";
 import ProductRail from "./_components/ProductRail";
 import TrustBanner from "./_components/TrustBanner";
 import ShopOnboarding from "./_components/ShopOnboarding";
+// Pull prop types explicitly so that dynamic imports retain type safety.
+import type { FilterSheetProps } from "./_components/FilterSheet";
+import type { SortSheetProps } from "./_components/SortSheet";
 import { SHOP_TABS, useCart, useCatalog } from "./_logic/useShop";
 import { ShopLocaleProvider, useShopLocale, type ShopLocale } from "./_hooks/useShopLocale";
 
-const FilterSheet = dynamic<typeof import("./_components/FilterSheet")["default"]>(
-  () => import("./_components/FilterSheet"),
+// Provide explicit generic types for the dynamic imports.  Without this, type inference
+// falls back to `any` and prop hints are lost.
+const FilterSheet = dynamic<FilterSheetProps>(
+  () => import("./_components/FilterSheet").then((mod) => mod.default),
   { ssr: false },
 );
-const SortSheet = dynamic<typeof import("./_components/SortSheet")["default"]>(
-  () => import("./_components/SortSheet"),
+const SortSheet = dynamic<SortSheetProps>(
+  () => import("./_components/SortSheet").then((mod) => mod.default),
   { ssr: false },
 );
 

@@ -12,6 +12,9 @@ const KIND_MAP: Record<string, 'ticket' | 'membership' | 'shop' | 'donation'> = 
 
 export async function GET(req: NextRequest) {
   const supabase = getSupabase();
+  if (!supabase) {
+    return successResponse([]);
+  }
   const userId = req.nextUrl.searchParams.get('userId');
   if (!userId) {
     return errorResponse('userId is required');
