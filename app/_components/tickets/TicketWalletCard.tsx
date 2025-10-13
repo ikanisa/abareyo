@@ -47,11 +47,14 @@ const TicketWalletCard = ({ fixture, order, zone, animationDelay }: TicketWallet
     }
   }, [fixture.date, fixture.title, order.qty, zone?.name]);
 
+  const isFreeTicket = order.total === 0;
+
   return (
     <article
       className="card space-y-5 bg-white/5 text-white animate-ticket-wallet"
       role="listitem"
       style={animationDelay ? { animationDelay: `${animationDelay}s` } : undefined}
+      data-ticket-free={isFreeTicket ? "1" : undefined}
     >
       <header className="flex items-start justify-between gap-3">
         <div className="space-y-1">
@@ -64,7 +67,10 @@ const TicketWalletCard = ({ fixture, order, zone, animationDelay }: TicketWallet
             <p className="text-sm font-semibold text-white">Zone {zone.name} · {order.qty} seat(s)</p>
           ) : null}
         </div>
-        <span className={`chip ${statusStyles[order.status]}`}>{statusLabels[order.status]}</span>
+        <span className={`chip ${statusStyles[order.status]}`}>
+          {statusLabels[order.status]}
+          {isFreeTicket ? <span className="ml-2 rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs">Perk</span> : null}
+        </span>
       </header>
       <div className="flex flex-col gap-4 md:flex-row">
         <div className="flex h-40 w-full max-w-[180px] items-center justify-center overflow-hidden rounded-3xl bg-black/40">
@@ -87,9 +93,15 @@ const TicketWalletCard = ({ fixture, order, zone, animationDelay }: TicketWallet
               <span className="font-semibold text-white">{statusLabels[order.status]}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span>Total paid</span>
+              <span>{isFreeTicket ? "Perk value" : "Total paid"}</span>
               <span className="font-semibold text-white">{order.total.toLocaleString()} RWF</span>
             </div>
+            {order.momoRef ? (
+              <div className="flex items-center justify-between">
+                <span>Reference</span>
+                <span className="font-semibold text-white">{order.momoRef}</span>
+              </div>
+            ) : null}
           </div>
           <div className="flex flex-wrap gap-3">
             <button
