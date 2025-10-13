@@ -4,10 +4,13 @@ import { errorResponse, successResponse } from '../_lib/responses';
 import type { TablesInsert } from '@/integrations/supabase/types';
 
 export async function GET(req: NextRequest) {
-  const supabase = getSupabase();
   const userId = req.nextUrl.searchParams.get('userId');
   if (!userId) {
     return errorResponse('userId is required');
+  }
+  const supabase = getSupabase();
+  if (!supabase) {
+    return successResponse({ user_id: userId, balance: 0 });
   }
   const { data, error } = await supabase
     .from('wallet')
@@ -21,7 +24,6 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = getSupabase();
   const payload = (await req.json().catch(() => null)) as {
     userId?: string;
     amount?: number;
@@ -34,6 +36,11 @@ export async function POST(req: NextRequest) {
   const userId = payload.userId;
   const amount = payload.amount;
   const ref = payload.ref ?? null;
+
+  const supabase = getSupabase();
+  if (!supabase) {
+    return errorResponse('supabase_config_missing', 500);
+  }
 
   const existing = await supabase
     .from('wallet')

@@ -4,6 +4,9 @@ import { errorResponse, successResponse } from '../../_lib/responses';
 
 export async function POST(req: NextRequest) {
   const supabase = getSupabase();
+  if (!supabase) {
+    return errorResponse('supabase_config_missing', 500);
+  }
   const payload = (await req.json().catch(() => null)) as {
     quoteId?: string;
     number?: string;

@@ -2,12 +2,36 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import type { Database } from "@/integrations/supabase/types";
+
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
 // NOTE: For MVP we use the "first" user (or you can pass ?user_id=...).
 // Replace with real auth in production.
-async function getDefaultUser(db: SupabaseClient) {
+type RewardsEventRow = {
+  id: string;
+  user_id: string;
+  points: number;
+  created_at: string;
+};
+
+type ExtendedDatabase = Database & {
+  public: Omit<Database["public"], "Tables"> & {
+    Tables: Database["public"]["Tables"] & {
+      rewards_events: {
+        Row: RewardsEventRow;
+        Insert: Partial<RewardsEventRow>;
+        Update: Partial<RewardsEventRow>;
+        Relationships: [];
+      };
+    };
+  };
+};
+
+type UserRow = ExtendedDatabase["public"]["Tables"]["users"]["Row"];
+
+async function getDefaultUser(db: SupabaseClient<ExtendedDatabase>) {
   const { data, error } = await db.from("users").select("*").order("created_at").limit(1);
   if (error || !data?.length) return null;
   return data[0];
@@ -18,10 +42,10 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "supabase_config_missing" }, { status: 500 });
   }
 
-  const db = createClient(supabaseUrl, supabaseAnonKey);
+  const db = createClient<ExtendedDatabase>(supabaseUrl, supabaseAnonKey);
   const url = new URL(req.url);
   const userId = url.searchParams.get("user_id");
-  let user = null;
+  let user: UserRow | null = null;
 
   if (userId) {
     const { data, error } = await db.from("users").select("*").eq("id", userId).single();

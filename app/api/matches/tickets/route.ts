@@ -1,9 +1,12 @@
 import { NextRequest } from 'next/server';
-import { getSupabase } from '../_lib/supabase';
-import { errorResponse, successResponse } from '../_lib/responses';
+import { getSupabase } from '../../_lib/supabase';
+import { errorResponse, successResponse } from '../../_lib/responses';
 
 export async function GET(req: NextRequest) {
   const supabase = getSupabase();
+  if (!supabase) {
+    return successResponse([]);
+  }
   const status = req.nextUrl.searchParams.get('status');
 
   let query = supabase.from('matches').select('*').order('date', { ascending: true });

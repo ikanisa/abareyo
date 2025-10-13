@@ -10,8 +10,90 @@ import ZoneSheet from "@/app/_components/tickets/ZoneSheet";
 import EmptyState from "@/app/_components/ui/EmptyState";
 import type { Fixture, TicketZone } from "@/app/_data/fixtures";
 import { fixtures as defaultFixtures } from "@/app/_data/fixtures";
+import { fanProfile } from "@/app/_data/fanProfile";
+import { jsonFetch } from "@/app/_lib/api";
 
 const randomId = () => `fixture-${Math.random().toString(36).slice(2, 10)}`;
+
+type ApiMatchZone = {
+  id?: string | null;
+  zone?: string | null;
+  name?: string | null;
+  price?: number | null;
+  seatsLeft?: number | null;
+  remaining?: number | null;
+  totalSeats?: number | null;
+  capacity?: number | null;
+};
+
+type ApiMatch = {
+  id?: string | null;
+  title?: string | null;
+  home_team?: string | null;
+  away_team?: string | null;
+  comp?: string | null;
+  date?: string | null;
+  kickoff?: string | null;
+  venue?: string | null;
+  status?: "upcoming" | "live" | "ft" | null;
+  zones?: ApiMatchZone[] | null;
+};
+
+type ReservationState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "success"; ticket: { id: string; paid: boolean; momo_ref: string | null; created_at: string } }
+  | { status: "error"; message: string };
+
+const fallbackFixtures = defaultFixtures;
+
+const toTicketZoneName = (value: string | null | undefined): TicketZone["name"] => {
+  if (!value) return "Fan";
+  const normalised = value.toLowerCase();
+  if (normalised.includes("vip")) return "VIP";
+  if (normalised.includes("regular")) return "Regular";
+  if (normalised.includes("blue")) return "Fan";
+  return "Fan";
+};
+
+const buildFixtureFromMatch = (match: ApiMatch): Fixture => {
+  const kickoffSource = match.date ?? match.kickoff ?? new Date().toISOString();
+  const kickoff = new Date(kickoffSource);
+  const readableDate = kickoff.toLocaleDateString(undefined, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  const readableTime = kickoff.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const zones: TicketZone[] = (Array.isArray(match.zones) ? match.zones : []).map((zone) => ({
+    id: zone.id ?? `${match.id ?? randomId()}-${(zone.zone ?? "zone").toLowerCase()}`,
+    name: toTicketZoneName(zone.name ?? zone.zone),
+    price: typeof zone.price === "number" ? zone.price : 0,
+    seatsLeft: Math.max(Number(zone.seatsLeft ?? zone.remaining ?? 0), 0),
+    totalSeats: Math.max(Number(zone.totalSeats ?? zone.capacity ?? 0), 0),
+  }));
+  const status = match.status === "ft" ? "completed" : match.status === "live" ? "upcoming" : "upcoming";
+  return {
+    id: match.id ?? randomId(),
+    title:
+      match.title ??
+      [match.home_team ?? "Rayon Sports", match.away_team ?? "Opposition"].filter(Boolean).join(" vs "),
+    comp: match.comp ?? "",
+    date: readableDate,
+    time: readableTime,
+    venue: match.venue ?? "TBD",
+    zones,
+    status: zones.every((zone) => zone.seatsLeft === 0) ? "soldout" : status,
+    heroImage: "/tickets/default-match.svg",
+  } satisfies Fixture;
+};
+
+const normaliseZoneName = (zone: TicketZone["name"]): "VIP" | "Regular" | "Blue" =>
+  zone === "Fan" ? "Blue" : zone;
 
 const TicketsPage = () => {
   const router = useRouter();
@@ -22,6 +104,8 @@ const TicketsPage = () => {
   const [selectedFixture, setSelectedFixture] = useState<Fixture | null>(null);
   const [selectedZone, setSelectedZone] = useState<TicketZone | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reservation, setReservation] = useState<ReservationState>({ status: "idle" });
 
   useEffect(() => {
     let isMounted = true;
@@ -98,7 +182,7 @@ const TicketsPage = () => {
   }, [searchParams]);
 
   useEffect(() => {
-    if (searchParams.get("claimed") === "1") {
+    if (searchParams?.get("claimed") === "1") {
       alert("🎉 Free BLUE ticket added to your tickets!");
       const el = document.querySelector("[data-ticket-free='1']");
       if (el instanceof HTMLElement) {
@@ -128,7 +212,7 @@ const TicketsPage = () => {
         setFixtures(fallbackFixtures);
       } finally {
         if (mounted) {
-          setLoadingFixtures(false);
+          setLoading(false);
         }
       }
     };

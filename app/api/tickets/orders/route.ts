@@ -5,6 +5,9 @@ import { getSupabase } from '../../_lib/supabase';
 
 export async function GET(req: NextRequest) {
   const supabase = getSupabase();
+  if (!supabase) {
+    return successResponse([]);
+  }
   const userId = req.nextUrl.searchParams.get('userId');
   if (!userId) {
     return errorResponse('userId is required');
