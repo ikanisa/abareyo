@@ -303,7 +303,7 @@ const OnboardingView = () => {
 
                 {!isLoadingSession && !isErrored && messages.length === 0 && (
                   <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4 text-sm text-primary">
-                    Abareyo is getting ready. Say hello and share your contact details when you&apos;re ready!
+                    GIKUNDIRO is getting ready. Say hello and share your contact details when you&apos;re ready!
                   </div>
                 )}
 
@@ -314,7 +314,7 @@ const OnboardingView = () => {
                 {sendMutation.isPending && (
                   <div className="flex max-w-[70%] items-center gap-2 rounded-3xl bg-muted/60 px-4 py-3 text-sm text-muted-foreground">
                     <Bot className="h-4 w-4 animate-bounce" />
-                    <span>Abareyo is typing…</span>
+                    <span>GIKUNDIRO is typing…</span>
                   </div>
                 )}
                 <div ref={bottomRef} />

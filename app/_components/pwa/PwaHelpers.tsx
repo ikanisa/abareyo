@@ -60,7 +60,7 @@ export function InstallPrompt() {
 
   return (
     <div className="card fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
-      <span>Install Abareyo?</span>
+      <span>Install GIKUNDIRO App??</span>
       <button className="btn-primary" onClick={handleInstall}>
         Install
       </button>

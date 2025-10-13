@@ -1,4 +1,4 @@
-# Abareyo Fullstack & UX Audit
+# GIKUNDIRO Fullstack & UX Audit
 
 _Date: 2025-02-14_
 

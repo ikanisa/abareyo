@@ -10,7 +10,7 @@ const PDPPage = ({ params }: { params: { slug: string } }) => {
   if (!product) {
     notFound();
   }
-  const localeCookie = cookies().get("abareyo:shop-locale")?.value;
+  const localeCookie = cookies().get("gikundiro:shop-locale")?.value;
   const initialLocale: ShopLocale = localeCookie === "rw" ? "rw" : "en";
   return <PdpClientPage product={product} initialLocale={initialLocale} />;
 };
