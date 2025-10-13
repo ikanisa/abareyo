@@ -494,8 +494,6 @@ export const useCatalog = () => {
   };
 };
 
-export const getProductBySlug = (slug: string) => PRODUCTS.find((product) => product.slug === slug);
-
 export const getVariantById = (variantId: string) => {
   for (const product of PRODUCTS) {
     const match = product.variants.find((variant) => variant.id === variantId);
