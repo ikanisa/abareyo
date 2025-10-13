@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+
+import { listTicketsForUser } from "./_queries";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = () =>
@@ -64,14 +66,32 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
-  const db = supabase();
-  const { data, error } = await db
-    .from("tickets")
-    .select("*, match:matches(*), user:users(id, name, phone)")
-    .order("created_at", { ascending: false });
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+const getAuthToken = () => process.env.TICKETS_API_TOKEN;
+
+export async function GET(req: Request) {
+  const expectedToken = getAuthToken();
+  if (!expectedToken) {
+    return NextResponse.json({ error: "Tickets API token is not configured" }, { status: 500 });
   }
-  return NextResponse.json(data ?? []);
+
+  const authHeader = req.headers.get("authorization");
+  if (authHeader !== `Bearer ${expectedToken}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const userId = searchParams.get("user_id");
+  const phone = searchParams.get("phone");
+
+  if (!userId && !phone) {
+    return NextResponse.json({ error: "Missing user scope" }, { status: 400 });
+  }
+
+  try {
+    const tickets = await listTicketsForUser({ userId, phone });
+    return NextResponse.json(tickets);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
