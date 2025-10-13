@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server';
 
-import { errorResponse, successResponse } from '../../_lib/responses';
-import { getSupabase } from '../../_lib/supabase';
-import { requireAuthUser } from '../../_lib/auth';
+import { errorResponse, successResponse } from '@/app/_lib/responses';
+import { getSupabase } from '@/app/_lib/supabase';
+import { requireAuthUser } from '@/app/_lib/auth';
 
 export async function GET(req: NextRequest) {
   const supabase = getSupabase();
