@@ -1,55 +1,24 @@
 "use client";
 
-import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
-
 import type { Product } from "../_data/products";
 import ProductCard from "./ProductCard";
-import { useShopLocale, type BilingualString } from "../_hooks/useShopLocale";
 
 type ProductRailProps = {
-  title: BilingualString;
-  caption?: BilingualString;
-  href?: string;
-  items: Product[];
+  title: string;
+  products: Product[];
 };
 
-const ProductRail = ({ title, caption, href, items }: ProductRailProps) => {
-  const prefersReducedMotion = useReducedMotion();
-  const { t } = useShopLocale();
-  const viewAllCopy = t("rail.viewAll");
-
-  if (!items.length) return null;
+const ProductRail = ({ title, products }: ProductRailProps) => {
+  if (!products.length) return null;
   return (
     <section className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="section-title">
-            {title.primary}
-            <span className="block text-sm font-normal text-white/70">{title.secondary}</span>
-          </h3>
-          {caption && (
-            <p className="text-sm text-white/70">
-              {caption.primary}
-              <span className="block text-xs text-white/60">{caption.secondary}</span>
-            </p>
-          )}
-        </div>
-        {href && (
-          <Link href={href} className="text-xs font-semibold text-white underline">
-            {viewAllCopy.primary}
-            <span className="block text-[10px] text-white/70">{viewAllCopy.secondary}</span>
-          </Link>
-        )}
-      </div>
-      <div className="card p-4">
-        <motion.div className="h-scroll flex gap-3 pb-2" layoutScroll={!prefersReducedMotion}>
-          {items.map((product) => (
-            <div key={product.id} className="min-w-[220px] max-w-[220px] flex-shrink-0">
-              <ProductCard product={product} />
-            </div>
-          ))}
-        </motion.div>
+      <h2 className="section-title">{title}</h2>
+      <div className="flex gap-3 overflow-x-auto pb-2">
+        {products.map((product) => (
+          <div key={product.id} className="w-60 flex-none">
+            <ProductCard product={product} />
+          </div>
+        ))}
       </div>
     </section>
   );

@@ -1,168 +1,105 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
-import { ShieldCheck, Truck } from "lucide-react";
+import { useMemo, useState } from "react";
+
+import PageShell from "@/app/_components/shell/PageShell";
+import TopAppBar from "@/app/_components/ui/TopAppBar";
 
 import PDPGallery from "../_components/PDPGallery";
+import SizeGuideModal from "../_components/SizeGuideModal";
 import UssdPayButton from "../_components/UssdPayButton";
-import VariantSelector from "../_components/VariantSelector";
-import ProductRail from "../_components/ProductRail";
-import type { SizeGuideModalProps } from "../_components/SizeGuideModal";
-// Explicitly import the modal prop type once for type safety on dynamic import
-import type { Product } from "../_data/products";
-import { formatPrice, getCrossSell, recordRecentlyViewed, useCart, useRecentlyViewed } from "../_logic/useShop";
-import { ShopLocaleProvider, useShopLocale, type ShopLocale } from "../_hooks/useShopLocale";
+import useShopLocale from "../_hooks/useShopLocale";
+import { useCart, type CartItem } from "../_logic/useShop";
+import type { Product, Variant } from "../_data/products";
 
-const SizeGuideModal = dynamic<SizeGuideModalProps>(
-  () => import("../_components/SizeGuideModal").then((mod) => mod.default),
-  { ssr: false },
-);
+const formatPrice = (value: number) =>
+  new Intl.NumberFormat("rw-RW", { style: "currency", currency: "RWF", maximumFractionDigits: 0 }).format(value);
 
-type Props = {
+type PdpClientPageProps = {
   product: Product;
-  initialLocale?: ShopLocale;
 };
 
-const PdpClientPage = ({ product, initialLocale }: Props) => (
-  <ShopLocaleProvider initialLocale={initialLocale}>
-    <PdpContent product={product} />
-  </ShopLocaleProvider>
-);
+const PdpClientPage = ({ product }: PdpClientPageProps) => {
+  const strings = useShopLocale();
+  const { add } = useCart();
+  const [variant, setVariant] = useState<Variant>(product.variants[0]);
 
-const PdpContent = ({ product }: { product: Product }) => {
-  const [variant, setVariant] = useState(product.variants[0]);
-  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
-  const { addItem } = useCart();
-  const recentlyViewed = useRecentlyViewed(product.slug);
-  const crossSell = useMemo(() => getCrossSell(product), [product]);
-  const { t } = useShopLocale();
-  const backCopy = t("pdp.back");
-  const detailsCopy = t("pdp.detailsTitle");
-  const bundleCopy = t("pdp.bundleIncludes");
-  const completeTitle = t("pdp.complete");
-  const completeCaption = t("pdp.completeCaption");
-  const recentTitle = t("pdp.recent");
-  const recentCaption = t("pdp.recentCaption");
+  const price = formatPrice(variant.price);
+  const isOutOfStock = variant.stock <= 0;
 
-  useEffect(() => {
-    setVariant(product.variants[0]);
-    recordRecentlyViewed(product.slug);
-  }, [product]);
+  const options = useMemo(() => ({
+    sizes: Array.from(new Set(product.variants.map((entry) => entry.size))),
+    colors: Array.from(new Set(product.variants.map((entry) => entry.color))),
+  }), [product.variants]);
 
-  const addToCart = () => {
-    addItem({ productId: product.id, variantId: variant.id, qty: 1 });
+  const handleAdd = () => {
+    const item: CartItem = { productId: product.id, variantId: variant.id, qty: 1 };
+    add(item);
   };
 
   return (
-    <div className="min-h-screen bg-rs-gradient pb-24 text-white">
-      <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 pb-16 pt-8">
-        <button
-          type="button"
-          onClick={() => window.history.back()}
-          className="self-start rounded-full bg-white/10 px-4 py-2 text-left text-sm text-white/70"
-        >
-          {backCopy.primary}
-          <span className="block text-[11px] text-white/60">{backCopy.secondary}</span>
-        </button>
-        <PDPGallery product={product} />
-        <section className="space-y-3">
-          <h1 className="text-3xl font-bold leading-tight">{product.name}</h1>
-          <p className="text-sm text-white/70">
-            {t("pdp.subtitle").primary}
-            <span className="block text-xs text-white/60">{t("pdp.subtitle").secondary}</span>
-          </p>
-          <div className="flex items-center gap-3 text-lg font-semibold">
-            <span>{formatPrice(variant.price)}</span>
-            {variant.compareAt && variant.compareAt > variant.price && (
-              <span className="text-sm text-white/60 line-through">{formatPrice(variant.compareAt)}</span>
-            )}
-            <span className="rounded-full bg-white/20 px-3 py-1 text-xs uppercase tracking-wide text-white/80">
-              {t("pdp.membersSave").primary}
-              <span className="block text-[10px] font-normal text-white/60">{t("pdp.membersSave").secondary}</span>
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-2 text-xs text-white/70">
-            <span className="rounded-full bg-white/15 px-3 py-1">
-              {t("pdp.trustOne").primary}
-              <span className="block text-[10px] text-white/60">{t("pdp.trustOne").secondary}</span>
-            </span>
-            <span className="rounded-full bg-white/15 px-3 py-1">
-              {t("pdp.trustTwo").primary}
-              <span className="block text-[10px] text-white/60">{t("pdp.trustTwo").secondary}</span>
-            </span>
-            <span className="rounded-full bg-white/15 px-3 py-1">
-              {t("pdp.trustThree").primary}
-              <span className="block text-[10px] text-white/60">{t("pdp.trustThree").secondary}</span>
-            </span>
-          </div>
-        </section>
+    <PageShell mainClassName="space-y-6 pb-24">
+      <TopAppBar right={<SizeGuideModal />} />
+      <PDPGallery product={product} />
 
-        <VariantSelector product={product} value={variant} onChange={setVariant} />
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setSizeGuideOpen(true)}
-            className="btn flex-1 rounded-2xl text-sm font-semibold"
-          >
-            {t("pdp.sizeGuide").primary}
-            <span className="block text-[11px] font-normal text-white/60">{t("pdp.sizeGuide").secondary}</span>
-          </button>
-          <button
-            type="button"
-            onClick={addToCart}
-            className="btn-primary flex-1 rounded-2xl text-sm font-semibold"
-            disabled={variant.stock === 0}
-          >
-            {t("pdp.addToCart").primary}
-            <span className="block text-[11px] font-normal text-white/60">{t("pdp.addToCart").secondary}</span>
-          </button>
+      <section className="card space-y-3 bg-white/10 p-5">
+        <div className="flex flex-wrap gap-2">
+          {product.badges?.map((badge) => (
+            <span key={badge} className="tile inline-flex w-auto px-3 py-1 text-xs">
+              {strings[badge] ?? badge}
+            </span>
+          ))}
+        </div>
+        <h1 className="text-2xl font-semibold text-white">{product.name}</h1>
+        {product.description ? <p className="text-sm text-white/70">{product.description}</p> : null}
+        <p className="text-lg font-semibold text-white">{price}</p>
+
+        <div className="space-y-2">
+          <h2 className="text-sm font-semibold text-white/80">{strings.size}</h2>
+          <div className="flex flex-wrap gap-2">
+            {options.sizes.map((size) => (
+              <button
+                key={size}
+                type="button"
+                className={`btn ${variant.size === size ? "bg-white text-slate-900" : ""}`}
+                onClick={() => {
+                  const next = product.variants.find((entry) => entry.size === size && entry.color === variant.color);
+                  if (next) setVariant(next);
+                }}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <UssdPayButton amount={variant.price} phoneNumber="0780000000" />
+        <div className="space-y-2">
+          <h2 className="text-sm font-semibold text-white/80">{strings.color}</h2>
+          <div className="flex flex-wrap gap-2">
+            {options.colors.map((color) => (
+              <button
+                key={color}
+                type="button"
+                className={`btn ${variant.color === color ? "bg-white text-slate-900" : ""}`}
+                onClick={() => {
+                  const next = product.variants.find((entry) => entry.color === color && entry.size === variant.size);
+                  if (next) setVariant(next);
+                }}
+              >
+                {color}
+              </button>
+            ))}
+          </div>
+        </div>
 
-        <section className="card space-y-3 bg-white/10">
-          <h2 className="text-lg font-semibold text-white">
-            {detailsCopy.primary}
-            <span className="block text-sm font-normal text-white/70">{detailsCopy.secondary}</span>
-          </h2>
-          <ul className="space-y-2 text-sm text-white/80">
-            {product.materials && <li>{product.materials}</li>}
-            {product.care && <li>{product.care}</li>}
-            {product.fit && <li>{product.fit}</li>}
-            {product.shipping && (
-              <li className="flex items-start gap-2">
-                <Truck className="mt-1 h-4 w-4 text-white/60" aria-hidden />
-                <span>{product.shipping}</span>
-              </li>
-            )}
-            {product.returnPolicy && (
-              <li className="flex items-start gap-2">
-                <ShieldCheck className="mt-1 h-4 w-4 text-white/60" aria-hidden />
-                <span>{product.returnPolicy}</span>
-              </li>
-            )}
-          </ul>
-          {product.bundleItems && (
-            <div className="rounded-2xl bg-white/10 p-3 text-sm text-white/70">
-              <p className="font-semibold text-white">
-                {bundleCopy.primary}
-                <span className="block text-xs font-normal text-white/60">{bundleCopy.secondary}</span>
-              </p>
-              <ul className="list-disc pl-5">
-                {product.bundleItems.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </section>
-
-        <ProductRail title={completeTitle} caption={completeCaption} items={crossSell} />
-        <ProductRail title={recentTitle} caption={recentCaption} items={recentlyViewed} />
-      </main>
-      <SizeGuideModal open={sizeGuideOpen} onClose={() => setSizeGuideOpen(false)} />
-    </div>
+        <div className="space-y-2">
+          <button type="button" className="btn-primary w-full" onClick={handleAdd} disabled={isOutOfStock}>
+            {isOutOfStock ? strings.outOfStock : strings.addToCart}
+          </button>
+          <UssdPayButton amount={variant.price} />
+        </div>
+      </section>
+    </PageShell>
   );
 };
 

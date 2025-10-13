@@ -1,244 +1,50 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import {
-  Wallet,
-  CreditCard,
-  Heart,
-  Calendar,
-  User,
-  Settings,
-  Globe,
-  HelpCircle,
-  LogOut,
-  ChevronRight,
-  ShieldAlert,
-  Share2,
-  Activity,
-  BarChart3,
-  Flag,
-} from "lucide-react";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import TopAppBar from "@/app/_components/ui/TopAppBar";
-import HeroBlock from "@/app/_components/widgets/HeroBlock";
-import { SectionHeader } from "@/app/_components/widgets/SectionHeader";
-import { GlassCard } from "@/components/ui/glass-card";
-import { cn } from "@/lib/utils";
-import { useI18n } from "@/providers/i18n-provider";
-import { useAuth } from "@/providers/auth-provider";
-import { useToast } from "@/components/ui/use-toast";
 
-const useMenuLabels = () => {
-  const { t } = useI18n();
-  return {
-    wallet: t("nav.wallet", "Wallet"),
-    membership: t("nav.membership", "Membership"),
-    fundraising: t("nav.fundraising", "Fundraising"),
-    events: t("nav.events", "Events"),
-    transfer: t("nav.transfer", "Transfer Ticket"),
-    profile: t("nav.profile", "Profile"),
-    settings: t("nav.settings", "Settings"),
-    language: t("nav.language", "Language"),
-    support: t("nav.support", "Help & Support"),
-    moderation: t("nav.moderation", "Admin Moderation"),
-    realtime: t("nav.realtime", "Realtime Monitor"),
-    missions: t("nav.missions", "Fan Missions"),
-    ticketAnalytics: t("nav.ticketAnalytics", "Ticket Analytics"),
-  } as const;
-};
+import SettingsList, { type SettingsItem } from "@/app/_components/more/SettingsList";
 
-const baseMenuItems = [
-  { icon: Wallet, label: "Wallet", path: "/wallet", color: "primary" },
-  { icon: CreditCard, label: "Membership", path: "/membership", color: "accent" },
-  { icon: Heart, label: "Fundraising", path: "/fundraising", color: "success" },
-  { icon: Calendar, label: "Events", path: "/events", color: "secondary" },
-  { icon: Share2, label: "Transfer Ticket", path: "/tickets/transfer", color: "primary" },
-  { icon: User, label: "Profile", path: "/profile", color: "primary" },
-  { icon: Settings, label: "Settings", path: "/settings", color: "muted" },
-  { icon: Globe, label: "Language", path: "/language", color: "muted" },
-  { icon: HelpCircle, label: "Help & Support", path: "/support", color: "muted" },
-  { icon: ShieldAlert, label: "Admin Moderation", path: "/admin/community", color: "accent" },
-  { icon: Flag, label: "Fan Missions", path: "/admin/community/missions", color: "accent" },
-  { icon: Activity, label: "Realtime Monitor", path: "/admin/realtime", color: "accent" },
-  { icon: BarChart3, label: "Ticket Analytics", path: "/admin/tickets", color: "accent" },
-] as const;
+const quickLinks: SettingsItem[] = [
+  { label: "Wallet", href: "/wallet" },
+  { label: "Membership", href: "/membership" },
+  { label: "Fundraising", href: "/fundraising" },
+  { label: "Tickets", href: "/tickets" },
+];
 
-const colorStyles: Record<string, { container: string; icon: string }> = {
-  primary: { container: "bg-primary/10", icon: "text-primary" },
-  accent: { container: "bg-accent/10", icon: "text-accent" },
-  success: { container: "bg-success/10", icon: "text-success" },
-  secondary: { container: "bg-secondary/10", icon: "text-secondary" },
-  muted: { container: "bg-muted/10", icon: "text-muted-foreground" },
-};
+const settingsLinks: SettingsItem[] = [
+  { label: "Profile", href: "/profile", description: "Manage details" },
+  { label: "Settings", href: "/settings", description: "Preferences" },
+  { label: "Support", href: "/support", description: "Help centre" },
+  { label: "Rewards", href: "/more/rewards", description: "Fan rewards" },
+];
 
-export default function More() {
-  const router = useRouter();
-  const { t } = useI18n();
-  const { user, logout } = useAuth();
-  const { toast } = useToast();
-
-  const labels = useMenuLabels();
-  const menuItems = baseMenuItems.map((item) => {
-    switch (item.path) {
-      case "/wallet":
-        return { ...item, label: labels.wallet };
-      case "/membership":
-        return { ...item, label: labels.membership };
-      case "/fundraising":
-        return { ...item, label: labels.fundraising };
-      case "/events":
-        return { ...item, label: labels.events };
-      case "/tickets/transfer":
-        return { ...item, label: labels.transfer };
-      case "/profile":
-        return { ...item, label: labels.profile };
-      case "/settings":
-        return { ...item, label: labels.settings };
-      case "/language":
-        return { ...item, label: labels.language };
-      case "/support":
-        return { ...item, label: labels.support };
-      case "/admin/community":
-        return { ...item, label: labels.moderation };
-      case "/admin/community/missions":
-        return { ...item, label: labels.missions };
-      case "/admin/realtime":
-        return { ...item, label: labels.realtime };
-      case "/admin/tickets":
-        return { ...item, label: labels.ticketAnalytics };
-      default:
-        return item;
-    }
-  });
-
-  const heroSubtitle = t("copy.moreSubtitle", "Account & settings");
-  const heroCtas = (
-    <Link className="btn-primary" href="/membership">
-      {t("nav.membership", "Membership")}
-    </Link>
-  );
-
-  const topBarActions = (
-    <>
-      <Link className="btn" href="/support">
-        {t("nav.support", "Support")}
-      </Link>
-      <Link className="btn" href="/wallet">
-        {t("nav.wallet", "Wallet")}
-      </Link>
-    </>
-  );
-
+const MoreView = () => {
   return (
     <PageShell mainClassName="space-y-6 pb-24">
-      <TopAppBar right={topBarActions} />
-      <HeroBlock title={t("nav.more", "More")} subtitle={heroSubtitle} ctas={heroCtas} />
+      <TopAppBar right={<Link className="btn" href="/settings">Settings</Link>} />
 
-      <section className="space-y-3">
-        <SectionHeader title={t("copy.profileOverview", "Your profile")} />
-        <GlassCard className="p-5">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-hero">
-                <User className="h-8 w-8 text-primary-foreground" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-foreground">{user?.id ?? "Guest fan"}</h3>
-                <p className="text-sm text-muted-foreground">Status: {user?.status ?? "anonymous"}</p>
-              </div>
-            </div>
-            <div className="flex flex-1 flex-wrap justify-end gap-2">
-              <Link className="btn" href="/settings">
-                {t("nav.settings", "Settings")}
-              </Link>
-              <Link className="btn" href="/profile">
-                {t("nav.profile", "Profile")}
-              </Link>
-            </div>
-          </div>
-        </GlassCard>
+      <header className="card space-y-2 bg-white/10 p-5 text-white">
+        <h1 className="text-2xl font-semibold">More</h1>
+        <p className="text-sm text-white/70">Access club services, settings, and help.</p>
+        <Link className="btn-primary w-fit" href="/membership">
+          View membership
+        </Link>
+      </header>
+
+      <section className="card space-y-3 bg-white/10 p-5">
+        <h2 className="text-lg font-semibold text-white">Quick links</h2>
+        <SettingsList items={quickLinks} />
       </section>
 
-      <section className="space-y-3">
-        <SectionHeader title={t("copy.quickLinks", "Quick links")} />
-        <div className="space-y-2">
-          {menuItems.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <GlassCard
-                key={item.path}
-                role="button"
-                tabIndex={0}
-                onClick={() => router.push(item.path)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    router.push(item.path);
-                  }
-                }}
-                className="p-4 transition-all hover:border-primary/40"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className={cn(
-                      "flex h-10 w-10 items-center justify-center rounded-xl",
-                      colorStyles[item.color]?.container ?? "bg-muted/10",
-                    )}
-                  >
-                    <Icon className={cn("h-5 w-5", colorStyles[item.color]?.icon ?? "text-muted-foreground")} />
-                  </div>
-                  <span className="flex-1 font-medium text-foreground">{item.label}</span>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </div>
-              </GlassCard>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="space-y-3">
-        <SectionHeader title={t("auth.logout", "Log out")} />
-        <GlassCard
-          className="p-4 transition-all hover:border-destructive/40"
-          role="button"
-          tabIndex={0}
-          onClick={async () => {
-            try {
-              await logout();
-              toast({ title: t("auth.loggedOut", "Signed out") });
-              router.replace("/onboarding");
-              router.refresh();
-            } catch (error) {
-              toast({
-                title: t("auth.logoutFailed", "Logout failed"),
-                description:
-                  error instanceof Error ? error.message : t("auth.tryAgain", "Please try again."),
-                variant: "destructive",
-              });
-            }
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              (event.currentTarget as HTMLDivElement).click();
-            }
-          }}
-        >
-          <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10">
-              <LogOut className="h-5 w-5 text-destructive" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-foreground">{t("auth.logout", "Log out")}</p>
-              <p className="text-xs text-muted-foreground">{t("copy.logoutSubtitle", "Switch accounts or exit the app")}</p>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          </div>
-        </GlassCard>
+      <section className="card space-y-3 bg-white/10 p-5">
+        <h2 className="text-lg font-semibold text-white">Account</h2>
+        <SettingsList items={settingsLinks} />
       </section>
     </PageShell>
   );
-}
+};
+
+export default MoreView;

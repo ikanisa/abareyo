@@ -1,40 +1,28 @@
 # Marketplace Revamp Status
 
 ## Current Coverage
-- **Navigation & discovery.** The shop header ships search, cart/profile shortcuts, and tabbed categories that match the IA brief, with active-filter summaries and motion-aware tab indicator. 【F:app/(routes)/shop/_components/ShopHeader.tsx†L23-L88】
-- **Merchandising rails.** Home view renders hero, top picks, new arrivals, deals, fan favourites, and a full grid backed by mock catalog/filter logic. 【F:app/(routes)/shop/ShopClientPage.tsx†L16-L86】【F:app/(routes)/shop/_logic/useShop.ts†L197-L263】
-- **Filtering, sorting, and URL state.** Bottom-sheet filters expose category, price, size, colour, tags, and availability while syncing to query params alongside sort/search debounce. 【F:app/(routes)/shop/_components/FilterSheet.tsx†L24-L189】【F:app/(routes)/shop/_logic/useShop.ts†L43-L192】
-- **Product merchandising.** Cards highlight authenticity badges, sale strikethroughs, size peek, and quick add-to-cart with shared cart store. 【F:app/(routes)/shop/_components/ProductCard.tsx†L20-L159】【F:app/(routes)/shop/_logic/useShop.ts†L264-L360】
-- **PDP essentials.** Variant selector, size guide modal hook-up, trust microcopy, and USSD CTA land per spec, plus cross-sell and recently viewed rails. 【F:app/(routes)/shop/[slug]/PdpClientPage.tsx†L16-L98】【F:app/(routes)/shop/_components/VariantSelector.tsx†L16-L78】
-- **Cart + USSD checkout.** Cart supports qty adjustments, optional pickup number, persistent totals, bilingual promos, and USSD deep link with waiting-state capture. 【F:app/cart/CartClientPage.tsx†L1-L367】【F:app/(routes)/shop/_components/UssdPayButton.tsx†L12-L160】
-- **Localisation & onboarding.** A locale toggle and dual-language copy span header, hero, cards, PDP, cart, and USSD flows, backed by a dismissible onboarding sheet for first-time shoppers. 【F:app/(routes)/shop/_hooks/useShopLocale.tsx†L1-L210】【F:app/(routes)/shop/_components/ShopOnboarding.tsx†L1-L108】【F:app/(routes)/shop/_components/ShopHeader.tsx†L18-L97】
+- **Navigation & discovery.** Shop landing uses the gradient shell with hero, filters, sort controls, and a simple onboarding card to guide first-time fans. 【F:app/(routes)/shop/ShopClientPage.tsx†L1-L56】【F:app/(routes)/shop/_components/ShopOnboarding.tsx†L1-L18】
+- **Product catalogue.** The mock dataset follows the unified product contract with price, stock, and badge metadata for jerseys, training gear, accessories, bundles, and kids lines. 【F:app/(routes)/shop/_data/products.ts†L1-L121】
+- **Filters & sorting.** Client-side filters cover category, size, colour, stock, and price ranges with modal sheets wired to the shared hook contract. Sort options expose recommended, price, newest, and popular ordering. 【F:app/(routes)/shop/_components/FilterSheet.tsx†L1-L89】【F:app/(routes)/shop/_components/SortSheet.tsx†L1-L54】【F:app/(routes)/shop/_logic/useShop.ts†L1-L109】
+- **PDP essentials.** The product detail view renders image gallery, variant selectors, add-to-cart, and USSD checkout button alongside badge chips and size guide modal. 【F:app/(routes)/shop/[slug]/PdpClientPage.tsx†L1-L111】【F:app/(routes)/shop/_components/PDPGallery.tsx†L1-L18】【F:app/(routes)/shop/_components/UssdPayButton.tsx†L1-L44】
+- **Cart + USSD checkout.** Cart view lists line items, totals, clear/remove actions, and exposes USSD payment CTA with clipboard fallback for iOS. 【F:app/cart/CartClientPage.tsx†L1-L63】【F:app/(routes)/shop/_components/UssdPayButton.tsx†L1-L44】
 
 ## Outstanding Gaps vs Spec
-1. **Internationalisation depth**
-   - Product catalogue metadata (names, descriptions, promo blurbs) still ships in English. Establishing translated variants or a CMS pipeline will unlock full bilingual parity. 【F:app/(routes)/shop/_data/products.ts†L1-L210】
-   - Dynamic marketing copy such as promo-code descriptions remains single-language; consider sourcing these from the locale dictionary.
-2. **Content management**
-   - Copy strings live in a local hook; aligning with a CMS or translation pipeline would enable non-dev updates and pluralisation rules. 【F:app/(routes)/shop/_hooks/useShopLocale.tsx†L1-L520】
-3. **Operational follow-up**
-   - Locale preference now syncs via cookie/localStorage for client routes, but downstream services (order emails, SMS receipts) still need bilingual coverage and telemetry to confirm onboarding completion rates before graduation to GA.
+1. **Advanced merchandising**
+   - Rails currently surface a single "Recommended" track; additional curated rows (new arrivals, bundles) can be reintroduced once merchandising data solidifies. 【F:app/(routes)/shop/ShopClientPage.tsx†L28-L55】
+2. **Cart depth**
+   - Quantity adjustments and variant swaps are not yet implemented in the simplified cart experience. Consider extending `useCart` with update helpers for parity with earlier flows. 【F:app/(routes)/shop/_logic/useShop.ts†L96-L132】
+3. **Localisation**
+   - Copy uses a minimal English-only string map; integrating translations or CMS-driven text would restore bilingual coverage highlighted in previous iterations. 【F:app/(routes)/shop/_hooks/useShopLocale.tsx†L1-L28】
 
 ## Recommended Phased Plan
-- **Phase 1 – Media & merchandising polish (est. 2–3 days)**
-  - Replace gallery and card placeholders with `next/image` components, add low-quality placeholders, and enable swipe + pinch zoom via Framer Motion/gesture handlers. 【F:app/(routes)/shop/_components/PDPGallery.tsx†L8-L50】
-  - Implement alternate image reveal on hover/long-press using motion variants and actual secondary assets. 【F:app/(routes)/shop/_components/ProductCard.tsx†L52-L79】
-  - Compute and display sale percentages in deals rail/cards and surface shimmer loaders for hero imagery.
-
-- **Phase 2 – Checkout enhancements (est. 2 days)**
-  - Allow variant/size swaps inside cart items (dropdown or modal) and introduce promo code input with validation hooks. ✅
-  - Add payment method tiles for MTN MoMo/Airtel Money with stateful selection feeding the USSD payload, plus explicit waiting overlay and manual reference entry form tied to cart order context. ✅
-
-- **Phase 3 – Performance & accessibility hardening (est. 1–2 days)**
-  - Code-split heavy sheets/modals, audit focus management, and ensure every interactive region meets 44px sizing on all breakpoints. ✅
-  - Add responsive image sizes, lazy loading, and prefers-reduced-motion fallbacks across rails; extend skeleton loaders to PDP and hero assets. ✅
-
-- **Phase 4 – Localisation & onboarding (complete)**
-  - Ship bilingual microcopy, locale toggle, and first-run onboarding sheet to satisfy RW/EN requirements while persisting user preference. ✅
+- **Phase 1 – Cart polish (1 day)**
+  - Add quantity steppers and variant swap controls that write through the shared cart store.
+- **Phase 2 – Merchandising expansion (1–2 days)**
+  - Reintroduce dedicated rails for new arrivals, deals, and bundles plus lightweight skeleton states.
+- **Phase 3 – Copy & localisation (1 day)**
+  - Expand locale map or integrate translation source to cover PDP notes, onboarding text, and cart summaries.
 
 ## Open Questions
-- Confirm desired asset pipeline (CMS, local placeholders, or CDN) to wire real imagery and alt text.
-- Clarify SMS confirmation integration requirements for manual reference capture (API endpoint vs local storage placeholder).
+- Should USSD support expose explicit MTN/Airtel toggles or keep a single default CTA?
+- Are additional payment or delivery instructions required on the PDP before launch?
