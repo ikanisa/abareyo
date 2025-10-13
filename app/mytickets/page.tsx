@@ -1,30 +1,67 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import TicketHero from "@/app/_components/tickets/TicketHero";
-import TicketWalletCard from "@/app/_components/tickets/TicketWalletCard";
+import TicketWalletCard, { type TicketRecord } from "@/app/_components/tickets/TicketWalletCard";
 import EmptyState from "@/app/_components/ui/EmptyState";
-import { fixtures, orders } from "@/app/_data/fixtures";
+import { jsonFetch } from "@/app/_lib/api";
+
+const tabs = [
+  { id: "upcoming", label: "Upcoming" },
+  { id: "my-tickets", label: "My Tickets", panelId: "wallet-panel" },
+  { id: "past", label: "Past Games" },
+];
+
+type ApiTicket = TicketRecord & {
+  match: TicketRecord["match"];
+};
 
 const MyTicketsPage = () => {
   const router = useRouter();
-  const tabs = [
-    { id: "upcoming", label: "Upcoming" },
-    { id: "my-tickets", label: "My Tickets", panelId: "wallet-panel" },
-    { id: "past", label: "Past Games" },
-  ];
+  const [tickets, setTickets] = useState<TicketRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const walletTickets = useMemo(
-    () =>
-      orders.map((order) => {
-        const fixture = fixtures.find((item) => item.id === order.fixtureId);
-        const zone = fixture?.zones.find((item) => item.id === order.zoneId);
-        return { order, fixture, zone };
-      }),
-    []
-  );
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const data = await jsonFetch<ApiTicket[]>("/api/tickets");
+        if (!mounted) return;
+        if (!Array.isArray(data)) {
+          setTickets([]);
+        } else {
+          setTickets(
+            data.map((ticket) => ({
+              id: ticket.id,
+              zone: ticket.zone,
+              price: ticket.price,
+              paid: ticket.paid,
+              momo_ref: ticket.momo_ref,
+              created_at: ticket.created_at,
+              match: ticket.match,
+            })),
+          );
+        }
+        setError(null);
+      } catch (error) {
+        console.error("Failed to load tickets", error);
+        if (!mounted) return;
+        setError(error instanceof Error ? error.message : "Unable to fetch tickets");
+        setTickets([]);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleTabChange = (tabId: string) => {
     if (tabId === "my-tickets") {
@@ -38,6 +75,8 @@ const MyTicketsPage = () => {
       router.push("/tickets?tab=past");
     }
   };
+
+  const orderedTickets = useMemo(() => tickets, [tickets]);
 
   return (
     <main className="min-h-screen bg-rs-gradient pb-24">
@@ -56,7 +95,12 @@ const MyTicketsPage = () => {
             </h2>
             <p className="text-xs text-white/70">Show these passes at the gate. Status updates automatically.</p>
           </header>
-          {walletTickets.length === 0 ? (
+          {loading ? (
+            <div className="space-y-4" role="status" aria-live="polite">
+              <div className="h-40 animate-pulse rounded-3xl bg-white/10" />
+              <div className="h-40 animate-pulse rounded-3xl bg-white/10" />
+            </div>
+          ) : orderedTickets.length === 0 ? (
             <EmptyState
               title="No tickets yet"
               description="Buy a ticket to your next Rayon Sports match and it will appear here, ready for offline access."
@@ -65,19 +109,16 @@ const MyTicketsPage = () => {
             />
           ) : (
             <div className="space-y-4" role="list">
-              {walletTickets.map(({ order, fixture, zone }, index) =>
-                fixture ? (
-                  <TicketWalletCard
-                    key={order.id}
-                    fixture={fixture}
-                    order={order}
-                    zone={zone}
-                    animationDelay={index * 0.08}
-                  />
-                ) : null
-              )}
+              {orderedTickets.map((ticket, index) => (
+                <TicketWalletCard key={ticket.id} ticket={ticket} animationDelay={index * 0.08} />
+              ))}
             </div>
           )}
+          {error ? (
+            <p className="text-xs text-amber-200" role="status" aria-live="polite">
+              {error}
+            </p>
+          ) : null}
         </section>
       </div>
     </main>

@@ -1,68 +1,62 @@
 # Rayon Sports Digital Platform
 
-This monorepo powers the Rayon Sports fan experience across web, mobile, and match operations. The current iteration delivers the Phase 1 foundation: a Next.js App Router frontend, a NestJS 11 backend scaffold, shared TypeScript contracts, and automation for CI/CD and containerised development.
+This monorepo powers the Rayon Sports fan experience across web, mobile, and match operations. The current MVP is a mobile-first Next.js PWA that reads and writes to Supabase for ticketing, retail, insurance, and SACCO services while remaining payment-first via USSD/SMS confirmations.
 
 ## Stack at a Glance
-- **Frontend**: Next.js 14 (App Router), Tailwind CSS, shadcn/ui, TanStack Query, next-themes, Socket.IO client for realtime toasts.
-- **Backend**: NestJS 11 + Fastify, Prisma ORM, PostgreSQL, Redis, BullMQ (queued jobs), OpenAI integrations, Socket.IO gateway.
-- **Shared packages**: `packages/contracts` distributes request/response DTOs used by the app and API.
-- **Tooling**: Dockerfiles for web + services, GitHub Actions CI (`npm run lint`, `npm run type-check`, `npm run build`).
+- **Frontend**: Next.js 14 (App Router), Tailwind CSS, shadcn/ui, TanStack Query, next-themes, Framer Motion.
+- **Backend**: Supabase Postgres (SQL migrations + seeds), Supabase Edge Functions, and Next.js API routes backed by `@supabase/supabase-js`.
+- **Realtime automation**: `/functions/v1/sms-webhook` reconciles MoMo/Airtel SMS receipts while `/functions/v1/issue-policy` turns paid insurance quotes into policies.
+- **Tooling**: Dockerfiles for web, GitHub Actions CI (`npm run lint`, `npm run type-check`, `npm run build`), Supabase CLI helpers.
+
+## Required Environment Variables
+
+Create a root `.env` file with the following values. Keys prefixed with `NEXT_PUBLIC_` are exposed to the browser and should point at the deployed backend/API origin.
+
+```
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_PROJECT_REF=
+SMS_WEBHOOK_TOKEN=
+NEXT_PUBLIC_BACKEND_URL=http://localhost:3000
+NEXT_PUBLIC_ENVIRONMENT_LABEL=local
+```
 
 ## Local Setup
 1. Install dependencies:
    ```bash
    npm install
-   (cd backend && npm install)
    ```
-2. Copy backend environment defaults and tweak as needed:
+2. Ensure the Supabase CLI is installed (<https://supabase.com/docs/guides/cli>). Log in once so migrations can run.
+3. Start Supabase locally (or point the env vars to a remote project):
    ```bash
-   cp backend/.env.example backend/.env
+   supabase start
    ```
-3. Create a root `.env` for the Next.js app (keys prefixed with `NEXT_PUBLIC_` are exposed to the browser):
-   ```
-   NEXT_PUBLIC_BACKEND_URL=http://localhost:5000/api
-   NEXT_PUBLIC_ADMIN_API_TOKEN=admin-dev-token
-   ```
-4. Start supporting services (Postgres, Redis) via Docker Compose or local installs. A minimal compose file is provided:
+   The CLI prints credentials that can be copied into `.env` for local development.
+4. Apply the MVP schema and seed data:
    ```bash
-   docker compose up db redis -d
+   supabase migration up
+   supabase db seed
    ```
-5. Apply Prisma schema and seed the database:
+5. Deploy or emulate Edge Functions if you plan to test payment automation locally:
    ```bash
-   cd backend
-   npm run prisma:generate
-   npm run prisma:dev
-   npm run seed
+   supabase functions serve sms-webhook --env-file .env
+   supabase functions serve issue-policy --env-file .env
    ```
-6. Run the backend and frontend in separate terminals:
+   These functions can also be deployed via `supabase functions deploy <name>`.
+6. Run the Next.js dev server:
    ```bash
-   # backend
-   cd backend
-   npm run start:dev
-
-   # frontend
    npm run dev
    ```
    Visit <http://localhost:3000> to explore the mobile-first PWA.
 
-Realtime events (ticket confirmations, gate scans, etc.) stream over Socket.IO at `<backend>/ws`. The UI already listens and surfaces toasts for the most common signals.
+Realtime payment confirmations are delivered through the SMS webhook. Use `node tools/gsm-emulator/send-sms.js "Paid RWF 25000 Ref XYZ"` or call the deployed `/functions/v1/sms-webhook` endpoint with an authorised payload to mark tickets, orders, quotes, and SACCO deposits as paid.
 
-If you plan to surface media (shop products, fundraising covers), configure S3-compatible storage in `backend/.env`:
-
-```
-S3_ENDPOINT=http://127.0.0.1:9000
-S3_BUCKET=rayon-dev
-S3_REGION=us-east-1
-S3_ACCESS_KEY_ID=minio
-S3_SECRET_ACCESS_KEY=miniostorage
-S3_PUBLIC_BASE_URL=http://127.0.0.1:9000/rayon-dev
-```
-
-In development, you can run a local MinIO instance and point the `S3_PUBLIC_BASE_URL` at its HTTP endpoint so the frontend receives fully-qualified image URLs.
+If you plan to surface media (shop products, fundraising covers), configure S3-compatible storage in the Supabase project storage bucket or an external CDN and update product image URLs accordingly.
 
 ### Chat-Based Onboarding
 - Visit `/onboarding` to launch the anonymous, ChatGPT-style onboarding assistant.
-- The backend requires `OPENAI_API_KEY` and optionally `OPENAI_ONBOARDING_MODEL` (defaults to `gpt-4.1-mini`) in `backend/.env` to call the OpenAI Responses API.
+- Set `OPENAI_API_KEY` in `.env` if you want to use the hosted onboarding agent locally.
 - The agent stores each fan's WhatsApp and MoMo numbers, linking them to the guest profile for future payments.
 - Once onboarding is completed, the app automatically unlocks the regular `/` home experience.
 
@@ -80,23 +74,25 @@ In development, you can run a local MinIO instance and point the `S3_PUBLIC_BASE
 - `app/` – Next.js route tree (`/(routes)` encloses mobile navigation, `/admin/*` hosts internal consoles).
 - `src/views/` – Client components powering screens referenced by routes.
 - `src/providers/` – Global context providers (auth façade, i18n scaffold, theme provider, React Query).
-- `backend/` – NestJS application (modules for tickets, payments, wallet, community, fundraising, SMS processing).
-- `packages/contracts/` – Shared DTOs and enums consumed by frontend and backend.
+- `backend/` – Legacy NestJS application retained for reference. The Supabase-backed flows now live in `app/api` and `supabase/`.
+- `packages/contracts/` – Shared DTOs and enums consumed by frontend utilities and any remaining backend tooling.
 - `docs/` – Architecture decisions, local runbooks, and mobile packaging guides.
 
 ## Next Steps (Production Readiness)
 
 - Migrations & Seed
-  - See `docs/migrations.md` and run `make backend-migrate` then `make backend-seed`.
+  - Review `docs/migrations.md` for Supabase workflow tips.
+  - Promote SQL via `supabase db push` in CI/CD or run `supabase migration up` + `supabase db seed` in production environments.
 
 - Envs & Secrets
   - Confirm required envs in `docs/production-env.md`. Validate with `make env-check`.
+  - Ensure Supabase service role keys are stored as repo/infra secrets, never shipped to the browser.
 
 - E2E Smokes
   - `make e2e` runs Playwright smokes with mocked API (guarded by `E2E_API_MOCKS=1`).
 
 - CI/CD
-  - CI runs lint/unit/e2e. Deploy workflow builds/pushes images (GHCR) and runs Prisma migrate deploy.
+  - CI runs lint/unit/build. Preview deploys rely on Vercel + Supabase. Edge Functions ship via `.github/workflows/supabase-functions-deploy.yml`.
   - Optional `HEALTH_URL` secret enables post-deploy health check loop.
 
 - Observability & Security
