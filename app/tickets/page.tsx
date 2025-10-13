@@ -27,7 +27,8 @@ const TicketsPage = () => {
     let isMounted = true;
     const loadMatches = async () => {
       try {
-        const response = await fetch("/api/matches");
+        // Fetch ticketing fixtures from the dedicated tickets endpoint.
+        const response = await fetch("/api/matches/tickets");
         if (!response.ok) {
           throw new Error(await response.text());
         }
@@ -107,6 +108,40 @@ const TicketsPage = () => {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const data = await jsonFetch<ApiMatch[]>("/api/matches");
+        if (!mounted) return;
+        if (!Array.isArray(data) || data.length === 0) {
+          setFixtures(fallbackFixtures);
+          setLoadError(null);
+          return;
+        }
+        setFixtures(data.map(buildFixtureFromMatch));
+        setLoadError(null);
+      } catch (error) {
+        console.error("Failed to load matches", error);
+        if (!mounted) return;
+        setLoadError(error instanceof Error ? error.message : "Unable to load fixtures");
+        setFixtures(fallbackFixtures);
+      } finally {
+        if (mounted) {
+          setLoadingFixtures(false);
+        }
+      }
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    setReservation({ status: "idle" });
+  }, [selectedFixture?.id]);
+
   const filteredFixtures = useMemo(() => {
     if (activeTab === "upcoming") {
       return fixtures.filter((fixture) => fixture.status === "upcoming");
@@ -125,6 +160,41 @@ const TicketsPage = () => {
     setActiveTab(tabId);
   };
 
+  const scrollToCheckout = () => {
+    const checkoutAnchor = document.getElementById("checkout-panel");
+    if (checkoutAnchor) {
+      checkoutAnchor.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const reserveTicket = async (fixture: Fixture, zone: TicketZone) => {
+    setReservation({ status: "loading" });
+    try {
+      const response = await jsonFetch<{
+        ok: boolean;
+        ticket: { id: string; paid: boolean; momo_ref: string | null; created_at: string };
+      }>("/api/tickets", {
+        method: "POST",
+        body: JSON.stringify({
+          match_id: fixture.id,
+          zone: normaliseZoneName(zone.name),
+          price: zone.price,
+          user: {
+            name: fanProfile.name,
+            phone: fanProfile.phone,
+            momo_number: fanProfile.momo ?? fanProfile.phone,
+          },
+        }),
+      });
+      setReservation({ status: "success", ticket: response.ticket });
+    } catch (error) {
+      setReservation({
+        status: "error",
+        message: error instanceof Error ? error.message : "Failed to reserve ticket",
+      });
+    }
+  };
+
   const handleFixtureSelect = (fixture: Fixture) => {
     setSelectedFixture(fixture);
     setSelectedZone(null);
@@ -134,9 +204,9 @@ const TicketsPage = () => {
   const handleZoneSelect = (zone: TicketZone) => {
     setSelectedZone(zone);
     setIsSheetOpen(false);
-    const checkoutAnchor = document.getElementById("checkout-panel");
-    if (checkoutAnchor) {
-      checkoutAnchor.scrollIntoView({ behavior: "smooth", block: "start" });
+    scrollToCheckout();
+    if (selectedFixture) {
+      reserveTicket(selectedFixture, zone);
     }
   };
 
@@ -185,10 +255,20 @@ const TicketsPage = () => {
               ))}
             </div>
           )}
+          {loadError ? (
+            <p className="text-xs text-amber-200" role="status" aria-live="polite">
+              {loadError}. Showing cached fixtures.
+            </p>
+          ) : null}
         </section>
         <section aria-live="polite" aria-atomic="true" role="region" aria-label="Checkout summary">
           {selectedFixture && selectedZone ? (
-            <CheckoutCard fixture={selectedFixture} zone={selectedZone} />
+            <CheckoutCard
+              fixture={selectedFixture}
+              zone={selectedZone}
+              reservation={reservation}
+              onRetry={() => selectedFixture && selectedZone && reserveTicket(selectedFixture, selectedZone)}
+            />
           ) : (
             <div className="card space-y-3 bg-white/5 text-white/80">
               <h3 className="text-base font-semibold text-white">Your selection</h3>

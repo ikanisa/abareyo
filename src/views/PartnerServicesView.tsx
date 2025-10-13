@@ -35,6 +35,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { launchUssdDialer } from "@/lib/ussd";
+import { fanProfile } from "@/app/_data/fanProfile";
+import { jsonFetch } from "@/app/_lib/api";
 import {
   activePolicy,
   bankInsights,
@@ -77,12 +79,21 @@ const getTicketEligibility = (total: number) => ({
     : `Add ${formatCurrency(25000 - total)} more to unlock a free Blue Zone ticket.`,
 });
 
-const InsuranceStatus = ({ status }: { status: "idle" | "pending" | "confirmed" }) => {
+const InsuranceStatus = ({
+  status,
+  quoteId,
+}: {
+  status: "idle" | "pending" | "confirmed";
+  quoteId?: string | null;
+}) => {
   switch (status) {
     case "pending":
       return (
         <span className="inline-flex items-center gap-2 text-sm text-white/80" aria-live="polite" role="status">
           <Loader2 className="h-4 w-4 animate-spin" /> Waiting for SMS confirmation…
+          {quoteId ? (
+            <span className="text-xs text-white/60">Quote {quoteId.slice(0, 8).toUpperCase()}</span>
+          ) : null}
         </span>
       );
     case "confirmed":
@@ -100,7 +111,13 @@ const InsuranceStatus = ({ status }: { status: "idle" | "pending" | "confirmed" 
   }
 };
 
-const DepositStatus = ({ status }: { status: "idle" | "pending" | "confirmed" }) => {
+const DepositStatus = ({
+  status,
+  reference,
+}: {
+  status: "idle" | "pending" | "confirmed";
+  reference?: string | null;
+}) => {
   switch (status) {
     case "pending":
       return (
@@ -112,6 +129,7 @@ const DepositStatus = ({ status }: { status: "idle" | "pending" | "confirmed" })
       return (
         <span className="inline-flex items-center gap-2 text-sm text-emerald-200" aria-live="polite" role="status">
           <CheckCircle2 className="h-4 w-4" /> Deposit confirmed. Points have been credited.
+          {reference ? <span className="text-xs text-emerald-100/80">Ref {reference}</span> : null}
         </span>
       );
     default:
@@ -284,6 +302,7 @@ const PartnerServicesView = () => {
   );
   const [depositAmount, setDepositAmount] = useState<number>(latestDeposit.amount);
   const [depositStatus, setDepositStatus] = useState<"idle" | "pending" | "confirmed">("idle");
+  const [depositSaving, setDepositSaving] = useState(false);
   const [manualDepositRef, setManualDepositRef] = useState("");
   const [showDepositFallback, setShowDepositFallback] = useState(false);
   const [dismissedDepositOverlay, setDismissedDepositOverlay] = useState(false);
@@ -382,21 +401,15 @@ const PartnerServicesView = () => {
   }, [searchParams]);
 
   useEffect(() => {
-    if (insuranceStatus === "pending") {
-      const timer = window.setTimeout(() => setInsuranceStatus("confirmed"), 7000);
-      return () => window.clearTimeout(timer);
+    if (insuranceStatus !== "pending") {
+      setDismissedInsuranceOverlay(false);
     }
-    setDismissedInsuranceOverlay(false);
-    return undefined;
   }, [insuranceStatus]);
 
   useEffect(() => {
-    if (depositStatus === "pending") {
-      const timer = window.setTimeout(() => setDepositStatus("confirmed"), 6000);
-      return () => window.clearTimeout(timer);
+    if (depositStatus !== "pending") {
+      setDismissedDepositOverlay(false);
     }
-    setDismissedDepositOverlay(false);
-    return undefined;
   }, [depositStatus]);
 
   useEffect(() => {
@@ -406,15 +419,15 @@ const PartnerServicesView = () => {
 
     const now = new Date();
     const autoRef = manualDepositRef.trim() || `USSD${now.getTime().toString().slice(-6)}`;
-    setDepositReceipt({
-      id: `receipt-${now.getTime()}`,
+    setDepositReceipt((current) => ({
+      id: current?.id ?? `receipt-${now.getTime()}`,
       saccoId: selectedSacco,
       amount: depositAmount,
       status: "confirmed",
       ref: autoRef,
       pointsEarned: getDepositPoints(depositAmount),
       createdAt: now.toISOString(),
-    });
+    }));
   }, [depositAmount, depositStatus, manualDepositRef, selectedSacco]);
 
   const handleToggleAddon = (addonId: string) => {
@@ -426,17 +439,55 @@ const PartnerServicesView = () => {
     });
   };
 
-  const handleStartInsurancePayment = () => {
-    setInsuranceStatus("pending");
-    setShowInsuranceFallback(false);
-    setDismissedInsuranceOverlay(false);
-    launchUssdDialer(insuranceUssdCode, {
-      onFallback: () => setShowInsuranceFallback(true),
-    });
-    toast({
-      title: "USSD session started",
-      description: "Complete the steps on your phone to confirm the insurance payment.",
-    });
+  const handleStartInsurancePayment = async () => {
+    if (!insuranceTotal || insuranceTotal <= 0) {
+      toast({
+        title: "Missing premium",
+        description: "Add your moto details to calculate the premium before paying.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const sanitizedPhone = (phoneNumber || fanProfile.phone).replace(/[^0-9+]/g, "");
+    try {
+      setInsuranceSaving(true);
+      const response = await jsonFetch<{
+        ok: boolean;
+        quote: { id: string; premium: number };
+      }>("/api/insurance/quote", {
+        method: "POST",
+        body: JSON.stringify({
+          moto_type: motoType,
+          plate: plateNumber || null,
+          period_months: coverageMonths,
+          premium: insuranceTotal,
+          user: {
+            name: fullName || fanProfile.name,
+            phone: sanitizedPhone,
+            momo_number: fanProfile.momo ?? sanitizedPhone,
+          },
+        }),
+      });
+      setInsuranceQuoteRecord(response.quote);
+      setInsuranceStatus("pending");
+      setShowInsuranceFallback(false);
+      setDismissedInsuranceOverlay(false);
+      launchUssdDialer(insuranceUssdCode, {
+        onFallback: () => setShowInsuranceFallback(true),
+      });
+      toast({
+        title: "USSD session started",
+        description: "Complete the steps on your phone to confirm the insurance payment.",
+      });
+    } catch (error) {
+      toast({
+        title: "Could not start payment",
+        description: error instanceof Error ? error.message : "Failed to create insurance quote.",
+        variant: "destructive",
+      });
+    } finally {
+      setInsuranceSaving(false);
+    }
   };
 
   const handleSubmitInsuranceReference = () => {
@@ -500,16 +551,53 @@ const PartnerServicesView = () => {
       });
       return;
     }
-    setDepositStatus("pending");
-    setShowDepositFallback(false);
-    setDismissedDepositOverlay(false);
-    launchUssdDialer(depositUssdCode, {
-      onFallback: () => setShowDepositFallback(true),
-    });
-    toast({
-      title: "Deposit in progress",
-      description: "Confirm the payment on your phone to grow your Ibimina savings.",
-    });
+    const sanitizedPhone = (phoneNumber || fanProfile.phone).replace(/[^0-9+]/g, "");
+    const saccoName = selectedSaccoDetails?.name ?? selectedSacco;
+    try {
+      setDepositSaving(true);
+      const response = await jsonFetch<{
+        ok: boolean;
+        deposit: { id: string; amount: number; status: "pending" | "confirmed"; ref: string | null; created_at: string };
+      }>("/api/sacco/deposit", {
+        method: "POST",
+        body: JSON.stringify({
+          sacco_name: saccoName,
+          amount: depositAmount,
+          user: {
+            name: fullName || fanProfile.name,
+            phone: sanitizedPhone,
+            momo_number: fanProfile.momo ?? sanitizedPhone,
+          },
+        }),
+      });
+      setDepositReceipt({
+        id: response.deposit.id,
+        saccoId: selectedSacco,
+        amount: response.deposit.amount,
+        status: response.deposit.status,
+        ref: response.deposit.ref ?? undefined,
+        pointsEarned: getDepositPoints(response.deposit.amount),
+        createdAt: response.deposit.created_at,
+      });
+      setDepositStatus(response.deposit.status);
+      setShowDepositFallback(false);
+      setDismissedDepositOverlay(false);
+      launchUssdDialer(depositUssdCode, {
+        onFallback: () => setShowDepositFallback(true),
+      });
+      toast({
+        title: "Deposit in progress",
+        description: "Confirm the payment on your phone to grow your Ibimina savings.",
+      });
+    } catch (error) {
+      toast({
+        title: "Could not start deposit",
+        description: error instanceof Error ? error.message : "Failed to register the deposit request.",
+        variant: "destructive",
+      });
+    } finally {
+      setDepositSaving(false);
+    }
   };
 
   const handleSubmitDepositReference = () => {
@@ -1015,16 +1103,31 @@ const PartnerServicesView = () => {
                   <p className="text-sm text-white/70">Complete the deposit using MTN or Airtel USSD.</p>
                 </div>
                 <div className="space-y-3">
-                  <Button className="w-full" variant="hero" onClick={handleStartDepositPayment}>
-                    <PhoneCall className="h-4 w-4" /> Dial {formatUssdDisplay(depositUssdCode)}
+                  <Button
+                    className="w-full"
+                    variant="hero"
+                    onClick={handleStartDepositPayment}
+                    disabled={depositSaving}
+                  >
+                    {depositSaving ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <PhoneCall className="h-4 w-4" />
+                    )}
+                    {depositSaving
+                      ? "Registering deposit…"
+                      : `Dial ${formatUssdDisplay(depositUssdCode)}`}
                   </Button>
                   <UssdNetworkTiles ussdCode={formatUssdDisplay(depositUssdCode)} />
-                  <DepositStatus status={depositStatus} />
+                  <DepositStatus status={depositStatus} reference={depositReceipt.ref} />
                   {showDepositFallback ? (
                     <div className="space-y-3">
                       <p className="text-sm text-white/70">
                         Enter the SMS reference if the payment is pending so our SACCO partners can reconcile it.
                       </p>
+                      {depositReceipt.ref ? (
+                        <p className="text-xs text-white/50">Current ref: {depositReceipt.ref}</p>
+                      ) : null}
                       <div className="flex flex-col gap-2 sm:flex-row">
                         <Input
                           placeholder="Reference"

@@ -9,10 +9,10 @@ import UssdPayButton from "../_components/UssdPayButton";
 import VariantSelector from "../_components/VariantSelector";
 import ProductRail from "../_components/ProductRail";
 import type { SizeGuideModalProps } from "../_components/SizeGuideModal";
+// Explicitly import the modal prop type once for type safety on dynamic import
 import type { Product } from "../_data/products";
 import { formatPrice, getCrossSell, recordRecentlyViewed, useCart, useRecentlyViewed } from "../_logic/useShop";
 import { ShopLocaleProvider, useShopLocale, type ShopLocale } from "../_hooks/useShopLocale";
-import type { SizeGuideModalProps } from "../_components/SizeGuideModal";
 
 const SizeGuideModal = dynamic<SizeGuideModalProps>(
   () => import("../_components/SizeGuideModal").then((mod) => mod.default),

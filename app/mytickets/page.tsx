@@ -143,6 +143,8 @@ const MyTicketsPage = () => {
     }
   };
 
+  const orderedTickets = useMemo(() => tickets, [tickets]);
+
   return (
     <main className="min-h-screen bg-rs-gradient pb-24">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8">
@@ -175,19 +177,16 @@ const MyTicketsPage = () => {
             />
           ) : (
             <div className="space-y-4" role="list">
-              {walletTickets.map(({ order, fixture, zone }, index) =>
-                fixture ? (
-                  <TicketWalletCard
-                    key={order.id}
-                    fixture={fixture}
-                    order={order}
-                    zone={zone}
-                    animationDelay={index * 0.08}
-                  />
-                ) : null
-              )}
+              {orderedTickets.map((ticket, index) => (
+                <TicketWalletCard key={ticket.id} ticket={ticket} animationDelay={index * 0.08} />
+              ))}
             </div>
           )}
+          {error ? (
+            <p className="text-xs text-amber-200" role="status" aria-live="polite">
+              {error}
+            </p>
+          ) : null}
         </section>
       </div>
     </main>
