@@ -136,7 +136,7 @@ const InstallPrompt = () => {
   }, []);
 
   const showCard = !ctaDismissed || notificationStatus === "default";
-  if (!showCard && notificationStatus !== "default") {
+  if (!showCard) {
     return null;
   }
 

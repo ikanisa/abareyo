@@ -1,0 +1,47 @@
+From 83c8b116d66fd8576772491f3ec0ea600f98c971 Mon Sep 17 00:00:00 2001
+From: CTO Mergebot <user@example.com>
+Date: Mon, 13 Oct 2025 09:43:43 +0000
+Subject: [PATCH] fix: remove duplicate pages for services and tickets to
+ resolve build conflicts
+
+---
+ app/(routes)/services/page.tsx | 11 -----------
+ app/(routes)/tickets/page.tsx  |  8 --------
+ 2 files changed, 19 deletions(-)
+ delete mode 100644 app/(routes)/services/page.tsx
+ delete mode 100644 app/(routes)/tickets/page.tsx
+
+diff --git a/app/(routes)/services/page.tsx b/app/(routes)/services/page.tsx
+deleted file mode 100644
+index 6fc7ebd..0000000
+--- a/app/(routes)/services/page.tsx
++++ /dev/null
+@@ -1,11 +0,0 @@
+-import { buildRouteMetadata } from "@/app/_lib/navigation";
+-import PartnerServicesView from "@/views/PartnerServicesView";
+-
+-export const metadata = buildRouteMetadata("/services", {
+-  title: "Partner Services — Rayon Sports",
+-  description: "Buy motor insurance, grow SACCO savings, and unlock fan perks without leaving the Rayon app.",
+-});
+-
+-const PartnerServicesPage = () => <PartnerServicesView />;
+-
+-export default PartnerServicesPage;
+diff --git a/app/(routes)/tickets/page.tsx b/app/(routes)/tickets/page.tsx
+deleted file mode 100644
+index cfbc96f..0000000
+--- a/app/(routes)/tickets/page.tsx
++++ /dev/null
+@@ -1,8 +0,0 @@
+-import { buildRouteMetadata } from "@/app/_lib/navigation";
+-import TicketsView from "@/views/TicketsView";
+-
+-export const metadata = buildRouteMetadata("/tickets");
+-
+-const TicketsPage = () => <TicketsView />;
+-
+-export default TicketsPage;
+-- 
+2.39.5
+

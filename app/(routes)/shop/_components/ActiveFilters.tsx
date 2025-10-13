@@ -54,8 +54,14 @@ export const formatActiveFilterCopy = (filter: ActiveFilter, t: Translator): Bil
     case "search":
       return t("chip.search", { query: filter.value });
     default:
-      return { primary: filter.label, secondary: filter.label };
+      return assertNever(filter);
   }
+};
+
+// Helper for exhaustive switch statements.  If we reach this function, the type system has
+// failed to narrow `filter.kind`, so throw a descriptive error.
+const assertNever = (value: never): never => {
+  throw new Error(`Unhandled filter kind: ${String(value)}`);
 };
 
 const ActiveFilters = ({ filters, onClear, onClearAll }: ActiveFiltersProps) => {

@@ -4,7 +4,6 @@ import { errorResponse, successResponse } from '../../../../_lib/responses';
 import { getSupabase } from '../../../../_lib/supabase';
 
 export async function GET(req: NextRequest, { params }: { params: { orderId?: string } }) {
-  const supabase = getSupabase();
   const userId = req.nextUrl.searchParams.get('userId');
   const orderId = params.orderId;
   if (!orderId) {
@@ -12,6 +11,11 @@ export async function GET(req: NextRequest, { params }: { params: { orderId?: st
   }
   if (!userId) {
     return errorResponse('userId is required');
+  }
+
+  const supabase = getSupabase();
+  if (!supabase) {
+    return successResponse(null);
   }
 
   const { data: order, error } = await supabase

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import ActionRail from "@/app/_components/matchday/ActionRail";
 import FanChat from "@/app/_components/matchday/FanChat";
@@ -27,6 +28,7 @@ import {
 const tabs = ["Highlights", "Timeline", "Stats", "Line-ups", "H2H", "Chat"] as const;
 
 const MatchdayPage = () => {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("Highlights");
   const [activeClip, setActiveClip] = useState<typeof highlightClips[number] | null>(
     null,
@@ -52,9 +54,21 @@ const MatchdayPage = () => {
     setActiveClip(null);
   }, []);
 
-  const handleAction = useCallback((label: string) => {
-    console.info(`Action selected: ${label}`);
-  }, []);
+  const handleTickets = useCallback(() => {
+    router.push("/tickets");
+  }, [router]);
+
+  const handleShop = useCallback(() => {
+    router.push("/shop");
+  }, [router]);
+
+  const handleDonate = useCallback(() => {
+    router.push("/services?focus=sacco");
+  }, [router]);
+
+  const handlePredict = useCallback(() => {
+    router.push("/community");
+  }, [router]);
 
   return (
     <main className="mx-auto flex max-w-4xl flex-col gap-6 px-4 pb-24 pt-6 text-white">
@@ -84,10 +98,10 @@ const MatchdayPage = () => {
       </SegmentedTabs>
 
       <ActionRail
-        onPredict={() => handleAction("Predict")}
-        onTickets={() => handleAction("Tickets")}
-        onShop={() => handleAction("Shop")}
-        onDonate={() => handleAction("Donate")}
+        onPredict={handlePredict}
+        onTickets={handleTickets}
+        onShop={handleShop}
+        onDonate={handleDonate}
       />
     </main>
   );

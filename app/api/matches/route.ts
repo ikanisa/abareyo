@@ -1,88 +1,57 @@
-import { NextRequest } from 'next/server';
-import { getSupabase } from '../_lib/supabase';
-import { errorResponse, successResponse } from '../_lib/responses';
+import { NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
-  const supabase = getSupabase();
-  const status = req.nextUrl.searchParams.get('status');
+// Match centre data is sourced from local fixtures defined in `/app/_data/matches`.
+// We optionally override `matches` with rows from Supabase if configured.
+import {
+  highlightClips,
+  leagueTable,
+  matches as fixtureMatches,
+  matchFeedUpdatedAt,
+} from "@/app/_data/matches";
 
-  let query = supabase.from('matches').select('*').order('date', { ascending: true });
-  if (status && ['upcoming', 'live', 'ft'].includes(status)) {
-    query = query.eq('status', status as 'upcoming' | 'live' | 'ft');
-  }
+export const runtime = "edge";
 
-  const { data, error } = await query;
+async function fetchMatchesFromSupabase() {
+  const url = process.env.SUPABASE_URL;
+  const key =
+    process.env.SUPABASE_ANON_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) return null;
+
+  // Importing here keeps edge bundle smaller when not used.
+  const { createClient } = await import("@supabase/supabase-js");
+  const supabase = createClient(url, key, { auth: { persistSession: false } });
+
+  const { data, error } = await supabase
+    .from("matches")
+    .select("*")
+    .order("date");
+
   if (error) {
-    return errorResponse(error.message, 500);
+    // Swallow error and allow fallback to fixtures
+    console.error("Supabase matches fetch failed:", error.message);
+    return null;
   }
+  return data ?? null;
+}
 
-  const matchIds = (data ?? []).map((match) => match.id).filter(Boolean) as string[];
-  let ticketCounts: Record<string, Record<string, number>> = {};
-  if (matchIds.length > 0) {
-    const { data: tickets, error: ticketsError } = await supabase
-      .from('tickets')
-      .select('match_id, zone, paid')
-      .in('match_id', matchIds);
-    if (ticketsError) {
-      return errorResponse(ticketsError.message, 500);
-    }
-    ticketCounts = (tickets ?? []).reduce((acc, ticket) => {
-      if (!ticket.match_id) {
-        return acc;
-      }
-      const matchMap = acc[ticket.match_id] ?? {};
-      const zoneKey = ticket.zone ?? 'Regular';
-      const current = matchMap[zoneKey] ?? 0;
-      return {
-        ...acc,
-        [ticket.match_id]: {
-          ...matchMap,
-          [zoneKey]: current + 1,
-        },
-      };
-    }, {} as Record<string, Record<string, number>>);
-  }
+/**
+ * Returns the current match centre feed as JSON.
+ *
+ * The response includes:
+ *  - `matches`: list of Match objects (DB if available, else fixtures)
+ *  - `highlights`: highlight clips (fixtures)
+ *  - `standings`: current league table (fixtures)
+ *  - `updatedAt`: ISO timestamp for last update (fixtures timestamp)
+ */
+export async function GET() {
+  const dbMatches = await fetchMatchesFromSupabase();
+  const matches = dbMatches ?? fixtureMatches;
 
-  const enriched = (data ?? []).map((match) => {
-    const zoneTotals = {
-      VIP: {
-        total: match.seats_vip ?? 0,
-        price: match.vip_price ?? 0,
-        label: 'VIP',
-      },
-      Regular: {
-        total: match.seats_regular ?? 0,
-        price: match.regular_price ?? 0,
-        label: 'Regular',
-      },
-      Blue: {
-        total: match.seats_blue ?? 0,
-        price: match.blue_price ?? match.regular_price ?? 0,
-        label: 'Fan Zone',
-      },
-    } as const;
-
-    const sold = ticketCounts[match.id] ?? {};
-    const zones = (Object.entries(zoneTotals) as [keyof typeof zoneTotals, (typeof zoneTotals)[keyof typeof zoneTotals]][]).map(
-      ([zoneKey, details]) => {
-        const soldCount = sold[zoneKey] ?? 0;
-        const seatsLeft = Math.max(details.total - soldCount, 0);
-        return {
-          id: `${match.id}-${zoneKey.toLowerCase()}`,
-          zone: zoneKey,
-          name: details.label,
-          price: details.price,
-          totalSeats: details.total,
-          seatsLeft,
-        };
-      },
-    );
-
-    return {
-      ...match,
-      zones,
-    };
+  return NextResponse.json({
+    matches,
+    highlights: highlightClips,
+    standings: leagueTable,
+    updatedAt: matchFeedUpdatedAt,
   });
-
-  return successResponse(enriched);
 }
