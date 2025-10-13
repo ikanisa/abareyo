@@ -52,6 +52,26 @@ if (self.workbox) {
     ({ request }) => request.destination === 'document',
     new workbox.strategies.NetworkFirst({ cacheName: 'rayon-pages' }),
   );
+
+  workbox.routing.registerRoute(
+    ({ url }) => url.pathname.startsWith('/tickets') || url.pathname.startsWith('/mytickets'),
+    new workbox.strategies.NetworkFirst({
+      cacheName: 'rayon-ticketing-pages',
+      plugins: [
+        new workbox.expiration.ExpirationPlugin({ maxEntries: 8, maxAgeSeconds: 60 * 60 }),
+      ],
+    }),
+  );
+
+  workbox.routing.registerRoute(
+    ({ request }) => request.destination === 'image' && request.url.includes('/tickets/'),
+    new workbox.strategies.CacheFirst({
+      cacheName: 'rayon-ticketing-media',
+      plugins: [
+        new workbox.expiration.ExpirationPlugin({ maxEntries: 24, maxAgeSeconds: 60 * 60 * 24 * 7 }),
+      ],
+    }),
+  );
 } else {
   console.warn('Workbox failed to load.');
 }
