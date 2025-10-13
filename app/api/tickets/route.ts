@@ -4,10 +4,13 @@ import { getSupabase } from '../_lib/supabase';
 import { errorResponse, successResponse } from '../_lib/responses';
 
 export async function GET(req: NextRequest) {
-  const supabase = getSupabase();
   const userId = req.nextUrl.searchParams.get('userId');
   if (!userId) {
     return errorResponse('userId is required');
+  }
+  const supabase = getSupabase();
+  if (!supabase) {
+    return successResponse([]);
   }
   const { data, error } = await supabase
     .from('tickets')
@@ -22,6 +25,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const supabase = getSupabase();
+  if (!supabase) {
+    return errorResponse('supabase_config_missing', 500);
+  }
   const payload = (await req.json().catch(() => null)) as {
     userId?: string;
     matchId?: string;

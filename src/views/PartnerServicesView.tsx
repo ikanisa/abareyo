@@ -280,7 +280,7 @@ const UssdNetworkTiles = ({ ussdCode }: { ussdCode: string }) => (
 );
 
 const PartnerServicesView = () => {
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduceMotion = useReducedMotion() ?? false;
   const { toast } = useToast();
   const searchParams = useSearchParams();
 
@@ -292,6 +292,8 @@ const PartnerServicesView = () => {
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [insuranceStatus, setInsuranceStatus] = useState<"idle" | "pending" | "confirmed">("idle");
+  const [insuranceQuoteRecord, setInsuranceQuoteRecord] = useState<{ id: string; premium: number } | null>(null);
+  const [insuranceSaving, setInsuranceSaving] = useState(false);
   const [isClaimingTicket, setIsClaimingTicket] = useState(false);
   const [manualInsuranceRef, setManualInsuranceRef] = useState("");
   const [showInsuranceFallback, setShowInsuranceFallback] = useState(false);
@@ -381,7 +383,7 @@ const PartnerServicesView = () => {
   );
 
   useEffect(() => {
-    const focus = searchParams.get("focus");
+    const focus = searchParams?.get("focus");
     if (!focus) {
       return;
     }
@@ -524,7 +526,7 @@ const PartnerServicesView = () => {
         | null;
 
       if (!response.ok || (!result?.ok && !result?.already)) {
-        const message = result?.error ? result.error.replaceAll("_", " ") : "Could not claim the ticket.";
+        const message = result?.error ? result.error.replace(/_/g, " ") : "Could not claim the ticket.";
         throw new Error(message);
       }
 
@@ -542,7 +544,7 @@ const PartnerServicesView = () => {
     }
   };
 
-  const handleStartDepositPayment = () => {
+  const handleStartDepositPayment = async () => {
     if (!depositAmount || depositAmount <= 0) {
       toast({
         title: "Enter deposit amount",

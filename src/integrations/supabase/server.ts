@@ -1,16 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const required = (value: string | undefined, name: string) => {
-  if (!value) {
-    throw new Error(`${name} is required`);
-  }
-  return value;
-};
-
 export const createServiceSupabaseClient = () => {
-  const url = required(process.env.SUPABASE_URL, 'SUPABASE_URL');
-  const key = required(process.env.SUPABASE_SERVICE_ROLE_KEY, 'SUPABASE_SERVICE_ROLE_KEY');
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    return null;
+  }
   return createClient<Database>(url, key, {
     auth: { persistSession: false },
   });

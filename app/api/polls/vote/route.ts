@@ -13,6 +13,10 @@ type PollRecord = {
 
 export async function GET(req: NextRequest) {
   const supabase = getSupabase();
+  if (!supabase) {
+    const id = req.nextUrl.searchParams.get('id');
+    return successResponse(id ? null : []);
+  }
   const id = req.nextUrl.searchParams.get('id');
   let query = supabase.from('polls').select('*');
   if (id) {
@@ -33,6 +37,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const supabase = getSupabase();
+  if (!supabase) {
+    return errorResponse('supabase_config_missing', 500);
+  }
   const payload = (await req.json().catch(() => null)) as {
     pollId?: string;
     option?: string;
