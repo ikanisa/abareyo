@@ -21,7 +21,7 @@ const HybridPayModal = ({
   total,
   walletBalance,
   points,
-  ussdCode = "*182*7*1#",
+  ussdCode = "*182*8*1*008000#",
   triggerLabel = "Checkout with Hybrid Pay",
   disabled = false,
 }: HybridPayModalProps) => {
