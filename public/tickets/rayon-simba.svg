@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="384" viewBox="0 0 512 384">
+  <defs>
+    <linearGradient id="simba-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1b1464" />
+      <stop offset="45%" stop-color="#0033ff" />
+      <stop offset="100%" stop-color="#fad201" />
+    </linearGradient>
+    <radialGradient id="simba-glow" cx="72%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.7)" />
+      <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+    </radialGradient>
+  </defs>
+  <rect width="512" height="384" fill="url(#simba-bg)" />
+  <g opacity="0.45">
+    <circle cx="420" cy="104" r="80" fill="#ffffff" />
+    <circle cx="108" cy="280" r="120" fill="#00a1de" />
+  </g>
+  <g transform="translate(96 72)">
+    <rect x="0" y="0" width="320" height="224" rx="40" ry="40" fill="rgba(0,0,0,0.15)" stroke="rgba(255,255,255,0.35)" stroke-width="6" />
+    <rect x="56" y="48" width="208" height="128" rx="32" ry="32" fill="rgba(255,255,255,0.18)" />
+    <rect x="120" y="80" width="80" height="64" rx="20" ry="20" fill="rgba(226,31,55,0.65)" />
+    <circle cx="160" cy="112" r="18" fill="rgba(255,255,255,0.95)" />
+  </g>
+  <rect width="512" height="384" fill="url(#simba-glow)" />
+</svg>
