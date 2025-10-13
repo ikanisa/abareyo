@@ -189,23 +189,28 @@ export const useCatalog = () => {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
-  const filters = useMemo(() => parseFilters(new URLSearchParams(searchParams.toString())), [searchParams]);
-  const activeTabId = searchParams.get("tab") ?? (filters.category ?? "featured");
-  const sort = (searchParams.get("sort") as SortOption | null) ?? "recommended";
-  const query = (searchParams.get("q") ?? "").toLowerCase();
+  const searchParamsString = searchParams?.toString() ?? "";
+  const currentParams = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
+  const filters = useMemo(
+    () => parseFilters(new URLSearchParams(searchParamsString)),
+    [searchParamsString],
+  );
+  const activeTabId = currentParams.get("tab") ?? (filters.category ?? "featured");
+  const sort = (currentParams.get("sort") as SortOption | null) ?? "recommended";
+  const query = (currentParams.get("q") ?? "").toLowerCase();
 
-  const [searchInput, setSearchInput] = useState(() => searchParams.get("q") ?? "");
+  const [searchInput, setSearchInput] = useState(() => currentParams.get("q") ?? "");
   useEffect(() => {
-    setSearchInput(searchParams.get("q") ?? "");
-  }, [searchParams]);
+    setSearchInput(currentParams.get("q") ?? "");
+  }, [currentParams]);
 
   const updateParams = useCallback(
     (updater: (params: URLSearchParams) => void) => {
-      const next = new URLSearchParams(searchParams.toString());
+      const next = new URLSearchParams(searchParamsString);
       updater(next);
       router.replace(`${pathname}${buildQueryString(next)}`, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParamsString],
   );
 
   useEffect(() => {

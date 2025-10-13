@@ -13,7 +13,7 @@ const sizeOptions: FilterState["sizes"] = ["XS", "S", "M", "L", "XL", "XXL"];
 const colorOptions: FilterState["colors"] = ["blue", "white", "black"];
 const tagOptions: FilterState["tags"] = ["Official", "Replica", "Kids"];
 
-type FilterSheetProps = {
+export type FilterSheetProps = {
   open: boolean;
   onClose: () => void;
   filters: FilterState;

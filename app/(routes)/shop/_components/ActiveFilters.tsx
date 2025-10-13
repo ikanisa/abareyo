@@ -53,8 +53,10 @@ export const formatActiveFilterCopy = (filter: ActiveFilter, t: Translator): Bil
       return t("chip.stock");
     case "search":
       return t("chip.search", { query: filter.value });
-    default:
-      return { primary: filter.label, secondary: filter.label };
+    default: {
+      const exhaustiveCheck: never = filter;
+      throw new Error(`Unhandled filter kind: ${JSON.stringify(exhaustiveCheck)}`);
+    }
   }
 };
 
