@@ -213,21 +213,31 @@ const FanHero = ({ score, rank, tierLabel = "Gikundiro+", missions }: FanHeroPro
                   type="button"
                   className="btn-primary min-h-[44px] rounded-xl px-5 py-3 text-sm font-semibold"
                   onClick={() => {
+                    if (!activeSheet) {
+                      closeSheet();
+                      return;
+                    }
+
+                    const mission = missionState.find((item) => item.id === activeSheet);
+
+                    if (!mission || mission.status === "done") {
+                      closeSheet();
+                      return;
+                    }
+
                     setMissionState((prev) =>
-                      prev.map((mission) =>
-                        mission.id === activeSheet
+                      prev.map((item) =>
+                        item.id === activeSheet
                           ? {
-                              ...mission,
+                              ...item,
                               status: "done",
                             }
-                          : mission,
+                          : item,
                       ),
                     );
-                    if (activeSheet) {
-                      const missionReward = missions.find((mission) => mission.id === activeSheet)?.pts ?? 0;
-                      setFanScore((value) => value + missionReward);
-                      setToast(`+${missionReward} pts · Mission completed`);
-                    }
+
+                    setFanScore((value) => value + mission.pts);
+                    setToast(`+${mission.pts} pts · Mission completed`);
                     closeSheet();
                   }}
                 >
