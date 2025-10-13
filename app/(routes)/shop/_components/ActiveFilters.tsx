@@ -53,13 +53,15 @@ export const formatActiveFilterCopy = (filter: ActiveFilter, t: Translator): Bil
       return t("chip.stock");
     case "search":
       return t("chip.search", { query: filter.value });
-    default: {
-      const exhaustiveCheck: never = filter;
-      throw new Error(`Unhandled filter kind: ${JSON.stringify(exhaustiveCheck)}`);
-      const fallback = filter as ActiveFilter & { label: string };
-      return { primary: fallback.label, secondary: fallback.label };
-    }
+    default:
+      return assertNever(filter);
   }
+};
+
+// Helper for exhaustive switch statements.  If we reach this function, the type system has
+// failed to narrow `filter.kind`, so throw a descriptive error.
+const assertNever = (value: never): never => {
+  throw new Error(`Unhandled filter kind: ${String(value)}`);
 };
 
 const ActiveFilters = ({ filters, onClear, onClearAll }: ActiveFiltersProps) => {

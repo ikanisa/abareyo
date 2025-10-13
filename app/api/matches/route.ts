@@ -1,88 +1,33 @@
-import { NextRequest } from 'next/server';
-import { getSupabase } from '../_lib/supabase';
-import { errorResponse, successResponse } from '../_lib/responses';
+import { NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
-  const supabase = getSupabase();
-  const status = req.nextUrl.searchParams.get('status');
+// Match centre data is sourced from local fixtures defined in `/app/_data/matches`.
+// This API returns a snapshot of the current match centre including match summaries,
+// highlight clips, standings table and the last updated timestamp.  It mirrors
+// the behaviour introduced in PR #4 while co‑existing with the legacy tickets
+// API which now lives under `/api/matches/tickets`.
+import {
+  highlightClips,
+  leagueTable,
+  matches,
+  matchFeedUpdatedAt,
+} from "@/app/_data/matches";
 
-  let query = supabase.from('matches').select('*').order('date', { ascending: true });
-  if (status && ['upcoming', 'live', 'ft'].includes(status)) {
-    query = query.eq('status', status as 'upcoming' | 'live' | 'ft');
-  }
+export const runtime = "edge";
 
-  const { data, error } = await query;
-  if (error) {
-    return errorResponse(error.message, 500);
-  }
-
-  const matchIds = (data ?? []).map((match) => match.id).filter(Boolean) as string[];
-  let ticketCounts: Record<string, Record<string, number>> = {};
-  if (matchIds.length > 0) {
-    const { data: tickets, error: ticketsError } = await supabase
-      .from('tickets')
-      .select('match_id, zone, paid')
-      .in('match_id', matchIds);
-    if (ticketsError) {
-      return errorResponse(ticketsError.message, 500);
-    }
-    ticketCounts = (tickets ?? []).reduce((acc, ticket) => {
-      if (!ticket.match_id) {
-        return acc;
-      }
-      const matchMap = acc[ticket.match_id] ?? {};
-      const zoneKey = ticket.zone ?? 'Regular';
-      const current = matchMap[zoneKey] ?? 0;
-      return {
-        ...acc,
-        [ticket.match_id]: {
-          ...matchMap,
-          [zoneKey]: current + 1,
-        },
-      };
-    }, {} as Record<string, Record<string, number>>);
-  }
-
-  const enriched = (data ?? []).map((match) => {
-    const zoneTotals = {
-      VIP: {
-        total: match.seats_vip ?? 0,
-        price: match.vip_price ?? 0,
-        label: 'VIP',
-      },
-      Regular: {
-        total: match.seats_regular ?? 0,
-        price: match.regular_price ?? 0,
-        label: 'Regular',
-      },
-      Blue: {
-        total: match.seats_blue ?? 0,
-        price: match.blue_price ?? match.regular_price ?? 0,
-        label: 'Fan Zone',
-      },
-    } as const;
-
-    const sold = ticketCounts[match.id] ?? {};
-    const zones = (Object.entries(zoneTotals) as [keyof typeof zoneTotals, (typeof zoneTotals)[keyof typeof zoneTotals]][]).map(
-      ([zoneKey, details]) => {
-        const soldCount = sold[zoneKey] ?? 0;
-        const seatsLeft = Math.max(details.total - soldCount, 0);
-        return {
-          id: `${match.id}-${zoneKey.toLowerCase()}`,
-          zone: zoneKey,
-          name: details.label,
-          price: details.price,
-          totalSeats: details.total,
-          seatsLeft,
-        };
-      },
-    );
-
-    return {
-      ...match,
-      zones,
-    };
+/**
+ * Returns the current match centre feed as JSON.
+ *
+ * The response includes:
+ *  - `matches`: a list of Match objects summarising upcoming and live fixtures.
+ *  - `highlights`: an array of highlight clips.
+ *  - `standings`: the current league table.
+ *  - `updatedAt`: an ISO date string indicating when the feed was last updated.
+ */
+export async function GET() {
+  return NextResponse.json({
+    matches,
+    highlights: highlightClips,
+    standings: leagueTable,
+    updatedAt: matchFeedUpdatedAt,
   });
-
-  return successResponse(enriched);
 }

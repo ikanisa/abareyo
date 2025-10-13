@@ -190,29 +190,21 @@ export const useCatalog = () => {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
-  const searchParamsString = searchParams?.toString() ?? "";
-  const currentParams = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
+  // Derive filters and other query params from the serialized search parameters.  This avoids
+  // triggering unnecessary re-renders when the searchParams object identity changes.
   const filters = useMemo(
     () => parseFilters(new URLSearchParams(searchParamsString)),
     [searchParamsString],
   );
-  const activeTabId = currentParams.get("tab") ?? (filters.category ?? "featured");
-  const sort = (currentParams.get("sort") as SortOption | null) ?? "recommended";
-  const query = (currentParams.get("q") ?? "").toLowerCase();
-
-  const [searchInput, setSearchInput] = useState(() => currentParams.get("q") ?? "");
-  useEffect(() => {
-    setSearchInput(currentParams.get("q") ?? "");
-  }, [currentParams]);
-  const filters = useMemo(() => parseFilters(new URLSearchParams(searchParamsString)), [searchParamsString]);
   const activeTabId = searchParams?.get("tab") ?? (filters.category ?? "featured");
   const sort = (searchParams?.get("sort") as SortOption | null) ?? "recommended";
   const query = (searchParams?.get("q") ?? "").toLowerCase();
 
+  // Keep a local copy of the `q` parameter for the search input.  Whenever the URL changes,
+  // rehydrate this state from the search string.
   const [searchInput, setSearchInput] = useState(() => new URLSearchParams(searchParamsString).get("q") ?? "");
   useEffect(() => {
-    const nextQuery = new URLSearchParams(searchParamsString).get("q") ?? "";
-    setSearchInput(nextQuery);
+    setSearchInput(new URLSearchParams(searchParamsString).get("q") ?? "");
   }, [searchParamsString]);
 
   const updateParams = useCallback(
