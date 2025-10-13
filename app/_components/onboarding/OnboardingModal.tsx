@@ -16,7 +16,7 @@ import { getSupabase } from '@/app/_lib/supabase';
 export function OnboardingModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [countryCode, setCountryCode] = useState("+250");
   const [waNumber, setWaNumber] = useState("");
-  const [consentWhatsApp, setConsentWhatsApp] = useState(false);
+  const [consentWhatsApp, setConsentWhatsApp] = useState(true);
   const [momoSame, setMomoSame] = useState(true);
   const [momoNumber, setMomoNumber] = useState("");
   const [personalCode, setPersonalCode] = useState("");
@@ -80,16 +80,13 @@ export function OnboardingModal({ open, onClose }: { open: boolean; onClose: () 
           <div>
             <label className="block text-sm font-medium mb-1">WhatsApp number</label>
             <div className="flex items-center gap-2">
-              <select
-                value={countryCode}
-                onChange={(e) => setCountryCode(e.target.value)}
-                className="rounded-md border border-gray-300 p-2 bg-background text-foreground">
-                <option value="+250">🇷🇼 +250</option>
-                <option value="+254">🇰🇪 +254</option>
-                <option value="+256">🇺🇬 +256</option>
-                <option value="+257">🇧🇮 +257</option>
-                <option value="+255">🇹🇿 +255</option>
-              </select>
+              <Input
+  type="tel"
+  value={countryCode}
+  onChange={(e) => setCountryCode(e.target.value)}
+  placeholder="+250"
+  className="w-20"
+/>
               <Input
                 type="tel"
                 required
@@ -129,7 +126,7 @@ export function OnboardingModal({ open, onClose }: { open: boolean; onClose: () 
                 type="tel"
                 value={momoNumber}
                 onChange={(e) => setMomoNumber(e.target.value)}
-                placeholder="078xxxxxxx"
+                placeholder="07xxxxxxx"
                 className="mt-2"
               />
             )}
