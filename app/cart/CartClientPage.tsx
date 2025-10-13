@@ -400,7 +400,7 @@ const CartContent = () => {
         {items.length > 0 && (
           <UssdPayButton
             amount={amountDue}
-            phoneNumber={phone}
+            phone={phone}
             onReferenceCaptured={(reference) => {
               setCapturedReference(reference);
               setOrderResult(null);

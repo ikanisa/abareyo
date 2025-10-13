@@ -5,29 +5,17 @@ import { NextResponse } from "next/server";
 // highlight clips, standings table and the last updated timestamp.  It mirrors
 // the behaviour introduced in PR #4 while co‑existing with the legacy tickets
 // API which now lives under `/api/matches/tickets`.
-import {
-  highlightClips,
-  leagueTable,
-  matches,
-  matchFeedUpdatedAt,
-} from "@/app/_data/matches";
+import { matches } from "@/app/_data/matches";
 
 export const runtime = "edge";
 
 /**
  * Returns the current match centre feed as JSON.
  *
- * The response includes:
- *  - `matches`: a list of Match objects summarising upcoming and live fixtures.
- *  - `highlights`: an array of highlight clips.
- *  - `standings`: the current league table.
- *  - `updatedAt`: an ISO date string indicating when the feed was last updated.
+ * The response includes a single `matches` array summarising upcoming,
+ * live, and full-time fixtures so client views can render the feed without
+ * additional shape conversions.
  */
 export async function GET() {
-  return NextResponse.json({
-    matches,
-    highlights: highlightClips,
-    standings: leagueTable,
-    updatedAt: matchFeedUpdatedAt,
-  });
+  return NextResponse.json({ matches });
 }

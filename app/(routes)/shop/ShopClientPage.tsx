@@ -54,7 +54,7 @@ const ShopClientPageContent = () => {
     setSort,
     searchInput,
     setSearchInput,
-    filters,
+    rawFilters,
     activeFilters,
     clearFilter,
     clearAllFilters,
@@ -273,7 +273,7 @@ const ShopClientPageContent = () => {
       <FilterSheet
         open={filtersOpen}
         onClose={() => setFiltersOpen(false)}
-        filters={filters}
+        filters={rawFilters}
         categories={categories}
         onSelectCategory={setCategory}
         onToggleSize={toggleSize}

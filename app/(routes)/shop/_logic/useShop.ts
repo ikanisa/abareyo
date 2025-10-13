@@ -14,6 +14,16 @@ import {
 import type { CopyKey } from "../_hooks/useShopLocale";
 
 export type SortOption = "recommended" | "price-asc" | "price-desc" | "newest" | "popular";
+export type Sort = SortOption;
+
+export type Filters = {
+  category?: Product["category"] | "all";
+  sizes?: Size[];
+  colors?: Color[];
+  inStock?: boolean;
+  min?: number;
+  max?: number;
+};
 
 export type FilterTag = "Official" | "Replica" | "Kids";
 
@@ -199,6 +209,16 @@ export const useCatalog = () => {
 
   // Parse filters (category, price, etc.) from the current query parameters once.
   const filters = useMemo(() => parseFilters(currentParams), [currentParams]);
+  const contractFilters = useMemo<Filters>(() => {
+    return {
+      category: filters.category ?? "all",
+      sizes: filters.sizes.length ? filters.sizes : undefined,
+      colors: filters.colors.length ? filters.colors : undefined,
+      inStock: filters.inStock ? true : undefined,
+      min: filters.min,
+      max: filters.max,
+    };
+  }, [filters]);
   const activeTabId = currentParams.get("tab") ?? (filters.category ?? "featured");
   const sort = (currentParams.get("sort") as SortOption | null) ?? "recommended";
   const query = (currentParams.get("q") ?? "").toLowerCase();
@@ -289,6 +309,40 @@ export const useCatalog = () => {
       });
     },
     [updateParams],
+  );
+
+  const setFiltersContract = useCallback(
+    (next: Filters | ((current: Filters) => Filters)) => {
+      const resolved = typeof next === "function" ? (next as (current: Filters) => Filters)(contractFilters) : next;
+      updateParams((params) => {
+        const category = resolved.category && resolved.category !== "all" ? resolved.category : undefined;
+        params.delete("category");
+        params.delete("tab");
+        if (category) {
+          params.set("category", category);
+          params.set("tab", category);
+        }
+
+        const applyMulti = (key: string, values?: string[]) => {
+          params.delete(key);
+          values?.forEach((value) => {
+            if (value) params.append(key, value);
+          });
+        };
+
+        applyMulti("size", resolved.sizes ?? []);
+        applyMulti("color", resolved.colors ?? []);
+
+        if (resolved.inStock) params.set("stock", "1");
+        else params.delete("stock");
+
+        if (resolved.min != null) params.set("min", String(resolved.min));
+        else params.delete("min");
+        if (resolved.max != null) params.set("max", String(resolved.max));
+        else params.delete("max");
+      });
+    },
+    [contractFilters, updateParams],
   );
 
   const clearFilter = useCallback(
@@ -482,6 +536,8 @@ export const useCatalog = () => {
   }, []);
 
   return {
+    list: items,
+    all: PRODUCTS,
     items,
     isLoading: isLoading && !hydrated,
     sort,
@@ -489,7 +545,9 @@ export const useCatalog = () => {
     setSort,
     searchInput,
     setSearchInput,
-    filters,
+    filters: contractFilters,
+    rawFilters: filters,
+    setFilters: setFiltersContract,
     activeFilters,
     clearFilter,
     clearAllFilters,
@@ -714,10 +772,39 @@ export const useCart = () => {
     total,
     count,
     addItem,
+    add: addItem,
     updateItem,
     changeVariant,
     removeItem,
+    remove: removeItem,
     clear,
+  };
+};
+
+export const useShop = () => {
+  const catalog = useCatalog();
+  const cart = useCart();
+
+  const { list, all, filters, setFilters, sort, setSort } = catalog;
+  const { items: cartItems, total, addItem } = cart;
+
+  const addToCart = useCallback(
+    (productId: string, variantId: string, qty = 1) => {
+      addItem({ productId, variantId, qty });
+    },
+    [addItem],
+  );
+
+  return {
+    list,
+    all,
+    filters,
+    setFilters,
+    sort,
+    setSort,
+    addToCart,
+    cart: cartItems,
+    total,
   };
 };
 

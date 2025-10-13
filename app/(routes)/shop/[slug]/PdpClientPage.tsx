@@ -119,7 +119,7 @@ const PdpContent = ({ product }: { product: Product }) => {
           </button>
         </div>
 
-        <UssdPayButton amount={variant.price} phoneNumber="0780000000" />
+        <UssdPayButton amount={variant.price} phone="0780000000" />
 
         <section className="card space-y-3 bg-white/10">
           <h2 className="text-lg font-semibold text-white">

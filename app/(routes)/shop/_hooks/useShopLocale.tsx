@@ -10,6 +10,22 @@ type BilingualString = { primary: string; secondary: string };
 type ReplacementValue = string | number | BilingualString;
 type CopyReplacements = Record<string, ReplacementValue>;
 
+type ShopLocaleStrings = {
+  buy: string;
+  addToCart: string;
+  payViaUSSD: string;
+  size: string;
+  color: string;
+  filters: string;
+  sort: string;
+  details: string;
+  returns: string;
+  official: string;
+  new: string;
+  sale: string;
+  limited: string;
+};
+
 const SHOP_COPY = {
   "header.tagline": {
     en: "Official store — discover team merchandise.",
@@ -708,6 +724,39 @@ const formatTemplate = (
   });
 };
 
+const SHOP_LOCALE_STRINGS: Record<ShopLocale, ShopLocaleStrings> = {
+  en: {
+    buy: "Buy",
+    addToCart: "Add to cart",
+    payViaUSSD: "Pay via USSD",
+    size: "Size",
+    color: "Color",
+    filters: "Filters",
+    sort: "Sort",
+    details: "Details",
+    returns: "Returns",
+    official: "Official",
+    new: "New",
+    sale: "Sale",
+    limited: "Limited",
+  },
+  rw: {
+    buy: "Gura",
+    addToCart: "Shyira mu gikapu",
+    payViaUSSD: "Ishura ukoresheje USSD",
+    size: "Ingano",
+    color: "Ibara",
+    filters: "Amasebe",
+    sort: "Tondeka",
+    details: "Ibisobanuro",
+    returns: "Garuka",
+    official: "Byemewe",
+    new: "Bishya",
+    sale: "Igabanyirizwa",
+    limited: "Bicye",
+  },
+};
+
 const readLocaleCookie = (): ShopLocale | undefined => {
   if (typeof document === "undefined") return undefined;
   const match = document.cookie.match(/(?:^|; )abareyo:shop-locale=([^;]+)/);
@@ -798,7 +847,8 @@ export const useShopLocale = () => {
   if (!context) {
     throw new Error("useShopLocale must be used within a ShopLocaleProvider");
   }
-  return context;
+  const strings = SHOP_LOCALE_STRINGS[context.locale] ?? SHOP_LOCALE_STRINGS.en;
+  return { ...context, ...strings, strings };
 };
 
-export type { CopyKey, ShopLocale, BilingualString, CopyReplacements };
+export type { CopyKey, ShopLocale, BilingualString, CopyReplacements, ShopLocaleStrings };

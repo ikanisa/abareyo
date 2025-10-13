@@ -14,15 +14,16 @@ import { useShopLocale } from "../_hooks/useShopLocale";
 
 type UssdPayButtonProps = {
   amount: number;
-  phoneNumber: string;
+  phone?: string;
+  provider?: PaymentMethod;
   onReferenceCaptured?: (reference: string) => void;
 };
 
 const referencePlaceholder = "e.g. MTN12345";
 
-const UssdPayButton = ({ amount, phoneNumber, onReferenceCaptured }: UssdPayButtonProps) => {
+const UssdPayButton = ({ amount, phone, provider = "mtn", onReferenceCaptured }: UssdPayButtonProps) => {
   const [dialing, setDialing] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("mtn");
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(provider);
   const [showOverlay, setShowOverlay] = useState(false);
   const [referenceInput, setReferenceInput] = useState("");
   const [referenceError, setReferenceError] = useState(false);
@@ -35,14 +36,15 @@ const UssdPayButton = ({ amount, phoneNumber, onReferenceCaptured }: UssdPayButt
   };
   const overlayRef = useDialogFocusTrap<HTMLDivElement>(showOverlay, { onClose: closeOverlay });
 
-  const disabled = amount <= 0 || !phoneNumber;
+  const disabled = amount <= 0;
 
   useEffect(() => {
     setDialing(false);
     setShowOverlay(false);
     setReferenceInput("");
     setReferenceError(false);
-  }, [amount, phoneNumber]);
+    setSelectedMethod(provider);
+  }, [amount, phone, provider]);
 
   useEffect(() => {
     if (!showOverlay) {
@@ -51,7 +53,7 @@ const UssdPayButton = ({ amount, phoneNumber, onReferenceCaptured }: UssdPayButt
     }
   }, [showOverlay]);
 
-  const href = useMemo(() => createUssdCode(phoneNumber, amount, selectedMethod), [amount, phoneNumber, selectedMethod]);
+  const href = useMemo(() => createUssdCode(phone ?? "", amount, selectedMethod), [amount, phone, selectedMethod]);
   const idleLabel = t("ussd.buttonIdle");
   const waitingLabel = t("ussd.buttonWaiting");
   const buttonCopy = dialing ? waitingLabel : idleLabel;
