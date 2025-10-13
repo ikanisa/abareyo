@@ -52,13 +52,7 @@ export const Providers = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    const maybeRegister = () => {
-      if (hasPwaOptIn()) {
-        registerServiceWorker();
-      }
-    };
-
-    maybeRegister();
+    registerServiceWorker();
 
     const onOptIn = () => {
       registerServiceWorker();
