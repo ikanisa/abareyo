@@ -27,7 +27,7 @@ const HeroShowcase = ({ product }: HeroShowcaseProps) => {
       initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: prefersReducedMotion ? 0.2 : 0.4 }}
-      className="card break-words whitespace-normal relative overflow-hidden bg-white/10 p-5 text-white"
+      className="card break-words whitespace-normal break-words whitespace-normal relative overflow-hidden bg-white/10 p-5 text-white"
     >
       <div className="absolute inset-0 -z-10 opacity-40" aria-hidden>
         <div className="absolute -left-24 top-10 h-64 w-64 rounded-full bg-blue-500/60 blur-3xl" />

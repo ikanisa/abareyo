@@ -80,7 +80,7 @@ const CheckoutCard = ({ fixture, zone, reservation, onRetry }: CheckoutCardProps
       aria-live="polite"
       aria-busy={waiting}
       id="checkout-panel"
-      className="card break-words whitespace-normal space-y-6 bg-white/5 text-white"
+      className="card break-words whitespace-normal break-words whitespace-normal space-y-6 bg-white/5 text-white"
       role="status"
     >
       <header className="space-y-1">

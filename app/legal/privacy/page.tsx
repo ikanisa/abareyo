@@ -12,7 +12,7 @@ const PrivacyPage = () => (
           We respect supporter data and only use it to power core experiences like ticketing, membership, and loyalty rewards. Below is a human-friendly summary of our data handling.
         </p>
       </header>
-      <article className="card break-words whitespace-normal space-y-4 text-sm text-white/80">
+      <article className="card break-words whitespace-normal break-words whitespace-normal space-y-4 text-sm text-white/80">
         <section>
           <h2 className="text-lg font-semibold text-white">1. What we collect</h2>
           <p>Contact details, match attendance, and shop orders captured through GIKUNDIRO official channels.</p>

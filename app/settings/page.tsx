@@ -14,7 +14,7 @@ const SettingsPage = () => (
           Tune language, theme, notifications, and support options for your GIKUNDIRO experience.
         </p>
       </header>
-      <section className="card break-words whitespace-normal space-y-4 text-sm text-white/80">
+      <section className="card break-words whitespace-normal break-words whitespace-normal space-y-4 text-sm text-white/80">
         <div>
           <h2 className="text-lg font-semibold text-white">Language</h2>
           <p>Switch between Kinyarwanda, English, and French inside the More → Control Center screen.</p>

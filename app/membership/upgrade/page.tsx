@@ -17,7 +17,7 @@ const MembershipUpgradePage = () => (
       </header>
       <section className="grid gap-4 md:grid-cols-2">
         {["Fan", "Gold", "Platinum"].map((tier) => (
-          <article key={tier} className="card break-words whitespace-normal space-y-2">
+          <article key={tier} className="card break-words whitespace-normal break-words whitespace-normal space-y-2">
             <h2 className="text-lg font-semibold text-white">{tier} tier</h2>
             <p className="text-sm text-white/70">
               {tier === 'Fan'

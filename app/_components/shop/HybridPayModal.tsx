@@ -61,7 +61,7 @@ const HybridPayModal = ({
       <Dialog.Trigger className="btn-primary w-full sm:w-auto">{triggerLabel}</Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
-        <Dialog.Content className="card break-words whitespace-normal fixed inset-x-4 top-1/2 z-50 mx-auto max-w-lg -translate-y-1/2 space-y-6 p-6">
+        <Dialog.Content className="card break-words whitespace-normal break-words whitespace-normal fixed inset-x-4 top-1/2 z-50 mx-auto max-w-lg -translate-y-1/2 space-y-6 p-6">
           <div className="space-y-2">
             <Dialog.Title className="text-2xl font-semibold text-white">Hybrid Pay</Dialog.Title>
             <Dialog.Description className="text-sm text-white/70">

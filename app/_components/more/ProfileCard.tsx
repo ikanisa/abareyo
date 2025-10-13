@@ -37,7 +37,7 @@ export function ProfileCard({ profile, membership }: ProfileCardProps) {
 
   return (
     <motion.section
-      className="card break-words whitespace-normal relative isolate overflow-hidden border-white/30 bg-white/10 p-5 text-white"
+      className="card break-words whitespace-normal break-words whitespace-normal relative isolate overflow-hidden border-white/30 bg-white/10 p-5 text-white"
       style={{ y }}
       aria-labelledby="more-profile-heading"
     >

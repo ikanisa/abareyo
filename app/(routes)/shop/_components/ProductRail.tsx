@@ -42,7 +42,7 @@ const ProductRail = ({ title, caption, href, items }: ProductRailProps) => {
           </Link>
         )}
       </div>
-      <div className="card break-words whitespace-normal p-4">
+      <div className="card break-words whitespace-normal break-words whitespace-normal p-4">
         <motion.div className="h-scroll flex gap-3 pb-2" layoutScroll={!prefersReducedMotion}>
           {items.map((product) => (
             <div key={product.id} className="min-w-[220px] max-w-[220px] flex-shrink-0">

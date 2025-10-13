@@ -48,7 +48,7 @@ const RewardsPage = () => {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {perks.map((perk) => (
-              <article key={perk.id} className="card break-words whitespace-normal h-full space-y-3">
+              <article key={perk.id} className="card break-words whitespace-normal break-words whitespace-normal h-full space-y-3">
                 <h3 className="text-lg font-semibold text-white">{perk.title}</h3>
                 <p className="text-sm text-white/70">{perk.description}</p>
                 <Link href={perk.cta.href} className="btn-primary w-full justify-center">
@@ -65,7 +65,7 @@ const RewardsPage = () => {
             {history.map((entry) => (
               <article
                 key={entry.id}
-                className="card break-words whitespace-normal flex flex-col gap-2 text-left"
+                className="card break-words whitespace-normal break-words whitespace-normal flex flex-col gap-2 text-left"
                 aria-label={`${entry.title} on ${entry.date}`}
               >
                 <div className="flex items-center justify-between">

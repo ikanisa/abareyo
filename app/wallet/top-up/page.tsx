@@ -14,7 +14,7 @@ const WalletTopUpPage = () => (
           Use the buttons below to add funds via USSD or visit the SACCO partner hub.
         </p>
       </header>
-      <section className="card break-words whitespace-normal space-y-3 text-sm text-white/80">
+      <section className="card break-words whitespace-normal break-words whitespace-normal space-y-3 text-sm text-white/80">
         <p>Dial <span className="font-semibold text-white">*651#</span> and select “Wallet Top Up”.</p>
         <p>Alternatively, make a SACCO deposit via the services hub to sync funds instantly.</p>
         <div className="flex flex-wrap gap-3">

@@ -25,7 +25,7 @@ const EventsPage = () => (
 
       <section className="space-y-4">
         {eventsSchedule.map((event) => (
-          <article key={event.id} className="card break-words whitespace-normal flex flex-col gap-2" aria-label={event.title}>
+          <article key={event.id} className="card break-words whitespace-normal break-words whitespace-normal flex flex-col gap-2" aria-label={event.title}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-lg font-semibold text-white">{event.title}</h2>
             </div>

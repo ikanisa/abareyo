@@ -41,7 +41,7 @@ const QuoteForm = ({ partnerId, onClose }: Props) => {
   }
 
   return (
-    <form className="card break-words whitespace-normal space-y-4" onSubmit={handleSubmit} aria-label="Motor insurance quote form">
+    <form className="card break-words whitespace-normal break-words whitespace-normal space-y-4" onSubmit={handleSubmit} aria-label="Motor insurance quote form">
       <header className="space-y-1">
         <p className="text-sm font-semibold uppercase tracking-wide text-white/70">Motor Insurance</p>
         <h3 className="text-lg font-semibold text-white">Get an instant quote</h3>

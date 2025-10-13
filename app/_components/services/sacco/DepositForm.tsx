@@ -32,7 +32,7 @@ const DepositForm = ({ onClose }: Props) => {
   };
 
   return (
-    <section className="card break-words whitespace-normal space-y-4" aria-label="SACCO deposit form">
+    <section className="card break-words whitespace-normal break-words whitespace-normal space-y-4" aria-label="SACCO deposit form">
       <header className="space-y-1">
         <h3 className="text-lg font-semibold text-white">SACCO Deposit</h3>
         <p className="muted text-sm">Earn double fan points on successful deposits today.</p>
@@ -75,7 +75,7 @@ const DepositForm = ({ onClose }: Props) => {
       {!paid ? (
         <UssdPayPanel amount={amount} onSuccess={handleSuccess} />
       ) : (
-        <div className="card break-words whitespace-normal space-y-3" role="status" aria-live="polite">
+        <div className="card break-words whitespace-normal break-words whitespace-normal space-y-3" role="status" aria-live="polite">
           <div className="text-white font-semibold">Deposit confirmed</div>
           <p className="muted text-sm">
             {formatRWF(amount)} added to your {sacco?.name ?? "SACCO"}. +{pointsEarned} fan points are on their way.

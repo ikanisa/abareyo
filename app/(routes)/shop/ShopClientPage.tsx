@@ -155,7 +155,7 @@ const ShopClientPageContent = () => {
               ) : null
             }
           />
-          <div className="card break-words whitespace-normal space-y-4 p-5">
+          <div className="card break-words whitespace-normal break-words whitespace-normal space-y-4 p-5">
             <p className="text-sm text-white/80">
               {tagline.primary}
               <span className="block text-xs text-white/60">{tagline.secondary}</span>
@@ -199,7 +199,7 @@ const ShopClientPageContent = () => {
             )}
           </div>
           {activeFilters.length ? (
-            <div className="card break-words whitespace-normal p-4">
+            <div className="card break-words whitespace-normal break-words whitespace-normal p-4">
               <ActiveFilters filters={activeFilters} onClear={clearFilter} onClearAll={clearAllFilters} />
             </div>
           ) : null}

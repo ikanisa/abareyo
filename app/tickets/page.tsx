@@ -299,7 +299,7 @@ const TicketsPage = () => {
               onRetry={() => selectedFixture && selectedZone && reserveTicket(selectedFixture, selectedZone)}
             />
           ) : (
-            <div className="card break-words whitespace-normal space-y-3 bg-white/5 text-white/80">
+            <div className="card break-words whitespace-normal break-words whitespace-normal space-y-3 bg-white/5 text-white/80">
               <h3 className="text-base font-semibold text-white">Your selection</h3>
               <p className="text-sm text-white/70">
                 Choose a match and seating zone to load the USSD checkout.

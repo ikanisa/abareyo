@@ -79,7 +79,7 @@ const UssdPayButton = ({ amount, phoneNumber, onReferenceCaptured }: UssdPayButt
   };
 
   return (
-    <div className="card break-words whitespace-normal space-y-4 bg-white/10 text-white">
+    <div className="card break-words whitespace-normal break-words whitespace-normal space-y-4 bg-white/10 text-white">
       <div>
         <h3 className="text-base font-semibold">
           {t("ussd.title").primary}
@@ -151,7 +151,7 @@ const UssdPayButton = ({ amount, phoneNumber, onReferenceCaptured }: UssdPayButt
           aria-label="Waiting for USSD confirmation"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
         >
-          <div ref={overlayRef} className="card break-words whitespace-normal w-full max-w-sm space-y-4 bg-white/10 text-white">
+          <div ref={overlayRef} className="card break-words whitespace-normal break-words whitespace-normal w-full max-w-sm space-y-4 bg-white/10 text-white">
             <header className="flex items-start justify-between gap-2">
               <div>
                 <h4 className="text-lg font-semibold">{t("ussd.overlayTitle").primary}</h4>
