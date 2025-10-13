@@ -1,0 +1,18 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="awayFrontGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" />
+      <stop offset="0.55" stop-color="#F2F5FF" />
+      <stop offset="1" stop-color="#C7D6FF" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1200" fill="url(#awayFrontGradient)" rx="80" />
+  <g fill="none" stroke="#0033FF" stroke-width="20" stroke-opacity="0.5">
+    <path d="M330 280h540l-70 130H400z" />
+    <path d="M330 280c0 150 120 270 270 270s270-120 270-270" stroke-opacity="0.3" />
+  </g>
+  <g fill="#0033FF" font-family="'Inter', sans-serif" text-anchor="middle">
+    <text x="600" y="930" font-size="64" font-weight="700">Away Jersey 24/25</text>
+    <text x="600" y="1008" font-size="38" font-weight="500" opacity="0.7">Crisp white with royal trims</text>
+  </g>
+</svg>
