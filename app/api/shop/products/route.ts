@@ -3,8 +3,11 @@ import { getSupabase } from '../../_lib/supabase';
 import { errorResponse, successResponse } from '../../_lib/responses';
 
 export async function GET(req: NextRequest) {
-  const supabase = getSupabase();
   const id = req.nextUrl.searchParams.get('id');
+  const supabase = getSupabase();
+  if (!supabase) {
+    return successResponse(id ? null : []);
+  }
 
   let query = supabase.from('shop_products').select('*').order('name');
   if (id) {

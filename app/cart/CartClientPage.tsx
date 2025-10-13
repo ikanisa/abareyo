@@ -77,7 +77,7 @@ const CartContent = () => {
         user: {
           name: fanProfile.name,
           phone: sanitizedPhone || fanProfile.phone,
-          momo_number: fanProfile.momo ?? sanitizedPhone || fanProfile.phone,
+          momo_number: fanProfile.momo ?? (sanitizedPhone || fanProfile.phone),
         },
         items: items.map((item) => ({
           product_id: item.product.id,

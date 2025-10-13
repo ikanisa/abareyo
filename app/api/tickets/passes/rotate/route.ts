@@ -6,6 +6,9 @@ import { getSupabase } from '../../../_lib/supabase';
 
 export async function POST(req: NextRequest) {
   const supabase = getSupabase();
+  if (!supabase) {
+    return errorResponse('supabase_config_missing', 500);
+  }
   const payload = (await req.json().catch(() => null)) as { passId?: string; userId?: string } | null;
   if (!payload?.passId || !payload.userId) {
     return errorResponse('passId and userId are required');
