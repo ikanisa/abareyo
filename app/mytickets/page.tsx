@@ -1,30 +1,142 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import TicketHero from "@/app/_components/tickets/TicketHero";
 import TicketWalletCard from "@/app/_components/tickets/TicketWalletCard";
 import EmptyState from "@/app/_components/ui/EmptyState";
-import { fixtures, orders } from "@/app/_data/fixtures";
+import type { Fixture, Order, TicketZone } from "@/app/_data/fixtures";
+import { fixtures as defaultFixtures, orders as defaultOrders } from "@/app/_data/fixtures";
+
+const DEFAULT_USER_ID = "11111111-1111-1111-1111-111111111111";
 
 const MyTicketsPage = () => {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+  const [walletTickets, setWalletTickets] = useState(
+    () =>
+      defaultOrders.map((order) => {
+        const fixture = defaultFixtures.find((item) => item.id === order.fixtureId);
+        const zone = fixture?.zones.find((item) => item.id === order.zoneId);
+        return { order, fixture: fixture ?? defaultFixtures[0], zone };
+      }),
+  );
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadOrders = async () => {
+      try {
+        setError(null);
+        const response = await fetch(`/api/tickets/orders?userId=${DEFAULT_USER_ID}`);
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+        const body = (await response.json()) as {
+          data?: {
+            id: string;
+            status: string;
+            total: number;
+            createdAt: string;
+            match: {
+              id: string;
+              opponent: string;
+              venue: string | null;
+              kickoff: string | null;
+              competition?: string | null;
+            } | null;
+            items: { id: string; zone: string; quantity: number; price: number }[];
+          }[];
+        };
+        if (!Array.isArray(body.data)) {
+          throw new Error("Invalid orders payload");
+        }
+        if (!isMounted) return;
+        const mapZoneName = (zone: string): TicketZone["name"] => {
+          switch (zone) {
+            case "VIP":
+              return "VIP";
+            case "Regular":
+              return "Regular";
+            default:
+              return "Fan";
+          }
+        };
+
+        const mapped = body.data.map((order) => {
+          const kickoff = order.match?.kickoff ? new Date(order.match.kickoff) : null;
+          const fixture: Fixture = {
+            id: order.match?.id ?? order.id,
+            title: order.match?.opponent ?? "Upcoming match",
+            comp: order.match?.competition ?? "",
+            date: kickoff
+              ? kickoff.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" })
+              : "TBD",
+            time: kickoff
+              ? kickoff.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
+              : "",
+            venue: order.match?.venue ?? "TBD",
+            zones: order.items.map((item) => ({
+              id: `${order.id}-${item.id}`,
+              name: mapZoneName(item.zone),
+              price: item.price,
+              seatsLeft: 0,
+              totalSeats: item.quantity,
+            })),
+            status: order.status === 'paid' ? 'upcoming' : order.status === 'cancelled' ? 'completed' : 'upcoming',
+            heroImage: "/tickets/default-match.svg",
+          };
+          const totalQty = order.items.reduce((sum, item) => sum + item.quantity, 0);
+          const zone = fixture.zones[0];
+          const statusMap: Record<string, "pending" | "paid" | "used" | "cancelled"> = {
+            pending: "pending",
+            paid: "paid",
+            cancelled: "cancelled",
+            expired: "cancelled",
+          };
+          const orderSummary: Order = {
+            id: order.id,
+            fixtureId: fixture.id,
+            zoneId: zone?.id ?? `${order.id}-zone`,
+            qty: totalQty,
+            total: order.total,
+            status: statusMap[order.status] ?? 'pending',
+            qrCode:
+              statusMap[order.status] === 'paid'
+                ? '/tickets/qr-active.svg'
+                : statusMap[order.status] === 'cancelled'
+                ? '/tickets/qr-cancelled.svg'
+                : '/tickets/qr-pending.svg',
+          };
+          return { order: orderSummary, fixture, zone };
+        });
+        setWalletTickets(mapped);
+        setError(null);
+      } catch (error) {
+        console.warn('Failed to load ticket orders', error);
+        if (error instanceof Error) {
+          setError(error.message);
+        } else {
+          setError("Failed to load ticket orders");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadOrders();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
   const tabs = [
     { id: "upcoming", label: "Upcoming" },
     { id: "my-tickets", label: "My Tickets", panelId: "wallet-panel" },
     { id: "past", label: "Past Games" },
   ];
-
-  const walletTickets = useMemo(
-    () =>
-      orders.map((order) => {
-        const fixture = fixtures.find((item) => item.id === order.fixtureId);
-        const zone = fixture?.zones.find((item) => item.id === order.zoneId);
-        return { order, fixture, zone };
-      }),
-    []
-  );
 
   const handleTabChange = (tabId: string) => {
     if (tabId === "my-tickets") {
@@ -38,6 +150,8 @@ const MyTicketsPage = () => {
       router.push("/tickets?tab=past");
     }
   };
+
+  const orderedTickets = useMemo(() => walletTickets, [walletTickets]);
 
   return (
     <main className="min-h-screen bg-rs-gradient pb-24">
@@ -56,7 +170,13 @@ const MyTicketsPage = () => {
             </h2>
             <p className="text-xs text-white/70">Show these passes at the gate. Status updates automatically.</p>
           </header>
-          {walletTickets.length === 0 ? (
+          {isLoading ? (
+            <EmptyState
+              title="Loading tickets"
+              description="Pulling your passes from the Supabase backend."
+              icon="⏳"
+            />
+          ) : walletTickets.length === 0 ? (
             <EmptyState
               title="No tickets yet"
               description="Buy a ticket to your next Rayon Sports match and it will appear here, ready for offline access."
@@ -65,19 +185,22 @@ const MyTicketsPage = () => {
             />
           ) : (
             <div className="space-y-4" role="list">
-              {walletTickets.map(({ order, fixture, zone }, index) =>
-                fixture ? (
-                  <TicketWalletCard
-                    key={order.id}
-                    fixture={fixture}
-                    order={order}
-                    zone={zone}
-                    animationDelay={index * 0.08}
-                  />
-                ) : null
-              )}
+              {orderedTickets.map((ticket, index) => (
+                <TicketWalletCard
+                  key={ticket.order.id}
+                  fixture={ticket.fixture}
+                  order={ticket.order}
+                  zone={ticket.zone}
+                  animationDelay={index * 0.08}
+                />
+              ))}
             </div>
           )}
+          {error ? (
+            <p className="text-xs text-amber-200" role="status" aria-live="polite">
+              {error}
+            </p>
+          ) : null}
         </section>
       </div>
     </main>

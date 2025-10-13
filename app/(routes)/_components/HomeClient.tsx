@@ -19,6 +19,7 @@ import {
 
 import Feed from "@/app/_components/home/Feed";
 import RewardsWidget from "@/app/_components/home/RewardsWidget";
+import PartnerTiles from "@/app/_components/home/PartnerTiles";
 import GamificationStrip from "@/app/_components/ui/GamificationStrip";
 import QuickTiles from "@/app/_components/ui/QuickTiles";
 import EmptyState from "@/app/_components/ui/EmptyState";
@@ -542,6 +543,10 @@ const HomeClient = () => (
         <RewardsWidget />
         <PartnerServicesBanner />
       </div>
+    </Section>
+
+    <Section title="Partner Services">
+      <PartnerTiles />
     </Section>
 
     <Section title="Stories">
