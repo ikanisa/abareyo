@@ -43,7 +43,7 @@ const LeaderboardCard = ({ weekly, monthly }: LeaderboardCardProps) => {
   const subtitle = period === "weekly" ? "Weekly · resets Monday" : "Monthly · cumulative";
 
   return (
-    <section className="card space-y-5 text-white" aria-labelledby="leaderboard-heading">
+    <section className="card break-words whitespace-normal break-words whitespace-normal space-y-5 text-white" aria-labelledby="leaderboard-heading">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 id="leaderboard-heading" className="section-title">

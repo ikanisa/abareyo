@@ -35,6 +35,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { launchUssdDialer } from "@/lib/ussd";
+import { fanProfile } from "@/app/_data/fanProfile";
+import { jsonFetch } from "@/app/_lib/api";
 import {
   activePolicy,
   bankInsights,
@@ -61,10 +63,7 @@ const fadeUp = (shouldReduceMotion: boolean) => ({
 const formatCurrency = (value: number) => `${value.toLocaleString()} RWF`;
 
 const getDepositPoints = (amount: number) => {
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return 0;
-  }
-
+  if (!Number.isFinite(amount) || amount <= 0) return 0;
   const base = Math.floor(amount / 500);
   const multiplier = amount >= 10000 ? 2 : 1;
   return base * multiplier;
@@ -72,17 +71,27 @@ const getDepositPoints = (amount: number) => {
 
 const getTicketEligibility = (total: number) => ({
   eligible: total >= 25000,
-  helper: total >= 25000
-    ? "Congrats! A Blue Zone ticket is ready once payment clears."
-    : `Add ${formatCurrency(25000 - total)} more to unlock a free Blue Zone ticket.`,
+  helper:
+    total >= 25000
+      ? "Congrats! A Blue Zone ticket is ready once payment clears."
+      : `Add ${formatCurrency(25000 - total)} more to unlock a free Blue Zone ticket.`,
 });
 
-const InsuranceStatus = ({ status }: { status: "idle" | "pending" | "confirmed" }) => {
+const InsuranceStatus = ({
+  status,
+  quoteId,
+}: {
+  status: "idle" | "pending" | "confirmed";
+  quoteId?: string | null;
+}) => {
   switch (status) {
     case "pending":
       return (
         <span className="inline-flex items-center gap-2 text-sm text-white/80" aria-live="polite" role="status">
           <Loader2 className="h-4 w-4 animate-spin" /> Waiting for SMS confirmation…
+          {quoteId ? (
+            <span className="text-xs text-white/60">Quote {quoteId.slice(0, 8).toUpperCase()}</span>
+          ) : null}
         </span>
       );
     case "confirmed":
@@ -100,7 +109,13 @@ const InsuranceStatus = ({ status }: { status: "idle" | "pending" | "confirmed" 
   }
 };
 
-const DepositStatus = ({ status }: { status: "idle" | "pending" | "confirmed" }) => {
+const DepositStatus = ({
+  status,
+  reference,
+}: {
+  status: "idle" | "pending" | "confirmed";
+  reference?: string | null;
+}) => {
   switch (status) {
     case "pending":
       return (
@@ -112,6 +127,7 @@ const DepositStatus = ({ status }: { status: "idle" | "pending" | "confirmed" })
       return (
         <span className="inline-flex items-center gap-2 text-sm text-emerald-200" aria-live="polite" role="status">
           <CheckCircle2 className="h-4 w-4" /> Deposit confirmed. Points have been credited.
+          {reference ? <span className="text-xs text-emerald-100/80">Ref {reference}</span> : null}
         </span>
       );
     default:
@@ -147,9 +163,7 @@ const PaymentOverlay = ({
   onDismiss: () => void;
   actionLabel: string;
 }) => {
-  if (!open) {
-    return null;
-  }
+  if (!open) return null;
 
   return (
     <div
@@ -213,11 +227,7 @@ const PerkBanner = ({
   </Link>
 );
 
-const FlowStepIndicator = ({
-  currentStep,
-}: {
-  currentStep: 0 | 1 | 2;
-}) => {
+const FlowStepIndicator = ({ currentStep }: { currentStep: 0 | 1 | 2 }) => {
   const steps = [
     { id: "quote", title: "Quote", description: "Add moto details" },
     { id: "pay", title: "Pay", description: "Dial USSD" },
@@ -247,22 +257,17 @@ const FlowStepIndicator = ({
 const UssdNetworkTiles = ({ ussdCode }: { ussdCode: string }) => (
   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" aria-label="USSD network options">
     {ussdNetworks.map((network) => (
-      <div
-        key={network.id}
-        className={`rounded-2xl bg-gradient-to-br ${network.accent} p-3 text-sm text-white/80`}
-      >
+      <div key={network.id} className={`rounded-2xl bg-gradient-to-br ${network.accent} p-3 text-sm text-white/80`}>
         <p className="font-semibold text-white">{network.name}</p>
         <p className="text-xs text-white/70">{network.description}</p>
-        <p className="mt-2 rounded-xl bg-black/20 px-3 py-1 text-xs font-mono text-white/80">
-          {ussdCode}
-        </p>
+        <p className="mt-2 rounded-xl bg-black/20 px-3 py-1 text-xs font-mono text-white/80">{ussdCode}</p>
       </div>
     ))}
   </div>
 );
 
 const PartnerServicesView = () => {
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduceMotion = useReducedMotion() ?? false;
   const { toast } = useToast();
   const searchParams = useSearchParams();
 
@@ -271,19 +276,20 @@ const PartnerServicesView = () => {
   const [coverageMonths, setCoverageMonths] = useState<number>(insuranceQuoteTemplate.periodMonths);
   const defaultAddons = insuranceQuoteTemplate.addons.length ? [insuranceQuoteTemplate.addons[0].id] : [];
   const [selectedAddons, setSelectedAddons] = useState<string[]>(defaultAddons);
-  const [fullName, setFullName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [fullName, setFullName] = useState(fanProfile.name);
+  const [phoneNumber, setPhoneNumber] = useState(fanProfile.phone);
   const [insuranceStatus, setInsuranceStatus] = useState<"idle" | "pending" | "confirmed">("idle");
+  const [insuranceQuoteRecord, setInsuranceQuoteRecord] = useState<{ id: string; premium: number } | null>(null);
+  const [insuranceSaving, setInsuranceSaving] = useState(false);
   const [isClaimingTicket, setIsClaimingTicket] = useState(false);
   const [manualInsuranceRef, setManualInsuranceRef] = useState("");
   const [showInsuranceFallback, setShowInsuranceFallback] = useState(false);
   const [dismissedInsuranceOverlay, setDismissedInsuranceOverlay] = useState(false);
 
-  const [selectedSacco, setSelectedSacco] = useState<string>(
-    latestDeposit.saccoId ?? saccoDirectory[0]?.id ?? "",
-  );
+  const [selectedSacco, setSelectedSacco] = useState<string>(latestDeposit.saccoId ?? saccoDirectory[0]?.id ?? "");
   const [depositAmount, setDepositAmount] = useState<number>(latestDeposit.amount);
   const [depositStatus, setDepositStatus] = useState<"idle" | "pending" | "confirmed">("idle");
+  const [depositSaving, setDepositSaving] = useState(false);
   const [manualDepositRef, setManualDepositRef] = useState("");
   const [showDepositFallback, setShowDepositFallback] = useState(false);
   const [dismissedDepositOverlay, setDismissedDepositOverlay] = useState(false);
@@ -306,23 +312,15 @@ const PartnerServicesView = () => {
     }, {});
   }, []);
 
-  const baseMonthlyPremium: Record<"moto" | "car", number> = {
-    moto: 3000,
-    car: 9000,
-  } as const;
-
+  const baseMonthlyPremium: Record<"moto" | "car", number> = { moto: 3000, car: 9000 } as const;
   const basePremium = baseMonthlyPremium[motoType] * coverageMonths;
-
   const addonsTotal = selectedAddons.reduce((total, addonId) => total + (addonPrices[addonId] ?? 0), 0);
-
   const insuranceTotal = basePremium + addonsTotal;
 
   const ticketEligibility = getTicketEligibility(insuranceTotal);
 
   const insuranceUssdCode = insuranceUssdTemplate.shortcode.replace("{amount}", String(insuranceTotal));
-
   const depositUssdCode = depositUssdTemplate.shortcode.replace("{amount}", String(depositAmount));
-
   const formatUssdDisplay = (code: string) => code.replace(/^tel:/, "").replace(/%23/g, "#");
 
   const insuranceStep: 0 | 1 | 2 = insuranceStatus === "idle" ? 0 : insuranceStatus === "pending" ? 1 : 2;
@@ -332,9 +330,7 @@ const PartnerServicesView = () => {
     return depositsHistory
       .map((deposit) => deposit.saccoId)
       .filter((id) => {
-        if (seen.has(id)) {
-          return false;
-        }
+        if (seen.has(id)) return false;
         seen.add(id);
         return Boolean(id);
       });
@@ -342,37 +338,23 @@ const PartnerServicesView = () => {
 
   const filteredSaccos = useMemo(() => {
     const query = saccoSearchTerm.trim().toLowerCase();
-    if (!query) {
-      return saccoDirectory;
-    }
+    if (!query) return saccoDirectory;
     return saccoDirectory.filter((sacco) => {
       const haystack = `${sacco.name} ${sacco.branch ?? ""}`.toLowerCase();
       return haystack.includes(query);
     });
   }, [saccoSearchTerm]);
 
-  const selectedSaccoDetails = useMemo(
-    () => saccoDirectory.find((sacco) => sacco.id === selectedSacco),
-    [selectedSacco],
-  );
-
+  const selectedSaccoDetails = useMemo(() => saccoDirectory.find((s) => s.id === selectedSacco), [selectedSacco]);
   const receiptSaccoDetails = useMemo(
-    () => saccoDirectory.find((sacco) => sacco.id === depositReceipt.saccoId),
+    () => saccoDirectory.find((s) => s.id === depositReceipt.saccoId),
     [depositReceipt.saccoId],
   );
 
   useEffect(() => {
-    const focus = searchParams.get("focus");
-    if (!focus) {
-      return;
-    }
-
-    const sectionMap: Record<string, string> = {
-      insurance: "motor-insurance",
-      sacco: "sacco-deposit",
-      bank: "bank-offers",
-    };
-
+    const focus = searchParams?.get("focus");
+    if (!focus) return;
+    const sectionMap: Record<string, string> = { insurance: "motor-insurance", sacco: "sacco-deposit", bank: "bank-offers" };
     const targetId = sectionMap[focus];
     if (targetId && typeof window !== "undefined") {
       window.requestAnimationFrame(() => {
@@ -382,61 +364,76 @@ const PartnerServicesView = () => {
   }, [searchParams]);
 
   useEffect(() => {
-    if (insuranceStatus === "pending") {
-      const timer = window.setTimeout(() => setInsuranceStatus("confirmed"), 7000);
-      return () => window.clearTimeout(timer);
-    }
-    setDismissedInsuranceOverlay(false);
-    return undefined;
+    if (insuranceStatus !== "pending") setDismissedInsuranceOverlay(false);
   }, [insuranceStatus]);
 
   useEffect(() => {
-    if (depositStatus === "pending") {
-      const timer = window.setTimeout(() => setDepositStatus("confirmed"), 6000);
-      return () => window.clearTimeout(timer);
-    }
-    setDismissedDepositOverlay(false);
-    return undefined;
+    if (depositStatus !== "pending") setDismissedDepositOverlay(false);
   }, [depositStatus]);
 
   useEffect(() => {
-    if (depositStatus !== "confirmed" || !depositAmount || depositAmount <= 0) {
-      return;
-    }
-
+    if (depositStatus !== "confirmed" || !depositAmount || depositAmount <= 0) return;
     const now = new Date();
     const autoRef = manualDepositRef.trim() || `USSD${now.getTime().toString().slice(-6)}`;
-    setDepositReceipt({
-      id: `receipt-${now.getTime()}`,
+    setDepositReceipt((current) => ({
+      id: current?.id ?? `receipt-${now.getTime()}`,
       saccoId: selectedSacco,
       amount: depositAmount,
       status: "confirmed",
       ref: autoRef,
       pointsEarned: getDepositPoints(depositAmount),
       createdAt: now.toISOString(),
-    });
+    }));
   }, [depositAmount, depositStatus, manualDepositRef, selectedSacco]);
 
   const handleToggleAddon = (addonId: string) => {
-    setSelectedAddons((current) => {
-      if (current.includes(addonId)) {
-        return current.filter((item) => item !== addonId);
-      }
-      return [...current, addonId];
-    });
+    setSelectedAddons((cur) => (cur.includes(addonId) ? cur.filter((x) => x !== addonId) : [...cur, addonId]));
   };
 
-  const handleStartInsurancePayment = () => {
-    setInsuranceStatus("pending");
-    setShowInsuranceFallback(false);
-    setDismissedInsuranceOverlay(false);
-    launchUssdDialer(insuranceUssdCode, {
-      onFallback: () => setShowInsuranceFallback(true),
-    });
-    toast({
-      title: "USSD session started",
-      description: "Complete the steps on your phone to confirm the insurance payment.",
-    });
+  const handleStartInsurancePayment = async () => {
+    if (!insuranceTotal || insuranceTotal <= 0) {
+      toast({
+        title: "Missing premium",
+        description: "Add your moto details to calculate the premium before paying.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const sanitizedPhone = (phoneNumber || fanProfile.phone).replace(/[^0-9+]/g, "");
+    try {
+      setInsuranceSaving(true);
+      const response = await jsonFetch<{ ok: boolean; quote: { id: string; premium: number } }>("/api/insurance/quote", {
+        method: "POST",
+        body: JSON.stringify({
+          moto_type: motoType,
+          plate: plateNumber || null,
+          period_months: coverageMonths,
+          premium: insuranceTotal,
+          user: {
+            name: fullName || fanProfile.name,
+            phone: sanitizedPhone,
+            momo_number: fanProfile.momo ?? sanitizedPhone,
+          },
+        }),
+      });
+      setInsuranceQuoteRecord(response.quote);
+      setInsuranceStatus("pending");
+      setShowInsuranceFallback(false);
+      setDismissedInsuranceOverlay(false);
+      launchUssdDialer(insuranceUssdCode, { onFallback: () => setShowInsuranceFallback(true) });
+      toast({
+        title: "USSD session started",
+        description: "Complete the steps on your phone to confirm the insurance payment.",
+      });
+    } catch (error) {
+      toast({
+        title: "Could not start payment",
+        description: error instanceof Error ? error.message : "Failed to create insurance quote.",
+        variant: "destructive",
+      });
+    } finally {
+      setInsuranceSaving(false);
+    }
   };
 
   const handleSubmitInsuranceReference = () => {
@@ -456,42 +453,32 @@ const PartnerServicesView = () => {
   };
 
   const handleClaimTicket = async () => {
-    if (!activePolicy || isClaimingTicket) {
-      return;
-    }
+    if (!activePolicy || isClaimingTicket) return;
 
     setIsClaimingTicket(true);
     try {
-      const response = await fetch("/api/rewards/claimTicket", {
+      const res = await fetch("/api/rewards/claimTicket", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ policy_id: activePolicy.id, user_id: null }),
       });
+      const result = (await res.json().catch(() => null)) as { ok?: boolean; already?: boolean; error?: string | null } | null;
 
-      const result = (await response.json().catch(() => null)) as
-        | { ok?: boolean; already?: boolean; error?: string | null }
-        | null;
-
-      if (!response.ok || (!result?.ok && !result?.already)) {
-        const message = result?.error ? result.error.replaceAll("_", " ") : "Could not claim the ticket.";
+      if (!res.ok || (!result?.ok && !result?.already)) {
+        const message = result?.error ? result.error.replace(/_/g, " ") : "Could not claim the ticket.";
         throw new Error(message);
       }
 
       setIsClaimingTicket(false);
       window.location.href = "/tickets?claimed=1";
-    } catch (error) {
-      console.error("claim_ticket_failed", error);
-      const message = error instanceof Error ? error.message : "Could not claim the free ticket.";
-      toast({
-        title: "Ticket claim failed",
-        description: message,
-        variant: "destructive",
-      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Could not claim the free ticket.";
+      toast({ title: "Ticket claim failed", description: message, variant: "destructive" });
       setIsClaimingTicket(false);
     }
   };
 
-  const handleStartDepositPayment = () => {
+  const handleStartDepositPayment = async () => {
     if (!depositAmount || depositAmount <= 0) {
       toast({
         title: "Enter deposit amount",
@@ -500,16 +487,51 @@ const PartnerServicesView = () => {
       });
       return;
     }
-    setDepositStatus("pending");
-    setShowDepositFallback(false);
-    setDismissedDepositOverlay(false);
-    launchUssdDialer(depositUssdCode, {
-      onFallback: () => setShowDepositFallback(true),
-    });
-    toast({
-      title: "Deposit in progress",
-      description: "Confirm the payment on your phone to grow your Ibimina savings.",
-    });
+    const sanitizedPhone = (phoneNumber || fanProfile.phone).replace(/[^0-9+]/g, "");
+    const saccoName = selectedSaccoDetails?.name ?? selectedSacco;
+    try {
+      setDepositSaving(true);
+      const response = await jsonFetch<{
+        ok: boolean;
+        deposit: { id: string; amount: number; status: "pending" | "confirmed"; ref: string | null; created_at: string };
+      }>("/api/sacco/deposit", {
+        method: "POST",
+        body: JSON.stringify({
+          sacco_name: saccoName,
+          amount: depositAmount,
+          user: {
+            name: fullName || fanProfile.name,
+            phone: sanitizedPhone,
+            momo_number: fanProfile.momo ?? sanitizedPhone,
+          },
+        }),
+      });
+      setDepositReceipt({
+        id: response.deposit.id,
+        saccoId: selectedSacco,
+        amount: response.deposit.amount,
+        status: response.deposit.status,
+        ref: response.deposit.ref ?? undefined,
+        pointsEarned: getDepositPoints(response.deposit.amount),
+        createdAt: response.deposit.created_at,
+      });
+      setDepositStatus(response.deposit.status);
+      setShowDepositFallback(false);
+      setDismissedDepositOverlay(false);
+      launchUssdDialer(depositUssdCode, { onFallback: () => setShowDepositFallback(true) });
+      toast({
+        title: "Deposit in progress",
+        description: "Confirm the payment on your phone to grow your Ibimina savings.",
+      });
+    } catch (error) {
+      toast({
+        title: "Could not start deposit",
+        description: error instanceof Error ? error.message : "Failed to register the deposit request.",
+        variant: "destructive",
+      });
+    } finally {
+      setDepositSaving(false);
+    }
   };
 
   const handleSubmitDepositReference = () => {
@@ -522,10 +544,7 @@ const PartnerServicesView = () => {
       return;
     }
     setDepositStatus("confirmed");
-    toast({
-      title: "Reference saved",
-      description: "We will confirm the savings deposit within a few minutes.",
-    });
+    toast({ title: "Reference saved", description: "We will confirm the savings deposit within a few minutes." });
   };
 
   const handleDismissInsuranceOverlay = () => {
@@ -539,10 +558,7 @@ const PartnerServicesView = () => {
   };
 
   const depositPoints = getDepositPoints(depositAmount);
-
-  const ticketPerkUnlocked =
-    ticketEligibility.eligible || (activePolicy && !activePolicy.ticketPerkIssued);
-
+  const ticketPerkUnlocked = ticketEligibility.eligible || (activePolicy && !activePolicy.ticketPerkIssued);
   const doublePointsActive =
     depositStatus === "confirmed"
       ? depositAmount >= 10000
@@ -567,12 +583,7 @@ const PartnerServicesView = () => {
   return (
     <div className="min-h-screen bg-rs-gradient pb-24 text-white">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 pb-16 pt-10">
-        <MotionSection
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp(shouldReduceMotion)}
-          className="space-y-6"
-        >
+        <MotionSection initial="hidden" animate="visible" variants={fadeUp(shouldReduceMotion)} className="space-y-6">
           <GlassCard className="relative overflow-hidden bg-white/5 p-6 md:p-8">
             <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-white/10" aria-hidden="true" />
             <div className="relative space-y-6">
@@ -586,10 +597,7 @@ const PartnerServicesView = () => {
               </div>
               <div className="flex flex-wrap items-center gap-2 text-sm text-white/70" aria-label="Partner sponsors">
                 {partnerServicesHero.sponsors.map((sponsor) => (
-                  <span
-                    key={sponsor.id}
-                    className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1"
-                  >
+                  <span key={sponsor.id} className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1">
                     <Sparkles className="h-3.5 w-3.5" /> {sponsor.name}
                   </span>
                 ))}
@@ -599,12 +607,7 @@ const PartnerServicesView = () => {
         </MotionSection>
 
         {pagePerkBanner ? (
-          <MotionSection
-            initial="hidden"
-            animate="visible"
-            variants={fadeUp(shouldReduceMotion)}
-            aria-live="polite"
-          >
+          <MotionSection initial="hidden" animate="visible" variants={fadeUp(shouldReduceMotion)} aria-live="polite">
             <PerkBanner {...pagePerkBanner} />
           </MotionSection>
         ) : null}
@@ -618,9 +621,7 @@ const PartnerServicesView = () => {
         >
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <h2 className="text-2xl font-semibold">Featured services</h2>
-            <p className="text-sm text-white/70">
-              Tap a card to launch the flow inside the Rayon app.
-            </p>
+            <p className="text-sm text-white/70">Tap a card to launch the flow inside the Rayon app.</p>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {partnerServices.map((service) => (
@@ -655,6 +656,7 @@ const PartnerServicesView = () => {
           </div>
         </MotionSection>
 
+        {/* Insurance */}
         <MotionSection
           id="motor-insurance"
           initial="hidden"
@@ -687,13 +689,13 @@ const PartnerServicesView = () => {
                     id="plate"
                     placeholder={insuranceQuoteTemplate.plate}
                     value={plateNumber}
-                    onChange={(event) => setPlateNumber(event.target.value.toUpperCase())}
+                    onChange={(e) => setPlateNumber(e.target.value.toUpperCase())}
                   />
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="moto-type">Moto type</Label>
-                    <Select value={motoType} onValueChange={(value: "moto" | "car") => setMotoType(value)}>
+                    <Select value={motoType} onValueChange={(v: "moto" | "car") => setMotoType(v)}>
                       <SelectTrigger id="moto-type">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
@@ -705,17 +707,14 @@ const PartnerServicesView = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="coverage">Coverage period</Label>
-                    <Select
-                      value={String(coverageMonths)}
-                      onValueChange={(value) => setCoverageMonths(Number(value))}
-                    >
+                    <Select value={String(coverageMonths)} onValueChange={(v) => setCoverageMonths(Number(v))}>
                       <SelectTrigger id="coverage">
                         <SelectValue placeholder="Select period" />
                       </SelectTrigger>
                       <SelectContent>
-                        {[1, 3, 6, 12].map((month) => (
-                          <SelectItem key={month} value={String(month)}>
-                            {month} {month === 1 ? "month" : "months"}
+                        {[1, 3, 6, 12].map((m) => (
+                          <SelectItem key={m} value={String(m)}>
+                            {m} {m === 1 ? "month" : "months"}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -730,11 +729,7 @@ const PartnerServicesView = () => {
                         const checked = selectedAddons.includes(addon.id);
                         return (
                           <label key={addon.id} className="flex items-start gap-3">
-                            <Checkbox
-                              id={`addon-${addon.id}`}
-                              checked={checked}
-                              onCheckedChange={() => handleToggleAddon(addon.id)}
-                            />
+                            <Checkbox id={`addon-${addon.id}`} checked={checked} onCheckedChange={() => handleToggleAddon(addon.id)} />
                             <div className="space-y-1">
                               <span className="font-medium">{addon.title}</span>
                               <p className="text-xs text-white/70">{addon.description}</p>
@@ -749,12 +744,7 @@ const PartnerServicesView = () => {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="full-name">Full name</Label>
-                    <Input
-                      id="full-name"
-                      placeholder="Fan name"
-                      value={fullName}
-                      onChange={(event) => setFullName(event.target.value)}
-                    />
+                    <Input id="full-name" placeholder="Fan name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone-number">Mobile number</Label>
@@ -763,7 +753,7 @@ const PartnerServicesView = () => {
                       inputMode="tel"
                       placeholder="07xx xxx xxx"
                       value={phoneNumber}
-                      onChange={(event) => setPhoneNumber(event.target.value)}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
                     />
                   </div>
                 </div>
@@ -788,9 +778,7 @@ const PartnerServicesView = () => {
                         <span>{formatCurrency(addonPrices[addonId] ?? 0)}</span>
                       </div>
                     ))}
-                    {selectedAddons.length === 0 ? (
-                      <p className="text-sm text-white/60">No add-ons selected</p>
-                    ) : null}
+                    {selectedAddons.length === 0 ? <p className="text-sm text-white/60">No add-ons selected</p> : null}
                   </div>
                   <div className="flex items-center justify-between border-t border-white/10 pt-3 text-base font-semibold">
                     <span>Total due</span>
@@ -808,10 +796,12 @@ const PartnerServicesView = () => {
                 </div>
               </div>
               <div className="space-y-4">
-                <Button className="w-full" variant="hero" onClick={handleStartInsurancePayment}>
-                  <PhoneCall className="h-4 w-4" /> Dial {formatUssdDisplay(insuranceUssdCode)}
+                <Button className="w-full" variant="hero" onClick={handleStartInsurancePayment} disabled={insuranceSaving}>
+                  {insuranceSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <PhoneCall className="h-4 w-4" />}
+                  {insuranceSaving ? "Preparing quote…" : `Dial ${formatUssdDisplay(insuranceUssdCode)}`}
                 </Button>
                 <UssdNetworkTiles ussdCode={formatUssdDisplay(insuranceUssdCode)} />
+
                 {insuranceStatus === "confirmed" ? (
                   <div className="card space-y-3 bg-emerald-500/10 text-emerald-50">
                     <div className="text-base font-semibold text-white">Payment received</div>
@@ -836,17 +826,22 @@ const PartnerServicesView = () => {
                   </div>
                 ) : (
                   <>
-                    <InsuranceStatus status={insuranceStatus} />
+                    <InsuranceStatus status={insuranceStatus} quoteId={insuranceQuoteRecord?.id ?? null} />
                     {showInsuranceFallback ? (
                       <div className="space-y-3">
                         <p className="text-sm text-white/70">
                           Didn’t receive the SMS? Enter the mobile money reference and we will verify manually.
                         </p>
+                        {insuranceQuoteRecord ? (
+                          <p className="text-xs text-white/50">
+                            Quote ref: {insuranceQuoteRecord.id.slice(0, 8).toUpperCase()}
+                          </p>
+                        ) : null}
                         <div className="flex flex-col gap-2 sm:flex-row">
                           <Input
                             placeholder="MM reference"
                             value={manualInsuranceRef}
-                            onChange={(event) => setManualInsuranceRef(event.target.value)}
+                            onChange={(e) => setManualInsuranceRef(e.target.value)}
                           />
                           <Button variant="secondary" onClick={handleSubmitInsuranceReference}>
                             Submit
@@ -856,6 +851,7 @@ const PartnerServicesView = () => {
                     ) : null}
                   </>
                 )}
+
                 <p className="text-xs text-white/60" id="motor-insurance-terms">
                   Payments processed via MTN MoMo & Airtel Money. Provide accurate details to avoid policy delays.
                 </p>
@@ -883,17 +879,13 @@ const PartnerServicesView = () => {
               <div className="space-y-1">
                 <p className="text-xs uppercase tracking-wide text-white/60">Validity</p>
                 <p className="text-sm text-white/80">
-                  {new Date(activePolicy.validFrom).toLocaleDateString()} – {new Date(activePolicy.validTo).toLocaleDateString()}
+                  {new Date(activePolicy.validFrom).toLocaleDateString()} –{" "}
+                  {new Date(activePolicy.validTo).toLocaleDateString()}
                 </p>
               </div>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button
-                className="w-full sm:w-auto"
-                variant="glass"
-                onClick={handleClaimTicket}
-                disabled={isClaimingTicket}
-              >
+              <Button className="w-full sm:w-auto" variant="glass" onClick={handleClaimTicket} disabled={isClaimingTicket}>
                 <Ticket className="h-4 w-4" />
                 {isClaimingTicket ? "Claiming…" : "Claim free ticket"}
               </Button>
@@ -906,6 +898,7 @@ const PartnerServicesView = () => {
           </GlassCard>
         </MotionSection>
 
+        {/* SACCO / Ibimina */}
         <MotionSection
           id="sacco-deposit"
           initial="hidden"
@@ -939,7 +932,7 @@ const PartnerServicesView = () => {
                       id="sacco-search"
                       placeholder="Search by name or branch"
                       value={saccoSearchTerm}
-                      onChange={(event) => setSaccoSearchTerm(event.target.value)}
+                      onChange={(e) => setSaccoSearchTerm(e.target.value)}
                       className="pl-9"
                     />
                   </div>
@@ -947,9 +940,7 @@ const PartnerServicesView = () => {
                     <div className="flex flex-wrap gap-2 pt-2">
                       {saccoRecents.map((saccoId) => {
                         const sacco = saccoDirectory.find((entry) => entry.id === saccoId);
-                        if (!sacco) {
-                          return null;
-                        }
+                        if (!sacco) return null;
                         const isActive = selectedSacco === sacco.id;
                         return (
                           <Button
@@ -996,13 +987,15 @@ const PartnerServicesView = () => {
                     id="deposit-amount"
                     inputMode="numeric"
                     value={depositAmount ? String(depositAmount) : ""}
-                    onChange={(event) => setDepositAmount(Number(event.target.value.replace(/[^\d]/g, "")))}
+                    onChange={(e) => setDepositAmount(Number(e.target.value.replace(/[^\d]/g, "")))}
                     placeholder="10,000"
                   />
                   <p className="text-xs text-white/60">Deposit ≥ 10,000 RWF today to double your fan points.</p>
                 </div>
                 <div className="rounded-2xl bg-blue-500/15 p-4 text-sm text-blue-100">
-                  <p>Estimated fan points: <strong>{depositPoints}</strong></p>
+                  <p>
+                    Estimated fan points: <strong>{depositPoints}</strong>
+                  </p>
                   <p className="text-blue-100/80">Points reflect instantly in your wallet.</p>
                 </div>
               </div>
@@ -1015,21 +1008,23 @@ const PartnerServicesView = () => {
                   <p className="text-sm text-white/70">Complete the deposit using MTN or Airtel USSD.</p>
                 </div>
                 <div className="space-y-3">
-                  <Button className="w-full" variant="hero" onClick={handleStartDepositPayment}>
-                    <PhoneCall className="h-4 w-4" /> Dial {formatUssdDisplay(depositUssdCode)}
+                  <Button className="w-full" variant="hero" onClick={handleStartDepositPayment} disabled={depositSaving}>
+                    {depositSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <PhoneCall className="h-4 w-4" />}
+                    {depositSaving ? "Registering deposit…" : `Dial ${formatUssdDisplay(depositUssdCode)}`}
                   </Button>
                   <UssdNetworkTiles ussdCode={formatUssdDisplay(depositUssdCode)} />
-                  <DepositStatus status={depositStatus} />
+                  <DepositStatus status={depositStatus} reference={depositReceipt.ref} />
                   {showDepositFallback ? (
                     <div className="space-y-3">
                       <p className="text-sm text-white/70">
                         Enter the SMS reference if the payment is pending so our SACCO partners can reconcile it.
                       </p>
+                      {depositReceipt.ref ? <p className="text-xs text-white/50">Current ref: {depositReceipt.ref}</p> : null}
                       <div className="flex flex-col gap-2 sm:flex-row">
                         <Input
                           placeholder="Reference"
                           value={manualDepositRef}
-                          onChange={(event) => setManualDepositRef(event.target.value)}
+                          onChange={(e) => setManualDepositRef(e.target.value)}
                         />
                         <Button variant="secondary" onClick={handleSubmitDepositReference}>
                           Submit
@@ -1056,6 +1051,7 @@ const PartnerServicesView = () => {
           </div>
         </MotionSection>
 
+        {/* Bank & partner offers */}
         <MotionSection
           id="bank-offers"
           initial="hidden"
@@ -1093,6 +1089,7 @@ const PartnerServicesView = () => {
           </p>
         </MotionSection>
 
+        {/* Rewards & perks */}
         <MotionSection
           id="future-services"
           initial="hidden"
@@ -1133,6 +1130,7 @@ const PartnerServicesView = () => {
           </GlassCard>
         </MotionSection>
 
+        {/* Services history */}
         <MotionSection
           id="services-history"
           initial="hidden"
@@ -1168,6 +1166,7 @@ const PartnerServicesView = () => {
           </div>
         </MotionSection>
       </div>
+
       <PaymentOverlay
         open={insuranceStatus === "pending" && !dismissedInsuranceOverlay}
         title="Waiting for insurance payment"

@@ -1,0 +1,50 @@
+diff --git a/app/_components/ui/TopAppBar.tsx b/app/_components/ui/TopAppBar.tsx
+--- a/app/_components/ui/TopAppBar.tsx
++++ b/app/_components/ui/TopAppBar.tsx
+@@
+-import type { ReactNode } from "react";
++import type { ReactNode } from "react";
++import Image from "next/image";
+@@ const TopAppBar = ({ right }: TopAppBarProps) => (
+-        <div aria-label="Rayon logo" className="h-8 w-8 rounded-xl bg-white/90" />
+-        <span className="text-white font-semibold">Rayon Sports</span>
++        {/* Rayon Sports logo; uses public asset saved as rayon-logo.png */}
++        <Image
++          src="/rayon-logo.png"
++          alt="Rayon Sports logo"
++          width={32}
++          height={32}
++          className="h-8 w-8 rounded-xl"
++          priority={true}
++        />
++        <span className="text-white font-semibold">Rayon Sports</span>
+
+diff --git a/app/_components/pwa/PwaHelpers.tsx b/app/_components/pwa/PwaHelpers.tsx
+--- a/app/_components/pwa/PwaHelpers.tsx
++++ b/app/_components/pwa/PwaHelpers.tsx
+@@ export function InstallPrompt() {
+-       return (
+-         <div className="card fixed inset-x-0 bottom-4 mx-auto flex w-fit items-center gap-2">
++       return (
++         {/* Position the install prompt above the bottom nav so it isn't hidden */}
++         <div className="card fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
+
+diff --git a/app/_components/shop/HybridPayModal.tsx b/app/_components/shop/HybridPayModal.tsx
+--- a/app/_components/shop/HybridPayModal.tsx
++++ b/app/_components/shop/HybridPayModal.tsx
+@@
+-      ussdCode = "*182*7*1#",
++      // default MoMo USSD code updated for Rayon Sports payments
++      ussdCode = "*182*8*1*008000#",
+
+diff --git a/app/(routes)/shop/_components/ProductCard.tsx b/app/(routes)/shop/_components/ProductCard.tsx
+--- a/app/(routes)/shop/_components/ProductCard.tsx
++++ b/app/(routes)/shop/_components/ProductCard.tsx
+@@ const ProductCard = ({ product }: ProductCardProps) => {
+-           <Link href={`/shop/${product.slug}`} className="group flex flex-col gap-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
++           {/* Build a safe link: disable navigation if product.slug is missing */}
++           <Link
++             href={product.slug ? `/shop/${product.slug}` : "#"}
++             aria-disabled={!product.slug}
++             onClick={product.slug ? undefined : (e) => e.preventDefault()}
++             className="group flex flex-col gap-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">

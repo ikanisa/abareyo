@@ -6,8 +6,9 @@ import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle, ShoppingBag } from "lucide-react";
 
-import { formatPrice, minPrice, type Product, useCart } from "../_logic/useShop";
+import { formatPrice, minPrice, useCart } from "../_logic/useShop";
 import { useShopLocale, type CopyKey } from "../_hooks/useShopLocale";
+import type { Color, Product, Size } from "../_data/products";
 
 const swatchColor: Record<string, string> = {
   blue: "#0033FF",
@@ -24,7 +25,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const prefersReducedMotion = useReducedMotion();
   const [showSizes, setShowSizes] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
-  const pressTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pressTimeout = useRef<number | null>(null);
   const { t } = useShopLocale();
   const officialCopy = t("product.genuine");
   const fallbackBadge = t("product.badgeFallback");
@@ -39,8 +40,20 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const saleBadgeCopy = discountPercent
     ? t("product.savePercent", { percent: discountPercent })
     : t("product.saleBadge");
-  const colors = useMemo(() => Array.from(new Set(product.variants.map((variant) => variant.color))), [product.variants]);
-  const sizes = useMemo(() => Array.from(new Set(product.variants.map((variant) => variant.size))), [product.variants]);
+  const colors = useMemo<Color[]>(() => {
+    const unique = new Set<Color>();
+    product.variants.forEach((variant) => {
+      if (variant.color) unique.add(variant.color);
+    });
+    return Array.from(unique);
+  }, [product.variants]);
+  const sizes = useMemo<Size[]>(() => {
+    const unique = new Set<Size>();
+    product.variants.forEach((variant) => {
+      if (variant.size) unique.add(variant.size);
+    });
+    return Array.from(unique);
+  }, [product.variants]);
   const hasMultipleVariants = sizes.length > 1 || colors.length > 1;
   const hasMultipleImages = product.images.length > 1;
   const displayImage = product.images[imageIndex] ?? product.images[0];
@@ -99,14 +112,19 @@ const ProductCard = ({ product }: ProductCardProps) => {
       layout={!prefersReducedMotion}
       whileHover={prefersReducedMotion ? undefined : { translateY: -4 }}
       transition={prefersReducedMotion ? { duration: 0 } : { type: "spring", stiffness: 260, damping: 24 }}
-      className="card relative flex h-full flex-col gap-3 bg-white/10 p-4"
+      className="card break-words whitespace-normal break-words whitespace-normal relative flex h-full flex-col gap-3 bg-white/10 p-4"
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
     >
-      <Link href={`/shop/${product.slug}`} className="group flex flex-col gap-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+      {/* Build a safe link: disable navigation if product.slug is missing */}
+           <Link
+             href={product.slug ? `/shop/${product.slug}` : "#"}
+             aria-disabled={!product.slug}
+             onClick={product.slug ? undefined : (e) => e.preventDefault()}
+             className="group flex flex-col gap-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
         <div className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-white/20 via-white/5 to-white/10">
           <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-blue-500/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white">
             <span>

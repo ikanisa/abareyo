@@ -136,12 +136,12 @@ const InstallPrompt = () => {
   }, []);
 
   const showCard = !ctaDismissed || notificationStatus === "default";
-  if (!showCard && notificationStatus !== "default") {
+  if (!showCard) {
     return null;
   }
 
   return (
-    <section className="card space-y-4" aria-live="polite">
+    <section className="card break-words whitespace-normal break-words whitespace-normal space-y-4" aria-live="polite">
       <div>
         <h2 className="section-title">Stay ready offline</h2>
         <p className="text-sm text-white/70">
@@ -217,7 +217,7 @@ const FeaturedCollectionCard = ({
   const firstSlug = items[0]?.slug;
 
   return (
-    <article className="card flex min-w-[220px] flex-col gap-3" role="listitem">
+    <article className="card break-words whitespace-normal break-words whitespace-normal flex min-w-[220px] flex-col gap-3" role="listitem">
       <h3 className="text-lg font-semibold text-white">{collection.title}</h3>
       {collection.description ? <p className="text-sm text-white/70">{collection.description}</p> : null}
       <div className="flex gap-3">
@@ -369,7 +369,7 @@ const ShopExperience = ({ data }: { data: ShopData }) => {
       .filter((item): item is { product: Product; reason: string } => Boolean(item));
   }, [findFromCatalog, recommendations]);
 
-  const isMember = viewer.tier !== "Gikundiro";
+  const isMember = viewer.tier !== "GIKUNDIRO";
 
   const filteredProducts = useMemo(() => {
     if (selectedCategory === "All") {
@@ -514,7 +514,7 @@ const ShopExperience = ({ data }: { data: ShopData }) => {
               </Link>
             </div>
             {filteredProducts.length === 0 ? (
-              <div className="card text-white/80">
+              <div className="card break-words whitespace-normal break-words whitespace-normal text-white/80">
                 No products available now — check next drop.
               </div>
             ) : (
@@ -522,7 +522,7 @@ const ShopExperience = ({ data }: { data: ShopData }) => {
                 {filteredProducts.map((product) => {
                   const isLocked = Boolean(product.memberOnly && !isMember);
                   return (
-                    <article key={product.id} className="card flex flex-col gap-3">
+                    <article key={product.id} className="card break-words whitespace-normal break-words whitespace-normal flex flex-col gap-3">
                       <Link
                         href={isLocked ? "#" : `/shop/${product.slug}`}
                         prefetch={!isLocked}
@@ -581,7 +581,7 @@ const ShopExperience = ({ data }: { data: ShopData }) => {
         </LazyReveal>
 
         <section className="grid gap-4 lg:grid-cols-[2fr_3fr]">
-          <div className="card space-y-4">
+          <div className="card break-words whitespace-normal break-words whitespace-normal space-y-4">
             <header>
               <h2 className="section-title">Checkout</h2>
               <p className="text-sm text-white/70">
@@ -597,7 +597,7 @@ const ShopExperience = ({ data }: { data: ShopData }) => {
               triggerLabel={cartTotal === 0 ? "Add items to checkout" : "Checkout with Hybrid Pay"}
             />
           </div>
-          <div className="card">
+          <div className="card break-words whitespace-normal break-words whitespace-normal">
             <h2 className="section-title mb-4">Order tracker</h2>
             <OrderTracker orders={orders} />
           </div>

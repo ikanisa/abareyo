@@ -1,0 +1,47 @@
+{
+  "generatedAt": "2025-10-14T06:38:03.271Z",
+  "results": [
+    {
+      "target": "/",
+      "status": 200,
+      "heading": "Rayon Sports vs APR",
+      "navigatedVia": "linked"
+    },
+    {
+      "target": "/admin",
+      "status": 200,
+      "heading": null,
+      "navigatedVia": "direct"
+    },
+    {
+      "target": "/admin/login",
+      "status": 200,
+      "heading": null,
+      "navigatedVia": "direct"
+    },
+    {
+      "target": "/cart",
+      "status": 200,
+      "heading": null,
+      "navigatedVia": "direct"
+    },
+    {
+      "target": "/community",
+      "status": 200,
+      "heading": null,
+      "navigatedVia": "linked"
+    },
+    {
+      "target": "/events",
+      "status": 200,
+      "heading": null,
+      "navigatedVia": "direct"
+    },
+    {
+      "target": "/fundraising",
+      "status": 200,
+      "heading": null,
+      "navigatedVia": "linked"
+    }
+  ]
+}

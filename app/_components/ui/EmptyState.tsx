@@ -12,7 +12,7 @@ interface EmptyStateProps {
 }
 
 const EmptyState = ({ title, description, icon, action }: EmptyStateProps) => (
-  <div className="card border border-dashed border-white/20 bg-white/5 text-left text-white/80">
+  <div className="card break-words whitespace-normal break-words whitespace-normal border border-dashed border-white/20 bg-white/5 text-left text-white/80">
     <div className="flex items-start gap-3">
       {icon ? <span aria-hidden="true" className="text-xl">{icon}</span> : null}
       <div className="space-y-1">

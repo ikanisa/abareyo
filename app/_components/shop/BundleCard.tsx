@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 
@@ -21,7 +23,7 @@ const BundleCard = ({ bundle, products }: BundleCardProps) => {
   const totalCompare = bundleProducts.reduce((total, product) => total + (product.compareAt ?? product.price), 0);
 
   return (
-    <article className="card flex min-w-[240px] flex-col gap-4" role="listitem">
+    <article className="card break-words whitespace-normal break-words whitespace-normal flex min-w-[240px] flex-col gap-4" role="listitem">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">{bundle.title}</h3>
         {bundle.savingsLabel ? (

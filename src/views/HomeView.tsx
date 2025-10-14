@@ -223,7 +223,7 @@ export default function Home() {
                 <h3 className="text-lg font-bold text-primary">Fan Spotlight</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Download the official app or check out the community feed for new behind-the-scenes stories, match
-                  previews, and supporter missions. Your voice powers Abareyo.
+                  previews, and supporter missions. Your voice powers GIKUNDIRO.
                 </p>
                 <Button asChild size="sm" variant="ghost" className="w-full">
                   <Link href="/community">
@@ -275,7 +275,7 @@ export default function Home() {
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
               <div className="flex items-center gap-2 text-sm font-semibold text-slate-100">
                 <Bot className="h-4 w-4" />
-                Abareyo Assist
+                GIKUNDIRO Assist
               </div>
               <button
                 type="button"

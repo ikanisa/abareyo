@@ -8,6 +8,7 @@ import { RealtimeModule } from '../realtime/realtime.module.js';
 import { AdminAuthController } from './auth/admin-auth.controller.js';
 import { AdminAuthService } from './auth/admin-auth.service.js';
 import { LoginRateLimiterService } from './auth/login-rate-limiter.service.js';
+import { SupabaseAdminAuthService } from './auth/supabase-admin-auth.service.js';
 import { AdminSessionGuard } from './rbac/admin-session.guard.js';
 import { AdminPermissionsGuard } from './rbac/admin-permissions.guard.js';
 import { AdminOrdersController } from './orders/admin-orders.controller.js';
@@ -45,6 +46,7 @@ import { AdminReportsService } from './reports/admin-reports.service.js';
   ],
   providers: [
     AdminAuthService,
+    SupabaseAdminAuthService,
     LoginRateLimiterService,
     AdminSessionGuard,
     AdminPermissionsGuard,

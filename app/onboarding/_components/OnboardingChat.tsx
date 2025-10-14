@@ -18,13 +18,13 @@ export default function OnboardingChat(){
     inputRef.current!.value = "";
     setMessages(m => [...m, {role:"user", text}]);
     setTimeout(()=>{
-      setMessages(m => [...m, {role:"assistant", text: "Murakoze! We’ll verify your numbers and set up your profile."}]);
+      setMessages(m => [...m, {role:"assistant", text: "Thank you! We’ll verify your numbers and set up your profile."}]);
     }, 600);
   };
 
   if (state === "loading"){
     return (
-      <div className="card">
+      <div className="card break-words whitespace-normal break-words whitespace-normal">
         <div className="animate-pulse h-6 w-40 bg-white/10 rounded mb-3" />
         <div className="animate-pulse h-4 w-full bg-white/10 rounded mb-2" />
         <div className="animate-pulse h-4 w-11/12 bg-white/10 rounded" />
@@ -35,7 +35,7 @@ export default function OnboardingChat(){
 
   if (state === "error"){
     return (
-      <div className="card border-red-400/40">
+      <div className="card break-words whitespace-normal break-words whitespace-normal border-red-400/40">
         <p className="text-red-300 font-medium mb-2">We couldn’t start the onboarding chat.</p>
         <button className="btn" onClick={()=>setState("loading")}>Retry</button>
       </div>
@@ -43,7 +43,7 @@ export default function OnboardingChat(){
   }
 
   return (
-    <div className="card">
+    <div className="card break-words whitespace-normal break-words whitespace-normal">
       <div className="muted mb-2">Anonymous session — powered by OpenAI Agents</div>
       <div className="flex flex-col gap-2 max-h-72 overflow-auto">
         {messages.length===0 && (

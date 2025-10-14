@@ -345,7 +345,7 @@ const SHOP_COPY = {
   },
   "cart.pickupTitle": {
     en: "Pickup details",
-    rw: "Amakuru yo kwakira",
+    rw: " yo kwakira",
   },
   "cart.pickupDescription": {
     en: "Optional: add the number we should use to trigger USSD.",
@@ -710,7 +710,7 @@ const formatTemplate = (
 
 const readLocaleCookie = (): ShopLocale | undefined => {
   if (typeof document === "undefined") return undefined;
-  const match = document.cookie.match(/(?:^|; )abareyo:shop-locale=([^;]+)/);
+  const match = document.cookie.match(/(?:^|; )gikundiro:shop-locale=([^;]+)/);
   const value = match ? decodeURIComponent(match[1]) : undefined;
   if (value === "en" || value === "rw") return value;
   return undefined;
@@ -719,7 +719,7 @@ const readLocaleCookie = (): ShopLocale | undefined => {
 const writeLocaleCookie = (value: ShopLocale) => {
   if (typeof document === "undefined") return;
   const maxAge = 60 * 60 * 24 * 365; // one year
-  document.cookie = `abareyo:shop-locale=${value}; path=/; max-age=${maxAge}; SameSite=Lax`;
+  document.cookie = `gikundiro:shop-locale=${value}; path=/; max-age=${maxAge}; SameSite=Lax`;
 };
 
 const resolveInitialLocale = (initialLocale?: ShopLocale): ShopLocale => {
@@ -741,7 +741,7 @@ type ShopLocaleContextValue = {
 
 const ShopLocaleContext = createContext<ShopLocaleContextValue | undefined>(undefined);
 
-const LOCALE_KEY = "abareyo:shop-locale";
+const LOCALE_KEY = "gikundiro:shop-locale";
 const ShopLocaleProvider = ({
   children,
   initialLocale,

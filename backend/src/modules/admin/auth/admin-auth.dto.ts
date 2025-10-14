@@ -8,3 +8,8 @@ export class AdminLoginDto {
   @MinLength(8)
   password!: string;
 }
+
+export class AdminSupabaseLoginDto {
+  @IsString()
+  accessToken!: string;
+}

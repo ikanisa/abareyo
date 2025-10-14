@@ -36,7 +36,7 @@ const PollWidget = ({ id, q, options, voted, onVote }: PollWidgetProps) => {
   };
 
   return (
-    <section className="card space-y-4 text-white" aria-labelledby={`${id}-poll-title`}>
+    <section className="card break-words whitespace-normal break-words whitespace-normal space-y-4 text-white" aria-labelledby={`${id}-poll-title`}>
       <div className="flex items-start justify-between gap-3">
         <h4 id={`${id}-poll-title`} className="text-base font-semibold">
           {q}

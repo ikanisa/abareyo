@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 
 import useDialogFocusTrap from "../_hooks/useDialogFocusTrap";
 
-type SizeGuideModalProps = {
+export type SizeGuideModalProps = {
   open: boolean;
   onClose: () => void;
 };
@@ -21,7 +21,7 @@ const SizeGuideModal = ({ open, onClose }: SizeGuideModalProps) => {
           <button type="button" className="absolute inset-0" aria-label="Close size guide" onClick={onClose} />
           <motion.div
             ref={containerRef}
-            className="card max-w-sm rounded-3xl bg-white/95 p-6 text-slate-900"
+            className="card break-words whitespace-normal break-words whitespace-normal max-w-sm rounded-3xl bg-white/95 p-6 text-slate-900"
             initial={{ opacity: prefersReducedMotion ? 1 : 0, scale: prefersReducedMotion ? 1 : 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: prefersReducedMotion ? 1 : 0, scale: prefersReducedMotion ? 1 : 0.96 }}

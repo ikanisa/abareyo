@@ -19,23 +19,33 @@
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
+      "@/app/_lib/*": [
+        "app/_lib/*"
       ],
       "@/app/*": [
         "./app/*"
       ],
-      "@/views/*": [
-        "./src/views/*"
+      "@/components/*": [
+        "./src/components/*"
+      ],
+      "@/hooks/*": [
+        "./src/hooks/*"
+      ],
+      "@/lib/*": [
+        "./src/lib/*"
       ],
       "@/providers/*": [
         "./src/providers/*"
       ],
-      "@/components/*": [
-        "./src/components/*"
+      "@/views/*": [
+        "./src/views/*"
       ],
-      "@/lib/*": [
-        "./src/lib/*"
+      "@/config/*": [
+        "./src/config/*"
+      ],
+      "@/*": [
+        "./src/*",
+        "*"
       ]
     },
     "incremental": true,

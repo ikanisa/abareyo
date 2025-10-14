@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 
@@ -10,9 +12,9 @@ type ExclusiveCardProps = {
   unlockLabel?: string;
 };
 
-const ExclusiveCard = ({ product, isMember, unlockLabel = "Gikundiro+ Only" }: ExclusiveCardProps) => {
+const ExclusiveCard = ({ product, isMember, unlockLabel = "GIKUNDIRO+ Only" }: ExclusiveCardProps) => {
   return (
-    <article className="card relative flex min-w-[220px] flex-col gap-3" aria-disabled={!isMember}>
+    <article className="card break-words whitespace-normal break-words whitespace-normal relative flex min-w-[220px] flex-col gap-3" aria-disabled={!isMember}>
       <div className="relative overflow-hidden rounded-2xl bg-white/10 p-4">
         <Image src={product.images[0]} alt={product.name} width={200} height={200} className="h-full w-full object-contain" />
         {!isMember && (

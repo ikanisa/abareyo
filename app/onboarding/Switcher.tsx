@@ -7,7 +7,7 @@ const LegacyOnboarding = dynamic(() => import("@/views/OnboardingView"), { ssr: 
 const NewOnboarding = dynamic(() => import("../(onboarding)/_components/OnboardingChat"), { ssr: false });
 
 type Mode = "legacy" | "new";
-const STORAGE_KEY = "abareyo:onboarding_ui";
+const STORAGE_KEY = "gikundiro:onboarding_ui";
 
 export default function OnboardingSwitcher() {
   const [mode, setMode] = useState<Mode>("legacy");

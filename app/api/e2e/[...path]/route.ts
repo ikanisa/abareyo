@@ -215,6 +215,28 @@ export async function POST(request: NextRequest, { params }: { params: { path?: 
     return ok({ status: 'ok' }, { headers });
   }
 
+  if (path === '/admin/auth/supabase') {
+    sessionId = 'sess-' + Math.random().toString(36).slice(2);
+    const cookieName = process.env.NEXT_PUBLIC_ADMIN_SESSION_COOKIE ?? 'admin_session';
+    const headers = new Headers();
+    headers.append(
+      'Set-Cookie',
+      `${cookieName}=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60};`
+    );
+    return ok({
+      data: {
+        user: {
+          id: 'admin-user',
+          email: 'admin@example.com',
+          displayName: 'Admin User',
+          status: 'active',
+          roles: ['SYSTEM_ADMIN'],
+        },
+        permissions: ['featureflag:update'],
+      },
+    }, { headers });
+  }
+
   // No-op updates in mocks
   if (
     path.startsWith('/admin/membership/members/') ||

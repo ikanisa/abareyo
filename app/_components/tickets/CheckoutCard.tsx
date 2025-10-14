@@ -8,6 +8,12 @@ import { fanProfile } from "@/app/_data/fanProfile";
 type CheckoutCardProps = {
   fixture: Fixture;
   zone: TicketZone;
+  reservation:
+    | { status: "idle" }
+    | { status: "loading" }
+    | { status: "error"; message: string }
+    | { status: "success"; ticket: { id: string; paid: boolean; momo_ref: string | null; created_at: string } };
+  onRetry?: () => void;
 };
 
 const paymentMethods = [
@@ -15,7 +21,7 @@ const paymentMethods = [
   { id: "airtel", label: "Airtel Money", deeplink: "tel:*182*8*2%23" },
 ];
 
-const CheckoutCard = ({ fixture, zone }: CheckoutCardProps) => {
+const CheckoutCard = ({ fixture, zone, reservation, onRetry }: CheckoutCardProps) => {
   const [waiting, setWaiting] = useState(false);
   const [reference, setReference] = useState("");
 
@@ -30,12 +36,51 @@ const CheckoutCard = ({ fixture, zone }: CheckoutCardProps) => {
     [fixture, zone]
   );
 
+  const reservationBanner = (() => {
+    switch (reservation.status) {
+      case "loading":
+        return (
+          <div className="flex items-center gap-3 rounded-2xl border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-sm text-blue-100" role="status">
+            <span className="flex h-3 w-3 animate-ping rounded-full bg-blue-300" aria-hidden />
+            <span>Reserving your seat… hold tight while we secure this ticket.</span>
+          </div>
+        );
+      case "error":
+        return (
+          <div className="flex flex-col gap-3 rounded-2xl border border-rose-400/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100" role="alert">
+            <span>{reservation.message}</span>
+            {onRetry ? (
+              <button
+                type="button"
+                className="self-start rounded-xl border border-white/20 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
+                onClick={onRetry}
+              >
+                Try again
+              </button>
+            ) : null}
+          </div>
+        );
+      case "success":
+        return (
+          <div className="flex flex-col gap-1 rounded-2xl border border-emerald-400/40 bg-emerald-500/15 px-4 py-3 text-sm text-emerald-100" role="status">
+            <span className="text-sm font-semibold">Reservation confirmed</span>
+            <span>Ticket ID: {reservation.ticket.id.slice(0, 8).toUpperCase()} · Status: {reservation.ticket.paid ? "Paid" : "Awaiting payment"}</span>
+            {reservation.ticket.momo_ref ? (
+              <span className="text-xs text-emerald-100/80">Mobile money ref: {reservation.ticket.momo_ref}</span>
+            ) : null}
+          </div>
+        );
+      default:
+        return null;
+    }
+  })();
+
   return (
     <section
       aria-live="polite"
       aria-busy={waiting}
       id="checkout-panel"
-      className="card space-y-6 bg-white/5 text-white"
+      className="card break-words whitespace-normal break-words whitespace-normal space-y-6 bg-white/5 text-white"
       role="status"
     >
       <header className="space-y-1">
@@ -82,6 +127,8 @@ const CheckoutCard = ({ fixture, zone }: CheckoutCardProps) => {
           <span className="text-right text-white">{fanProfile.membership}</span>
         </div>
       </div>
+      {reservationBanner}
+
       <div className="space-y-3">
         <p className="text-xs uppercase tracking-[0.2em] text-white/60">Pay with Mobile Money</p>
         <div className="grid gap-3 md:grid-cols-2">
