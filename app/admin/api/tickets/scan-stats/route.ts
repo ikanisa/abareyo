@@ -17,7 +17,7 @@ export async function GET() {
     const [passesCount, ordersCount, statusSummary, recentPasses] = await Promise.all([
       supabase.from('ticket_passes').select('id', { count: 'exact', head: true }),
       supabase.from('ticket_orders').select('id', { count: 'exact', head: true }),
-      supabase.from('ticket_orders').select('status, count:status', { head: false }).group('status'),
+      supabase.from('ticket_orders').select('status, count', { head: false }).group('status'),
       supabase.from('ticket_passes').select('gate, created_at').gte('created_at', sinceIso),
     ]);
 
