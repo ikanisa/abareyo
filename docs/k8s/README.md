@@ -40,6 +40,6 @@ Ingress & TLS (optional)
   sed -e "s/__INGRESS_HOST__/app.example.com/g" -e "s/__TLS_SECRET__/app-example-com-tls/g" k8s/ingress.yaml | kubectl apply -f -
 
 Notes
-- Images point to `ghcr.io/ikanisa/abareyo-*` (updated).
+- Images point to `ghcr.io/ikanisa/gikundiro-*` (updated).
 - Health endpoints: backend `/api/health`, frontend `/`.
 - Frontend is configured for same-origin API calls (`NEXT_PUBLIC_BACKEND_URL=/api`). Set `CORS_ORIGIN` to your public origin(s).

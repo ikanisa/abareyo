@@ -1,6 +1,6 @@
 export type TicketZone = {
   id: string;
-  name: "VIP" | "Regular" | "Fan";
+  name: "VIP" | "Regular" | "Fan" | "Blue";
   price: number;
   seatsLeft: number;
   totalSeats: number;

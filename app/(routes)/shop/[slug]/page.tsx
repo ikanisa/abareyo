@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 
 import PdpClientPage from "./PdpClientPage";
-import { getProductBySlug } from "../_logic/useShop";
+import { getProductBySlug } from "../_logic/serverShop";
 import type { ShopLocale } from "../_hooks/useShopLocale";
 
 const PDPPage = ({ params }: { params: { slug: string } }) => {
@@ -10,7 +10,7 @@ const PDPPage = ({ params }: { params: { slug: string } }) => {
   if (!product) {
     notFound();
   }
-  const localeCookie = cookies().get("abareyo:shop-locale")?.value;
+  const localeCookie = cookies().get("gikundiro:shop-locale")?.value;
   const initialLocale: ShopLocale = localeCookie === "rw" ? "rw" : "en";
   return <PdpClientPage product={product} initialLocale={initialLocale} />;
 };

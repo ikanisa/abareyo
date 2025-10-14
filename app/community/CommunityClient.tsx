@@ -1,6 +1,13 @@
 "use client";
 
-import { type KeyboardEvent, type PropsWithChildren, useMemo, useState } from "react";
+import {
+  type FormEvent,
+  type KeyboardEvent,
+  type PropsWithChildren,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
@@ -21,13 +28,71 @@ import {
   mockPolls,
   mockPosts,
   mockWeeklyLeaders,
+  type Post,
   type Clip,
 } from "@/app/_data/community";
+import { fanProfile } from "@/app/_data/fanProfile";
+import { jsonFetch } from "@/app/_lib/api";
+import { useToast } from "@/components/ui/use-toast";
 
 const tabs = ["Feed", "Leaderboard", "Fan Clubs", "Polls"] as const;
 
 type TabKey = (typeof tabs)[number];
 type ThreadState = { type: "post" | "clip"; id: string; title: string } | null;
+
+type FanPostRecord = {
+  id: string;
+  text: string | null;
+  media_url: string | null;
+  likes: number | null;
+  comments: number | null;
+  created_at: string;
+  user: { id: string; name: string | null; avatar_url: string | null } | null;
+};
+
+const fallbackAvatar = "/community/avatars/guest.png";
+
+const formatRelativeTime = (value?: string | null) => {
+  if (!value) return "now";
+  const timestamp = Date.parse(value);
+  if (Number.isNaN(timestamp)) return "now";
+  const diff = Date.now() - timestamp;
+  if (diff <= 45_000) return "now";
+  const minute = 60_000;
+  const hour = minute * 60;
+  const day = hour * 24;
+  if (diff < hour) {
+    const minutes = Math.max(1, Math.floor(diff / minute));
+    return `${minutes}m`;
+  }
+  if (diff < day) {
+    const hours = Math.max(1, Math.floor(diff / hour));
+    return `${hours}h`;
+  }
+  const days = Math.max(1, Math.floor(diff / day));
+  if (days < 7) {
+    return `${days}d`;
+  }
+  const weeks = Math.max(1, Math.floor(days / 7));
+  if (weeks < 5) {
+    return `${weeks}w`;
+  }
+  const months = Math.max(1, Math.floor(days / 30));
+  return `${months}mo`;
+};
+
+const mapFanPost = (record: FanPostRecord): Post => ({
+  id: record.id,
+  user: record.user?.name?.trim() || "Rayon Fan",
+  avatar: record.user?.avatar_url || fallbackAvatar,
+  text: record.text ?? "",
+  media: record.media_url ?? undefined,
+  likes: record.likes ?? 0,
+  comments: record.comments ?? 0,
+  time: formatRelativeTime(record.created_at),
+});
+
+const composerMaxLength = 280;
 
 type HeroBlockProps = {
   title: string;
@@ -155,18 +220,104 @@ const ClipsCarousel = ({ clips, onOpenComments }: { clips: Clip[]; onOpenComment
 };
 
 const CommunityClient = () => {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<TabKey>("Feed");
   const [openThread, setOpenThread] = useState<ThreadState>(null);
+  const [feedPosts, setFeedPosts] = useState<Post[]>(mockPosts);
+  const [feedLoading, setFeedLoading] = useState(false);
+  const [feedError, setFeedError] = useState<string | null>(null);
+  const [composerText, setComposerText] = useState("");
+  const [posting, setPosting] = useState(false);
+  const [postError, setPostError] = useState<string | null>(null);
 
   const badgeGroups = useMemo(() => mockBadges.slice(0, 3), []);
 
+  useEffect(() => {
+    let subscribed = true;
+    const loadPosts = async () => {
+      setFeedLoading(true);
+      try {
+        const records = await jsonFetch<FanPostRecord[]>("/api/community/posts");
+        if (!subscribed) {
+          return;
+        }
+        if (Array.isArray(records) && records.length) {
+          const remotePosts = records
+            .map(mapFanPost)
+            .filter((post) => post.text.trim().length > 0);
+          if (remotePosts.length) {
+            const fallback = mockPosts.filter((mock) => !remotePosts.some((post) => post.id === mock.id));
+            setFeedPosts([...remotePosts, ...fallback]);
+          }
+        }
+        setFeedError(null);
+      } catch (error) {
+        if (!subscribed) {
+          return;
+        }
+        console.error("Failed to load fan posts", error);
+        setFeedError(error instanceof Error ? error.message : "Unable to load community feed");
+      } finally {
+        if (subscribed) {
+          setFeedLoading(false);
+        }
+      }
+    };
+    loadPosts();
+    return () => {
+      subscribed = false;
+    };
+  }, []);
+
+  const composerRemaining = composerMaxLength - composerText.length;
+  const composerDisabled =
+    posting || !composerText.trim() || composerText.trim().length > composerMaxLength;
+
   const handleOpenPost = (postId: string) => {
-    const post = mockPosts.find((item) => item.id === postId);
+    const post = feedPosts.find((item) => item.id === postId) ?? mockPosts.find((item) => item.id === postId);
     setOpenThread({
       type: "post",
       id: postId,
       title: post ? `${post.user} • Live feed` : "Post thread",
     });
+  };
+
+  const handleComposerSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const message = composerText.trim();
+    if (!message) {
+      setPostError("Share a chant or update before posting.");
+      return;
+    }
+    if (message.length > composerMaxLength) {
+      setPostError(`Keep your chant under ${composerMaxLength} characters.`);
+      return;
+    }
+    setPostError(null);
+    setPosting(true);
+    try {
+      const response = await jsonFetch<{ ok: boolean; post: FanPostRecord }>("/api/community/posts", {
+        method: "POST",
+        body: JSON.stringify({
+          text: message,
+          user: {
+            name: fanProfile.name,
+            phone: fanProfile.phone,
+            momo_number: fanProfile.momo ?? fanProfile.phone,
+            avatar_url: fallbackAvatar,
+          },
+        }),
+      });
+      const newPost = mapFanPost(response.post);
+      setFeedPosts((current) => [newPost, ...current.filter((item) => item.id !== newPost.id)]);
+      setComposerText("");
+      toast({ title: "Posted to feed", description: "Your chant is now live for Rayon fans." });
+    } catch (error) {
+      console.error("Failed to publish post", error);
+      setPostError(error instanceof Error ? error.message : "Unable to publish post");
+    } finally {
+      setPosting(false);
+    }
   };
 
   const handleOpenClip = (clip: Clip) => {
@@ -186,7 +337,7 @@ const CommunityClient = () => {
 
         <FanHero score={1250} rank={12} missions={mockMissions} />
 
-        <section className="card space-y-4 text-white" aria-labelledby="badges-heading">
+        <section className="card break-words whitespace-normal break-words whitespace-normal space-y-4 text-white" aria-labelledby="badges-heading">
           <div className="flex items-center justify-between">
             <h3 id="badges-heading" className="section-title">
               Your badges
@@ -233,11 +384,89 @@ const CommunityClient = () => {
 
         <div>
           {activeTab === "Feed" ? (
-            <WidgetRow>
-              {mockPosts.map((post) => (
-                <PostCard key={post.id} {...post} onOpenComments={handleOpenPost} />
-              ))}
-            </WidgetRow>
+            <div className="space-y-4">
+              <section className="card break-words whitespace-normal break-words whitespace-normal space-y-4 text-white" aria-labelledby="composer-heading">
+                <div className="flex items-center gap-3">
+                  <Image
+                    src={fallbackAvatar}
+                    alt=""
+                    width={48}
+                    height={48}
+                    className="h-12 w-12 rounded-full object-cover"
+                  />
+                  <div>
+                    <h3 id="composer-heading" className="text-lg font-semibold">
+                      Start a chant
+                    </h3>
+                    <p className="text-xs text-white/70">Share matchday energy with thousands of GIKUNDIRO fans.</p>
+                  </div>
+                </div>
+                <form onSubmit={handleComposerSubmit} className="space-y-3">
+                  <label className="text-sm font-semibold text-white/80" htmlFor="community-composer">
+                    What's happening?
+                  </label>
+                  <textarea
+                    id="community-composer"
+                    value={composerText}
+                    onChange={(event) => {
+                      if (postError) {
+                        setPostError(null);
+                      }
+                      setComposerText(event.target.value);
+                    }}
+                    placeholder="Rayon is taking over Kigali Stadium tonight..."
+                    className="min-h-[140px] w-full rounded-3xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/70"
+                    aria-label="Share a community update"
+                  />
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <span className={`text-xs ${composerRemaining < 0 ? "text-rose-200" : "text-white/60"}`} aria-live="polite">
+                      {composerRemaining >= 0
+                        ? `${composerRemaining} characters left`
+                        : `${Math.abs(composerRemaining)} over the limit`}
+                    </span>
+                    <button
+                      type="submit"
+                      className="btn-primary min-h-[44px] rounded-xl px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={composerDisabled}
+                    >
+                      {posting ? "Posting…" : "Post to feed"}
+                    </button>
+                  </div>
+                  {postError ? (
+                    <p className="text-xs text-rose-200" role="status" aria-live="polite">
+                      {postError}
+                    </p>
+                  ) : null}
+                </form>
+              </section>
+              {feedLoading ? (
+                <div
+                  className="rounded-3xl border border-white/10 bg-white/10 p-4 text-xs text-white/70"
+                  role="status"
+                  aria-live="polite"
+                >
+                  Syncing live chants…
+                </div>
+              ) : null}
+              {feedPosts.length ? (
+                <WidgetRow>
+                  {feedPosts.map((post) => (
+                    <PostCard key={post.id} {...post} onOpenComments={handleOpenPost} />
+                  ))}
+                </WidgetRow>
+              ) : (
+                <EmptyState
+                  title="Be the first to post"
+                  description="Share a chant to kick off the community conversation."
+                  icon="📣"
+                />
+              )}
+              {feedError ? (
+                <p className="text-xs text-amber-200" role="status" aria-live="polite">
+                  {feedError}. Showing cached chants.
+                </p>
+              ) : null}
+            </div>
           ) : null}
 
           {activeTab === "Leaderboard" ? (

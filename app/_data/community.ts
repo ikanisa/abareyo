@@ -70,7 +70,7 @@ export const mockMissions: Mission[] = [
 export const mockPosts: Post[] = [
   {
     id: "p1",
-    user: "Gikundiro+",
+    user: "GIKUNDIRO+",
     avatar: "/community/avatars/gikundiro-plus.png",
     text: "Just arrived at Kigali Stadium — the energy is unreal! Who else is here early? 💙",
     media: "/community/posts/warmup.jpg",

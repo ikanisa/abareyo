@@ -7,7 +7,7 @@ import { Smartphone, Sparkles, Tags, X } from "lucide-react";
 import useDialogFocusTrap from "../_hooks/useDialogFocusTrap";
 import { useShopLocale } from "../_hooks/useShopLocale";
 
-const STORAGE_KEY = "abareyo:shop-onboarded";
+const STORAGE_KEY = "gikundiro:shop-onboarded";
 
 const ShopOnboarding = () => {
   const { t } = useShopLocale();
@@ -74,7 +74,7 @@ const ShopOnboarding = () => {
             role="dialog"
             aria-modal="true"
             aria-label={t("onboarding.title").primary}
-            className="card relative w-full max-w-md rounded-t-3xl bg-[#10215b] text-white"
+            className="card break-words whitespace-normal break-words whitespace-normal relative w-full max-w-md rounded-t-3xl bg-[#10215b] text-white"
             initial={{ y: prefersReducedMotion ? 0 : 40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: prefersReducedMotion ? 0 : 40, opacity: 0 }}

@@ -7,6 +7,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { DataTable } from '@/components/admin/DataTable';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { AttachSmsModal } from '@/components/admin/orders/AttachSmsModal';
+import { useAdminSession } from '@/providers/admin-session-provider';
 import {
   AdminTicketOrder,
   PaginatedResponse,
@@ -30,12 +32,14 @@ export type TicketOrdersTableProps = {
 
 export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
   const { toast } = useToast();
+  const { user } = useAdminSession();
   const [data, setData] = useState(initial.data);
   const [meta, setMeta] = useState(initial.meta);
   const [status, setStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [attachTarget, setAttachTarget] = useState<{ id: string; amount: number } | null>(null);
 
   const loadOrders = useCallback(
     async ({ page, search, status: nextStatus }: { page?: number; search?: string; status?: string }) => {
@@ -111,6 +115,23 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
     [loadOrders, toast],
   );
 
+  const handleAttachOpen = useCallback((order: AdminTicketOrder) => {
+    setAttachTarget({ id: order.id, amount: order.total });
+  }, []);
+
+  const handleModalClose = useCallback((nextOpen: boolean) => {
+    if (!nextOpen) {
+      setAttachTarget(null);
+    }
+  }, []);
+
+  const handleAttached = useCallback(() => {
+    setAttachTarget(null);
+    startTransition(() => {
+      void loadOrders({});
+    });
+  }, [loadOrders]);
+
   useEffect(() => {
     setData(initial.data);
     setMeta(initial.meta);
@@ -177,18 +198,25 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
       {
         header: 'Actions',
         cell: ({ row }) => (
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={row.original.status !== 'paid' || isPending}
-            onClick={() => handleRefund(row.original.id)}
-          >
-            Refund
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {row.original.status !== 'paid' ? (
+              <Button variant="outline" size="sm" onClick={() => handleAttachOpen(row.original)}>
+                Attach SMS
+              </Button>
+            ) : null}
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={row.original.status !== 'paid' || isPending}
+              onClick={() => handleRefund(row.original.id)}
+            >
+              Refund
+            </Button>
+          </div>
         ),
       },
     ],
-    [handleRefund, isPending],
+    [handleAttachOpen, handleRefund, isPending],
   );
 
   return (
@@ -217,6 +245,16 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
         onSearchChange={handleSearchChange}
         searchPlaceholder="Search order ID or email"
       />
+      {attachTarget ? (
+        <AttachSmsModal
+          open={Boolean(attachTarget)}
+          onOpenChange={handleModalClose}
+          entity={{ kind: 'ticket', id: attachTarget.id }}
+          amount={attachTarget.amount}
+          adminUserId={user?.id}
+          onAttached={handleAttached}
+        />
+      ) : null}
     </div>
   );
 };

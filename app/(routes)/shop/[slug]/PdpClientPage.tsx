@@ -8,12 +8,14 @@ import PDPGallery from "../_components/PDPGallery";
 import UssdPayButton from "../_components/UssdPayButton";
 import VariantSelector from "../_components/VariantSelector";
 import ProductRail from "../_components/ProductRail";
+import type { SizeGuideModalProps } from "../_components/SizeGuideModal";
+// Explicitly import the modal prop type once for type safety on dynamic import
 import type { Product } from "../_data/products";
 import { formatPrice, getCrossSell, recordRecentlyViewed, useCart, useRecentlyViewed } from "../_logic/useShop";
 import { ShopLocaleProvider, useShopLocale, type ShopLocale } from "../_hooks/useShopLocale";
 
-const SizeGuideModal = dynamic<typeof import("../_components/SizeGuideModal")["default"]>(
-  () => import("../_components/SizeGuideModal"),
+const SizeGuideModal = dynamic<SizeGuideModalProps>(
+  () => import("../_components/SizeGuideModal").then((mod) => mod.default),
   { ssr: false },
 );
 
@@ -119,7 +121,7 @@ const PdpContent = ({ product }: { product: Product }) => {
 
         <UssdPayButton amount={variant.price} phoneNumber="0780000000" />
 
-        <section className="card space-y-3 bg-white/10">
+        <section className="card break-words whitespace-normal break-words whitespace-normal space-y-3 bg-white/10">
           <h2 className="text-lg font-semibold text-white">
             {detailsCopy.primary}
             <span className="block text-sm font-normal text-white/70">{detailsCopy.secondary}</span>

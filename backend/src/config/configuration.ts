@@ -49,6 +49,10 @@ export default () => ({
       name: process.env.ADMIN_DEFAULT_NAME ?? 'System Admin',
     },
   },
+  supabase: {
+    url: process.env.SUPABASE_URL,
+    serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  },
   fan: {
     session: {
       cookieName: process.env.FAN_SESSION_COOKIE ?? 'fan_session',

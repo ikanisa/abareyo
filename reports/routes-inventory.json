@@ -1,0 +1,737 @@
+{
+  "summary": {
+    "generatedAt": "2025-10-14T06:36:25.478Z",
+    "totalRoutes": 70,
+    "staticCount": 65,
+    "dynamicCount": 5
+  },
+  "routes": [
+    {
+      "path": "/",
+      "segmentType": "static",
+      "files": [
+        "layout.tsx",
+        "loading.tsx",
+        "not-found.tsx",
+        "page.tsx"
+      ],
+      "hasNotFound": true,
+      "hasError": false,
+      "hasLoading": true
+    },
+    {
+      "path": "/admin",
+      "segmentType": "static",
+      "files": [
+        "layout.tsx",
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/admin/community",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/admin/community/missions",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/admin/fundraising",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/admin/login",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/admin/match-ops",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/admin/membership",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/admin/orders",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/admin/realtime",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/admin/settings",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/admin/shop",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/admin/sms",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/admin/tickets",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/admin/translations",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/admin/ussd",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/[...path]",
+      "segmentType": "catchall",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/community/posts",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/e2e/[...path]",
+      "segmentType": "catchall",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/fan/feed",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/health",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/insurance/policy",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/insurance/quote",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/matches",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/matches/tickets",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/polls/vote",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/rewards/claimTicket",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/rewards/summary",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/sacco/deposit",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/shop/orders",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/shop/products",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/telemetry/app-state",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/tickets",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/tickets/orders",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/tickets/orders/[orderId]/cancel",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/tickets/orders/[orderId]/receipt",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/tickets/passes",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/tickets/passes/rotate",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/users",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/wallet",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/wallet/summary",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/api/wallet/transactions",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/cart",
+      "segmentType": "static",
+      "files": [
+        "error.tsx",
+        "loading.tsx",
+        "not-found.tsx",
+        "page.tsx"
+      ],
+      "hasNotFound": true,
+      "hasError": true,
+      "hasLoading": true
+    },
+    {
+      "path": "/community",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/events",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/fundraising",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/gate",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/legal/privacy",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/legal/terms",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/matchday",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/matches",
+      "segmentType": "static",
+      "files": [
+        "error.tsx",
+        "loading.tsx",
+        "not-found.tsx",
+        "page.tsx"
+      ],
+      "hasNotFound": true,
+      "hasError": true,
+      "hasLoading": true
+    },
+    {
+      "path": "/membership",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/membership/upgrade",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/more",
+      "segmentType": "static",
+      "files": [
+        "error.tsx",
+        "loading.tsx",
+        "not-found.tsx",
+        "page.tsx"
+      ],
+      "hasNotFound": true,
+      "hasError": true,
+      "hasLoading": true
+    },
+    {
+      "path": "/more/rewards",
+      "segmentType": "static",
+      "files": [
+        "error.tsx",
+        "loading.tsx",
+        "not-found.tsx",
+        "page.tsx"
+      ],
+      "hasNotFound": true,
+      "hasError": true,
+      "hasLoading": true
+    },
+    {
+      "path": "/mytickets",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/onboarding",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/orders",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/profile",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/services",
+      "segmentType": "static",
+      "files": [
+        "error.tsx",
+        "loading.tsx",
+        "not-found.tsx",
+        "page.tsx"
+      ],
+      "hasNotFound": true,
+      "hasError": true,
+      "hasLoading": true
+    },
+    {
+      "path": "/settings",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/settings/about",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/shop",
+      "segmentType": "static",
+      "files": [
+        "error.tsx",
+        "loading.tsx",
+        "not-found.tsx",
+        "page.tsx"
+      ],
+      "hasNotFound": true,
+      "hasError": true,
+      "hasLoading": true
+    },
+    {
+      "path": "/shop/[slug]",
+      "segmentType": "dynamic",
+      "files": [
+        "loading.tsx",
+        "not-found.tsx",
+        "page.tsx"
+      ],
+      "hasNotFound": true,
+      "hasError": false,
+      "hasLoading": true
+    },
+    {
+      "path": "/support",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/tickets",
+      "segmentType": "static",
+      "files": [
+        "error.tsx",
+        "loading.tsx",
+        "not-found.tsx",
+        "page.tsx"
+      ],
+      "hasNotFound": true,
+      "hasError": true,
+      "hasLoading": true
+    },
+    {
+      "path": "/tickets/transfer",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/wallet",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/wallet/history",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    },
+    {
+      "path": "/wallet/top-up",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ],
+      "hasNotFound": false,
+      "hasError": false,
+      "hasLoading": false
+    }
+  ]
+}

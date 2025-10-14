@@ -123,6 +123,7 @@ export type ClubEvent = {
   date: string;
   location: string;
   href: string;
+  description?: string;
 };
 
 export type CommunityHighlight = {
@@ -246,7 +247,7 @@ export const quickActionTiles: QuickActionTile[] = [
 ];
 
 export const membershipCta: MembershipCta = {
-  heading: "Become Gikundiro+ Member",
+  heading: "Become GIKUNDIRO+ Member",
   description: "Early tickets, discounts, and rewards.",
   action: {
     label: "Join now",
@@ -429,7 +430,7 @@ export const fundraisingCampaigns: FundraisingCampaign[] = [
   {
     id: "community-pitch",
     title: "Community Pitch Lighting",
-    description: "Install floodlights at the Gikundiro community centre.",
+    description: "Install floodlights at the GIKUNDIRO community centre.",
     raised: 3200000,
     target: 5000000,
     href: "/fundraising/community-pitch",

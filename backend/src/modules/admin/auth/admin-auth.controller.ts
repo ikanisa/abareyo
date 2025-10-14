@@ -14,9 +14,10 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { Logger } from '@nestjs/common';
 
 import { AdminAuthService } from './admin-auth.service.js';
-import { AdminLoginDto } from './admin-auth.dto.js';
+import { AdminLoginDto, AdminSupabaseLoginDto } from './admin-auth.dto.js';
 import { LoginRateLimiterService } from './login-rate-limiter.service.js';
 import { AdminSessionGuard } from '../rbac/admin-session.guard.js';
+import { SupabaseAdminAuthService } from './supabase-admin-auth.service.js';
 
 @Controller('admin')
 export class AdminAuthController {
@@ -27,6 +28,7 @@ export class AdminAuthController {
     private readonly adminAuthService: AdminAuthService,
     private readonly rateLimiter: LoginRateLimiterService,
     private readonly configService: ConfigService,
+    private readonly supabaseAdminAuthService: SupabaseAdminAuthService,
   ) {
     this.isProd = this.configService.get<string>('app.env', 'development') === 'production';
   }
@@ -93,6 +95,56 @@ export class AdminAuthController {
     return {
       data: {
         user: this.adminAuthService.mapAdminPayload(activeSession.session.adminUser),
+        permissions,
+      },
+    };
+  }
+
+  @Post('auth/supabase')
+  @HttpCode(HttpStatus.OK)
+  async loginWithSupabase(
+    @Body() body: AdminSupabaseLoginDto,
+    @Req() request: FastifyRequest,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
+    const supabaseUser = await this.supabaseAdminAuthService.getUserFromAccessToken(body.accessToken);
+    const adminUser = await this.adminAuthService.findActiveAdminByEmail(supabaseUser.email ?? '');
+
+    const session = await this.adminAuthService.createSession(adminUser.id, {
+      ip: request.ip,
+      userAgent: request.headers['user-agent'] as string | undefined,
+    });
+
+    const activeSession = await this.adminAuthService.getActiveSession(session.id);
+    if (!activeSession) {
+      throw new Error('Failed to initialize admin session.');
+    }
+
+    const maxAgeSeconds = Math.floor(this.adminAuthService.cookieTtlMs / 1000);
+    const cookieDomain = this.adminAuthService.cookieDomain;
+    reply.setCookie(this.adminAuthService.cookieName, session.id, {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: this.isProd,
+      maxAge: maxAgeSeconds,
+      ...(cookieDomain ? { domain: cookieDomain } : {}),
+    });
+
+    const permissions = Array.from(activeSession.permissionKeys).sort();
+
+    this.logger.log(
+      JSON.stringify({
+        event: 'admin.auth.supabase.login.success',
+        adminUserId: adminUser.id,
+        ip: request.ip ?? null,
+        sessionId: session.id,
+      }),
+    );
+
+    return {
+      data: {
+        user: activeSession.user,
         permissions,
       },
     };

@@ -120,13 +120,13 @@ export const appNavigation: AppNavigation = {
       href: '/membership',
       title: 'Membership',
       labelKey: 'nav.membership',
-      description: 'Manage Gikundiro+ plans, billing, and perks.',
+      description: 'Manage GIKUNDIRO+ plans, billing, and perks.',
       icon: 'users',
       analyticsId: 'nav-membership',
       surfaces: ['drawer', 'sidebar'],
       meta: {
-        title: 'Gikundiro+ Membership',
-        description: 'Manage Gikundiro+ plans, billing, and perks.',
+        title: 'GIKUNDIRO+ Membership',
+        description: 'Manage GIKUNDIRO+ plans, billing, and perks.',
       },
     },
     {

@@ -86,7 +86,7 @@ function createOnboardingSession(locale?: string): MockOnboardingSession {
         id: randomUUID(),
         role: 'assistant',
         kind: 'text',
-        text: 'Muraho neza! Turimo kugufasha kwinjira mu Rayon fan club. Ohereza nimero ya WhatsApp na ya MoMo ukoresha gushyigikira ikipe.',
+        text: 'Hello neza! Turimo kugufasha kwinjira mu Rayon fan club. Ohereza nimero ya WhatsApp na ya MoMo ukoresha gushyigikira ikipe.',
         createdAt,
       },
     ],
@@ -403,7 +403,7 @@ async function onboardingGateway(req: NextRequest, ctx: MockContext) {
       return NextResponse.json({ error: 'unauthorized', message: 'Missing or invalid token.' }, { status: 401 });
     }
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-    const AGENT_ID = process.env.AGENT_ID || 'abareyo-onboarding';
+    const AGENT_ID = process.env.AGENT_ID || 'gikundiro-onboarding';
     const ALLOW_MOCK = (
       process.env.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK === '1' ||
       process.env.ONBOARDING_ALLOW_MOCK === '1'
@@ -433,7 +433,7 @@ async function onboardingGateway(req: NextRequest, ctx: MockContext) {
       return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
     }
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-    const AGENT_ID = process.env.AGENT_ID || 'abareyo-onboarding';
+    const AGENT_ID = process.env.AGENT_ID || 'gikundiro-onboarding';
     const ALLOW_MOCK = (
       process.env.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK === '1' ||
       process.env.ONBOARDING_ALLOW_MOCK === '1'
@@ -468,7 +468,7 @@ async function onboardingGateway(req: NextRequest, ctx: MockContext) {
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           input: `Agent:${AGENT_ID}\nUser:${text}\nReturn a short onboarding reply.`,
-          metadata: { app: 'abareyo', sessionId },
+          metadata: { app: 'gikundiro', sessionId },
         }),
       });
       if (!resp.ok) {
@@ -476,7 +476,7 @@ async function onboardingGateway(req: NextRequest, ctx: MockContext) {
         return NextResponse.json({ error: 'upstream_error', detail }, { status: 502 });
       }
       const data = await resp.json();
-      const reply = data?.output?.[0]?.content?.[0]?.text ?? "Muraho! Let's get started.";
+      const reply = data?.output?.[0]?.content?.[0]?.text ?? "Hello! Let's get started.";
       return NextResponse.json({ ok: true, reply });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';

@@ -5,7 +5,7 @@ import { useShopLocale } from "../_hooks/useShopLocale";
 const TrustBanner = () => {
   const { t } = useShopLocale();
   return (
-    <section className="card flex flex-col gap-2 bg-white/5 text-white">
+    <section className="card break-words whitespace-normal break-words whitespace-normal flex flex-col gap-2 bg-white/5 text-white">
       <h3 className="text-sm font-semibold uppercase tracking-wide text-white/80">
         {t("trust.bannerTitle").primary}
         <span className="block text-xs font-normal text-white/60">{t("trust.bannerTitle").secondary}</span>

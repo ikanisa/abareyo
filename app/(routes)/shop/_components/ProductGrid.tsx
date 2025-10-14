@@ -25,7 +25,7 @@ const ProductGrid = ({ items, isLoading = false }: ProductGridProps) => {
   if (!items.length) {
     const emptyCopy = t("grid.empty");
     return (
-      <div className="card text-center text-sm text-white/80">
+      <div className="card break-words whitespace-normal break-words whitespace-normal text-center text-sm text-white/80">
         {emptyCopy.primary}
         <span className="block text-xs text-white/60">{emptyCopy.secondary}</span>
       </div>

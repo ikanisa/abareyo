@@ -1,0 +1,1104 @@
+{
+  "generatedAt": "2025-10-14T06:36:31.619Z",
+  "scannedFiles": 356,
+  "links": [
+    {
+      "source": "app/wallet/top-up/page.tsx",
+      "line": 21,
+      "column": 14,
+      "type": "anchor",
+      "target": "tel:*651%23",
+      "internal": false,
+      "notes": "external"
+    },
+    {
+      "source": "app/wallet/top-up/page.tsx",
+      "line": 24,
+      "column": 17,
+      "type": "next/link",
+      "target": "/services#sacco",
+      "internal": true
+    },
+    {
+      "source": "app/tickets/page.tsx",
+      "line": 187,
+      "column": 7,
+      "type": "router.push",
+      "target": "/mytickets",
+      "internal": true
+    },
+    {
+      "source": "app/tickets/not-found.tsx",
+      "line": 12,
+      "column": 17,
+      "type": "next/link",
+      "target": "/matches",
+      "internal": true
+    },
+    {
+      "source": "app/tickets/not-found.tsx",
+      "line": 15,
+      "column": 17,
+      "type": "next/link",
+      "target": "/shop",
+      "internal": true
+    },
+    {
+      "source": "app/tickets/not-found.tsx",
+      "line": 18,
+      "column": 17,
+      "type": "next/link",
+      "target": "/",
+      "internal": true
+    },
+    {
+      "source": "app/tickets/error.tsx",
+      "line": 17,
+      "column": 17,
+      "type": "next/link",
+      "target": "/shop",
+      "internal": true
+    },
+    {
+      "source": "app/tickets/error.tsx",
+      "line": 20,
+      "column": 17,
+      "type": "next/link",
+      "target": "/",
+      "internal": true
+    },
+    {
+      "source": "app/support/page.tsx",
+      "line": 19,
+      "column": 43,
+      "type": "anchor",
+      "target": "mailto:support@gikundiro.rw",
+      "internal": false,
+      "notes": "external"
+    },
+    {
+      "source": "app/support/page.tsx",
+      "line": 21,
+      "column": 17,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "app/support/page.tsx",
+      "line": 24,
+      "column": 17,
+      "type": "next/link",
+      "target": "/shop",
+      "internal": true
+    },
+    {
+      "source": "app/support/page.tsx",
+      "line": 27,
+      "column": 17,
+      "type": "next/link",
+      "target": "/services",
+      "internal": true
+    },
+    {
+      "source": "app/shop/not-found.tsx",
+      "line": 12,
+      "column": 17,
+      "type": "next/link",
+      "target": "/shop",
+      "internal": true
+    },
+    {
+      "source": "app/shop/not-found.tsx",
+      "line": 15,
+      "column": 17,
+      "type": "next/link",
+      "target": "/",
+      "internal": true
+    },
+    {
+      "source": "app/shop/not-found.tsx",
+      "line": 18,
+      "column": 17,
+      "type": "next/link",
+      "target": "/more/rewards",
+      "internal": true
+    },
+    {
+      "source": "app/shop/error.tsx",
+      "line": 17,
+      "column": 17,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "app/shop/error.tsx",
+      "line": 20,
+      "column": 17,
+      "type": "next/link",
+      "target": "/services",
+      "internal": true
+    },
+    {
+      "source": "app/shop/ShopExperience.tsx",
+      "line": 510,
+      "column": 17,
+      "type": "next/link",
+      "target": "#",
+      "internal": false,
+      "notes": "external"
+    },
+    {
+      "source": "app/settings/page.tsx",
+      "line": 27,
+      "column": 17,
+      "type": "next/link",
+      "target": "/more",
+      "internal": true
+    },
+    {
+      "source": "app/settings/page.tsx",
+      "line": 30,
+      "column": 17,
+      "type": "next/link",
+      "target": "/settings/about",
+      "internal": true
+    },
+    {
+      "source": "app/settings/about/page.tsx",
+      "line": 18,
+      "column": 86,
+      "type": "anchor",
+      "target": "mailto:support@gikundiro.rw",
+      "internal": false,
+      "notes": "external"
+    },
+    {
+      "source": "app/settings/about/page.tsx",
+      "line": 19,
+      "column": 71,
+      "type": "next/link",
+      "target": "/legal/privacy",
+      "internal": true
+    },
+    {
+      "source": "app/settings/about/page.tsx",
+      "line": 19,
+      "column": 147,
+      "type": "next/link",
+      "target": "/legal/terms",
+      "internal": true
+    },
+    {
+      "source": "app/services/not-found.tsx",
+      "line": 12,
+      "column": 17,
+      "type": "next/link",
+      "target": "/services",
+      "internal": true
+    },
+    {
+      "source": "app/services/not-found.tsx",
+      "line": 15,
+      "column": 17,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "app/services/not-found.tsx",
+      "line": 18,
+      "column": 17,
+      "type": "next/link",
+      "target": "/shop",
+      "internal": true
+    },
+    {
+      "source": "app/services/error.tsx",
+      "line": 17,
+      "column": 17,
+      "type": "next/link",
+      "target": "/more/rewards",
+      "internal": true
+    },
+    {
+      "source": "app/services/error.tsx",
+      "line": 20,
+      "column": 17,
+      "type": "next/link",
+      "target": "/",
+      "internal": true
+    },
+    {
+      "source": "app/profile/page.tsx",
+      "line": 20,
+      "column": 17,
+      "type": "next/link",
+      "target": "/more",
+      "internal": true
+    },
+    {
+      "source": "app/profile/page.tsx",
+      "line": 23,
+      "column": 17,
+      "type": "next/link",
+      "target": "/settings",
+      "internal": true
+    },
+    {
+      "source": "app/mytickets/MyTicketsClientPage.tsx",
+      "line": 29,
+      "column": 7,
+      "type": "router.push",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "app/mytickets/MyTicketsClientPage.tsx",
+      "line": 33,
+      "column": 7,
+      "type": "router.push",
+      "target": "/tickets?tab=past",
+      "internal": true
+    },
+    {
+      "source": "app/more/rewards/page.tsx",
+      "line": 45,
+      "column": 19,
+      "type": "next/link",
+      "target": "/services",
+      "internal": true
+    },
+    {
+      "source": "app/more/rewards/page.tsx",
+      "line": 97,
+      "column": 19,
+      "type": "next/link",
+      "target": "/matches",
+      "internal": true
+    },
+    {
+      "source": "app/more/rewards/page.tsx",
+      "line": 100,
+      "column": 19,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "app/more/rewards/page.tsx",
+      "line": 103,
+      "column": 19,
+      "type": "next/link",
+      "target": "/shop",
+      "internal": true
+    },
+    {
+      "source": "app/more/rewards/not-found.tsx",
+      "line": 12,
+      "column": 17,
+      "type": "next/link",
+      "target": "/more",
+      "internal": true
+    },
+    {
+      "source": "app/more/rewards/not-found.tsx",
+      "line": 15,
+      "column": 17,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "app/more/rewards/not-found.tsx",
+      "line": 18,
+      "column": 17,
+      "type": "next/link",
+      "target": "/shop",
+      "internal": true
+    },
+    {
+      "source": "app/more/rewards/error.tsx",
+      "line": 17,
+      "column": 17,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "app/more/rewards/error.tsx",
+      "line": 20,
+      "column": 17,
+      "type": "next/link",
+      "target": "/shop",
+      "internal": true
+    },
+    {
+      "source": "app/more/not-found.tsx",
+      "line": 12,
+      "column": 17,
+      "type": "next/link",
+      "target": "/",
+      "internal": true
+    },
+    {
+      "source": "app/more/not-found.tsx",
+      "line": 15,
+      "column": 17,
+      "type": "next/link",
+      "target": "/more/rewards",
+      "internal": true
+    },
+    {
+      "source": "app/more/not-found.tsx",
+      "line": 18,
+      "column": 17,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "app/more/error.tsx",
+      "line": 17,
+      "column": 17,
+      "type": "next/link",
+      "target": "/wallet",
+      "internal": true
+    },
+    {
+      "source": "app/more/error.tsx",
+      "line": 20,
+      "column": 17,
+      "type": "next/link",
+      "target": "/shop",
+      "internal": true
+    },
+    {
+      "source": "app/membership/upgrade/page.tsx",
+      "line": 29,
+      "column": 19,
+      "type": "next/link",
+      "target": "/more",
+      "internal": true
+    },
+    {
+      "source": "app/membership/upgrade/page.tsx",
+      "line": 36,
+      "column": 66,
+      "type": "anchor",
+      "target": "mailto:membership@gikundiro.rw",
+      "internal": false,
+      "notes": "external"
+    },
+    {
+      "source": "app/matches/not-found.tsx",
+      "line": 12,
+      "column": 17,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "app/matches/not-found.tsx",
+      "line": 15,
+      "column": 17,
+      "type": "next/link",
+      "target": "/shop",
+      "internal": true
+    },
+    {
+      "source": "app/matches/not-found.tsx",
+      "line": 18,
+      "column": 17,
+      "type": "next/link",
+      "target": "/",
+      "internal": true
+    },
+    {
+      "source": "app/matches/error.tsx",
+      "line": 17,
+      "column": 17,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "app/matches/error.tsx",
+      "line": 20,
+      "column": 17,
+      "type": "next/link",
+      "target": "/shop",
+      "internal": true
+    },
+    {
+      "source": "app/matches/MatchesClient.tsx",
+      "line": 307,
+      "column": 19,
+      "type": "next/link",
+      "target": "/community",
+      "internal": true
+    },
+    {
+      "source": "app/matches/MatchesClient.tsx",
+      "line": 324,
+      "column": 19,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "app/matchday/page.tsx",
+      "line": 58,
+      "column": 5,
+      "type": "router.push",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "app/matchday/page.tsx",
+      "line": 62,
+      "column": 5,
+      "type": "router.push",
+      "target": "/shop",
+      "internal": true
+    },
+    {
+      "source": "app/matchday/page.tsx",
+      "line": 66,
+      "column": 5,
+      "type": "router.push",
+      "target": "/services?focus=sacco",
+      "internal": true
+    },
+    {
+      "source": "app/matchday/page.tsx",
+      "line": 70,
+      "column": 5,
+      "type": "router.push",
+      "target": "/community",
+      "internal": true
+    },
+    {
+      "source": "app/legal/terms/page.tsx",
+      "line": 30,
+      "column": 51,
+      "type": "anchor",
+      "target": "mailto:support@gikundiro.rw",
+      "internal": false,
+      "notes": "external"
+    },
+    {
+      "source": "app/legal/privacy/page.tsx",
+      "line": 30,
+      "column": 51,
+      "type": "anchor",
+      "target": "mailto:privacy@gikundiro.rw",
+      "internal": false,
+      "notes": "external"
+    },
+    {
+      "source": "app/events/page.tsx",
+      "line": 38,
+      "column": 18,
+      "type": "anchor",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "app/cart/not-found.tsx",
+      "line": 12,
+      "column": 17,
+      "type": "next/link",
+      "target": "/shop",
+      "internal": true
+    },
+    {
+      "source": "app/cart/not-found.tsx",
+      "line": 15,
+      "column": 17,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "app/cart/not-found.tsx",
+      "line": 18,
+      "column": 17,
+      "type": "next/link",
+      "target": "/",
+      "internal": true
+    },
+    {
+      "source": "app/cart/error.tsx",
+      "line": 17,
+      "column": 17,
+      "type": "next/link",
+      "target": "/shop",
+      "internal": true
+    },
+    {
+      "source": "app/cart/error.tsx",
+      "line": 20,
+      "column": 17,
+      "type": "next/link",
+      "target": "/",
+      "internal": true
+    },
+    {
+      "source": "app/cart/CartClientPage.tsx",
+      "line": 133,
+      "column": 17,
+      "type": "next/link",
+      "target": "/shop",
+      "internal": true
+    },
+    {
+      "source": "app/admin/(auth)/login/page.tsx",
+      "line": 11,
+      "column": 5,
+      "type": "router.push",
+      "target": "/admin",
+      "internal": true
+    },
+    {
+      "source": "app/_components/more/WalletWidget.tsx",
+      "line": 29,
+      "column": 5,
+      "type": "router.push",
+      "target": "/wallet/top-up",
+      "internal": true
+    },
+    {
+      "source": "app/_components/more/WalletWidget.tsx",
+      "line": 64,
+      "column": 11,
+      "type": "next/link",
+      "target": "/wallet/history",
+      "internal": true
+    },
+    {
+      "source": "app/_components/more/ProfileCard.tsx",
+      "line": 98,
+      "column": 13,
+      "type": "next/link",
+      "target": "/profile",
+      "internal": true
+    },
+    {
+      "source": "app/_components/more/MoreDashboard.tsx",
+      "line": 76,
+      "column": 5,
+      "type": "router.push",
+      "target": "/wallet/top-up",
+      "internal": true
+    },
+    {
+      "source": "app/_components/more/MoreDashboard.tsx",
+      "line": 86,
+      "column": 5,
+      "type": "router.push",
+      "target": "/fundraising",
+      "internal": true
+    },
+    {
+      "source": "app/_components/more/MoreDashboard.tsx",
+      "line": 91,
+      "column": 5,
+      "type": "router.push",
+      "target": "/events",
+      "internal": true
+    },
+    {
+      "source": "app/_components/more/MoreDashboard.tsx",
+      "line": 105,
+      "column": 7,
+      "type": "router.replace",
+      "target": "/onboarding",
+      "internal": true
+    },
+    {
+      "source": "app/_components/more/MoreDashboard.tsx",
+      "line": 132,
+      "column": 5,
+      "type": "router.push",
+      "target": "/profile",
+      "internal": true
+    },
+    {
+      "source": "app/_components/more/MoreDashboard.tsx",
+      "line": 137,
+      "column": 5,
+      "type": "router.push",
+      "target": "/wallet",
+      "internal": true
+    },
+    {
+      "source": "app/_components/more/MembershipWidget.tsx",
+      "line": 26,
+      "column": 7,
+      "type": "router.push",
+      "target": "/membership",
+      "internal": true
+    },
+    {
+      "source": "app/_components/more/MembershipWidget.tsx",
+      "line": 33,
+      "column": 5,
+      "type": "router.push",
+      "target": "/membership/upgrade",
+      "internal": true
+    },
+    {
+      "source": "app/_components/more/FundraiserWidget.tsx",
+      "line": 31,
+      "column": 5,
+      "type": "router.push",
+      "target": "/fundraising",
+      "internal": true
+    },
+    {
+      "source": "app/_components/more/FooterBrand.tsx",
+      "line": 24,
+      "column": 11,
+      "type": "next/link",
+      "target": "/settings/about",
+      "internal": true
+    },
+    {
+      "source": "app/_components/more/FooterBrand.tsx",
+      "line": 30,
+      "column": 11,
+      "type": "next/link",
+      "target": "/legal/privacy",
+      "internal": true
+    },
+    {
+      "source": "app/_components/more/FooterBrand.tsx",
+      "line": 36,
+      "column": 11,
+      "type": "next/link",
+      "target": "/legal/terms",
+      "internal": true
+    },
+    {
+      "source": "app/_components/more/EventsWidget.tsx",
+      "line": 23,
+      "column": 5,
+      "type": "router.push",
+      "target": "/events",
+      "internal": true
+    },
+    {
+      "source": "app/_components/match/MatchCard.tsx",
+      "line": 103,
+      "column": 13,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "app/_components/home/RewardsWidget.tsx",
+      "line": 146,
+      "column": 11,
+      "type": "anchor",
+      "target": "/more",
+      "internal": true
+    },
+    {
+      "source": "app/(routes)/shop/_components/ShopHeader.tsx",
+      "line": 94,
+      "column": 15,
+      "type": "next/link",
+      "target": "/cart",
+      "internal": true
+    },
+    {
+      "source": "app/(routes)/shop/_components/ShopHeader.tsx",
+      "line": 106,
+      "column": 15,
+      "type": "next/link",
+      "target": "/more",
+      "internal": true
+    },
+    {
+      "source": "app/(routes)/shop/_components/HeroShowcase.tsx",
+      "line": 94,
+      "column": 19,
+      "type": "next/link",
+      "target": "/cart",
+      "internal": true
+    },
+    {
+      "source": "app/(routes)/shop/[slug]/not-found.tsx",
+      "line": 12,
+      "column": 17,
+      "type": "next/link",
+      "target": "/shop",
+      "internal": true
+    },
+    {
+      "source": "app/(routes)/shop/[slug]/not-found.tsx",
+      "line": 15,
+      "column": 17,
+      "type": "next/link",
+      "target": "/cart",
+      "internal": true
+    },
+    {
+      "source": "app/(routes)/shop/[slug]/not-found.tsx",
+      "line": 18,
+      "column": 17,
+      "type": "next/link",
+      "target": "/",
+      "internal": true
+    },
+    {
+      "source": "app/(routes)/shop/ShopClientPage.tsx",
+      "line": 113,
+      "column": 29,
+      "type": "next/link",
+      "target": "/cart",
+      "internal": true
+    },
+    {
+      "source": "app/(routes)/shop/ShopClientPage.tsx",
+      "line": 131,
+      "column": 29,
+      "type": "next/link",
+      "target": "/cart",
+      "internal": true
+    },
+    {
+      "source": "app/(routes)/_components/HomeClient.tsx",
+      "line": 147,
+      "column": 60,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "src/views/TicketsView.tsx",
+      "line": 372,
+      "column": 29,
+      "type": "next/link",
+      "target": "/tickets/transfer",
+      "internal": true
+    },
+    {
+      "source": "src/views/TicketsView.tsx",
+      "line": 375,
+      "column": 29,
+      "type": "next/link",
+      "target": "/matches",
+      "internal": true
+    },
+    {
+      "source": "src/views/TicketsView.tsx",
+      "line": 381,
+      "column": 27,
+      "type": "next/link",
+      "target": "/wallet",
+      "internal": true
+    },
+    {
+      "source": "src/views/TicketsView.tsx",
+      "line": 420,
+      "column": 37,
+      "type": "next/link",
+      "target": "/matches",
+      "internal": true
+    },
+    {
+      "source": "src/views/PartnerServicesView.tsx",
+      "line": 823,
+      "column": 31,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "src/views/PartnerServicesView.tsx",
+      "line": 893,
+      "column": 23,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "src/views/PartnerServicesView.tsx",
+      "line": 1069,
+      "column": 21,
+      "type": "next/link",
+      "target": "#future-services",
+      "internal": false,
+      "notes": "external"
+    },
+    {
+      "source": "src/views/PartnerServicesView.tsx",
+      "line": 1080,
+      "column": 25,
+      "type": "next/link",
+      "target": "/support",
+      "internal": true
+    },
+    {
+      "source": "src/views/OnboardingView.tsx",
+      "line": 190,
+      "column": 7,
+      "type": "router.replace",
+      "target": "/",
+      "internal": true
+    },
+    {
+      "source": "src/views/MoreView.tsx",
+      "line": 118,
+      "column": 35,
+      "type": "next/link",
+      "target": "/membership",
+      "internal": true
+    },
+    {
+      "source": "src/views/MoreView.tsx",
+      "line": 125,
+      "column": 29,
+      "type": "next/link",
+      "target": "/support",
+      "internal": true
+    },
+    {
+      "source": "src/views/MoreView.tsx",
+      "line": 128,
+      "column": 29,
+      "type": "next/link",
+      "target": "/wallet",
+      "internal": true
+    },
+    {
+      "source": "src/views/MoreView.tsx",
+      "line": 153,
+      "column": 37,
+      "type": "next/link",
+      "target": "/settings",
+      "internal": true
+    },
+    {
+      "source": "src/views/MoreView.tsx",
+      "line": 156,
+      "column": 37,
+      "type": "next/link",
+      "target": "/profile",
+      "internal": true
+    },
+    {
+      "source": "src/views/MoreView.tsx",
+      "line": 212,
+      "column": 15,
+      "type": "router.replace",
+      "target": "/onboarding",
+      "internal": true
+    },
+    {
+      "source": "src/views/MatchesView.tsx",
+      "line": 102,
+      "column": 17,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "src/views/MatchesView.tsx",
+      "line": 134,
+      "column": 29,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "src/views/MatchesView.tsx",
+      "line": 137,
+      "column": 29,
+      "type": "next/link",
+      "target": "/community",
+      "internal": true
+    },
+    {
+      "source": "src/views/MatchesView.tsx",
+      "line": 143,
+      "column": 27,
+      "type": "next/link",
+      "target": "/more",
+      "internal": true
+    },
+    {
+      "source": "src/views/MatchesView.tsx",
+      "line": 168,
+      "column": 25,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "src/views/MatchesView.tsx",
+      "line": 177,
+      "column": 41,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "src/views/HomeView.tsx",
+      "line": 93,
+      "column": 21,
+      "type": "next/link",
+      "target": "/community",
+      "internal": true
+    },
+    {
+      "source": "src/views/HomeView.tsx",
+      "line": 99,
+      "column": 15,
+      "type": "next/link",
+      "target": "/admin/login",
+      "internal": true
+    },
+    {
+      "source": "src/views/HomeView.tsx",
+      "line": 171,
+      "column": 25,
+      "type": "next/link",
+      "target": "/tickets",
+      "internal": true
+    },
+    {
+      "source": "src/views/HomeView.tsx",
+      "line": 184,
+      "column": 25,
+      "type": "next/link",
+      "target": "/membership",
+      "internal": true
+    },
+    {
+      "source": "src/views/HomeView.tsx",
+      "line": 229,
+      "column": 25,
+      "type": "next/link",
+      "target": "/community",
+      "internal": true
+    },
+    {
+      "source": "src/views/CommunityView.tsx",
+      "line": 538,
+      "column": 29,
+      "type": "next/link",
+      "target": "/wallet",
+      "internal": true
+    },
+    {
+      "source": "src/views/CommunityView.tsx",
+      "line": 541,
+      "column": 29,
+      "type": "next/link",
+      "target": "/more",
+      "internal": true
+    },
+    {
+      "source": "src/views/CommunityView.tsx",
+      "line": 554,
+      "column": 29,
+      "type": "next/link",
+      "target": "#community-missions",
+      "internal": false,
+      "notes": "external"
+    },
+    {
+      "source": "src/views/CommunityView.tsx",
+      "line": 604,
+      "column": 90,
+      "type": "next/link",
+      "target": "#community-missions",
+      "internal": false,
+      "notes": "external"
+    },
+    {
+      "source": "src/views/CommunityView.tsx",
+      "line": 607,
+      "column": 90,
+      "type": "next/link",
+      "target": "#community-missions",
+      "internal": false,
+      "notes": "external"
+    },
+    {
+      "source": "src/views/CommunityView.tsx",
+      "line": 610,
+      "column": 90,
+      "type": "next/link",
+      "target": "#community-missions",
+      "internal": false,
+      "notes": "external"
+    },
+    {
+      "source": "src/views/CommunityView.tsx",
+      "line": 683,
+      "column": 37,
+      "type": "next/link",
+      "target": "#community-missions",
+      "internal": false,
+      "notes": "external"
+    },
+    {
+      "source": "src/components/admin/AdminShell.tsx",
+      "line": 68,
+      "column": 7,
+      "type": "router.push",
+      "target": "/admin/login",
+      "internal": true
+    },
+    {
+      "source": "src/components/admin/AdminShell.tsx",
+      "line": 105,
+      "column": 17,
+      "type": "next/link",
+      "target": "/admin",
+      "internal": true
+    }
+  ],
+  "summary": {
+    "totalLinks": 131,
+    "internalLinks": 118,
+    "externalLinks": 13,
+    "uniqueInternalTargets": [
+      "/",
+      "/admin",
+      "/admin/login",
+      "/cart",
+      "/community",
+      "/events",
+      "/fundraising",
+      "/legal/privacy",
+      "/legal/terms",
+      "/matches",
+      "/membership",
+      "/membership/upgrade",
+      "/more",
+      "/more/rewards",
+      "/mytickets",
+      "/onboarding",
+      "/profile",
+      "/services",
+      "/services#sacco",
+      "/services?focus=sacco",
+      "/settings",
+      "/settings/about",
+      "/shop",
+      "/support",
+      "/tickets",
+      "/tickets/transfer",
+      "/tickets?tab=past",
+      "/wallet",
+      "/wallet/history",
+      "/wallet/top-up"
+    ]
+  }
+}

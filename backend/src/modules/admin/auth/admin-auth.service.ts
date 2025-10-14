@@ -111,6 +111,26 @@ export class AdminAuthService {
     return adminUser;
   }
 
+  async findActiveAdminByEmail(email: string) {
+    const normalizedEmail = email.trim().toLowerCase();
+    let adminUser = await this.prisma.adminUser.findUnique({ where: { email: normalizedEmail } });
+
+    if (!adminUser) {
+      const defaultPassword = this.configService.get<string>('admin.defaultAccount.password') ?? '';
+      adminUser = await this.bootstrapDefaultAdmin(normalizedEmail, defaultPassword);
+    }
+
+    if (!adminUser) {
+      throw new UnauthorizedException('No admin account is registered for this email.');
+    }
+
+    if (adminUser.status !== 'active') {
+      throw new ForbiddenException('This admin account is not active.');
+    }
+
+    return adminUser;
+  }
+
   private async bootstrapDefaultAdmin(email: string, password: string) {
     const defaultEmail =
       this.configService.get<string>('admin.defaultAccount.email')?.trim().toLowerCase() ?? '';

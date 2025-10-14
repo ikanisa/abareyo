@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-
-const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
+import { randomUUID } from "crypto";
 
 export async function POST(req: Request) {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceKey) {
+    return NextResponse.json({ error: "supabase_config_missing" }, { status: 500 });
+  }
+
+  const db = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
+
   try {
     const payload = await req.json().catch(() => null);
     const policyId = payload?.policy_id as string | undefined;
@@ -81,12 +86,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "ticket_order_failed" }, { status: 500 });
     }
 
+    const rawToken = randomUUID();
+
     const { data: pass, error: passError } = await db
       .from("ticket_passes")
       .insert({
         order_id: order.id,
         zone: "Blue",
         gate: "G3",
+        qr_token_hash: rawToken,
       })
       .select("id")
       .single();
