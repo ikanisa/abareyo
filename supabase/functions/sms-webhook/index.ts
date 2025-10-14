@@ -11,47 +11,106 @@ serve(async (req) => {
   const auth = req.headers.get("authorization")?.split("Bearer ")[1];
   if (!auth || auth !== TOKEN) return new Response("Unauthorized", { status: 401 });
 
-  const payload = await req.json(); // { from, text } e.g. "Paid RWF 25000 Ref XYZ123 ..."
+  const payload = await req.json().catch(() => ({}));
   const txt = String(payload?.text ?? "");
-  const refMatch = txt.match(/Ref\s+([A-Z0-9\-]+)/i);
-  const amtMatch = txt.match(/RWF\s*([\d,]+)/i);
-  const REF = refMatch?.[1] ?? crypto.randomUUID();
+  const refMatch = txt.match(/Ref[: ]+([A-Z0-9\-]+)/i);
+  const amtMatch = txt.match(/RWF[: ]*([\d,]+)/i);
+  const REF = refMatch?.[1] ?? crypto.randomUUID().slice(0, 8).toUpperCase();
   const AMT = amtMatch ? Number(amtMatch[1].replace(/,/g, "")) : 0;
 
+  async function ensureTicketPass(orderId: string) {
+    const { data: existing } = await db
+      .from("ticket_passes")
+      .select("id")
+      .eq("order_id", orderId)
+      .limit(1);
+
+    if (existing && existing.length) return;
+
+    await db
+      .from("ticket_passes")
+      .insert({
+        order_id: orderId,
+        zone: "Blue",
+        gate: "G3",
+        qr_token_hash: crypto.randomUUID(),
+      })
+      .catch(() => {});
+  }
+
   // Try to match pending ticket/order/quote/deposit by amount or placeholder ref
-  // For MVP we only flip earliest pending with same total.
+  // We prioritise ticket orders, then shop orders, insurance quotes, and sacco deposits.
   async function matchAndConfirm() {
-    // tickets
-    let { data: t } = await db.from("tickets").select("*").eq("paid", false).order("created_at").limit(50);
-    const ticket = (t ?? []).find((x: any) => x.price === AMT);
-    if (ticket) {
-      await db.from("tickets").update({ paid: true, momo_ref: REF }).eq("id", ticket.id);
-      await db.from("transactions").insert({ user_id: ticket.user_id, kind: "purchase", amount: AMT, ref: REF });
-      return { kind: "ticket", id: ticket.id };
+    // ticket orders (new schema)
+    const { data: ticketOrders } = await db
+      .from("ticket_orders")
+      .select("id,total,status,user_id")
+      .eq("status", "pending")
+      .order("created_at", { ascending: true })
+      .limit(50);
+
+    const ticketOrder = (ticketOrders ?? []).find((order: any) => order.total === AMT);
+    if (ticketOrder) {
+      await db.from("ticket_orders").update({ status: "paid", sms_ref: REF }).eq("id", ticketOrder.id);
+      await ensureTicketPass(ticketOrder.id);
+      await db
+        .from("payments")
+        .insert({ kind: "ticket", amount: AMT, status: "confirmed", ticket_order_id: ticketOrder.id, metadata: { ref: REF } })
+        .catch(() => {});
+      return { kind: "ticket_order", id: ticketOrder.id };
     }
-    // orders
-    let { data: o } = await db.from("orders").select("*").eq("status", "pending").order("created_at").limit(50);
-    const order = (o ?? []).find((x: any) => x.total === AMT);
-    if (order) {
-      await db.from("orders").update({ status: "paid", momo_ref: REF }).eq("id", order.id);
-      await db.from("transactions").insert({ user_id: order.user_id, kind: "purchase", amount: AMT, ref: REF });
-      return { kind: "order", id: order.id };
+
+    // shop orders
+    const { data: shopOrders } = await db
+      .from("orders")
+      .select("id,total,status,user_id")
+      .eq("status", "pending")
+      .order("created_at", { ascending: true })
+      .limit(50);
+    const shopOrder = (shopOrders ?? []).find((order: any) => order.total === AMT);
+    if (shopOrder) {
+      await db.from("orders").update({ status: "paid", momo_ref: REF }).eq("id", shopOrder.id);
+      await db
+        .from("payments")
+        .insert({ kind: "shop", amount: AMT, status: "confirmed", order_id: shopOrder.id, metadata: { ref: REF } })
+        .catch(() => {});
+      return { kind: "shop_order", id: shopOrder.id };
     }
-    // insurance
-    let { data: q } = await db.from("insurance_quotes").select("*").eq("status", "quoted").order("created_at").limit(50);
-    const quote = (q ?? []).find((x: any) => x.premium === AMT);
+
+    // insurance quotes
+    const { data: quotes } = await db
+      .from("insurance_quotes")
+      .select("id,premium,status")
+      .eq("status", "quoted")
+      .order("created_at", { ascending: true })
+      .limit(50);
+    const quote = (quotes ?? []).find((row: any) => row.premium === AMT);
     if (quote) {
       await db.from("insurance_quotes").update({ status: "paid", ref: REF }).eq("id", quote.id);
-      return { kind: "quote", id: quote.id };
+      await db
+        .from("payments")
+        .insert({ kind: "policy", amount: AMT, status: "confirmed", metadata: { ref: REF } })
+        .catch(() => {});
+      return { kind: "insurance_quote", id: quote.id };
     }
-    // sacco
-    let { data: d } = await db.from("sacco_deposits").select("*").eq("status", "pending").order("created_at").limit(50);
-    const dep = (d ?? []).find((x: any) => x.amount === AMT);
-    if (dep) {
-      await db.from("sacco_deposits").update({ status: "confirmed", ref: REF }).eq("id", dep.id);
-      await db.from("transactions").insert({ user_id: dep.user_id, kind: "deposit", amount: AMT, ref: REF });
-      return { kind: "deposit", id: dep.id };
+
+    // sacco deposits
+    const { data: deposits } = await db
+      .from("sacco_deposits")
+      .select("id,amount,status,user_id")
+      .eq("status", "pending")
+      .order("created_at", { ascending: true })
+      .limit(50);
+    const deposit = (deposits ?? []).find((row: any) => row.amount === AMT);
+    if (deposit) {
+      await db.from("sacco_deposits").update({ status: "confirmed", ref: REF }).eq("id", deposit.id);
+      await db
+        .from("payments")
+        .insert({ kind: "deposit", amount: AMT, status: "confirmed", metadata: { ref: REF } })
+        .catch(() => {});
+      return { kind: "sacco_deposit", id: deposit.id };
     }
+
     return { kind: "unmatched" };
   }
 
