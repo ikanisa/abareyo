@@ -7,6 +7,8 @@ type StatusSummary = Array<{ status: string; count: number }>;
 
 type GateThroughput = Array<{ gate: string; perMin: number; samples: number }>;
 
+type GroupableFilter<T> = T & { group(columns: string): T };
+
 export async function GET() {
   try {
     await requireAdminSession();
@@ -14,10 +16,13 @@ export async function GET() {
 
     const sinceIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
+    const statusCountsQuery = supabase.from('ticket_orders').select('status, count:status', { head: false });
+    const statusSummaryPromise = (statusCountsQuery as GroupableFilter<typeof statusCountsQuery>).group('status');
+
     const [passesCount, ordersCount, statusSummary, recentPasses] = await Promise.all([
       supabase.from('ticket_passes').select('id', { count: 'exact', head: true }),
       supabase.from('ticket_orders').select('id', { count: 'exact', head: true }),
-      supabase.from('ticket_orders').select('status, count:status', { head: false }).group('status'),
+      statusSummaryPromise,
       supabase.from('ticket_passes').select('gate, created_at').gte('created_at', sinceIso),
     ]);
 

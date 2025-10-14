@@ -12,23 +12,23 @@ const DEPOSIT_SUMMARY = 'id, status, ref, amount, user_id, created_at';
 
 type EntityKind = 'ticket' | 'order' | 'quote' | 'deposit';
 
+type SmsAttachPayload = {
+  sms_id?: string;
+  smsId?: string;
+  entity?: { kind?: EntityKind; id?: string };
+  note?: string | null;
+  manual_note?: string | null;
+};
+
 export async function POST(request: NextRequest) {
   // accept both snakeCase and camelCase payload keys for compatibility
-  let payload:
-    | {
-        sms_id?: string;
-        smsId?: string;
-        entity?: { kind?: EntityKind; id?: string };
-        note?: string | null;
-        manual_note?: string | null;
-      }
-    | null = null;
+  let payload: SmsAttachPayload | null = null;
 
   try {
     const session = await requireAdminSession();
     const supabase = getSupabaseAdmin();
 
-    payload = (await request.json().catch(() => null)) as typeof payload;
+    payload = (await request.json().catch(() => null)) as SmsAttachPayload | null;
 
     const smsId = payload?.sms_id ?? payload?.smsId;
     const entity = payload?.entity;

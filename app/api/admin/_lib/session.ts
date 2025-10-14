@@ -96,8 +96,10 @@ export const fetchAdminContextForToken = async (
     .select('role_id, admin_roles(name)')
     .eq('admin_user_id', user.id);
 
-  const roles = normalizeRoles(roleLinks ?? []);
-  const roleIds = (roleLinks ?? []).map((link) => link.role_id);
+  const normalizedRoleLinks = (roleLinks ?? []) as unknown as RoleLink[];
+
+  const roles = normalizeRoles(normalizedRoleLinks);
+  const roleIds = normalizedRoleLinks.map((link) => link.role_id);
 
   let permissions: string[] = [];
   if (roleIds.length) {
@@ -105,7 +107,8 @@ export const fetchAdminContextForToken = async (
       .from('roles_permissions')
       .select('permissions(key)')
       .in('role_id', roleIds);
-    permissions = normalizePermissions(permLinks ?? []);
+    const normalizedPermLinks = (permLinks ?? []) as unknown as PermissionLink[];
+    permissions = normalizePermissions(normalizedPermLinks);
   }
 
   await client

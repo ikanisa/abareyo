@@ -7,13 +7,14 @@ import { getSupabaseAdmin } from '@/app/admin/api/_lib/supabase';
 const MEDIA_BUCKET = 'media';
 
 export async function POST(request: NextRequest) {
-  let payload: { fileName?: string; dataUrl?: string } | null = null;
+  type UploadPayload = { fileName?: string; dataUrl?: string };
+  let payload: UploadPayload | null = null;
 
   try {
     await requireAdminSession();
     const supabase = getSupabaseAdmin();
 
-    payload = (await request.json().catch(() => null)) as typeof payload;
+    payload = (await request.json().catch(() => null)) as UploadPayload | null;
     if (!payload?.fileName || !payload.dataUrl) {
       return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
     }
