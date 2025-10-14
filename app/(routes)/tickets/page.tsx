@@ -1,40 +1,23 @@
-import Link from "next/link";
-
 import PageShell from "@/app/_components/shell/PageShell";
-import Empty from "@/app/_components/common/Empty";
-import { fixtures } from "@/app/_data/fixtures";
-import { buildRouteMetadata } from "@/app/_lib/navigation";
+import TicketsGrid from "./_components/TicketsGrid";
 
-export const metadata = buildRouteMetadata("/tickets");
+export const dynamic = "force-dynamic";
 
-const upcomingFixtures = fixtures.filter((fixture) => fixture.status === "upcoming");
+export default async function Tickets() {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BACKEND_URL ?? ""}/api/matches`,
+    { cache: "no-store" },
+  ).catch(() => null);
+  const json = await res?.json().catch(() => null);
+  const matches = Array.isArray(json?.matches) ? json.matches : [];
 
-const Tickets = async () => {
   return (
     <PageShell>
-      <section className="card space-y-2">
-        <div>
-          <h1>Upcoming Matches</h1>
-          <p className="muted">Choose your zone and pay instantly via USSD.</p>
-        </div>
+      <section className="card">
+        <h1>Upcoming Matches</h1>
+        <div className="muted">Choose a match, pick a zone, pay via USSD.</div>
       </section>
-      <section className="space-y-3">
-        {upcomingFixtures.length === 0 ? (
-          <Empty title="No upcoming fixtures" desc="Check back soon for new matches." />
-        ) : (
-          upcomingFixtures.map((fixture) => (
-            <Link key={fixture.id} href={`/tickets/${fixture.id}`} className="card block space-y-1">
-              <h2 className="section-title">{fixture.title}</h2>
-              <p className="muted text-sm">
-                {fixture.date} • {fixture.time}
-              </p>
-              <p className="muted text-xs">{fixture.venue}</p>
-            </Link>
-          ))
-        )}
-      </section>
+      <TicketsGrid matches={matches} />
     </PageShell>
   );
-};
-
-export default Tickets;
+}

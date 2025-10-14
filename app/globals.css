@@ -2,162 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --rs-blue: #0033ff;
-  --rs-azure: #00a1de;
-  --rs-yellow: #fad201;
-  --rs-green: #20603d;
-  --glass-bg: rgba(255, 255, 255, 0.14);
-  --glass-stroke: rgba(255, 255, 255, 0.22);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.25);
-  --radius-xl: 16px;
-  --radius-2xl: 24px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-  }
+:root{
+  --rs-blue:#0033FF; --rs-azure:#00A1DE; --rs-yellow:#FAD201; --rs-green:#20603D;
+  --glass-bg:rgba(255,255,255,.14); --glass-stroke:rgba(255,255,255,.22);
+  --shadow-lg:0 8px 24px rgba(0,0,0,.25);
+  --radius-xl:16px; --radius-2xl:24px;
 }
 
 @layer base {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     @apply border-border;
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
-    font-size: 16px;
-    line-height: 1.5;
+    @apply text-[16px] leading-6 bg-background text-foreground antialiased;
   }
 
   h1 {
-    font-size: 28px;
-    line-height: 32px;
-    font-weight: 700;
+    @apply text-[28px] leading-8 font-bold;
   }
 
   h2 {
-    font-size: 20px;
-    line-height: 24px;
-    font-weight: 600;
+    @apply text-[20px] leading-6 font-semibold;
   }
 }
 
 @layer components {
-  .bg-rs-gradient {
-    background: linear-gradient(135deg, var(--rs-blue), var(--rs-azure), var(--rs-yellow), var(--rs-green));
-  }
-
-  .glass,
-  .glass-card,
-  .card,
-  .tile,
-  .btn,
-  .btn-primary,
-  .btn-ghost {
-    background: var(--glass-bg);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid var(--glass-stroke);
-    border-radius: var(--radius-2xl);
-    box-shadow: var(--shadow-lg);
-  }
-
-  .card {
-    padding: 1rem;
-  }
-
-  @screen md {
-    .card {
-      padding: 1.5rem;
-    }
-  }
-
-  .tile {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    min-height: 44px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-align: center;
-    color: rgba(255, 255, 255, 0.9);
-    border-radius: var(--radius-2xl);
-    transition: background 200ms ease-out, color 200ms ease-out;
-  }
-
-  .tile:hover {
-    background: rgba(255, 255, 255, 0.22);
-  }
-
-  .btn,
-  .btn-primary,
-  .btn-ghost {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    min-height: 44px;
-    font-size: 0.9375rem;
-    font-weight: 600;
-    transition: background 200ms ease-out, color 200ms ease-out;
-  }
-
-  .btn {
-    color: #fff;
-  }
-
-  .btn:hover {
-    background: rgba(255, 255, 255, 0.22);
-  }
-
-  .btn-primary {
-    background: #3b82f6;
-    border-color: transparent;
-    color: #fff;
-  }
-
-  .btn-primary:hover {
-    background: #2563eb;
-  }
-
-  .btn-ghost {
-    background: transparent;
-    border-color: transparent;
-    color: rgba(255, 255, 255, 0.8);
-  }
-
-  .btn-ghost:hover {
-    background: rgba(255, 255, 255, 0.12);
-  }
-
-  .muted {
-    color: rgba(255, 255, 255, 0.7);
-  }
-
-  .section-title {
-    font-size: 20px;
-    line-height: 24px;
-    font-weight: 600;
-  }
+  .bg-rs-gradient{ background:linear-gradient(135deg,var(--rs-blue),var(--rs-azure),var(--rs-yellow),var(--rs-green)); }
+  .glass{ background:var(--glass-bg); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border:1px solid var(--glass-stroke); border-radius:var(--radius-2xl); box-shadow:var(--shadow-lg); }
+  .card{ @apply glass p-4 md:p-6; }
+  .tile{ @apply glass px-4 py-3 rounded-2xl text-white/90 text-sm font-medium flex items-center justify-center text-center; }
+  .btn{ @apply px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white transition inline-flex items-center justify-center gap-2; }
+  .btn-primary{ @apply px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition inline-flex items-center justify-center gap-2; }
+  .btn-ghost{ @apply px-4 py-2 rounded-xl text-white/80 hover:bg-white/10 inline-flex items-center justify-center gap-2; }
+  .muted{ @apply text-white/70; }
+  .section-title{ @apply text-lg md:text-xl font-semibold text-white; }
 }
 
-:focus-visible {
-  outline: 2px solid #ffffff;
-  outline-offset: 2px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation: none !important;
-    transition: none !important;
-  }
-}
+@media (prefers-reduced-motion: reduce){ *{ animation:none!important; transition:none!important; } }
+:focus-visible{ outline:2px solid #fff; outline-offset:2px; }

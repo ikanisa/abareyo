@@ -7,9 +7,17 @@ import {
   leagueTable,
   matches as fixtureMatches,
   matchFeedUpdatedAt,
+  type Match,
 } from "@/app/_data/matches";
 
 export const runtime = "edge";
+
+type SupabaseMatchRow = {
+  opponent?: string | null;
+  home?: string | null;
+  away?: string | null;
+  [key: string]: unknown;
+};
 
 async function fetchMatchesFromSupabase() {
   const url = process.env.SUPABASE_URL;
@@ -46,7 +54,18 @@ async function fetchMatchesFromSupabase() {
  */
 export async function GET() {
   const dbMatches = await fetchMatchesFromSupabase();
-  const matches = dbMatches ?? fixtureMatches;
+  const matches = (dbMatches ?? fixtureMatches).map((match) => {
+    const row = match as SupabaseMatchRow | Match;
+    if ("opponent" in row && typeof row.opponent === "string" && row.opponent) return row;
+    const home = typeof row.home === "string" ? row.home : undefined;
+    const away = typeof row.away === "string" ? row.away : undefined;
+    const isRayonHome = home?.toLowerCase().includes("rayon");
+    const opponent = isRayonHome ? away : home;
+    return {
+      opponent,
+      ...row,
+    };
+  });
 
   return NextResponse.json({
     matches,

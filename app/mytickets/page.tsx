@@ -25,6 +25,16 @@ const toTicketRecord = (ticket: TicketRecordWithRelations): TicketRecord => ({
 });
 
 const loadTickets = async () => {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return {
+      tickets: [] as TicketRecord[],
+      error: "Ticket history is unavailable in this environment.",
+    };
+  }
+
   try {
     const tickets = await listTicketsForUser({ phone: fanProfile.phone });
     return { tickets: tickets.map(toTicketRecord), error: null as string | null };
