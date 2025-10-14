@@ -50,6 +50,13 @@ const captureHeading = async (page: import('@playwright/test').Page) => {
   return null;
 };
 
+const normalisePath = (value: string) => {
+  if (value === '/') {
+    return '/';
+  }
+  return value.replace(/\/$/, '');
+};
+
 const attemptClick = async (
   page: import('@playwright/test').Page,
   target: string,
@@ -61,12 +68,16 @@ const attemptClick = async (
     if ((await link.count()) === 0) {
       continue;
     }
-    const [response] = await Promise.all([
-      page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+    await Promise.all([
+      page.waitForURL(
+        (url) => normalisePath(url.pathname) === normalisePath(target),
+        { timeout: 10_000 },
+      ),
       link.click({ timeout: 10_000 }),
     ]);
+    const response = await page.request.get(`${baseUrl}${target}`);
     const heading = await captureHeading(page);
-    return { status: response?.status() ?? null, heading, via: 'click' };
+    return { status: response.status(), heading, via: 'click' };
   }
 
   const response = await page.goto(`${baseUrl}${target}`, { waitUntil: 'domcontentloaded' });
