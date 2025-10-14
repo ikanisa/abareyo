@@ -1,243 +1,217 @@
 import { randomUUID } from 'crypto';
-import { NextResponse } from 'next/server';
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server';
 
-const createSupabaseClient = () => {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, { auth: { persistSession: false } });
-};
+import { recordAudit } from '@/app/admin/api/_lib/audit';
+import { AdminAuthError, requireAdminSession } from '@/app/admin/api/_lib/session';
+import { getSupabaseAdmin } from '@/app/admin/api/_lib/supabase';
+
+const ORDER_SUMMARY = 'id, status, momo_ref, total, match_id, created_at';
+const SHOP_ORDER_SUMMARY = 'id, status, momo_ref, total, created_at';
+const QUOTE_SUMMARY = 'id, status, ref, premium, user_id, created_at';
+const DEPOSIT_SUMMARY = 'id, status, ref, amount, user_id, created_at';
 
 type EntityKind = 'ticket' | 'order' | 'quote' | 'deposit';
 
-type AttachPayload = {
-  smsId?: string;
-  sms_id?: string;
-  entity?: { kind: EntityKind; id: string };
-  adminId?: string | null;
-  admin_id?: string | null;
-  note?: string | null;
-  manual_note?: string | null;
-};
+export async function POST(request: NextRequest) {
+  // accept both snakeCase and camelCase payload keys for compatibility
+  let payload:
+    | {
+        sms_id?: string;
+        smsId?: string;
+        entity?: { kind?: EntityKind; id?: string };
+        note?: string | null;
+        manual_note?: string | null;
+      }
+    | null = null;
 
-type TicketOrderRecord = {
-  id: string;
-  user_id: string | null;
-  total: number;
-  status: string;
-  sms_ref: string | null;
-};
+  try {
+    const session = await requireAdminSession();
+    const supabase = getSupabaseAdmin();
 
-type ShopOrderRecord = {
-  id: string;
-  user_id: string | null;
-  total: number;
-  status: string;
-  momo_ref: string | null;
-};
+    payload = (await request.json().catch(() => null)) as typeof payload;
 
-type InsuranceQuoteRecord = {
-  id: string;
-  user_id: string | null;
-  premium: number;
-  status: string;
-  ref: string | null;
-};
+    const smsId = payload?.sms_id ?? payload?.smsId;
+    const entity = payload?.entity;
+    const manualNote = payload?.note ?? payload?.manual_note ?? null;
 
-type SaccoDepositRecord = {
-  id: string;
-  user_id: string | null;
-  amount: number;
-  status: string;
-  ref: string | null;
-};
-
-type SmsParsedRecord = {
-  id: string;
-  amount: number;
-  ref: string | null;
-  created_at: string;
-};
-
-type EntityRecordMap = {
-  ticket: TicketOrderRecord;
-  order: ShopOrderRecord;
-  quote: InsuranceQuoteRecord;
-  deposit: SaccoDepositRecord;
-};
-
-type EntityTable = {
-  [K in EntityKind]: string;
-};
-
-const ENTITY_TABLE: EntityTable = {
-  ticket: 'ticket_orders',
-  order: 'orders',
-  quote: 'insurance_quotes',
-  deposit: 'sacco_deposits',
-};
-
-async function fetchEntity<K extends EntityKind>(
-  db: SupabaseClient,
-  kind: K,
-  id: string,
-): Promise<EntityRecordMap[K] | null> {
-  const { data, error } = await db.from(ENTITY_TABLE[kind]).select('*').eq('id', id).maybeSingle();
-  if (error) {
-    throw new Error(error.message);
-  }
-  return (data as EntityRecordMap[K] | null) ?? null;
-}
-
-async function ensureTicketPass(db: SupabaseClient, orderId: string) {
-  const { data: existing, error } = await db
-    .from('ticket_passes')
-    .select('id')
-    .eq('order_id', orderId)
-    .limit(1);
-  if (error) {
-    throw new Error(error.message);
-  }
-  if (!existing || existing.length === 0) {
-    const { error: insertError } = await db.from('ticket_passes').insert({
-      order_id: orderId,
-      zone: 'BLUE',
-      gate: 'G3',
-      qr_token_hash: randomUUID(),
-    });
-    if (insertError) {
-      throw new Error(insertError.message);
+    if (!smsId || !entity?.kind || !entity.id) {
+      return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
     }
-  }
-}
 
-async function updateEntity(
-  db: SupabaseClient,
-  kind: EntityKind,
-  id: string,
-  parsed: SmsParsedRecord,
-): Promise<void> {
-  if (kind === 'ticket') {
-    const { error } = await db
-      .from('ticket_orders')
-      .update({ status: 'paid', sms_ref: parsed.ref ?? null })
-      .eq('id', id);
-    if (error) throw new Error(error.message);
-    await ensureTicketPass(db, id);
-    return;
-  }
-  if (kind === 'order') {
-    const { error } = await db
-      .from('orders')
-      .update({ status: 'paid', momo_ref: parsed.ref ?? null })
-      .eq('id', id);
-    if (error) throw new Error(error.message);
-    return;
-  }
-  if (kind === 'quote') {
-    const { error } = await db
-      .from('insurance_quotes')
-      .update({ status: 'paid', ref: parsed.ref ?? null })
-      .eq('id', id);
-    if (error) throw new Error(error.message);
-    return;
-  }
-  if (kind === 'deposit') {
-    const { error } = await db
-      .from('sacco_deposits')
-      .update({ status: 'confirmed', ref: parsed.ref ?? null })
-      .eq('id', id);
-    if (error) throw new Error(error.message);
-  }
-}
-
-async function markSmsMatched(db: SupabaseClient, smsId: string, entity: { kind: EntityKind; id: string }) {
-  const { error } = await db
-    .from('sms_parsed')
-    .update({ matched_entity: `${entity.kind}:${entity.id}` })
-    .eq('id', smsId);
-  if (error) {
-    throw new Error(error.message);
-  }
-}
-
-async function writeAudit(entry: Record<string, unknown>) {
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-  if (!backendUrl) {
-    return;
-  }
-  try {
-    const endpoint = `${backendUrl.replace(/\/$/, '')}/admin/api/audit`;
-    await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(entry),
-    });
-  } catch {
-    // audit fan-out is best effort
-  }
-}
-
-export async function POST(request: Request) {
-  const db = createSupabaseClient();
-  if (!db) {
-    return NextResponse.json({ error: 'supabase_not_configured' }, { status: 500 });
-  }
-  let payload: AttachPayload;
-  try {
-    payload = (await request.json()) as AttachPayload;
-  } catch {
-    return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
-  }
-
-  const smsId = payload.smsId ?? payload.sms_id;
-  const entity = payload.entity;
-  const adminId = payload.adminId ?? payload.admin_id ?? null;
-  const manualNote = payload.note ?? payload.manual_note ?? null;
-
-  if (!smsId || !entity?.id || !entity.kind) {
-    return NextResponse.json({ error: 'missing_fields' }, { status: 400 });
-  }
-
-  try {
-    const { data: parsed, error: parsedError } = await db
+    // Load parsed SMS row
+    const { data: sms, error: smsError } = await supabase
       .from('sms_parsed')
-      .select('id, amount, ref, created_at')
+      .select('id, ref, amount, payer_mask, created_at, sms_id')
       .eq('id', smsId)
       .maybeSingle();
 
-    if (parsedError) {
-      throw new Error(parsedError.message);
+    if (smsError) throw smsError;
+    if (!sms) return NextResponse.json({ error: 'sms_not_found' }, { status: 404 });
+
+    const refValue = sms.ref ?? sms.id;
+
+    if (entity.kind === 'ticket') {
+      const { data: before, error: beforeError } = await supabase
+        .from('ticket_orders')
+        .select(ORDER_SUMMARY)
+        .eq('id', entity.id)
+        .maybeSingle();
+      if (beforeError) throw beforeError;
+      if (!before) return NextResponse.json({ error: 'ticket_order_not_found' }, { status: 404 });
+
+      const { data: updated, error: updateError } = await supabase
+        .from('ticket_orders')
+        .update({ status: 'paid', momo_ref: refValue })
+        .eq('id', entity.id)
+        .select(ORDER_SUMMARY)
+        .single();
+      if (updateError) throw updateError;
+
+      // ensure a ticket_pass exists (create one if missing)
+      const { data: existingPasses, error: passCheckError } = await supabase
+        .from('ticket_passes')
+        .select('id')
+        .eq('order_id', entity.id)
+        .limit(1);
+      if (passCheckError) throw passCheckError;
+
+      if (!existingPasses || existingPasses.length === 0) {
+        const { data: newPass, error: passError } = await supabase
+          .from('ticket_passes')
+          .insert({
+            order_id: entity.id,
+            zone: 'Blue',
+            gate: 'G3',
+            state: 'active',
+            qr_token_hash: randomUUID(),
+          })
+          .select('id, zone, gate, state, created_at')
+          .single();
+        if (passError) throw passError;
+
+        await recordAudit(supabase, {
+          action: 'ticket_passes.insert',
+          entityType: 'ticket_pass',
+          entityId: newPass.id,
+          before: null,
+          after: newPass,
+          userId: session.user.id,
+          ip: session.ip,
+          userAgent: session.userAgent,
+        });
+      }
+
+      await recordAudit(supabase, {
+        action: 'ticket_orders.attach_sms',
+        entityType: 'ticket_order',
+        entityId: entity.id,
+        before,
+        after: updated,
+        userId: session.user.id,
+        ip: session.ip,
+        userAgent: session.userAgent,
+        context: { sms_id: smsId, sms_ref: refValue, note: manualNote },
+      });
+    } else if (entity.kind === 'order') {
+      const { data: before, error: beforeError } = await supabase
+        .from('orders')
+        .select(SHOP_ORDER_SUMMARY)
+        .eq('id', entity.id)
+        .maybeSingle();
+      if (beforeError) throw beforeError;
+      if (!before) return NextResponse.json({ error: 'shop_order_not_found' }, { status: 404 });
+
+      const { data: updated, error: updateError } = await supabase
+        .from('orders')
+        .update({ status: 'paid', momo_ref: refValue })
+        .eq('id', entity.id)
+        .select(SHOP_ORDER_SUMMARY)
+        .single();
+      if (updateError) throw updateError;
+
+      await recordAudit(supabase, {
+        action: 'orders.attach_sms',
+        entityType: 'shop_order',
+        entityId: entity.id,
+        before,
+        after: updated,
+        userId: session.user.id,
+        ip: session.ip,
+        userAgent: session.userAgent,
+        context: { sms_id: smsId, sms_ref: refValue, note: manualNote },
+      });
+    } else if (entity.kind === 'quote') {
+      const { data: before, error: beforeError } = await supabase
+        .from('insurance_quotes')
+        .select(QUOTE_SUMMARY)
+        .eq('id', entity.id)
+        .maybeSingle();
+      if (beforeError) throw beforeError;
+      if (!before) return NextResponse.json({ error: 'quote_not_found' }, { status: 404 });
+
+      const { data: updated, error: updateError } = await supabase
+        .from('insurance_quotes')
+        .update({ status: 'paid', ref: refValue })
+        .eq('id', entity.id)
+        .select(QUOTE_SUMMARY)
+        .single();
+      if (updateError) throw updateError;
+
+      await recordAudit(supabase, {
+        action: 'insurance_quotes.attach_sms',
+        entityType: 'insurance_quote',
+        entityId: entity.id,
+        before,
+        after: updated,
+        userId: session.user.id,
+        ip: session.ip,
+        userAgent: session.userAgent,
+        context: { sms_id: smsId, sms_ref: refValue, note: manualNote },
+      });
+    } else if (entity.kind === 'deposit') {
+      const { data: before, error: beforeError } = await supabase
+        .from('sacco_deposits')
+        .select(DEPOSIT_SUMMARY)
+        .eq('id', entity.id)
+        .maybeSingle();
+      if (beforeError) throw beforeError;
+      if (!before) return NextResponse.json({ error: 'deposit_not_found' }, { status: 404 });
+
+      const { data: updated, error: updateError } = await supabase
+        .from('sacco_deposits')
+        .update({ status: 'confirmed', ref: refValue })
+        .eq('id', entity.id)
+        .select(DEPOSIT_SUMMARY)
+        .single();
+      if (updateError) throw updateError;
+
+      await recordAudit(supabase, {
+        action: 'sacco_deposits.attach_sms',
+        entityType: 'sacco_deposit',
+        entityId: entity.id,
+        before,
+        after: updated,
+        userId: session.user.id,
+        ip: session.ip,
+        userAgent: session.userAgent,
+        context: { sms_id: smsId, sms_ref: refValue, note: manualNote },
+      });
+    } else {
+      return NextResponse.json({ error: 'unsupported_entity' }, { status: 400 });
     }
 
-    if (!parsed) {
-      return NextResponse.json({ error: 'sms_not_found' }, { status: 404 });
-    }
+    // Also mark the SMS row as matched to this entity (brings in main’s improvement)
+    await supabase
+      .from('sms_parsed')
+      .update({ matched_entity: `${entity.kind}:${entity.id}` })
+      .eq('id', smsId);
 
-    const before = await fetchEntity(db, entity.kind, entity.id);
-    if (!before) {
-      return NextResponse.json({ error: 'entity_not_found' }, { status: 404 });
-    }
-
-    await updateEntity(db, entity.kind, entity.id, parsed as SmsParsedRecord);
-    await markSmsMatched(db, smsId, entity);
-
-    const after = await fetchEntity(db, entity.kind, entity.id);
-
-    await writeAudit({
-      action: 'sms_attach',
-      entity_type: entity.kind,
-      entity_id: entity.id,
-      before,
-      after,
-      admin_user_id: adminId,
-      context: { sms_id: smsId, sms_ref: parsed.ref ?? null, note: manualNote },
-    });
-
-    return NextResponse.json({ ok: true, ref: parsed.ref ?? null });
+    return NextResponse.json({ ok: true, ref: refValue });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'attach_failed';
-    return NextResponse.json({ error: message }, { status: 500 });
+    if (error instanceof AdminAuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    console.error('Failed to attach SMS to entity', error, payload);
+    return NextResponse.json({ error: 'sms_attach_failed' }, { status: 500 });
   }
 }

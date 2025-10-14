@@ -28,9 +28,10 @@ serve(async (_req) => {
     new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 
   async function findNearestUpcomingMatch() {
-    // Try matches.date
     const now = nowIso();
-    let { data: byDate, error: dateErr } = await db
+
+    // Try matches.date first
+    const { data: byDate, error: dateErr } = await db
       .from("matches")
       .select("*")
       .gte("date", now)
@@ -59,7 +60,6 @@ serve(async (_req) => {
       .eq("user_id", userId)
       .eq("momo_ref", "FREE-TICKET-PERK")
       .limit(1);
-
     if (t1 && t1.length) return true;
 
     const { data: t2 } = await db
@@ -70,18 +70,6 @@ serve(async (_req) => {
       .limit(1);
 
     return !!(t2 && t2.length);
-  }
-
-  async function grantPerkTicketLegacy(userId: string, matchId: string) {
-    const { error: tErr } = await db.from("tickets").insert({
-      user_id: userId,
-      match_id: matchId,
-      zone: "Blue",
-      price: 0,
-      paid: true,
-      momo_ref: "FREE-TICKET-PERK",
-    });
-    return !tErr;
   }
 
   async function grantPerkTicketNew(userId: string, matchId: string, policyId: string) {
@@ -101,7 +89,7 @@ serve(async (_req) => {
     if (orderErr || !order?.id) return false;
 
     // Create one Blue pass; store a token hash (raw token or UUID)
-    const rawToken = crypto.randomUUID(); // keep simple; hashing optional if your DB expects hash
+    const rawToken = crypto.randomUUID(); // Deno's global crypto
     const { error: passErr } = await db
       .from("ticket_passes")
       .insert({
@@ -180,28 +168,8 @@ serve(async (_req) => {
         if (perkFlag && q.user_id) {
           if (!(await hasExistingPerk(q.user_id))) {
             const match = await findNearestUpcomingMatch();
-            if (match) {
-              // Try new schema first; if it fails, fallback to legacy tickets table
-              const okNew = await grantPerkTicketNew(q.user_id, match.id, pol.id);
-              if (okNew) {
-                perkTickets++;
-              } else {
-                const okLegacy = await grantPerkTicketLegacy(q.user_id, match.id);
-                if (okLegacy) {
-                  perkTickets++;
-                  // Best-effort log
-                  await db
-                    .from("rewards_events")
-                    .insert({
-                      user_id: q.user_id,
-                      source: "policy_perk",
-                      ref_id: pol.id,
-                      points: 0,
-                      meta: { perk: "free_blue_ticket", match_id: match.id },
-                    })
-                    .catch(() => {});
-                }
-              }
+            if (match && (await grantPerkTicketNew(q.user_id, match.id, pol.id))) {
+              perkTickets++;
             }
           }
         }

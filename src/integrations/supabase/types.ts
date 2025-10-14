@@ -1,11 +1,18 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { PWA_OPT_IN_EVENT, PWA_OPT_IN_KEY, recordPwaOptIn } from "@/app/_lib/pwa";
+
+/** Minimal JSON helper so DB types compile */
 export type Json =
   | string
   | number
   | boolean
   | null
-  | { [key: string]: Json | undefined }
+  | { [key: string]: Json }
   | Json[];
 
+/** Supabase Database types (conflict-free, merged) */
 export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5";
@@ -13,18 +20,9 @@ export type Database = {
   public: {
     Tables: {
       admin_roles: {
-        Row: {
-          id: string;
-          name: string;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-        };
+        Row: { id: string; name: string };
+        Insert: { id?: string; name: string };
+        Update: { id?: string; name?: string };
         Relationships: [];
       };
       admin_users: {
@@ -55,18 +53,9 @@ export type Database = {
         Relationships: [];
       };
       admin_users_roles: {
-        Row: {
-          admin_user_id: string;
-          role_id: string;
-        };
-        Insert: {
-          admin_user_id: string;
-          role_id: string;
-        };
-        Update: {
-          admin_user_id?: string;
-          role_id?: string;
-        };
+        Row: { admin_user_id: string; role_id: string };
+        Insert: { admin_user_id: string; role_id: string };
+        Update: { admin_user_id?: string; role_id?: string };
         Relationships: [
           {
             foreignKeyName: "admin_users_roles_admin_user_id_fkey";
@@ -129,24 +118,9 @@ export type Database = {
         ];
       };
       fan_clubs: {
-        Row: {
-          city: string | null;
-          id: string;
-          members: number;
-          name: string;
-        };
-        Insert: {
-          city?: string | null;
-          id?: string;
-          members?: number;
-          name: string;
-        };
-        Update: {
-          city?: string | null;
-          id?: string;
-          members?: number;
-          name?: string;
-        };
+        Row: { city: string | null; id: string; members: number; name: string };
+        Insert: { city?: string | null; id?: string; members?: number; name: string };
+        Update: { city?: string | null; id?: string; members?: number; name?: string };
         Relationships: [];
       };
       fan_posts: {
@@ -281,27 +255,9 @@ export type Database = {
         Relationships: [];
       };
       order_items: {
-        Row: {
-          id: string;
-          order_id: string | null;
-          price: number;
-          product_id: string | null;
-          qty: number;
-        };
-        Insert: {
-          id?: string;
-          order_id?: string | null;
-          price: number;
-          product_id?: string | null;
-          qty: number;
-        };
-        Update: {
-          id?: string;
-          order_id?: string | null;
-          price?: number;
-          product_id?: string | null;
-          qty?: number;
-        };
+        Row: { id: string; order_id: string | null; price: number; product_id: string | null; qty: number };
+        Insert: { id?: string; order_id?: string | null; price: number; product_id?: string | null; qty: number };
+        Update: { id?: string; order_id?: string | null; price?: number; product_id?: string | null; qty?: number };
         Relationships: [
           {
             foreignKeyName: "order_items_order_id_fkey";
@@ -386,27 +342,9 @@ export type Database = {
         ];
       };
       polls: {
-        Row: {
-          active: boolean;
-          id: string;
-          options: Json;
-          question: string;
-          results: Json;
-        };
-        Insert: {
-          active?: boolean;
-          id?: string;
-          options: Json;
-          question: string;
-          results?: Json;
-        };
-        Update: {
-          active?: boolean;
-          id?: string;
-          options?: Json;
-          question?: string;
-          results?: Json;
-        };
+        Row: { active: boolean; id: string; options: Json; question: string; results: Json };
+        Insert: { active?: boolean; id?: string; options: Json; question: string; results?: Json };
+        Update: { active?: boolean; id?: string; options?: Json; question?: string; results?: Json };
         Relationships: [];
       };
       sacco_deposits: {
@@ -447,21 +385,9 @@ export type Database = {
         ];
       };
       permissions: {
-        Row: {
-          description: string | null;
-          id: string;
-          key: string;
-        };
-        Insert: {
-          description?: string | null;
-          id?: string;
-          key: string;
-        };
-        Update: {
-          description?: string | null;
-          id?: string;
-          key?: string;
-        };
+        Row: { description: string | null; id: string; key: string };
+        Insert: { description?: string | null; id?: string; key: string };
+        Update: { description?: string | null; id?: string; key?: string };
         Relationships: [];
       };
       shop_products: {
@@ -498,27 +424,9 @@ export type Database = {
         Relationships: [];
       };
       ticket_order_items: {
-        Row: {
-          id: string;
-          order_id: string | null;
-          price: number;
-          quantity: number;
-          zone: Database["public"]["Enums"]["ticket_zone"];
-        };
-        Insert: {
-          id?: string;
-          order_id?: string | null;
-          price: number;
-          quantity: number;
-          zone: Database["public"]["Enums"]["ticket_zone"];
-        };
-        Update: {
-          id?: string;
-          order_id?: string | null;
-          price?: number;
-          quantity?: number;
-          zone?: Database["public"]["Enums"]["ticket_zone"];
-        };
+        Row: { id: string; order_id: string | null; price: number; quantity: number; zone: Database["public"]["Enums"]["ticket_zone"] };
+        Insert: { id?: string; order_id?: string | null; price: number; quantity: number; zone: Database["public"]["Enums"]["ticket_zone"] };
+        Update: { id?: string; order_id?: string | null; price?: number; quantity?: number; zone?: Database["public"]["Enums"]["ticket_zone"] };
         Relationships: [
           {
             foreignKeyName: "ticket_order_items_order_id_fkey";
@@ -535,6 +443,7 @@ export type Database = {
           id: string;
           match_id: string | null;
           momo_ref: string | null;
+          sms_ref: string | null;
           status: Database["public"]["Enums"]["ticket_order_status"];
           total: number;
           user_id: string | null;
@@ -546,6 +455,7 @@ export type Database = {
           id?: string;
           match_id?: string | null;
           momo_ref?: string | null;
+          sms_ref?: string | null;
           status?: Database["public"]["Enums"]["ticket_order_status"];
           total: number;
           user_id?: string | null;
@@ -557,6 +467,7 @@ export type Database = {
           id?: string;
           match_id?: string | null;
           momo_ref?: string | null;
+          sms_ref?: string | null;
           status?: Database["public"]["Enums"]["ticket_order_status"];
           total?: number;
           user_id?: string | null;
@@ -682,18 +593,9 @@ export type Database = {
         ];
       };
       roles_permissions: {
-        Row: {
-          permission_id: string;
-          role_id: string;
-        };
-        Insert: {
-          permission_id: string;
-          role_id: string;
-        };
-        Update: {
-          permission_id?: string;
-          role_id?: string;
-        };
+        Row: { permission_id: string; role_id: string };
+        Insert: { permission_id: string; role_id: string };
+        Update: { permission_id?: string; role_id?: string };
         Relationships: [
           {
             foreignKeyName: "roles_permissions_permission_id_fkey";
@@ -743,24 +645,9 @@ export type Database = {
         Relationships: [];
       };
       wallet: {
-        Row: {
-          balance: number;
-          id: string;
-          updated_at: string;
-          user_id: string | null;
-        };
-        Insert: {
-          balance?: number;
-          id?: string;
-          updated_at?: string;
-          user_id?: string | null;
-        };
-        Update: {
-          balance?: number;
-          id?: string;
-          updated_at?: string;
-          user_id?: string | null;
-        };
+        Row: { balance: number; id: string; updated_at: string; user_id: string | null };
+        Insert: { balance?: number; id?: string; updated_at?: string; user_id?: string | null };
+        Update: { balance?: number; id?: string; updated_at?: string; user_id?: string | null };
         Relationships: [
           {
             foreignKeyName: "wallet_user_id_fkey";
@@ -771,15 +658,10 @@ export type Database = {
         ];
       };
     };
-    Views: {
-      [_ in never]: never;
-    };
+    Views: { [_ in never]: never };
     Functions: {
       increment_user_points: {
-        Args: {
-          p_user_id: string;
-          p_points_delta: number;
-        };
+        Args: { p_user_id: string; p_points_delta: number };
         Returns: void;
       };
     };
@@ -793,107 +675,112 @@ export type Database = {
       transaction_status: "pending" | "confirmed" | "failed" | "manual_review";
       transaction_type: "deposit" | "purchase" | "refund" | "reward";
       user_tier: "guest" | "fan" | "gold";
+      payment_kind: "ticket" | "shop" | "deposit" | "policy";
+      payment_status: "pending" | "confirmed" | "failed";
     };
-    CompositeTypes: {
-      [_ in never]: never;
-    };
+    CompositeTypes: { [_ in never]: never };
   };
 };
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
+/** PWA Install + Offline UI */
+type BeforeInstallPromptEvent = Event & { prompt: () => Promise<void> };
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">];
+const hasWindow = () => typeof window !== "undefined";
 
-export type Tables<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
+export function InstallPrompt() {
+  const [showIosPrompt, setShowIosPrompt] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    if (!hasWindow()) return;
+
+    const ua = window.navigator.userAgent.toLowerCase();
+    const isiOS = /iphone|ipad|ipod/.test(ua);
+    const navigatorWithStandalone = window.navigator as Navigator & { standalone?: boolean };
+    const inStandalone =
+      "standalone" in navigatorWithStandalone && Boolean(navigatorWithStandalone.standalone);
+    if (isiOS && !inStandalone) setShowIosPrompt(true);
+
+    const onBeforeInstallPrompt = (event: BeforeInstallPromptEvent) => {
+      event.preventDefault();
+      setDeferredPrompt(event);
+      setShow(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+    return () => window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+  }, []);
+
+  useEffect(() => {
+    if (!hasWindow()) return;
+    try {
+      if (window.localStorage.getItem(PWA_OPT_IN_KEY) === "true") setShow(false);
+    } catch (error) {
+      console.warn("Unable to read stored PWA preference", error);
+    }
+  }, []);
+
+  if (showIosPrompt) {
+    return (
+      <div className="card break-words whitespace-normal fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
+        <span>Install GIKUNDIRO App to your Home Screen</span>
+        <p className="text-xs text-white/70">Tap the Share icon and select “Add to Home Screen”.</p>
+        <button className="btn" onClick={() => setShowIosPrompt(false)}>
+          Close
+        </button>
+      </div>
+    );
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R;
-    }
-    ? R
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-  ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-      Row: infer R;
-    }
-    ? R
-    : never
-  : never;
 
-export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I;
-    }
-    ? I
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-      Insert: infer I;
-    }
-    ? I
-    : never
-  : never;
+  if (!show) return null;
 
-export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U;
+  const handleInstall = async () => {
+    recordPwaOptIn({ reason: "install" });
+    try {
+      await deferredPrompt?.prompt();
+    } catch (error) {
+      console.warn("PWA installation prompt failed", error);
+    } finally {
+      setShow(false);
     }
-    ? U
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-      Update: infer U;
-    }
-    ? U
-    : never
-  : never;
+  };
 
-export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
+  return (
+    <div className="card break-words whitespace-normal fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
+      <span>Install GIKUNDIRO App?</span>
+      <button className="btn-primary" onClick={handleInstall}>
+        Install
+      </button>
+      <button className="btn" onClick={() => setShow(false)}>
+        Later
+      </button>
+    </div>
+  );
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-  : never;
+
+export function OfflineBanner() {
+  const [offline, setOffline] = useState(false);
+
+  useEffect(() => {
+    if (!hasWindow()) return () => {};
+    const handleOnline = () => setOffline(false);
+    const handleOffline = () => setOffline(true);
+
+    setOffline(!navigator.onLine);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  if (!offline) return null;
+
+  return (
+    <div className="fixed inset-x-0 top-14 bg-yellow-500/20 p-2 text-center text-yellow-100">
+      You’re offline. We’ll sync when you’re back.
+    </div>
+  );
+}
