@@ -12,13 +12,24 @@ export type HeroAction = {
   ariaLabel: string;
 };
 
+export type GamificationIcon = "check" | "brain" | "target";
+
 export type GamificationTile = {
   id: string;
-  emoji: string;
+  icon: GamificationIcon;
   label: string;
   href: string;
   ariaLabel: string;
 };
+
+export type QuickActionIcon =
+  | "tickets"
+  | "membership"
+  | "shop"
+  | "donate"
+  | "insurance"
+  | "sacco"
+  | "bank";
 
 export type QuickActionTile = {
   id:
@@ -29,7 +40,7 @@ export type QuickActionTile = {
     | "services-insurance"
     | "services-sacco"
     | "services-bank";
-  emoji: string;
+  icon: QuickActionIcon;
   label: string;
   href: string;
   ariaLabel: string;
@@ -173,21 +184,21 @@ export const heroActions: HeroAction[] = [
 export const gamificationTiles: GamificationTile[] = [
   {
     id: "daily-check-in",
-    emoji: "✅",
+    icon: "check",
     label: "Daily Check-in",
     href: "/community",
     ariaLabel: "Open the daily check-in mission",
   },
   {
     id: "quiz",
-    emoji: "🧠",
+    icon: "brain",
     label: "Quiz",
     href: "/community",
     ariaLabel: "Play the latest Rayon Sports quiz",
   },
   {
     id: "prediction",
-    emoji: "🎯",
+    icon: "target",
     label: "Prediction",
     href: "/community",
     ariaLabel: "Submit your match predictions",
@@ -197,49 +208,49 @@ export const gamificationTiles: GamificationTile[] = [
 export const quickActionTiles: QuickActionTile[] = [
   {
     id: "tickets",
-    emoji: "🎟️",
+    icon: "tickets",
     label: "Tickets",
     href: "/tickets",
     ariaLabel: "Open match tickets",
   },
   {
     id: "membership",
-    emoji: "⭐",
+    icon: "membership",
     label: "Membership",
     href: "/membership",
     ariaLabel: "View membership plans",
   },
   {
     id: "shop",
-    emoji: "🛍️",
+    icon: "shop",
     label: "Shop",
     href: "/shop",
     ariaLabel: "Browse the club shop",
   },
   {
     id: "donate",
-    emoji: "💙",
+    icon: "donate",
     label: "Donate",
     href: "/fundraising",
     ariaLabel: "Support fundraising campaigns",
   },
   {
     id: "services-insurance",
-    emoji: "🛡️",
+    icon: "insurance",
     label: "Insurance",
     href: "/services?focus=insurance",
     ariaLabel: "Open partner motor insurance hub",
   },
   {
     id: "services-sacco",
-    emoji: "🤝",
+    icon: "sacco",
     label: "SACCO Deposit",
     href: "/services?focus=sacco",
     ariaLabel: "Open SACCO deposit flow",
   },
   {
     id: "services-bank",
-    emoji: "🏦",
+    icon: "bank",
     label: "Bank Offers",
     href: "/services?focus=bank",
     ariaLabel: "Browse partner bank offers",

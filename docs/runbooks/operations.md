@@ -17,6 +17,9 @@ This runbook outlines the checks the Rayon Sports digital team should perform ev
    - Ensure the home feed has at least one current story, live ticker item, and fixture. If not, coordinate with media team or rely on new empty/offline states shipped in P3.
 5. **PWA readiness**
    - Run `npm run lint:pwa` to validate manifest/service worker checks before matchday deployment.
+6. **Offline cache health**
+   - Load <http://localhost:3000> once while online, then toggle Chrome DevTools to **Offline** and refresh. Verify the home feed and missions show the offline banner and cached content rather than blank tiles.
+   - Inspect `localStorage.getItem("home-surface-cache-v1")` to confirm the cache timestamp updated within the last 24 hours.
 
 ## Hourly Smoke (Automated)
 
@@ -52,6 +55,16 @@ npx axe http://localhost:3000 --tags wcag2a,wcag2aa
 ```
 
 Document results in `reports/operations-log.md` with timestamp, operator, and actions taken.
+
+## Offline Cache Validation (Detailed)
+
+1. Visit the fan home experience while connected to the network and wait for the hero, feed, and missions to render.
+2. In DevTools, open **Application → Storage** and ensure `home-surface-cache-v1` contains a JSON payload with `meta.generatedAt` no older than 24 hours.
+3. Switch DevTools network throttling to **Offline** and refresh the page. Confirm:
+   - The top offline banner from `HomeInteractiveLayer` announces the state with `aria-live="assertive"`.
+   - The **Latest** feed shows the cached stories with the inline offline card and provides a retry button.
+   - The **Play & Earn** missions render with the offline card and cached progress states.
+4. Return to **Online** mode and click **Retry now** in the feed to ensure fresh data loads and the offline banners disappear automatically.
 
 ## Rollback Procedure (Frontend)
 
