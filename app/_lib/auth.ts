@@ -10,8 +10,18 @@ function readAccessToken(req: NextRequest): string | null {
   for (const part of cookie.split(";")) {
     const [k, ...rest] = part.trim().split("=");
     if (!k || rest.length === 0) continue;
+    const value = decodeURIComponent(rest.join("="));
     if (["sb-access-token", "sb:token", "supabase-access-token"].includes(k)) {
-      return decodeURIComponent(rest.join("="));
+      return value;
+    }
+    if (k === "supabase-auth-token") {
+      try {
+        const parsed = JSON.parse(value);
+        const access = parsed?.currentSession?.access_token;
+        if (typeof access === "string" && access) return access;
+      } catch {
+        // ignore parse errors
+      }
     }
   }
   return null;
