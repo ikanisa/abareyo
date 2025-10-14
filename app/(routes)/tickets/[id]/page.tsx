@@ -1,51 +1,31 @@
-import { notFound } from "next/navigation";
-
 import PageShell from "@/app/_components/shell/PageShell";
-import ZoneSelector from "@/app/_components/tickets/ZoneSelector";
-import { fixtures } from "@/app/_data/fixtures";
 
-type TicketParams = {
-  params: { id: string };
-};
-
-const getFixture = (id: string) => fixtures.find((fixture) => fixture.id === id);
-
-export const generateMetadata = ({ params }: TicketParams) => {
-  const fixture = getFixture(params.id);
-  if (!fixture) {
-    return {};
-  }
-  return {
-    title: `${fixture.title} | Tickets`,
-    description: `${fixture.comp} at ${fixture.venue}`,
-  };
-};
-
-const TicketPage = ({ params }: TicketParams) => {
-  const fixture = getFixture(params.id);
-  if (!fixture) {
-    notFound();
-  }
-
-  const zones = fixture.zones.map((zone) => ({
-    id: zone.id,
-    name: zone.name,
-    price: zone.price,
-  }));
-
+export default function TicketPDP() {
+  const price = 5000;
   return (
     <PageShell>
-      <section className="card space-y-3">
-        <div>
-          <h1>{fixture.title}</h1>
-          <p className="muted">
-            {fixture.venue} • {fixture.date} {fixture.time}
+      <section className="card">
+        <h1>Rayon vs APR</h1>
+        <div className="muted">Amahoro • Sat 18:00</div>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {(["VIP", "Regular", "Blue"] as const).map((zone) => (
+            <button key={zone} className="tile text-center">
+              {zone}
+            </button>
+          ))}
+        </div>
+        <div className="mt-3">
+          <a
+            className="btn-primary w-full inline-block text-center"
+            href={`tel:*182*1*1*078xxxxxxx*${price}%23`}
+          >
+            Pay via USSD
+          </a>
+          <p className="muted text-xs mt-2">
+            On iOS, copy USSD if dial does not open.
           </p>
         </div>
-        <ZoneSelector zones={zones} matchId={fixture.id} />
       </section>
     </PageShell>
   );
-};
-
-export default TicketPage;
+}

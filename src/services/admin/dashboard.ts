@@ -22,17 +22,6 @@ type PaymentTelemetry = {
   averageConfirmationSeconds: number | null;
 };
 
-type SmsLatencyRow = {
-  created_at: string;
-  sms_raw: { received_at: string | null } | null;
-};
-
-type PaymentLatencyRow = {
-  created_at: string;
-  ticket_orders: { created_at: string | null } | null;
-  orders: { created_at: string | null } | null;
-};
-
 type GateTelemetry = {
   windowHours: number;
   totalPasses: number;
@@ -64,20 +53,6 @@ const sumValues = (values: Array<number | null | undefined>) => {
   return total;
 };
 
-const average = (values: number[]) => {
-  if (!values.length) return null;
-  const total = values.reduce((acc, value) => acc + value, 0);
-  return total / values.length;
-};
-
-const toSeconds = (start: string | null | undefined, end: string | null | undefined) => {
-  if (!start || !end) return null;
-  const startDate = new Date(start).getTime();
-  const endDate = new Date(end).getTime();
-  if (Number.isNaN(startDate) || Number.isNaN(endDate)) return null;
-  return Math.max(0, (endDate - startDate) / 1000);
-};
-
 export const fetchDashboardSnapshot = async (): Promise<DashboardSnapshot> => {
   const now = new Date();
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -103,162 +78,83 @@ export const fetchDashboardSnapshot = async (): Promise<DashboardSnapshot> => {
   }
 
   const client = getServiceClient();
-  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
 
-  const [
-    tickets7d,
-    tickets30d,
-    shop7d,
-    shop30d,
-    policies7d,
-    policies30d,
-    deposits7d,
-    deposits30d,
-    smsRaw7d,
-    smsParsed7d,
-    smsLatencyRows,
-    paymentRows,
-    pendingTicketOrders,
-    pendingShopOrders,
-    gateRows,
-  ] = await Promise.all([
+  const [kpiResponse, smsResponse, paymentResponse, gateResponse] = await Promise.all([
+    client.from('admin_dashboard_kpis').select('metric, value_7d, value_30d, format'),
     client
-      .from('ticket_orders')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'paid')
-      .gte('created_at', sevenDaysAgo),
-    client
-      .from('ticket_orders')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'paid')
-      .gte('created_at', thirtyDaysAgo),
-    client
-      .from('orders')
-      .select('sum:total.sum()', { head: false })
-      .in('status', ['paid', 'ready', 'pickedup'])
-      .gte('created_at', sevenDaysAgo)
+      .from('admin_dashboard_sms_metrics')
+      .select('raw_count_7d, parsed_count_7d, success_rate, average_latency_seconds')
       .maybeSingle(),
     client
-      .from('orders')
-      .select('sum:total.sum()', { head: false })
-      .in('status', ['paid', 'ready', 'pickedup'])
-      .gte('created_at', thirtyDaysAgo)
+      .from('admin_dashboard_payment_metrics')
+      .select('confirmed_count_7d, pending_count, average_confirmation_seconds')
       .maybeSingle(),
-    client
-      .from('insurance_quotes')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'issued')
-      .gte('created_at', sevenDaysAgo),
-    client
-      .from('insurance_quotes')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'issued')
-      .gte('created_at', thirtyDaysAgo),
-    client
-      .from('sacco_deposits')
-      .select('sum:amount.sum()', { head: false })
-      .eq('status', 'confirmed')
-      .gte('created_at', sevenDaysAgo)
-      .maybeSingle(),
-    client
-      .from('sacco_deposits')
-      .select('sum:amount.sum()', { head: false })
-      .eq('status', 'confirmed')
-      .gte('created_at', thirtyDaysAgo)
-      .maybeSingle(),
-    client
-      .from('sms_raw')
-      .select('id', { count: 'exact', head: true })
-      .gte('received_at', sevenDaysAgo),
-    client
-      .from('sms_parsed')
-      .select('id', { count: 'exact', head: true })
-      .gte('created_at', sevenDaysAgo),
-    client
-      .from('sms_parsed')
-      .select('created_at, sms_raw:sms_raw(received_at)')
-      .gte('created_at', sevenDaysAgo)
-      .order('created_at', { ascending: false })
-      .limit(200),
-    client
-      .from('payments')
-      .select(
-        'created_at, ticket_orders:ticket_order_id(created_at), orders:order_id(created_at)'
-      )
-      .eq('status', 'confirmed')
-      .gte('created_at', sevenDaysAgo)
-      .limit(200),
-    client
-      .from('ticket_orders')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending'),
-    client
-      .from('orders')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending'),
-    client
-      .from('ticket_passes')
-      .select('gate, created_at')
-      .gte('created_at', twentyFourHoursAgo)
-      .limit(500),
+    client.from('admin_dashboard_gate_throughput').select('gate, passes, window_hours'),
   ]);
 
-  if (tickets7d.error) throw tickets7d.error;
-  if (tickets30d.error) throw tickets30d.error;
-  if (shop7d.error) throw shop7d.error;
-  if (shop30d.error) throw shop30d.error;
-  if (policies7d.error) throw policies7d.error;
-  if (deposits7d.error) throw deposits7d.error;
-  if (policies30d.error) throw policies30d.error;
-  if (deposits30d.error) throw deposits30d.error;
-  if (smsRaw7d.error) throw smsRaw7d.error;
-  if (smsParsed7d.error) throw smsParsed7d.error;
-  if (smsLatencyRows.error) throw smsLatencyRows.error;
-  if (paymentRows.error) throw paymentRows.error;
-  if (pendingTicketOrders.error) throw pendingTicketOrders.error;
-  if (pendingShopOrders.error) throw pendingShopOrders.error;
-  if (gateRows.error) throw gateRows.error;
+  if (kpiResponse.error) throw kpiResponse.error;
+  if (smsResponse.error) throw smsResponse.error;
+  if (paymentResponse.error) throw paymentResponse.error;
+  if (gateResponse.error) throw gateResponse.error;
 
-  const tickets7Count = tickets7d.count ?? 0;
-  const tickets30Count = tickets30d.count ?? 0;
-  const shop7Total = Number((shop7d.data as { sum?: number } | null)?.sum ?? 0);
-  const shop30Total = Number((shop30d.data as { sum?: number } | null)?.sum ?? 0);
-  const policiesIssued7 = policies7d.count ?? 0;
-  const policiesIssued30 = policies30d.count ?? policiesIssued7;
-  const depositsConfirmed7 = Number((deposits7d.data as { sum?: number } | null)?.sum ?? 0);
-  const depositsConfirmed30 = Number((deposits30d.data as { sum?: number } | null)?.sum ?? depositsConfirmed7);
+  type KpiRow = {
+    metric: string;
+    value_7d: number | string | null;
+    value_30d: number | string | null;
+    format: 'count' | 'currency' | string;
+  };
 
-  const smsRawCount = smsRaw7d.count ?? 0;
-  const smsParsedCount = smsParsed7d.count ?? 0;
-  const smsSuccessRate = smsRawCount === 0 ? null : smsParsedCount / smsRawCount;
-  const smsLatencyRowsData = (smsLatencyRows.data ?? []) as unknown as SmsLatencyRow[];
-  const smsLatencyValues = smsLatencyRowsData
-    .map((row) => toSeconds(row.sms_raw?.received_at, row.created_at) ?? null)
-    .filter((value): value is number => value !== null);
-  const smsAverageLatency = average(smsLatencyValues);
+  type SmsMetricsRow = {
+    raw_count_7d: number | string | null;
+    parsed_count_7d: number | string | null;
+    success_rate: number | null;
+    average_latency_seconds: number | null;
+  };
 
-  const paymentRowsData = (paymentRows.data ?? []) as unknown as PaymentLatencyRow[];
-  const paymentDurations = paymentRowsData
-    .map((row) => {
-      const orderCreatedAt = row.ticket_orders?.created_at ?? row.orders?.created_at ?? null;
-      return toSeconds(orderCreatedAt, row.created_at);
-    })
-    .filter((value): value is number => value !== null);
-  const paymentAverage = average(paymentDurations);
-  const confirmedPayments7 = (paymentRows.data ?? []).length;
-  const pendingOrders = (pendingTicketOrders.count ?? 0) + (pendingShopOrders.count ?? 0);
+  type PaymentMetricsRow = {
+    confirmed_count_7d: number | string | null;
+    pending_count: number | string | null;
+    average_confirmation_seconds: number | null;
+  };
 
-  const gateMap = new Map<string, number>();
-  for (const row of gateRows.data ?? []) {
-    const gate = row.gate ?? 'Unassigned';
-    gateMap.set(gate, (gateMap.get(gate) ?? 0) + 1);
-  }
-  const gateBreakdown = Array.from(gateMap.entries())
-    .map(([gate, passes]) => ({ gate, passes }))
+  type GateMetricsRow = {
+    gate: string | null;
+    passes: number | string | null;
+    window_hours: number | null;
+  };
+
+  const kpiRows = (kpiResponse.data ?? []) as unknown as KpiRow[];
+  const smsRow = (smsResponse.data ?? null) as SmsMetricsRow | null;
+  const paymentRow = (paymentResponse.data ?? null) as PaymentMetricsRow | null;
+  const gateRows = (gateResponse.data ?? []) as unknown as GateMetricsRow[];
+
+  const kpiMap = new Map(
+    kpiRows.map((row) => [row.metric, { ...row, format: row.format === 'currency' ? 'currency' : 'count' }]),
+  );
+
+  const parseNumeric = (value: number | string | null | undefined) => {
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string') {
+      const parsed = Number(value);
+      return Number.isNaN(parsed) ? 0 : parsed;
+    }
+    return 0;
+  };
+
+  const smsRawCount = parseNumeric(smsRow?.raw_count_7d);
+  const smsParsedCount = parseNumeric(smsRow?.parsed_count_7d);
+  const smsSuccessRate = smsRow?.success_rate ?? (smsRawCount === 0 ? null : smsParsedCount / smsRawCount);
+  const smsAverageLatency = smsRow?.average_latency_seconds ?? null;
+
+  const confirmedPayments7 = parseNumeric(paymentRow?.confirmed_count_7d);
+  const pendingOrders = parseNumeric(paymentRow?.pending_count);
+  const paymentAverage = paymentRow?.average_confirmation_seconds ?? null;
+
+  const gateBreakdown = gateRows
+    .map((row) => ({ gate: row.gate ?? 'Unassigned', passes: parseNumeric(row.passes) }))
     .sort((a, b) => b.passes - a.passes);
   const gateTotal = sumValues(gateBreakdown.map((entry) => entry.passes));
+  const windowHours = gateRows.length ? gateRows[0].window_hours ?? 24 : 24;
 
   const computeTrend = (value7: number, value30: number) => {
     if (!value30) return null;
@@ -267,40 +163,28 @@ export const fetchDashboardSnapshot = async (): Promise<DashboardSnapshot> => {
     return value7 - projected7From30;
   };
 
-  const kpis: Kpi[] = [
-    {
-      key: 'tickets',
-      label: 'Tickets sold',
-      value7d: tickets7Count,
-      value30d: tickets30Count,
-      trend: computeTrend(tickets7Count, tickets30Count),
-      format: 'count',
-    },
-    {
-      key: 'gmv',
-      label: 'Shop GMV (RWF)',
-      value7d: shop7Total,
-      value30d: shop30Total,
-      trend: computeTrend(shop7Total, shop30Total),
-      format: 'currency',
-    },
-    {
-      key: 'policies',
-      label: 'Policies issued',
-      value7d: policiesIssued7,
-      value30d: policiesIssued30,
-      trend: null,
-      format: 'count',
-    },
-    {
-      key: 'deposits',
-      label: 'SACCO deposits (RWF)',
-      value7d: depositsConfirmed7,
-      value30d: depositsConfirmed30,
-      trend: null,
-      format: 'currency',
-    },
-  ];
+  const KPI_LABELS: Record<string, string> = {
+    tickets: 'Tickets sold',
+    gmv: 'Shop GMV (RWF)',
+    policies: 'Policies issued',
+    deposits: 'SACCO deposits (RWF)',
+  };
+
+  const orderedKeys: Array<keyof typeof KPI_LABELS> = ['tickets', 'gmv', 'policies', 'deposits'];
+
+  const kpis: Kpi[] = orderedKeys.map((key) => {
+    const row = kpiMap.get(key) ?? null;
+    const value7d = row ? parseNumeric(row.value_7d) : 0;
+    const value30d = row ? parseNumeric(row.value_30d) : 0;
+    return {
+      key,
+      label: KPI_LABELS[key],
+      value7d,
+      value30d,
+      trend: computeTrend(value7d, value30d),
+      format: row?.format === 'currency' ? 'currency' : 'count',
+    };
+  });
 
   const alerts: Alert[] = [];
   if (smsSuccessRate !== null && smsSuccessRate < 0.75) {
@@ -347,7 +231,7 @@ export const fetchDashboardSnapshot = async (): Promise<DashboardSnapshot> => {
       averageConfirmationSeconds: paymentAverage,
     },
     gates: {
-      windowHours: 24,
+      windowHours,
       totalPasses: gateTotal,
       breakdown: gateBreakdown.slice(0, 5),
     },

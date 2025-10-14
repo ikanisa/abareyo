@@ -5,7 +5,7 @@ import { fetchDictionary } from '@/services/admin/translations';
 import { requireAdmin } from '../../_lib/session';
 
 export const GET = async (request: Request) => {
-  const result = await requireAdmin(request, { permission: 'i18n.update' });
+  const result = await requireAdmin(request, { anyOf: ['i18n.update', 'dashboard:view'] });
   if ('response' in result) {
     return result.response;
   }

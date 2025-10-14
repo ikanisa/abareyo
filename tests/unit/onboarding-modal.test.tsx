@@ -1,48 +1,83 @@
-import React from "react";
-import { act, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import "@testing-library/jest-dom";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import OnboardingModal from "@/app/_components/onboarding/OnboardingModal";
 
+type UpsertPayload = {
+  id: string;
+  whatsapp: string;
+  momo: string;
+  consent_whatsapp: boolean;
+};
+
+const mocks = vi.hoisted(() => {
+  const upsert = vi.fn();
+  const from = vi.fn().mockReturnValue({ upsert });
+  const getSupabase = vi.fn(() => ({ from }));
+  return { upsert, from, getSupabase };
+});
+
+vi.mock("@/app/_lib/supabase", () => ({ getSupabase: mocks.getSupabase }));
+
 describe("OnboardingModal", () => {
   beforeEach(() => {
-    vi.useFakeTimers();
+    mocks.upsert.mockReset();
+    mocks.from.mockClear();
+    mocks.getSupabase.mockClear();
+    localStorage.clear();
   });
 
-  afterEach(() => {
-    vi.runOnlyPendingTimers();
-    vi.useRealTimers();
+  it("submits contact details and stores profile completion", async () => {
+    const onClose = vi.fn();
+    render(<OnboardingModal open onClose={onClose} />);
+
+    const whatsappInput = screen.getByPlaceholderText("7xxxxxxxx");
+    fireEvent.change(whatsappInput, { target: { value: "788888888" } });
+
+    const submitButton = screen.getByRole("button", { name: /submit/i });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+
+    expect(mocks.getSupabase).toHaveBeenCalled();
+    const payload = mocks.upsert.mock.calls[0]?.[0] as UpsertPayload | undefined;
+    expect(payload?.id).toMatch(/^\d{6}$/);
+    expect(payload?.whatsapp).toBe("+250788888888");
+    expect(payload?.momo).toBe("+250788888888");
+    expect(payload?.consent_whatsapp).toBe(true);
+    expect(localStorage.getItem("profileComplete")).toBe("1");
   });
 
-  it("sends a user message and schedules an assistant reply", async () => {
-    render(<OnboardingModal open onClose={() => {}} />);
-
-    const input = screen.getByPlaceholderText("Type your message…") as HTMLInputElement;
-    fireEvent.change(input, { target: { value: "0788000000" } });
-    fireEvent.submit(input.closest("form") as HTMLFormElement);
-
-    expect(input.value).toBe("");
-    expect(screen.getByText("0788000000")).toBeTruthy();
-
-    await act(async () => {
-      vi.advanceTimersByTime(600);
-    });
-
-    expect(screen.getByText(/Murakoze!/i)).toBeTruthy();
-  });
-
-  it("resets messages when reopened", () => {
+  it("resets form state when modal is reopened", () => {
     const onClose = vi.fn();
     const { rerender } = render(<OnboardingModal open onClose={onClose} />);
 
-    const input = screen.getByPlaceholderText("Type your message…");
-    fireEvent.change(input, { target: { value: "Optional details" } });
-    fireEvent.submit(input.closest("form") as HTMLFormElement);
+    const whatsappInput = screen.getByPlaceholderText("7xxxxxxxx");
+    fireEvent.change(whatsappInput, { target: { value: "799999999" } });
+
+    const momoToggle = screen.getByLabelText(/same as whatsapp/i) as HTMLInputElement;
+    fireEvent.click(momoToggle);
+    const momoInput = screen.getByPlaceholderText("07xxxxxxx");
+    fireEvent.change(momoInput, { target: { value: "0788000000" } });
 
     rerender(<OnboardingModal open={false} onClose={onClose} />);
     rerender(<OnboardingModal open onClose={onClose} />);
 
-    expect(screen.queryByText("Optional details")).toBeNull();
-    expect(screen.getByText(/Muraho!/i)).toBeTruthy();
+    expect(screen.getByPlaceholderText("7xxxxxxxx")).toHaveValue("");
+    expect(screen.queryByPlaceholderText("07xxxxxxx")).toBeNull();
+    expect(screen.getByLabelText(/same as whatsapp/i)).toBeChecked();
+    expect(screen.getByLabelText(/country code/i)).toHaveValue("+250");
+  });
+
+  it("allows skipping without marking profile complete", () => {
+    const onClose = vi.fn();
+    render(<OnboardingModal open onClose={onClose} />);
+
+    const laterButton = screen.getByRole("button", { name: /later/i });
+    fireEvent.click(laterButton);
+
+    expect(onClose).toHaveBeenCalled();
+    expect(localStorage.getItem("profileComplete")).toBeNull();
   });
 });
