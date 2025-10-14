@@ -7,14 +7,11 @@
   --rs-azure: #00a1de;
   --rs-yellow: #fad201;
   --rs-green: #20603d;
-  --rs-night: #050b27;
-
-  --glass-surface: rgba(255, 255, 255, 0.14);
+  --glass-bg: rgba(255, 255, 255, 0.14);
   --glass-stroke: rgba(255, 255, 255, 0.22);
-  --glass-shadow: 0 24px 60px rgba(5, 11, 39, 0.35);
-
-  --rs-radius-xl: 18px;
-  --rs-radius-2xl: 26px;
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.25);
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -32,120 +29,128 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  h1 {
+    font-size: 28px;
+    line-height: 32px;
+    font-weight: 700;
+  }
+
+  h2 {
+    font-size: 20px;
+    line-height: 24px;
+    font-weight: 600;
   }
 }
 
 @layer components {
   .bg-rs-gradient {
-    background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.12), transparent 55%),
-      linear-gradient(135deg, var(--rs-blue), var(--rs-azure), var(--rs-yellow), var(--rs-green));
+    background: linear-gradient(135deg, var(--rs-blue), var(--rs-azure), var(--rs-yellow), var(--rs-green));
   }
 
-  .glass {
-    background: var(--glass-surface);
+  .glass,
+  .glass-card,
+  .card,
+  .tile,
+  .btn,
+  .btn-primary,
+  .btn-ghost {
+    background: var(--glass-bg);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid var(--glass-stroke);
-    border-radius: var(--rs-radius-2xl);
-    box-shadow: var(--glass-shadow);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-lg);
   }
 
   .card {
-    @apply glass p-5 md:p-6;
+    padding: 1rem;
+  }
+
+  @screen md {
+    .card {
+      padding: 1.5rem;
+    }
   }
 
   .tile {
-    @apply glass px-4 py-3 text-sm font-medium text-white/90 transition;
-    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl text-center;
-    @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    min-height: 44px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.9);
+    border-radius: var(--radius-2xl);
+    transition: background 200ms ease-out, color 200ms ease-out;
+  }
+
+  .tile:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
+
+  .btn,
+  .btn-primary,
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    min-height: 44px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    transition: background 200ms ease-out, color 200ms ease-out;
   }
 
   .btn {
-    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold text-white;
-    @apply bg-white/15 transition hover:bg-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80;
-    @apply disabled:pointer-events-none disabled:opacity-60;
+    color: #fff;
+  }
+
+  .btn:hover {
+    background: rgba(255, 255, 255, 0.22);
   }
 
   .btn-primary {
-    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold text-white;
-    @apply bg-[#0051ff] transition hover:bg-[#0041cc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80;
-    @apply disabled:pointer-events-none disabled:opacity-60;
+    background: #3b82f6;
+    border-color: transparent;
+    color: #fff;
+  }
+
+  .btn-primary:hover {
+    background: #2563eb;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.12);
   }
 
   .muted {
-    @apply text-white/70;
+    color: rgba(255, 255, 255, 0.7);
   }
 
   .section-title {
-    @apply text-lg font-semibold text-white md:text-xl;
-  }
-
-  .h-scroll {
-    @apply scroll-smooth overflow-x-auto whitespace-nowrap;
-  }
-
-  .chip {
-    @apply inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs text-white;
+    font-size: 20px;
+    line-height: 24px;
+    font-weight: 600;
   }
 }
 
-@keyframes ticket-sheet {
-  from {
-    transform: translateY(32px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes ticket-overlay {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 0.95;
-  }
-}
-
-@keyframes ticket-wallet {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes ticket-waiting {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-.animate-ticket-sheet {
-  animation: ticket-sheet 0.25s ease-out forwards;
-}
-
-.animate-ticket-overlay {
-  animation: ticket-overlay 0.25s ease-out forwards;
-}
-
-.animate-ticket-wallet {
-  animation: ticket-wallet 0.45s ease-out forwards;
-}
-
-.animate-ticket-waiting {
-  animation: ticket-waiting 2.4s ease-in-out infinite;
+:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -153,12 +158,6 @@
   *::before,
   *::after {
     animation: none !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
+    transition: none !important;
   }
-}
-
-:focus-visible {
-  outline: 2px solid #ffffff;
-  outline-offset: 3px;
 }
