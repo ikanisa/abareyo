@@ -10,6 +10,7 @@ export type AuditInput = {
   before?: unknown;
   after?: unknown;
   request?: Request;
+  context?: unknown;
 };
 
 const extractRequestMeta = (req?: Request) => {
@@ -28,7 +29,16 @@ const toJson = (value: unknown) => {
   }
 };
 
-export const writeAuditLog = async ({ adminId, action, entityType, entityId, before, after, request }: AuditInput) => {
+export const writeAuditLog = async ({
+  adminId,
+  action,
+  entityType,
+  entityId,
+  before,
+  after,
+  request,
+  context,
+}: AuditInput) => {
   try {
     const client = getServiceClient();
     const meta = extractRequestMeta(request);
@@ -41,6 +51,7 @@ export const writeAuditLog = async ({ adminId, action, entityType, entityId, bef
       after: toJson(after),
       ip: meta.ip,
       ua: meta.ua ?? null,
+      context: toJson(context),
     };
     await client.from('audit_logs').insert(payload);
   } catch (error) {

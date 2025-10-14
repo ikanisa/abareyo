@@ -22,6 +22,17 @@ type PaymentTelemetry = {
   averageConfirmationSeconds: number | null;
 };
 
+type SmsLatencyRow = {
+  created_at: string;
+  sms_raw: { received_at: string | null } | null;
+};
+
+type PaymentLatencyRow = {
+  created_at: string;
+  ticket_orders: { created_at: string | null } | null;
+  orders: { created_at: string | null } | null;
+};
+
 type GateTelemetry = {
   windowHours: number;
   totalPasses: number;
@@ -222,12 +233,14 @@ export const fetchDashboardSnapshot = async (): Promise<DashboardSnapshot> => {
   const smsRawCount = smsRaw7d.count ?? 0;
   const smsParsedCount = smsParsed7d.count ?? 0;
   const smsSuccessRate = smsRawCount === 0 ? null : smsParsedCount / smsRawCount;
-  const smsLatencyValues = (smsLatencyRows.data ?? [])
+  const smsLatencyRowsData = (smsLatencyRows.data ?? []) as unknown as SmsLatencyRow[];
+  const smsLatencyValues = smsLatencyRowsData
     .map((row) => toSeconds(row.sms_raw?.received_at, row.created_at) ?? null)
     .filter((value): value is number => value !== null);
   const smsAverageLatency = average(smsLatencyValues);
 
-  const paymentDurations = (paymentRows.data ?? [])
+  const paymentRowsData = (paymentRows.data ?? []) as unknown as PaymentLatencyRow[];
+  const paymentDurations = paymentRowsData
     .map((row) => {
       const orderCreatedAt = row.ticket_orders?.created_at ?? row.orders?.created_at ?? null;
       return toSeconds(orderCreatedAt, row.created_at);
