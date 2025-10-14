@@ -8,6 +8,14 @@ export type TranslationRow = {
   updatedBy?: string | null;
 };
 
+type TranslationQueryRow = {
+  lang: string | null;
+  key: string;
+  value: string;
+  updated_at: string;
+  admin_users: { display_name: string | null } | null;
+};
+
 export const listTranslationLanguages = async (): Promise<string[]> => {
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return ['en', 'rw'];
@@ -54,8 +62,10 @@ export const fetchTranslationsPage = async (
   const { data, error, count } = await query.range(start, end);
   if (error) throw error;
 
+  const entries = (data ?? []) as unknown as TranslationQueryRow[];
+
   return {
-    data: (data ?? []).map((entry) => ({
+    data: entries.map((entry) => ({
       lang: entry.lang ?? lang,
       key: entry.key,
       value: entry.value,

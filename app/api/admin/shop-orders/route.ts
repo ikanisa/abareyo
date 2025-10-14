@@ -96,7 +96,7 @@ export const GET = async (request: Request) => {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 
-  const payload = (data ?? []).map((entry) => serializeOrder(entry as ShopOrderRow));
+  const payload = (data ?? []).map((entry) => serializeOrder(entry as unknown as ShopOrderRow));
   return NextResponse.json({
     status: 'ok',
     data: payload,

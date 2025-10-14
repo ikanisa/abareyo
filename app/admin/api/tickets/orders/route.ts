@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { recordAudit } from '@/app/admin/api/_lib/audit';
 import { AdminAuthError, requireAdminSession } from '@/app/admin/api/_lib/session';
 import { getSupabaseAdmin } from '@/app/admin/api/_lib/supabase';
+import type { Tables } from '@/integrations/supabase/types';
 
 const ORDER_SELECT = `
   id,
@@ -20,12 +21,24 @@ const ORDER_SELECT = `
   payments:payments(id, amount, status, created_at)
 `;
 
+const TICKET_STATUSES: readonly Tables<'ticket_orders'>['status'][] = [
+  'pending',
+  'paid',
+  'cancelled',
+  'expired',
+] as const;
+
+const isValidTicketStatus = (
+  value: string | undefined,
+): value is Tables<'ticket_orders'>['status'] =>
+  value !== undefined && TICKET_STATUSES.includes(value as Tables<'ticket_orders'>['status']);
+
 export async function GET(request: NextRequest) {
   try {
     await requireAdminSession();
     const supabase = getSupabaseAdmin();
     const { searchParams } = request.nextUrl;
-    const status = searchParams.get('status') ?? undefined;
+    const statusParam = searchParams.get('status') ?? undefined;
     const matchId = searchParams.get('match_id') ?? undefined;
     const query = searchParams.get('q') ?? undefined;
     const limit = Math.min(Number.parseInt(searchParams.get('limit') ?? '50', 10), 200);
@@ -37,8 +50,8 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (status) {
-      builder = builder.eq('status', status);
+    if (isValidTicketStatus(statusParam)) {
+      builder = builder.eq('status', statusParam);
     }
 
     if (matchId) {
@@ -107,6 +120,9 @@ export async function PATCH(request: NextRequest) {
 
     const updates: Record<string, unknown> = {};
     if (payload.status) {
+      if (!isValidTicketStatus(payload.status)) {
+        return NextResponse.json({ error: 'invalid_status' }, { status: 400 });
+      }
       updates.status = payload.status;
     }
     if (payload.momo_ref !== undefined) {
