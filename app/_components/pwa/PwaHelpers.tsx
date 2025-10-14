@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { PWA_OPT_IN_EVENT, PWA_OPT_IN_KEY, recordPwaOptIn } from "@/app/_lib/pwa";
+import { getStoredPwaOptIn, recordPwaOptIn } from "@/app/_lib/pwa";
 
 // Types for the beforeinstallprompt event
 // See: https://developer.mozilla.org/en-US/docs/Web/API/BeforeInstallPromptEvent
@@ -45,7 +45,7 @@ export function InstallPrompt() {
   useEffect(() => {
     if (!hasWindow()) return;
     try {
-      if (window.localStorage.getItem(PWA_OPT_IN_KEY) === "true") {
+      if (getStoredPwaOptIn(window.localStorage)) {
         setShow(false);
       }
     } catch (error) {

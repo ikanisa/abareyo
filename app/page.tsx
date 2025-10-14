@@ -1,90 +1,52 @@
-import Link from "next/link";
-
 import PageShell from "@/app/_components/shell/PageShell";
 import RewardsWidget from "@/app/_components/home/RewardsWidget";
-import { fixtures } from "@/app/_data/fixtures";
-import { buildRouteMetadata } from "@/app/_lib/navigation";
 
-export const metadata = buildRouteMetadata("/");
-
-const heroFixture = fixtures.find((fixture) => fixture.status === "upcoming");
-
-const quickActions = [
-  { href: "/tickets", label: "🎟️ Tickets" },
-  { href: "/shop", label: "🛍️ Shop" },
-  { href: "/services", label: "🏦 Services" },
-  { href: "/more/rewards", label: "⭐ Rewards" },
-] as const;
-
-const whatsNext = [
-  {
-    title: "Insurance Perk",
-    body: "Get a free Blue Ticket when you secure match insurance.",
-  },
-  {
-    title: "Savings Streak",
-    body: "Earn rewards faster with weekly SACCO deposits via USSD.",
-  },
-] as const;
-
-const formatHero = () => {
-  if (!heroFixture) {
-    return {
-      title: "Next match",
-      subtitle: "Rayon Sports — stay tuned",
-      venue: "",
-    };
-  }
-  return {
-    title: `${heroFixture.title} — ${heroFixture.date.split(", ")[0]} ${heroFixture.time}`,
-    subtitle: heroFixture.venue,
-    venue: heroFixture.venue,
-  };
-};
-
-const hero = formatHero();
-
-const Home = () => {
+export default function Home() {
   return (
     <PageShell>
-      <section className="card space-y-3">
-        <div>
-          <h1>{hero.title}</h1>
-          {hero.subtitle ? <p className="muted">{hero.subtitle}</p> : null}
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Link href="/tickets" className="btn-primary flex-1 text-center">
+      <section className="card">
+        <h1>Rayon vs APR — Sat 18:00</h1>
+        <p className="muted">Amahoro Stadium</p>
+        <div className="mt-3 flex gap-2">
+          <a className="btn-primary" href="/tickets">
             Buy Ticket
-          </Link>
-          <Link href="/matches" className="btn flex-1 text-center">
+          </a>
+          <a className="btn" href="/matches">
             Match Centre
-          </Link>
+          </a>
         </div>
       </section>
 
       <section className="space-y-3">
         <h2 className="section-title">Quick Actions</h2>
         <div className="grid grid-cols-2 gap-3">
-          {quickActions.map((action) => (
-            <Link key={action.href} href={action.href} className="tile">
-              {action.label}
-            </Link>
-          ))}
+          <a className="tile text-center" href="/tickets">
+            🎟️ Tickets
+          </a>
+          <a className="tile text-center" href="/shop">
+            🛍️ Shop
+          </a>
+          <a className="tile text-center" href="/services">
+            🏦 Services
+          </a>
+          <a className="tile text-center" href="/more/rewards">
+            ⭐ Rewards
+          </a>
         </div>
       </section>
 
       <section className="grid gap-3">
-        {whatsNext.map((item) => (
-          <div key={item.title} className="card space-y-1">
-            <h2 className="section-title">{item.title}</h2>
-            <p className="muted">{item.body}</p>
-          </div>
-        ))}
+        <div className="card">
+          <h2 className="section-title">What’s Next</h2>
+          <div className="muted">Get a free Blue Ticket with an insurance policy.</div>
+        </div>
+        <div className="card">
+          <h2 className="section-title">Savings Streak</h2>
+          <div className="muted">Earn points with SACCO deposits via USSD.</div>
+        </div>
       </section>
 
       <RewardsWidget />
     </PageShell>
   );
-};
-
-export default Home;
+}

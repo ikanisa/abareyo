@@ -64,12 +64,17 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
           <p className="muted text-sm">{product.description}</p>
         </div>
 
-        <ProductPurchase productId={product.id} price={baseVariant.price} colors={colors} />
+        <ProductPurchase
+          productId={product.id}
+          price={baseVariant.price}
+          colors={colors}
+        />
 
         <div className="space-y-2 rounded-2xl bg-white/10 p-3 text-xs text-white/80">
           {product.materials ? (
             <p>
-              <span className="font-semibold text-white">Materials:</span> {product.materials}
+              <span className="font-semibold text-white">Materials:</span>{" "}
+              {product.materials}
             </p>
           ) : null}
           {product.care ? (
@@ -84,7 +89,8 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
           ) : null}
           {product.returnPolicy ? (
             <p>
-              <span className="font-semibold text-white">Returns:</span> {product.returnPolicy}
+              <span className="font-semibold text-white">Returns:</span>{" "}
+              {product.returnPolicy}
             </p>
           ) : null}
         </div>

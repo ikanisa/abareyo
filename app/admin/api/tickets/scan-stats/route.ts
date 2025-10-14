@@ -3,12 +3,30 @@ import { NextResponse } from 'next/server';
 import { AdminAuthError, requireAdminSession } from '@/app/admin/api/_lib/session';
 import { getSupabaseAdmin } from '@/app/admin/api/_lib/supabase';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
+const isSupabaseConfigured = () => {
+  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return Boolean(url && serviceKey);
+};
+
 type StatusSummary = Array<{ status: string; count: number }>;
 type GateThroughput = Array<{ gate: string; perMin: number; samples: number }>;
+type TicketPassRecord = { gate?: string | null };
 
 export async function GET() {
   try {
     await requireAdminSession();
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json(
+        { error: 'supabase_not_configured', passes: 0, orders: 0, statusSummary: [], throughputPerGate: [] },
+        { status: 503, headers: { 'x-admin-offline': 'supabase-missing' } },
+      );
+    }
     const supabase = getSupabaseAdmin();
 
     const sinceIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
@@ -41,11 +59,14 @@ export async function GET() {
     );
 
     const throughputByGate: GateThroughput = Object.values(
-      (recentPasses.data ?? []).reduce<Record<string, { gate: string; total: number }>>((acc, record: any) => {
-        const gate = record.gate ?? 'Unassigned';
-        acc[gate] = acc[gate] ? { gate, total: acc[gate]!.total + 1 } : { gate, total: 1 };
-        return acc;
-      }, {}),
+      (recentPasses.data ?? []).reduce<Record<string, { gate: string; total: number }>>(
+        (acc, record: TicketPassRecord) => {
+          const gate = record.gate ?? 'Unassigned';
+          acc[gate] = acc[gate] ? { gate, total: acc[gate]!.total + 1 } : { gate, total: 1 };
+          return acc;
+        },
+        {},
+      ),
     ).map(({ gate, total }) => ({
       gate,
       perMin: Number((total / 60).toFixed(2)),
