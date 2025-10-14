@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Capacitor } from "@capacitor/core";
 
-import { PWA_OPT_IN_EVENT, PWA_OPT_IN_KEY } from "@/app/_lib/pwa";
+import { PWA_OPT_IN_EVENT, getStoredPwaOptIn } from "@/app/_lib/pwa";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -35,10 +35,12 @@ const hasPwaOptIn = () => {
   if (!hasWindow()) {
     return false;
   }
+
   try {
-    return window.localStorage.getItem(PWA_OPT_IN_KEY) === 'true';
+    const storage = window.localStorage;
+    return Boolean(getStoredPwaOptIn(storage));
   } catch (error) {
-    console.warn('Unable to read stored PWA opt-in preference', error);
+    console.warn("Unable to read stored PWA opt-in preference", error);
     return false;
   }
 };

@@ -1,22 +1,17 @@
 import PageShell from "@/app/_components/shell/PageShell";
-import ShopCatalog from "@/app/_components/shop/ShopCatalog";
-import { products } from "@/app/_data/shop_v2";
-import { buildRouteMetadata } from "@/app/_lib/navigation";
+import { shopData } from "@/app/_data/shop_v2";
+import MinimalCatalog from "./_components/MinimalCatalog";
 
-export const metadata = buildRouteMetadata("/shop");
+export default function Shop() {
+  const products = shopData.products.slice(0, 8);
 
-const ShopPage = async () => {
   return (
     <PageShell>
-      <section className="card space-y-2">
-        <div>
-          <h1>Official Shop</h1>
-          <p className="muted">Kits, training gear, and accessories — checkout via USSD.</p>
-        </div>
+      <section className="card">
+        <h1>Official Shop</h1>
+        <div className="muted">Kits, training, accessories—USSD checkout.</div>
       </section>
-      <ShopCatalog products={products} />
+      <MinimalCatalog products={products} />
     </PageShell>
   );
-};
-
-export default ShopPage;
+}

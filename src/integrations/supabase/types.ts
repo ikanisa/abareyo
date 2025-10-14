@@ -113,6 +113,7 @@ export type Database = {
           after: Json | null;
           at: string | null;
           before: Json | null;
+          context: Json | null;
           entity_id: string | null;
           entity_type: string | null;
           id: string;
@@ -125,6 +126,7 @@ export type Database = {
           after?: Json | null;
           at?: string | null;
           before?: Json | null;
+          context?: Json | null;
           entity_id?: string | null;
           entity_type?: string | null;
           id?: string;
@@ -137,6 +139,7 @@ export type Database = {
           after?: Json | null;
           at?: string | null;
           before?: Json | null;
+          context?: Json | null;
           entity_id?: string | null;
           entity_type?: string | null;
           id?: string;
@@ -261,15 +264,17 @@ export type Database = {
           away_team: string | null;
           blue_price: number | null;
           comp: string | null;
-          date: string;
+          date: string | null;
           home_team: string | null;
           id: string;
+          kickoff: string | null;
+          opponent: string | null;
           regular_price: number | null;
           seats_blue: number | null;
           seats_regular: number | null;
           seats_vip: number | null;
           status: Database["public"]["Enums"]["match_status"];
-          title: string;
+          title: string | null;
           venue: string | null;
           vip_price: number | null;
         };
@@ -277,15 +282,17 @@ export type Database = {
           away_team?: string | null;
           blue_price?: number | null;
           comp?: string | null;
-          date: string;
+          date?: string | null;
           home_team?: string | null;
           id?: string;
+          kickoff?: string | null;
+          opponent?: string | null;
           regular_price?: number | null;
           seats_blue?: number | null;
           seats_regular?: number | null;
           seats_vip?: number | null;
           status?: Database["public"]["Enums"]["match_status"];
-          title: string;
+          title?: string | null;
           venue?: string | null;
           vip_price?: number | null;
         };
@@ -296,6 +303,8 @@ export type Database = {
           date?: string;
           home_team?: string | null;
           id?: string;
+          kickoff?: string | null;
+          opponent?: string | null;
           regular_price?: number | null;
           seats_blue?: number | null;
           seats_regular?: number | null;
@@ -434,6 +443,52 @@ export type Database = {
         Insert: { description?: string | null; id?: string; key: string };
         Update: { description?: string | null; id?: string; key?: string };
         Relationships: [];
+      };
+
+      roles_permissions: {
+        Row: { permission_id: string; role_id: string };
+        Insert: { permission_id: string; role_id: string };
+        Update: { permission_id?: string; role_id?: string };
+        Relationships: [
+          {
+            foreignKeyName: "roles_permissions_permission_id_fkey";
+            columns: ["permission_id"];
+            referencedRelation: "permissions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "roles_permissions_role_id_fkey";
+            columns: ["role_id"];
+            referencedRelation: "admin_roles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
+      translations: {
+        Row: { lang: string; key: string; updated_at: string; updated_by: string | null; value: string };
+        Insert: {
+          lang: string;
+          key: string;
+          value: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          lang?: string;
+          key?: string;
+          value?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "translations_updated_by_fkey";
+            columns: ["updated_by"];
+            referencedRelation: "admin_users";
+            referencedColumns: ["id"];
+          }
+        ];
       };
 
       shop_products: {
@@ -808,7 +863,33 @@ export type Database = {
       };
     };
 
-    Views: { [_ in never]: never };
+    Views: {
+      admin_dashboard_gate_throughput: {
+        Row: { gate: string | null; passes: number | null; window_hours: number | null };
+        Relationships: [];
+      };
+      admin_dashboard_kpis: {
+        Row: { format: string | null; metric: string | null; value_30d: number | null; value_7d: number | null };
+        Relationships: [];
+      };
+      admin_dashboard_payment_metrics: {
+        Row: {
+          average_confirmation_seconds: number | null;
+          confirmed_count_7d: number | null;
+          pending_count: number | null;
+        };
+        Relationships: [];
+      };
+      admin_dashboard_sms_metrics: {
+        Row: {
+          average_latency_seconds: number | null;
+          parsed_count_7d: number | null;
+          raw_count_7d: number | null;
+          success_rate: number | null;
+        };
+        Relationships: [];
+      };
+    };
 
     Functions: {
       increment_user_points: {
