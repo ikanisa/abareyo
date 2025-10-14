@@ -1,24 +1,67 @@
+import { matches as fallbackMatches } from '@/app/_data/matches';
 import PageShell from '@/app/_components/shell/PageShell';
+import { buildBackendUrl } from '@/app/(routes)/_lib/backend-url';
+
 import MatchesList from './_components/MatchesList';
 
 export const dynamic = 'force-dynamic';
 
-export default async function MatchesPage(){
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL||''}/api/matches`, { cache:'no-store' }).catch(()=>null);
-  const j = await res?.json().catch(()=>null);
-  const matches = Array.isArray(j?.matches) ? j.matches : [];
-  const normalized = matches.map((match:any, index:number)=>{
-    const kickoff = match.kickoff || match.date || null;
-    const venue = match.venue || match.stadium || null;
-    const status = match.status || (match.score ? 'live' : 'upcoming');
-    const opponent = match.opponent || (()=>{
-      if(typeof match.home === 'string' && match.home.toLowerCase().includes('rayon')){
-        return match.away || 'Opponent';
+type MatchesResponse = {
+  matches?: unknown;
+};
+
+type RemoteMatch = {
+  id?: string | number;
+  opponent?: string;
+  home?: string;
+  away?: string;
+  venue?: string;
+  stadium?: string;
+  kickoff?: string;
+  date?: string;
+  status?: string;
+  score?: { home?: number; away?: number } | null;
+};
+
+export default async function MatchesPage() {
+  let matchesPayload: MatchesResponse | null = null;
+
+  try {
+    const response = await fetch(buildBackendUrl('/api/matches'), { cache: 'no-store' });
+    if (response.ok) {
+      matchesPayload = (await response.json()) as MatchesResponse;
+    }
+  } catch (error) {
+    console.warn('Failed to fetch matches feed, falling back to fixtures', error);
+  }
+
+  const matchesSource = Array.isArray(matchesPayload?.matches)
+    ? (matchesPayload.matches as RemoteMatch[])
+    : (fallbackMatches as RemoteMatch[]);
+
+  const normalized = matchesSource.map((match, index) => {
+    const kickoff =
+      (typeof match.kickoff === 'string' && match.kickoff) ||
+      (typeof match.date === 'string' ? match.date : null);
+    const venue =
+      (typeof match.venue === 'string' && match.venue) ||
+      (typeof match.stadium === 'string' ? match.stadium : null);
+    const status =
+      (typeof match.status === 'string' && match.status) || (match.score ? 'live' : 'upcoming');
+    const opponent = match.opponent || (() => {
+      const home = typeof match.home === 'string' ? match.home : '';
+      const away = typeof match.away === 'string' ? match.away : '';
+
+      if (home.toLowerCase().includes('rayon')) {
+        return away || 'Opponent';
       }
-      if(typeof match.away === 'string' && match.away.toLowerCase().includes('rayon')){
-        return match.home || 'Opponent';
+      if (away.toLowerCase().includes('rayon')) {
+        return home || 'Opponent';
       }
-      return match.home && match.away ? `${match.home} vs ${match.away}` : match.home || match.away || 'Opponent';
+      if (home && away) {
+        return `${home} vs ${away}`;
+      }
+      return home || away || 'Opponent';
     })();
     return {
       id: match.id?.toString() || `fixture-${index}`,
