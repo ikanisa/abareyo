@@ -4,10 +4,7 @@ import { AdminAuthError, requireAdminSession } from '@/app/admin/api/_lib/sessio
 import { getSupabaseAdmin } from '@/app/admin/api/_lib/supabase';
 
 type StatusSummary = Array<{ status: string; count: number }>;
-
 type GateThroughput = Array<{ gate: string; perMin: number; samples: number }>;
-
-type GroupableFilter<T> = T & { group(columns: string): T };
 
 export async function GET() {
   try {
@@ -16,8 +13,12 @@ export async function GET() {
 
     const sinceIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
-    const statusCountsQuery = supabase.from('ticket_orders').select('status, count:status', { head: false });
-    const statusSummaryPromise = (statusCountsQuery as GroupableFilter<typeof statusCountsQuery>).group('status');
+    // Grouped status counts
+    const statusSummaryPromise = supabase
+      .from('ticket_orders')
+      // Use PostgREST aggregate with alias and group by status
+      .select('status, count:status', { head: false })
+      .group('status');
 
     const [passesCount, ordersCount, statusSummary, recentPasses] = await Promise.all([
       supabase.from('ticket_passes').select('id', { count: 'exact', head: true }),
@@ -31,13 +32,13 @@ export async function GET() {
     if (statusSummary.error) throw statusSummary.error;
     if (recentPasses.error) throw recentPasses.error;
 
-    const statusAggregate: StatusSummary = (statusSummary.data ?? []).map((row) => ({
+    const statusAggregate: StatusSummary = (statusSummary.data ?? []).map((row: any) => ({
       status: row.status ?? 'unknown',
       count: Number(row.count ?? 0),
     }));
 
     const throughputByGate: GateThroughput = Object.values(
-      (recentPasses.data ?? []).reduce<Record<string, { gate: string; total: number }>>((acc, record) => {
+      (recentPasses.data ?? []).reduce<Record<string, { gate: string; total: number }>>((acc, record: any) => {
         const gate = record.gate ?? 'Unassigned';
         acc[gate] = acc[gate] ? { gate, total: acc[gate]!.total + 1 } : { gate, total: 1 };
         return acc;
