@@ -64,7 +64,12 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
           <p className="muted text-sm">{product.description}</p>
         </div>
 
-        <ProductPurchase productId={product.id} price={baseVariant.price} colors={colors} />
+        <ProductPurchase
+          productId={product.id}
+          price={baseVariant.price}
+          colors={colors}
+          variants={product.variants}
+        />
 
         <div className="space-y-2 rounded-2xl bg-white/10 p-3 text-xs text-white/80">
           {product.materials ? (
