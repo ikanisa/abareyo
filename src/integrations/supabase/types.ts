@@ -235,6 +235,55 @@ export type Database = {
           }
         ];
       };
+      payments: {
+        Row: {
+          amount: number;
+          created_at: string;
+          donation_id: string | null;
+          id: string;
+          kind: string;
+          membership_id: string | null;
+          order_id: string | null;
+          sms_parsed_id: string | null;
+          status: string;
+        };
+        Insert: {
+          amount: number;
+          created_at?: string;
+          donation_id?: string | null;
+          id?: string;
+          kind: string;
+          membership_id?: string | null;
+          order_id?: string | null;
+          sms_parsed_id?: string | null;
+          status?: string;
+        };
+        Update: {
+          amount?: number;
+          created_at?: string;
+          donation_id?: string | null;
+          id?: string;
+          kind?: string;
+          membership_id?: string | null;
+          order_id?: string | null;
+          sms_parsed_id?: string | null;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payments_order_id_fkey";
+            columns: ["order_id"];
+            referencedRelation: "ticket_orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_sms_parsed_id_fkey";
+            columns: ["sms_parsed_id"];
+            referencedRelation: "sms_parsed";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       policies: {
         Row: {
           free_ticket_issued: boolean;
@@ -330,6 +379,73 @@ export type Database = {
           }
         ];
       };
+      sms_parsed: {
+        Row: {
+          amount: number;
+          confidence: number | null;
+          created_at: string;
+          currency: string | null;
+          id: string;
+          matched_entity: string | null;
+          payer_mask: string | null;
+          ref: string | null;
+          sms_id: string | null;
+        };
+        Insert: {
+          amount: number;
+          confidence?: number | null;
+          created_at?: string;
+          currency?: string | null;
+          id?: string;
+          matched_entity?: string | null;
+          payer_mask?: string | null;
+          ref?: string | null;
+          sms_id?: string | null;
+        };
+        Update: {
+          amount?: number;
+          confidence?: number | null;
+          created_at?: string;
+          currency?: string | null;
+          id?: string;
+          matched_entity?: string | null;
+          payer_mask?: string | null;
+          ref?: string | null;
+          sms_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sms_parsed_sms_id_fkey";
+            columns: ["sms_id"];
+            referencedRelation: "sms_raw";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      sms_raw: {
+        Row: {
+          from_msisdn: string | null;
+          id: string;
+          received_at: string;
+          source: string | null;
+          text: string;
+        };
+        Insert: {
+          from_msisdn?: string | null;
+          id?: string;
+          received_at?: string;
+          source?: string | null;
+          text: string;
+        };
+        Update: {
+          from_msisdn?: string | null;
+          id?: string;
+          received_at?: string;
+          source?: string | null;
+          text?: string;
+        };
+        Relationships: [];
+      };
       shop_products: {
         Row: {
           badge: string | null;
@@ -337,6 +453,7 @@ export type Database = {
           description: string | null;
           id: string;
           image_url: string | null;
+          images: Json | null;
           name: string;
           price: number;
           stock: number;
@@ -347,6 +464,7 @@ export type Database = {
           description?: string | null;
           id?: string;
           image_url?: string | null;
+          images?: Json | null;
           name: string;
           price: number;
           stock?: number;
@@ -357,6 +475,7 @@ export type Database = {
           description?: string | null;
           id?: string;
           image_url?: string | null;
+          images?: Json | null;
           name?: string;
           price?: number;
           stock?: number;
@@ -439,6 +558,43 @@ export type Database = {
             foreignKeyName: "ticket_orders_user_id_fkey";
             columns: ["user_id"];
             referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      ticket_passes: {
+        Row: {
+          created_at: string;
+          gate: string | null;
+          id: string;
+          order_id: string | null;
+          qr_token_hash: string | null;
+          state: string;
+          zone: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          gate?: string | null;
+          id?: string;
+          order_id?: string | null;
+          qr_token_hash?: string | null;
+          state?: string;
+          zone?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          gate?: string | null;
+          id?: string;
+          order_id?: string | null;
+          qr_token_hash?: string | null;
+          state?: string;
+          zone?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ticket_passes_order_id_fkey";
+            columns: ["order_id"];
+            referencedRelation: "ticket_orders";
             referencedColumns: ["id"];
           }
         ];
