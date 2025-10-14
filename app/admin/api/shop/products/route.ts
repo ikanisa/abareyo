@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { recordAudit } from '@/app/admin/api/_lib/audit';
 import { AdminAuthError, requireAdminSession } from '@/app/admin/api/_lib/session';
 import { getSupabaseAdmin } from '@/app/admin/api/_lib/supabase';
+import type { Tables } from '@/integrations/supabase/types';
 
 const PRODUCT_SELECT = 'id, name, category, price, stock, description, image_url, badge';
 
@@ -14,7 +15,10 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') ?? undefined;
     const query = searchParams.get('q') ?? undefined;
 
-    let builder = supabase.from('shop_products').select(PRODUCT_SELECT).order('name', { ascending: true });
+    let builder = supabase
+      .from('shop_products')
+      .select(PRODUCT_SELECT)
+      .order('name', { ascending: true });
 
     if (category) {
       builder = builder.eq('category', category);
@@ -22,11 +26,13 @@ export async function GET(request: NextRequest) {
 
     if (query) {
       const sanitized = query.replace(/'/g, "''");
-      builder = builder.or([
-        `name.ilike.%${sanitized}%`,
-        `description.ilike.%${sanitized}%`,
-        `badge.ilike.%${sanitized}%`,
-      ].join(','));
+      builder = builder.or(
+        [
+          `name.ilike.%${sanitized}%`,
+          `description.ilike.%${sanitized}%`,
+          `badge.ilike.%${sanitized}%`,
+        ].join(',')
+      );
     }
 
     const { data, error } = await builder;
@@ -37,7 +43,6 @@ export async function GET(request: NextRequest) {
     if (error instanceof AdminAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-
     console.error('Failed to load shop products', error);
     return NextResponse.json({ error: 'products_fetch_failed' }, { status: 500 });
   }
@@ -74,7 +79,9 @@ export async function POST(request: NextRequest) {
       stock: payload.stock ?? 0,
       description: payload.description ?? null,
       badge: payload.badge ?? null,
-      image_url: payload.image_url ?? (Array.isArray(payload.images) ? payload.images.find(Boolean) ?? null : null),
+      image_url:
+        payload.image_url ??
+        (Array.isArray(payload.images) ? payload.images.find(Boolean) ?? null : null),
     };
 
     const { data, error } = await supabase
@@ -84,24 +91,30 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) throw error;
+    if (!data || Array.isArray(data) || 'code' in data) {
+      throw new Error('product_insert_invalid_response');
+    }
+
+    const product = data as unknown as Tables<'shop_products'> & {
+      images?: string[];
+    } & Record<string, unknown>;
 
     await recordAudit(supabase, {
       action: 'shop_products.insert',
       entityType: 'shop_product',
-      entityId: data.id,
+      entityId: product.id,
       before: null,
-      after: data,
+      after: product,
       userId: session.user.id,
       ip: session.ip,
       userAgent: session.userAgent,
     });
 
-    return NextResponse.json({ product: data });
+    return NextResponse.json({ product });
   } catch (error) {
     if (error instanceof AdminAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-
     console.error('Failed to create product', error, payload);
     return NextResponse.json({ error: 'product_create_failed' }, { status: 500 });
   }
@@ -136,11 +149,11 @@ export async function PATCH(request: NextRequest) {
     if (payload.description !== undefined) updates.description = payload.description;
     if (payload.badge !== undefined) updates.badge = payload.badge;
     if (payload.image_url !== undefined) updates.image_url = payload.image_url;
+
+    // If explicit image_url not provided, derive from images[] (first truthy).
     if (updates.image_url === undefined && Array.isArray(payload.images)) {
       const firstImage = payload.images.find(Boolean);
-      if (firstImage) {
-        updates.image_url = firstImage;
-      }
+      if (firstImage) updates.image_url = firstImage;
     }
 
     const { data: updated, error: updateError } = await supabase
@@ -151,24 +164,30 @@ export async function PATCH(request: NextRequest) {
       .single();
 
     if (updateError) throw updateError;
+    if (!updated || Array.isArray(updated) || 'code' in updated) {
+      throw new Error('product_update_invalid_response');
+    }
+
+    const product = updated as unknown as Tables<'shop_products'> & {
+      images?: string[];
+    } & Record<string, unknown>;
 
     await recordAudit(supabase, {
       action: 'shop_products.update',
       entityType: 'shop_product',
       entityId: payload.id,
       before,
-      after: updated,
+      after: product,
       userId: session.user.id,
       ip: session.ip,
       userAgent: session.userAgent,
     });
 
-    return NextResponse.json({ product: updated });
+    return NextResponse.json({ product });
   } catch (error) {
     if (error instanceof AdminAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-
     console.error('Failed to update product', error, payload);
     return NextResponse.json({ error: 'product_update_failed' }, { status: 500 });
   }
@@ -213,7 +232,6 @@ export async function DELETE(request: NextRequest) {
     if (error instanceof AdminAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-
     console.error('Failed to delete product', error);
     return NextResponse.json({ error: 'product_delete_failed' }, { status: 500 });
   }

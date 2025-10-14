@@ -4,7 +4,57 @@ import { applySecurityHeaders as withSecurityHeaders } from './config/security-h
 
 const LOCALES = ['en', 'fr', 'rw'] as const;
 const LOCALE_RE = new RegExp(`^/(?:${LOCALES.join('|')})(?=/|$)`);
+const LOCALE_SET = new Set(LOCALES);
 const isProduction = process.env.NODE_ENV === 'production';
+
+const normaliseHost = (host: string | null) => host?.toLowerCase() ?? null;
+
+const getConfiguredHosts = () => {
+  const value = process.env.NEXT_PUBLIC_SITE_URL;
+  if (!value) {
+    return [] as string[];
+  }
+
+  return value
+    .split(',')
+    .map((entry) => entry.trim())
+    .map((entry) => {
+      try {
+        return new URL(entry).host;
+      } catch (error) {
+        return entry;
+      }
+    })
+    .map((entry) => normaliseHost(entry))
+    .filter((entry): entry is string => Boolean(entry));
+};
+
+const isTrustedLocaleRedirect = (req: NextRequest, locale: string | null) => {
+  if (!locale || !LOCALE_SET.has(locale as (typeof LOCALES)[number])) {
+    return false;
+  }
+
+  const referer = req.headers.get('referer');
+  if (!referer) {
+    return false;
+  }
+
+  try {
+    const refererUrl = new URL(referer);
+    const trustedHosts = new Set<string>();
+    const requestHost = normaliseHost(req.headers.get('host'));
+    if (requestHost) {
+      trustedHosts.add(requestHost);
+    }
+    for (const host of getConfiguredHosts()) {
+      trustedHosts.add(host);
+    }
+
+    return trustedHosts.has(normaliseHost(refererUrl.host));
+  } catch (error) {
+    return false;
+  }
+};
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -39,6 +89,7 @@ export function middleware(req: NextRequest) {
   const hasPrefix = LOCALE_RE.test(pathname);
   const ref = req.headers.get('referer') || '';
   const refMatch = ref.match(/\/(en|fr|rw)(?=\/|$)/);
+  const refLocale = refMatch?.[1] ?? null;
 
   // If URL has a locale prefix, rewrite to the bare path for routing
   if (hasPrefix) {
@@ -47,9 +98,8 @@ export function middleware(req: NextRequest) {
   }
 
   // If no prefix, but referer carried one, keep the user's locale in the URL
-  if (refMatch) {
-    const locale = refMatch[1];
-    const target = pathname === '/' ? `/${locale}` : `/${locale}${pathname}`;
+  if (refLocale && isTrustedLocaleRedirect(req, refLocale)) {
+    const target = pathname === '/' ? `/${refLocale}` : `/${refLocale}${pathname}`;
     return withSecurityHeaders(NextResponse.redirect(new URL(target, req.url)));
   }
 

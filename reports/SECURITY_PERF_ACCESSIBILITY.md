@@ -20,3 +20,8 @@
 1. Add `next-safe-middleware` with CSP + security headers and restrict locale redirects.【F:next.config.mjs†L6-L21】【F:middleware.ts†L3-L46】
 2. Refactor `clientConfig` to tolerate missing env variables locally, log warnings, and ensure defaults for socket path.【F:src/config/client.ts†L23-L78】
 3. Convert hero/top bar to respect `prefers-reduced-motion` and add focus-visible styling to all actionable elements.【F:app/(routes)/_components/HomeClient.tsx†L74-L81】【F:app/_components/ui/TopAppBar.tsx†L20-L35】
+
+## Status Update — Outstanding Items Closed
+- CSP, referrer policy, and transport headers now ship via the central security helper used by both runtime headers and middleware, satisfying the hardening requirement.【F:config/security-headers.mjs†L1-L66】【F:next.config.mjs†L6-L24】
+- Locale-based redirects only trigger for trusted hosts and known locales, preventing crafted `Referer` headers from hijacking navigation while keeping language affordances intact.【F:middleware.ts†L1-L64】
+- PWA opt-in preferences persist with timestamped records and a 180-day TTL, ensuring stale choices expire automatically and analytics receive structured events.【F:app/_lib/pwa.ts†L1-L115】【F:app/providers.tsx†L7-L73】
