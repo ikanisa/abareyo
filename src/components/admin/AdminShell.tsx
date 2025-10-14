@@ -9,22 +9,23 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { AdminLocaleProvider, useAdminLocale } from '@/providers/admin-locale-provider';
 
-const NAV_ITEMS: Array<{ label: string; href: string }> = [
-  { label: 'Overview', href: '/admin' },
-  { label: 'Match Ops', href: '/admin/match-ops' },
-  { label: 'Orders & Payments', href: '/admin/orders' },
-  { label: 'Membership', href: '/admin/membership' },
-  { label: 'Shop', href: '/admin/shop' },
-  { label: 'Fundraising', href: '/admin/fundraising' },
-  { label: 'Community', href: '/admin/community' },
-  { label: 'Content', href: '/admin/content' },
-  { label: 'Translations', href: '/admin/translations' },
-  { label: 'SMS Console', href: '/admin/sms' },
-  { label: 'USSD Templates', href: '/admin/ussd' },
-  { label: 'Users', href: '/admin/users' },
-  { label: 'Admin', href: '/admin/settings' },
-  { label: 'Reports', href: '/admin/reports' },
+const NAV_ITEMS: Array<{ key: string; fallback: string; href: string }> = [
+  { key: 'admin.nav.overview', fallback: 'Overview', href: '/admin' },
+  { key: 'admin.nav.match_ops', fallback: 'Match Ops', href: '/admin/match-ops' },
+  { key: 'admin.nav.orders', fallback: 'Orders & Payments', href: '/admin/orders' },
+  { key: 'admin.nav.membership', fallback: 'Membership', href: '/admin/membership' },
+  { key: 'admin.nav.shop', fallback: 'Shop', href: '/admin/shop' },
+  { key: 'admin.nav.fundraising', fallback: 'Fundraising', href: '/admin/fundraising' },
+  { key: 'admin.nav.community', fallback: 'Community', href: '/admin/community' },
+  { key: 'admin.nav.content', fallback: 'Content', href: '/admin/content' },
+  { key: 'admin.nav.translations', fallback: 'Translations', href: '/admin/translations' },
+  { key: 'admin.nav.sms', fallback: 'SMS Console', href: '/admin/sms' },
+  { key: 'admin.nav.ussd', fallback: 'USSD Templates', href: '/admin/ussd' },
+  { key: 'admin.nav.users', fallback: 'Users', href: '/admin/users' },
+  { key: 'admin.nav.admin', fallback: 'Admin', href: '/admin/settings' },
+  { key: 'admin.nav.reports', fallback: 'Reports', href: '/admin/reports' },
 ];
 
 export type AdminShellProps = {
@@ -37,12 +38,13 @@ export type AdminShellProps = {
   children: ReactNode;
 };
 
-export const AdminShell = ({ user, environment = 'dev', children }: AdminShellProps) => {
+const ShellInner = ({ user, environment, children }: AdminShellProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { locale, setLocale, loading: localeLoading, t } = useAdminLocale();
   const activeHref = useMemo(() => {
     if (!pathname) {
       return '/admin';
@@ -122,7 +124,7 @@ export const AdminShell = ({ user, environment = 'dev', children }: AdminShellPr
                   isActive ? 'bg-primary text-primary-foreground shadow-lg' : 'text-slate-300',
                 )}
               >
-                {item.label}
+                {t(item.key, item.fallback)}
               </Link>
             );
           })}
@@ -153,6 +155,30 @@ export const AdminShell = ({ user, environment = 'dev', children }: AdminShellPr
             />
           </div>
           <div className="flex items-center gap-2">
+            <div className="hidden items-center gap-1 text-xs text-slate-400 md:flex">
+              <span className="uppercase tracking-wide">Lang</span>
+              <div className="flex overflow-hidden rounded-full border border-white/10">
+                {(['en', 'rw'] as const).map((code) => {
+                  const isActive = locale === code;
+                  return (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => setLocale(code)}
+                      disabled={localeLoading}
+                      className={cn(
+                        'px-2 py-1 text-[11px] font-semibold uppercase transition-colors',
+                        isActive
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-transparent text-slate-300 hover:bg-white/10',
+                      )}
+                    >
+                      {code}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <Button variant="ghost" size="sm" className="hidden items-center gap-2 text-slate-300 hover:text-white md:flex">
               Quick actions
               <ChevronDown className="h-4 w-4" />
@@ -175,3 +201,11 @@ export const AdminShell = ({ user, environment = 'dev', children }: AdminShellPr
     </div>
   );
 };
+
+export const AdminShell = ({ user, environment = 'dev', children }: AdminShellProps) => (
+  <AdminLocaleProvider>
+    <ShellInner user={user} environment={environment}>
+      {children}
+    </ShellInner>
+  </AdminLocaleProvider>
+);

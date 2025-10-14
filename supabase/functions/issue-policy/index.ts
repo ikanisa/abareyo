@@ -29,26 +29,47 @@ serve(async (_req) => {
 
   async function findNearestUpcomingMatch() {
     const now = nowIso();
-    const { data, error: kickErr } = await db
+
+    // Try matches.date first
+    const { data: byDate, error: dateErr } = await db
+      .from("matches")
+      .select("*")
+      .gte("date", now)
+      .order("date", { ascending: true })
+      .limit(1);
+
+    if (!dateErr && byDate && byDate.length) return byDate[0];
+
+    // Fallback: matches.kickoff
+    const { data: byKick, error: kickErr } = await db
       .from("matches")
       .select("*")
       .gte("kickoff", now)
       .order("kickoff", { ascending: true })
       .limit(1);
 
-    if (!kickErr && data && data.length) return data[0];
+    if (!kickErr && byKick && byKick.length) return byKick[0];
     return null;
   }
 
   async function hasExistingPerk(userId: string) {
-    const { data: orders } = await db
+    // Check BOTH schemas for prior perk
+    const { data: t1 } = await db
+      .from("tickets")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("momo_ref", "FREE-TICKET-PERK")
+      .limit(1);
+    if (t1 && t1.length) return true;
+
+    const { data: t2 } = await db
       .from("ticket_orders")
       .select("id")
       .eq("user_id", userId)
       .eq("sms_ref", "FREE-TICKET-PERK")
       .limit(1);
 
-    return !!(orders && orders.length);
+    return !!(t2 && t2.length);
   }
 
   async function grantPerkTicketNew(userId: string, matchId: string, policyId: string) {
@@ -68,7 +89,7 @@ serve(async (_req) => {
     if (orderErr || !order?.id) return false;
 
     // Create one Blue pass; store a token hash (raw token or UUID)
-    const rawToken = crypto.randomUUID(); // keep simple; hashing optional if your DB expects hash
+    const rawToken = crypto.randomUUID(); // Deno's global crypto
     const { error: passErr } = await db
       .from("ticket_passes")
       .insert({
