@@ -11,20 +11,19 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
 const client = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 
 const PERMISSIONS = [
+  { key: 'dashboard:view', description: 'View operational dashboards and KPIs' },
   { key: 'match.manage', description: 'Create and update match operations data' },
   { key: 'orders.read', description: 'View ticket and shop orders' },
   { key: 'orders.refund', description: 'Refund ticket and shop orders' },
   { key: 'shop.manage', description: 'Manage shop catalog and orders' },
   { key: 'sms.attach', description: 'Attach inbound SMS to payments' },
   { key: 'admin.manage', description: 'Manage admin users and roles' },
+  { key: 'i18n.update', description: 'Manage bilingual translations for RW/EN' },
 ];
 
 async function upsertPermissions() {
   for (const permission of PERMISSIONS) {
-    await client
-      .from('permissions')
-      .upsert(permission, { onConflict: 'key' })
-      .throwOnError();
+    await client.from('permissions').upsert(permission, { onConflict: 'key' }).throwOnError();
   }
 }
 
