@@ -21,10 +21,12 @@ export async function recordAudit(
   try {
     const context =
       payload.context !== undefined && payload.context !== null
-        ? (JSON.parse(JSON.stringify(payload.context)) as TablesInsert<'audit_logs'>['context'])
+        ? (JSON.parse(JSON.stringify(payload.context)) as TablesInsert<'audit_logs'>['before'])
         : null;
 
-    const row: TablesInsert<'audit_logs'> = {
+    const row: TablesInsert<'audit_logs'> & {
+      context?: TablesInsert<'audit_logs'>['before'];
+    } = {
       action: payload.action,
       entity_type: payload.entityType ?? null,
       entity_id: payload.entityId ?? null,
@@ -36,7 +38,7 @@ export async function recordAudit(
       context,
     };
 
-    await supabase.from('audit_logs').insert(row);
+    await supabase.from('audit_logs').insert(row as TablesInsert<'audit_logs'>);
   } catch (error) {
     console.warn('Failed to write admin audit log', error);
   }

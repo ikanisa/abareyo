@@ -1,18 +1,16 @@
+import PageShell from "@/app/_components/shell/PageShell";
 import { buildRouteMetadata } from "@/app/_lib/navigation";
+import {
+  matches as fallbackMatches,
+  type Match,
+} from "@/app/_data/matches";
 
 import MatchesClient from "./MatchesClient";
-import {
-  highlightClips as fallbackHighlights,
-  leagueTable as fallbackStandings,
-  matches as fallbackMatches,
-} from "@/app/_data/matches";
 
 export const metadata = buildRouteMetadata("/matches");
 
 type MatchCentreResponse = {
-  matches?: typeof fallbackMatches;
-  highlights?: typeof fallbackHighlights;
-  standings?: typeof fallbackStandings;
+  matches?: Match[];
 };
 
 const resolveBaseUrl = () => {
@@ -28,7 +26,7 @@ const resolveBaseUrl = () => {
   return "http://localhost:3000";
 };
 
-const fetchMatchCentre = async () => {
+const fetchMatches = async (): Promise<Match[]> => {
   try {
     const response = await fetch(`${resolveBaseUrl()}/api/matches`, {
       cache: "no-store",
@@ -37,24 +35,22 @@ const fetchMatchCentre = async () => {
       throw new Error(`Failed to load matches (${response.status})`);
     }
     const payload = (await response.json()) as MatchCentreResponse;
-    return {
-      matches: payload.matches?.length ? payload.matches : fallbackMatches,
-      highlights: payload.highlights?.length ? payload.highlights : fallbackHighlights,
-      standings: payload.standings?.length ? payload.standings : fallbackStandings,
-    };
+    if (payload.matches && payload.matches.length > 0) {
+      return payload.matches;
+    }
   } catch (error) {
     console.warn("Falling back to fixture matches", error);
-    return {
-      matches: fallbackMatches,
-      highlights: fallbackHighlights,
-      standings: fallbackStandings,
-    };
   }
+  return fallbackMatches;
 };
 
 const MatchesPage = async () => {
-  const { matches, highlights, standings } = await fetchMatchCentre();
-  return <MatchesClient matches={matches} highlights={highlights} standings={standings} />;
+  const matches = await fetchMatches();
+  return (
+    <PageShell>
+      <MatchesClient matches={matches} />
+    </PageShell>
+  );
 };
 
 export default MatchesPage;
