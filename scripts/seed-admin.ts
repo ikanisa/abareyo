@@ -23,10 +23,7 @@ const PERMISSIONS = [
 
 async function upsertPermissions() {
   for (const permission of PERMISSIONS) {
-    await client
-      .from('permissions')
-      .upsert(permission, { onConflict: 'key' })
-      .throwOnError();
+    await client.from('permissions').upsert(permission, { onConflict: 'key' }).throwOnError();
   }
 }
 
