@@ -3,17 +3,34 @@ import { NextResponse } from 'next/server';
 import { writeAuditLog } from '@/app/api/admin/_lib/audit';
 import { getServiceClient } from '@/app/api/admin/_lib/db';
 import { requireAdmin } from '@/app/api/admin/_lib/session';
-import type { Tables } from '@/integrations/supabase/types';
 
-type MatchRow = Pick<
-  Tables<'matches'>,
-  'id' | 'opponent' | 'kickoff' | 'venue' | 'status' | 'vip_price' | 'regular_price' | 'seats_vip' | 'seats_regular' | 'seats_blue'
->;
+type MatchRow = {
+  id: string;
+  title: string;
+  date: string;
+  venue: string | null;
+  status: string;
+  vip_price: number | null;
+  regular_price: number | null;
+  seats_vip: number | null;
+  seats_regular: number | null;
+  seats_blue: number | null;
+  home_team: string | null;
+  away_team: string | null;
+};
+
+const resolveOpponent = (row: MatchRow) => {
+  const home = row.home_team ?? '';
+  const away = row.away_team ?? '';
+  if (home.toLowerCase().includes('rayon')) return away || row.title;
+  if (away.toLowerCase().includes('rayon')) return home || row.title;
+  return row.title;
+};
 
 const serialize = (row: MatchRow) => ({
   id: row.id,
-  opponent: row.opponent,
-  kickoff: row.kickoff,
+  opponent: resolveOpponent(row) ?? row.title,
+  kickoff: row.date,
   venue: row.venue,
   status: row.status === 'upcoming' ? 'scheduled' : row.status,
   vipPrice: row.vip_price,
@@ -32,7 +49,7 @@ export const GET = async (request: Request, context: { params: { matchId: string
   const client = getServiceClient();
   const { data, error } = await client
     .from('matches')
-    .select('id, opponent, kickoff, venue, status, vip_price, regular_price, seats_vip, seats_regular, seats_blue')
+    .select('id, title, date, venue, status, vip_price, regular_price, seats_vip, seats_regular, seats_blue, home_team, away_team')
     .eq('id', context.params.matchId)
     .maybeSingle();
 
@@ -73,8 +90,12 @@ export const PATCH = async (request: Request, context: { params: { matchId: stri
   }
 
   const update: Record<string, unknown> = {};
-  if (typeof payload.opponent === 'string') update.opponent = payload.opponent.trim();
-  if (typeof payload.kickoff === 'string') update.kickoff = payload.kickoff;
+  if (typeof payload.opponent === 'string') {
+    const trimmed = payload.opponent.trim();
+    update.away_team = trimmed;
+    update.title = trimmed;
+  }
+  if (typeof payload.kickoff === 'string') update.date = payload.kickoff;
   if (typeof payload.venue === 'string' || payload.venue === null) update.venue = payload.venue;
   if (typeof payload.status === 'string') update.status = payload.status;
   if (typeof payload.vipPrice === 'number' || payload.vipPrice === null) update.vip_price = payload.vipPrice;
@@ -92,7 +113,7 @@ export const PATCH = async (request: Request, context: { params: { matchId: stri
     .from('matches')
     .update(update)
     .eq('id', context.params.matchId)
-    .select('id, opponent, kickoff, venue, status, vip_price, regular_price, seats_vip, seats_regular, seats_blue')
+    .select('id, title, date, venue, status, vip_price, regular_price, seats_vip, seats_regular, seats_blue, home_team, away_team')
     .maybeSingle();
 
   if (error || !data) {

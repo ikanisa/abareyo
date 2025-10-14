@@ -4,7 +4,7 @@ import { recordAudit } from '@/app/admin/api/_lib/audit';
 import { AdminAuthError, requireAdminSession } from '@/app/admin/api/_lib/session';
 import { getSupabaseAdmin } from '@/app/admin/api/_lib/supabase';
 
-const PRODUCT_SELECT = 'id, name, category, price, stock, description, image_url, images, badge, created_at';
+const PRODUCT_SELECT = 'id, name, category, price, stock, description, image_url, badge';
 
 export async function GET(request: NextRequest) {
   try {
@@ -67,7 +67,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'name_and_price_required' }, { status: 400 });
     }
 
-    const gallery = Array.isArray(payload.images) ? payload.images.filter(Boolean) : [];
     const insert = {
       name: payload.name,
       category: payload.category ?? 'general',
@@ -75,8 +74,7 @@ export async function POST(request: NextRequest) {
       stock: payload.stock ?? 0,
       description: payload.description ?? null,
       badge: payload.badge ?? null,
-      image_url: payload.image_url ?? gallery[0] ?? null,
-      images: gallery,
+      image_url: payload.image_url ?? (Array.isArray(payload.images) ? payload.images.find(Boolean) ?? null : null),
     };
 
     const { data, error } = await supabase
@@ -130,8 +128,6 @@ export async function PATCH(request: NextRequest) {
     if (beforeError) throw beforeError;
     if (!before) return NextResponse.json({ error: 'product_not_found' }, { status: 404 });
 
-    const gallery = Array.isArray(payload.images) ? payload.images.filter(Boolean) : (before.images as string[] | null) ?? [];
-
     const updates: Record<string, unknown> = {};
     if (payload.name !== undefined) updates.name = payload.name;
     if (payload.category !== undefined) updates.category = payload.category;
@@ -140,9 +136,11 @@ export async function PATCH(request: NextRequest) {
     if (payload.description !== undefined) updates.description = payload.description;
     if (payload.badge !== undefined) updates.badge = payload.badge;
     if (payload.image_url !== undefined) updates.image_url = payload.image_url;
-    updates.images = gallery;
-    if (updates.image_url === undefined && gallery.length > 0) {
-      updates.image_url = gallery[0];
+    if (updates.image_url === undefined && Array.isArray(payload.images)) {
+      const firstImage = payload.images.find(Boolean);
+      if (firstImage) {
+        updates.image_url = firstImage;
+      }
     }
 
     const { data: updated, error: updateError } = await supabase

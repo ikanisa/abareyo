@@ -3,22 +3,37 @@ import { NextResponse } from 'next/server';
 import { writeAuditLog } from '@/app/api/admin/_lib/audit';
 import { getServiceClient } from '@/app/api/admin/_lib/db';
 import { requireAdmin } from '@/app/api/admin/_lib/session';
-import type { Tables } from '@/integrations/supabase/types';
+type MatchRow = {
+  id: string;
+  title: string;
+  date: string;
+  venue: string | null;
+  status: string;
+  vip_price: number | null;
+  regular_price: number | null;
+  seats_vip: number | null;
+  seats_regular: number | null;
+  seats_blue: number | null;
+  home_team: string | null;
+  away_team: string | null;
+};
 
-type MatchRow = Pick<
-  Tables<'matches'>,
-  'id' | 'opponent' | 'kickoff' | 'venue' | 'status' | 'vip_price' | 'regular_price' | 'seats_vip' | 'seats_regular' | 'seats_blue'
->;
+type MatchZoneRow = {
+  id: string;
+  match_id: string;
+  name: string;
+  capacity: number;
+  price: number;
+  default_gate: string | null;
+};
 
-type MatchZoneRow = Pick<
-  Tables<'match_zones'>,
-  'id' | 'match_id' | 'name' | 'capacity' | 'price' | 'default_gate'
->;
-
-type MatchGateRow = Pick<
-  Tables<'match_gates'>,
-  'id' | 'match_id' | 'name' | 'location' | 'max_throughput'
->;
+type MatchGateRow = {
+  id: string;
+  match_id: string;
+  name: string;
+  location: string | null;
+  max_throughput: number | null;
+};
 
 type SerializedZone = {
   id: string;
@@ -37,14 +52,22 @@ type SerializedGate = {
   matchId: string;
 };
 
+const resolveOpponent = (row: MatchRow) => {
+  const home = row.home_team ?? '';
+  const away = row.away_team ?? '';
+  if (home.toLowerCase().includes('rayon')) return away || row.title;
+  if (away.toLowerCase().includes('rayon')) return home || row.title;
+  return row.title;
+};
+
 const serializeMatch = (
   row: MatchRow,
   zones: Record<string, SerializedZone[]>,
   gates: Record<string, SerializedGate[]>,
 ) => ({
   id: row.id,
-  opponent: row.opponent,
-  kickoff: row.kickoff,
+  opponent: resolveOpponent(row) ?? row.title,
+  kickoff: row.date,
   venue: row.venue,
   status: row.status === 'upcoming' ? 'scheduled' : row.status,
   vipPrice: row.vip_price,
@@ -65,8 +88,10 @@ export const GET = async (request: Request) => {
   const client = getServiceClient();
   const { data: matches, error } = await client
     .from('matches')
-    .select('id, opponent, kickoff, venue, status, vip_price, regular_price, seats_vip, seats_regular, seats_blue')
-    .order('kickoff', { ascending: true });
+    .select(
+      'id, title, date, venue, status, vip_price, regular_price, seats_vip, seats_regular, seats_blue, home_team, away_team',
+    )
+    .order('date', { ascending: true });
 
   if (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
@@ -139,10 +164,12 @@ export const POST = async (request: Request) => {
   }
 
   const insertPayload = {
-    opponent,
-    kickoff,
+    title: opponent,
+    date: kickoff,
     venue,
     status,
+    away_team: opponent,
+    home_team: 'Rayon Sports',
     vip_price: typeof body.vipPrice === 'number' ? body.vipPrice : null,
     regular_price: typeof body.regularPrice === 'number' ? body.regularPrice : null,
     seats_vip: typeof body.seatsVip === 'number' ? body.seatsVip : 0,

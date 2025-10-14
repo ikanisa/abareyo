@@ -1,0 +1,1 @@
+export default function NotFound(){ return (<div className="card text-center"><div className="text-white/90 font-semibold">Match not found</div><a className="btn mt-2" href="/matches">Back to Matches</a></div>); }

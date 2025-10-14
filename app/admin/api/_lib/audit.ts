@@ -19,11 +19,6 @@ export async function recordAudit(
   payload: AuditLogPayload,
 ): Promise<void> {
   try {
-    const context =
-      payload.context !== undefined && payload.context !== null
-        ? (JSON.parse(JSON.stringify(payload.context)) as TablesInsert<'audit_logs'>['context'])
-        : null;
-
     const row: TablesInsert<'audit_logs'> = {
       action: payload.action,
       entity_type: payload.entityType ?? null,
@@ -33,7 +28,6 @@ export async function recordAudit(
       admin_user_id: payload.userId,
       ip: payload.ip ?? null,
       ua: payload.userAgent ?? null,
-      context,
     };
 
     await supabase.from('audit_logs').insert(row);
