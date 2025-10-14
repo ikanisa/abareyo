@@ -104,9 +104,13 @@ serve(async (req) => {
     const deposit = (deposits ?? []).find((row: any) => row.amount === AMT);
     if (deposit) {
       await db.from("sacco_deposits").update({ status: "confirmed", ref: REF }).eq("id", deposit.id);
+      const metadata: Record<string, unknown> = { ref: REF, sacco_deposit_id: deposit.id };
+      if (deposit.user_id) {
+        metadata.user_id = deposit.user_id;
+      }
       await db
         .from("payments")
-        .insert({ kind: "deposit", amount: AMT, status: "confirmed", metadata: { ref: REF } })
+        .insert({ kind: "deposit", amount: AMT, status: "confirmed", metadata })
         .catch(() => {});
       return { kind: "sacco_deposit", id: deposit.id };
     }

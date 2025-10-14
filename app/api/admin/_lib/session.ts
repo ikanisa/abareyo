@@ -8,6 +8,8 @@ import { getServiceClient } from './db';
 const ADMIN_COOKIE_NAME = process.env.NEXT_PUBLIC_ADMIN_SESSION_COOKIE ?? 'admin_session';
 const DEFAULT_SESSION_TTL_HOURS = 12;
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 const parseCookie = (cookieHeader: string | null) => {
   if (!cookieHeader) return null;
   const parts = cookieHeader.split(';');
@@ -187,7 +189,7 @@ export const destroyAdminSession = async (token: string) => {
 export const clearSessionCookie = (response: NextResponse) => {
   response.cookies.set(ADMIN_COOKIE_NAME, '', {
     httpOnly: true,
-    secure: true,
+    secure: isProduction,
     sameSite: 'lax',
     path: '/',
     expires: new Date(0),
@@ -202,7 +204,7 @@ export const withSessionCookie = (
 ) => {
   response.cookies.set(ADMIN_COOKIE_NAME, token, {
     httpOnly: true,
-    secure: true,
+    secure: isProduction,
     sameSite: 'lax',
     path: '/',
     expires: expiresAt ? new Date(expiresAt) : undefined,
