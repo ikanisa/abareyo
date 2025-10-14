@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { recordAudit } from '@/app/admin/api/_lib/audit';
 import { AdminAuthError, requireAdminSession } from '@/app/admin/api/_lib/session';
 import { getSupabaseAdmin } from '@/app/admin/api/_lib/supabase';
+import type { Tables } from '@/integrations/supabase/types';
 
 const PRODUCT_SELECT = 'id, name, category, price, stock, description, image_url, images, badge, created_at';
 
@@ -87,18 +88,24 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
+    if (!data || Array.isArray(data) || 'code' in data) {
+      throw new Error('product_insert_invalid_response');
+    }
+
+    const product = data as unknown as Tables<'shop_products'> & { images?: string[] } & Record<string, unknown>;
+
     await recordAudit(supabase, {
       action: 'shop_products.insert',
       entityType: 'shop_product',
-      entityId: data.id,
+      entityId: product.id,
       before: null,
-      after: data,
+      after: product,
       userId: session.user.id,
       ip: session.ip,
       userAgent: session.userAgent,
     });
 
-    return NextResponse.json({ product: data });
+    return NextResponse.json({ product });
   } catch (error) {
     if (error instanceof AdminAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
@@ -130,7 +137,10 @@ export async function PATCH(request: NextRequest) {
     if (beforeError) throw beforeError;
     if (!before) return NextResponse.json({ error: 'product_not_found' }, { status: 404 });
 
-    const gallery = Array.isArray(payload.images) ? payload.images.filter(Boolean) : (before.images as string[] | null) ?? [];
+    const existingImages = (before as unknown as { images?: string[] | null }).images ?? [];
+    const gallery = Array.isArray(payload.images)
+      ? payload.images.filter(Boolean)
+      : (existingImages ?? []);
 
     const updates: Record<string, unknown> = {};
     if (payload.name !== undefined) updates.name = payload.name;
@@ -154,18 +164,24 @@ export async function PATCH(request: NextRequest) {
 
     if (updateError) throw updateError;
 
+    if (!updated || Array.isArray(updated) || 'code' in updated) {
+      throw new Error('product_update_invalid_response');
+    }
+
+    const product = updated as unknown as Tables<'shop_products'> & { images?: string[] } & Record<string, unknown>;
+
     await recordAudit(supabase, {
       action: 'shop_products.update',
       entityType: 'shop_product',
       entityId: payload.id,
       before,
-      after: updated,
+      after: product,
       userId: session.user.id,
       ip: session.ip,
       userAgent: session.userAgent,
     });
 
-    return NextResponse.json({ product: updated });
+    return NextResponse.json({ product });
   } catch (error) {
     if (error instanceof AdminAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });

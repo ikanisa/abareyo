@@ -1,20 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
 import { usePathname } from "next/navigation";
-import { BottomNav } from "@/components/layout/BottomNav";
+import BottomNav from "@/app/_components/shell/BottomNav";
 
 const LOCALE_PREFIX = /^\/(en|fr|rw)(?=\/|$)/;
 const HIDDEN_PREFIXES = ["/admin", "/api"];
 const HIDDEN_ROUTES = new Set(["/admin/login"]);
-
-const stripLocale = (pathname: string | null) => {
-  if (!pathname) {
-    return "/";
-  }
-
-  return pathname.replace(LOCALE_PREFIX, "") || "/";
-};
 
 const shouldRenderBottomNav = (barePath: string) =>
   !HIDDEN_PREFIXES.some((prefix) => barePath.startsWith(prefix)) &&
@@ -22,14 +13,15 @@ const shouldRenderBottomNav = (barePath: string) =>
 
 const BottomNavContainer = () => {
   const pathname = usePathname();
-
-  const barePath = useMemo(() => stripLocale(pathname), [pathname]);
+  const match = pathname?.match(LOCALE_PREFIX);
+  const localePrefix = match?.[0] ?? "";
+  const barePath = (pathname ?? "/").replace(LOCALE_PREFIX, "") || "/";
 
   if (!shouldRenderBottomNav(barePath)) {
     return null;
   }
 
-  return <BottomNav />;
+  return <BottomNav localePrefix={localePrefix} activePath={barePath} />;
 };
 
 export default BottomNavContainer;

@@ -14,11 +14,7 @@ export async function GET() {
     const sinceIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
     // Grouped status counts
-    const statusSummaryPromise = supabase
-      .from('ticket_orders')
-      // Use PostgREST aggregate with alias and group by status
-      .select('status, count:status', { head: false })
-      .group('status');
+    const statusSummaryPromise = supabase.from('ticket_orders').select('status');
 
     const [passesCount, ordersCount, statusSummary, recentPasses] = await Promise.all([
       supabase.from('ticket_passes').select('id', { count: 'exact', head: true }),
@@ -32,10 +28,17 @@ export async function GET() {
     if (statusSummary.error) throw statusSummary.error;
     if (recentPasses.error) throw recentPasses.error;
 
-    const statusAggregate: StatusSummary = (statusSummary.data ?? []).map((row: any) => ({
-      status: row.status ?? 'unknown',
-      count: Number(row.count ?? 0),
-    }));
+    const statusAggregate = Object.values(
+      (statusSummary.data ?? []).reduce<
+        Record<string, { status: string; count: number }>
+      >((acc, row) => {
+        const key = (row as { status?: string | null }).status ?? 'unknown';
+        acc[key] = acc[key]
+          ? { status: key, count: acc[key]!.count + 1 }
+          : { status: key, count: 1 };
+        return acc;
+      }, {}),
+    );
 
     const throughputByGate: GateThroughput = Object.values(
       (recentPasses.data ?? []).reduce<Record<string, { gate: string; total: number }>>((acc, record: any) => {

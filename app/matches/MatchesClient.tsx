@@ -1,386 +1,310 @@
 "use client";
 
-import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 
-import TopAppBar from "@/app/_components/ui/TopAppBar";
-import EmptyState from "@/app/_components/ui/EmptyState";
-import HeroBlock from "@/app/_components/ui/HeroBlock";
-import LiveTicker, { type LiveTickerEvent } from "@/app/_components/match/LiveTicker";
-import MatchCard from "@/app/_components/match/MatchCard";
-import MatchDetailSheet from "@/app/_components/match/MatchDetailSheet";
-import HighlightsCarousel from "@/app/_components/match/HighlightsCarousel";
-import StandingsTable from "@/app/_components/match/StandingsTable";
-import type { HighlightClip, Match, StandingsRow } from "@/app/_data/matches";
-
-type MatchCentreFeed = {
-  matches: Match[];
-  highlights: HighlightClip[];
-  standings: StandingsRow[];
-  updatedAt?: string;
-};
+import { track } from "@/lib/track";
+import type { Match, MatchEvent } from "@/app/_data/matches";
 
 type MatchesClientProps = {
   matches: Match[];
-  highlights: HighlightClip[];
-  standings: StandingsRow[];
 };
 
-const MatchesClient = ({ matches, highlights, standings }: MatchesClientProps) => {
-  const reduceMotion = useReducedMotion();
+const statusLabel: Record<Match["status"], string> = {
+  live: "Live",
+  upcoming: "Upcoming",
+  ft: "Full time",
+};
+
+const statusAccent: Record<Match["status"], string> = {
+  live: "text-emerald-300",
+  upcoming: "text-white/70",
+  ft: "text-white/70",
+};
+
+const eventIcon: Record<MatchEvent["type"], string> = {
+  goal: "⚽",
+  "card-yellow": "🟨",
+  "card-red": "🟥",
+  substitution: "🔄",
+  var: "🖥️",
+  info: "•",
+};
+
+const formatKickoff = (match: Match) => {
+  const kickoff = match.kickoff ?? match.date;
+  if (!kickoff) return match.date ?? "";
+  const date = new Date(kickoff);
+  if (Number.isNaN(date.getTime())) {
+    return `${match.date ?? ""} • ${match.venue}`.trim();
+  }
+  return `${date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  })} • ${date.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  })}`;
+};
+
+const formatScore = (match: Match) => {
+  if (!match.score) return "";
+  return `${match.score.home}-${match.score.away}`;
+};
+
+const statusHelper = (match: Match) => {
+  if (match.status === "live") {
+    const minute = match.liveMinute ? `${match.liveMinute}` : "Live";
+    return `${minute} • ${formatScore(match)}`;
+  }
+  if (match.status === "ft") {
+    return `Final • ${formatScore(match)}`;
+  }
+  return "Tap for timeline";
+};
+
+const MatchesClient = ({ matches }: MatchesClientProps) => {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [feed, setFeed] = useState<MatchCentreFeed>({
-    matches,
-    highlights,
-    standings,
-  });
-  const [lastUpdated, setLastUpdated] = useState<string | undefined>(undefined);
-  const [isOffline, setIsOffline] = useState<boolean>(() =>
-    typeof navigator !== "undefined" ? !navigator.onLine : false,
-  );
 
-  const liveMatches = useMemo(
-    () => feed.matches.filter((match) => match.status === "live"),
-    [feed.matches],
-  );
-  const upcomingMatches = useMemo(
-    () => feed.matches.filter((match) => match.status === "upcoming"),
-    [feed.matches],
-  );
-  const finishedMatches = useMemo(
-    () => feed.matches.filter((match) => match.status === "ft"),
-    [feed.matches],
-  );
+  const grouped = useMemo(() => {
+    const live = matches.filter((match) => match.status === "live");
+    const upcoming = matches.filter((match) => match.status === "upcoming");
+    const finished = matches.filter((match) => match.status === "ft");
+    return { live, upcoming, finished };
+  }, [matches]);
 
-  const tickerEvents = useMemo<LiveTickerEvent[]>(() => {
-    if (liveMatches.length === 0) {
-      return [];
-    }
+  const heroMatch = grouped.live[0] ?? grouped.upcoming[0] ?? matches[0];
+  const heroSubtitle = heroMatch
+    ? `${formatKickoff(heroMatch)} • ${heroMatch.venue}`
+    : "Fixtures update weekly";
 
-    return liveMatches.flatMap((match) =>
-      match.events.map((event) => ({
-        ...event,
-        matchId: match.id,
-        fixture: `${match.home} ${match.score ? match.score.home : "-"}-${match.score ? match.score.away : "-"} ${match.away}`,
-        status: match.status,
-        currentScore: event.scoreline ?? (match.score ? `${match.score.home}-${match.score.away}` : undefined),
-      })),
-    );
-  }, [liveMatches]);
-
-  const liveSectionRef = useRef<HTMLDivElement>(null);
-  const upcomingSectionRef = useRef<HTMLDivElement>(null);
-  const resultsSectionRef = useRef<HTMLDivElement>(null);
-
-  const lastSyncLabel = useMemo(() => {
-    const updatedIso = lastUpdated ?? feed.updatedAt;
-    if (!updatedIso) return null;
-    const updatedDate = new Date(updatedIso);
-    if (Number.isNaN(updatedDate.getTime())) return null;
-
-    const diffMs = Date.now() - updatedDate.getTime();
-    const minutes = Math.floor(diffMs / 60000);
-    if (minutes < 1) return "just now";
-    if (minutes === 1) return "1 minute ago";
-    if (minutes < 60) return `${minutes} minutes ago`;
-
-    const hours = Math.floor(minutes / 60);
-    if (hours === 1) return "1 hour ago";
-    if (hours < 24) return `${hours} hours ago`;
-
-    const days = Math.floor(hours / 24);
-    return days === 1 ? "1 day ago" : `${days} days ago`;
-  }, [feed.updatedAt, lastUpdated]);
-
-  const heroKicker = useMemo(() => {
-    const base =
-      liveMatches.length > 0
-        ? `${liveMatches.length} live fixture${liveMatches.length > 1 ? "s" : ""} updating every 30s`
-        : "No live fixtures right now — previews start 60 minutes before kick-off";
-
-    return lastSyncLabel ? `${base} • Last sync ${lastSyncLabel}` : base;
-  }, [lastSyncLabel, liveMatches.length]);
-
-  const scrollToSection = (ref: RefObject<HTMLElement>) => {
-    if (ref.current) {
-      ref.current.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
-      ref.current.focus({ preventScroll: true });
-    }
-  };
-
-  const openMatchDetail = (match: Match) => {
+  const handleSelect = (match: Match) => {
     setSelectedMatch(match);
-    setDetailOpen(true);
+    track("matches.open_detail", { matchId: match.id, status: match.status });
   };
-
-  const handleCloseDetail = () => {
-    setDetailOpen(false);
-    window.setTimeout(() => {
-      setSelectedMatch(null);
-    }, reduceMotion ? 0 : 200);
-  };
-
-  useEffect(() => {
-    if (!detailOpen) {
-      return;
-    }
-
-    const body = document.querySelector("body");
-    if (!body) return;
-    body.style.overflow = "hidden";
-    return () => {
-      body.style.overflow = "";
-    };
-  }, [detailOpen]);
-
-  useEffect(() => {
-    if (!feed.matches.length) {
-      setFeed({ matches, highlights, standings });
-    }
-  }, [feed.matches.length, highlights, matches, standings]);
-
-  const applyFeedUpdate = useCallback((payload: MatchCentreFeed) => {
-    setFeed({
-      matches: payload.matches ?? matches,
-      highlights: payload.highlights ?? highlights,
-      standings: payload.standings ?? standings,
-      updatedAt: payload.updatedAt,
-    });
-    setLastUpdated(payload.updatedAt);
-
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("rs-match-centre-feed", JSON.stringify(payload));
-    }
-  }, [highlights, matches, standings]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return undefined;
-    }
-
-    const cached = window.localStorage.getItem("rs-match-centre-feed");
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached) as MatchCentreFeed;
-        if (parsed.matches?.length) {
-          applyFeedUpdate(parsed);
-        }
-      } catch (error) {
-        console.warn("Failed to parse cached match centre feed", error);
-      }
-    }
-
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, [applyFeedUpdate]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchFeed = async () => {
-      try {
-        const response = await fetch("/api/matches", { cache: "no-store" });
-        if (!response.ok) {
-          throw new Error(`Failed to fetch feed (${response.status})`);
-        }
-
-        const payload = (await response.json()) as MatchCentreFeed;
-        if (!cancelled) {
-          applyFeedUpdate(payload);
-          setIsOffline(false);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setIsOffline(true);
-        }
-        console.warn("Unable to refresh match centre feed", error);
-      }
-    };
-
-    fetchFeed();
-    const interval = window.setInterval(fetchFeed, 30000);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(interval);
-    };
-  }, [applyFeedUpdate]);
 
   return (
-    <div className="min-h-screen bg-rs-gradient text-white">
-      <TopAppBar />
-      <motion.main
-        className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 pb-24 pt-6"
-        initial={reduceMotion ? undefined : { opacity: 0, y: 32 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: reduceMotion ? 0 : 0.25, ease: "easeOut" }}
-      >
-        <HeroBlock
-          eyebrow="Matchday hub"
-          title="Match Centre"
-          subtitle="Live scores, stats & fan chat wrapped in Rayon&apos;s glass matchday atmosphere. Scroll for fixtures, highlights and the league table."
-          kicker={heroKicker}
-          actions={
-            <>
-              {liveMatches.length > 0 ? (
-                <span className="chip bg-emerald-500/20 text-emerald-100">{liveMatches.length} live</span>
-              ) : null}
-              <button className="btn-primary" onClick={() => scrollToSection(liveSectionRef)}>
-                Live now
-              </button>
-              <button className="btn" onClick={() => scrollToSection(upcomingSectionRef)}>
-                Upcoming
-              </button>
-              <button className="btn" onClick={() => scrollToSection(resultsSectionRef)}>
-                Results
-              </button>
-            </>
-          }
-        />
-
-        {isOffline ? (
-          <div className="glass flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80">
-            <span aria-hidden="true">📶</span>
-            <p>
-              Offline mode — showing the latest saved data. We&apos;ll resync automatically when your connection returns.
+    <>
+      <section className="card space-y-3">
+        <div>
+          <h1>Match Centre</h1>
+          <p className="muted">
+            Live scores, fixtures, and results. Tap a match to view the timeline and line-ups.
+          </p>
+        </div>
+        {heroMatch ? (
+          <div className="rounded-2xl bg-white/10 p-3">
+            <p className="text-xs uppercase tracking-wide text-white/70">Featured</p>
+            <p className="text-lg font-semibold text-white">
+              {heroMatch.home} vs {heroMatch.away}
             </p>
+            <p className="muted text-sm">{heroSubtitle}</p>
           </div>
         ) : null}
+      </section>
 
-        {tickerEvents.length > 0 ? (
-          <LiveTicker events={tickerEvents} />
-        ) : (
-          <EmptyState
-            title="No live matches now — View upcoming fixtures or replays."
-            description="Scroll to upcoming fixtures for ticket links or jump into the highlights reel."
-            icon="⏱️"
-          />
-        )}
+      <MatchListSection
+        title="Live now"
+        emptyCopy="No live fixtures. We will refresh the moment play resumes."
+        matches={grouped.live}
+        onSelect={handleSelect}
+      />
 
-        <section
-          ref={liveSectionRef}
-          tabIndex={-1}
-          aria-labelledby="live-now-heading"
-          className="space-y-4"
-        >
-          <div className="flex items-center justify-between">
-            <h2 id="live-now-heading" className="section-title">
-              Live now
-            </h2>
-            <span className="text-xs uppercase tracking-wide text-white/60">
-              Auto-refreshing every 30s
-            </span>
-          </div>
-          {liveMatches.length === 0 ? (
-            <EmptyState
-              title="No live matches"
-              description="We&apos;ll light up this space the moment Rayon walk out."
-              icon="🎉"
-            />
-          ) : (
-            <div className="flex gap-4 overflow-x-auto pb-2" role="list">
-              {liveMatches.map((match) => (
-                <MatchCard
-                  key={match.id}
-                  match={match}
-                  onSelect={openMatchDetail}
-                  isActive={detailOpen && selectedMatch?.id === match.id}
-                />
-              ))}
+      <MatchListSection
+        title="Upcoming fixtures"
+        emptyCopy="New fixtures will appear here once confirmed."
+        matches={grouped.upcoming}
+        onSelect={handleSelect}
+      />
+
+      <MatchListSection
+        title="Recent results"
+        emptyCopy="Results will land here right after the final whistle."
+        matches={grouped.finished}
+        onSelect={handleSelect}
+      />
+
+      <MatchDetailSheet match={selectedMatch} onClose={() => setSelectedMatch(null)} />
+    </>
+  );
+};
+
+type MatchListSectionProps = {
+  title: string;
+  emptyCopy: string;
+  matches: Match[];
+  onSelect: (match: Match) => void;
+};
+
+const MatchListSection = ({ title, emptyCopy, matches, onSelect }: MatchListSectionProps) => (
+  <section className="space-y-3">
+    <h2 className="section-title">{title}</h2>
+    {matches.length === 0 ? (
+      <div className="card">
+        <p className="muted text-sm">{emptyCopy}</p>
+      </div>
+    ) : (
+      <div className="space-y-2">
+        {matches.map((match) => (
+          <button
+            key={match.id}
+            type="button"
+            className="card w-full space-y-1 text-left transition hover:bg-white/20"
+            onClick={() => onSelect(match)}
+            aria-label={`View ${match.home} vs ${match.away}`}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-semibold text-white">
+                {match.home} <span className="text-white/60">vs</span> {match.away}
+              </p>
+              <span className={`text-xs font-semibold uppercase tracking-wide ${statusAccent[match.status]}`}>
+                {statusLabel[match.status]}
+              </span>
             </div>
-          )}
-        </section>
+            <p className="muted text-xs">
+              {formatKickoff(match)} • {match.venue}
+            </p>
+            <p className="text-sm text-white/80">{statusHelper(match)}</p>
+          </button>
+        ))}
+      </div>
+    )}
+  </section>
+);
 
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="section-title">Highlights & media</h2>
-            <Link href="/community" className="text-sm font-semibold text-white/80 underline">
-              More stories
-            </Link>
-          </div>
-          <HighlightsCarousel clips={feed.highlights} />
-        </section>
+type MatchDetailSheetProps = {
+  match: Match | null;
+  onClose: () => void;
+};
 
-        <section
-          ref={upcomingSectionRef}
-          tabIndex={-1}
-          aria-labelledby="upcoming-heading"
-          className="space-y-4"
-        >
-          <div className="flex items-center justify-between">
-            <h2 id="upcoming-heading" className="section-title">
-              Upcoming fixtures
+const useScrollLock = (active: boolean) => {
+  useEffect(() => {
+    if (!active) return;
+    const { body } = document;
+    const previous = body.style.overflow;
+    body.style.overflow = "hidden";
+    return () => {
+      body.style.overflow = previous;
+    };
+  }, [active]);
+};
+
+const MatchDetailSheet = ({ match, onClose }: MatchDetailSheetProps) => {
+  useScrollLock(Boolean(match));
+
+  useEffect(() => {
+    if (!match) return;
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [match, onClose]);
+
+  if (!match) {
+    return null;
+  }
+
+  const timeline = match.events ?? [];
+  const lineups = match.lineups;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 px-4 pb-8">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${match.home} vs ${match.away} detail`}
+        className="card w-full max-w-md space-y-4"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold text-white">
+              {match.home} vs {match.away}
             </h2>
-            <Link href="/tickets" className="text-sm font-semibold text-white/80 underline">
-              View tickets
-            </Link>
+            <p className="muted text-sm">
+              {formatKickoff(match)} • {match.venue}
+            </p>
+            {match.score ? (
+              <p className="text-sm font-semibold text-white">Score {formatScore(match)}</p>
+            ) : null}
           </div>
-          {upcomingMatches.length === 0 ? (
-            <EmptyState
-              title="Fixtures to be confirmed"
-              description="Once the federation releases new dates we&apos;ll drop them here."
-              icon="📅"
-            />
-          ) : (
-            <div className="flex gap-4 overflow-x-auto pb-2" role="list">
-              {upcomingMatches.map((match) => (
-                <MatchCard
-                  key={match.id}
-                  match={match}
-                  onSelect={openMatchDetail}
-                  isActive={detailOpen && selectedMatch?.id === match.id}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn-ghost px-3 py-1 text-sm"
+          >
+            Close
+          </button>
+        </div>
 
-        <section
-          ref={resultsSectionRef}
-          tabIndex={-1}
-          aria-labelledby="results-heading"
-          className="space-y-4"
-        >
-          <div className="flex items-center justify-between">
-            <h2 id="results-heading" className="section-title">
-              Recent results
-            </h2>
-            <span className="text-xs uppercase tracking-wide text-white/60">Last 3 matches</span>
+        <div className="space-y-2">
+          <h3 className="text-base font-semibold text-white">Timeline</h3>
+          {timeline.length === 0 ? (
+            <p className="muted text-sm">Timeline will appear once the match begins.</p>
+          ) : (
+            <ul className="space-y-2">
+              {timeline.map((event) => (
+                <li
+                  key={event.id}
+                  className="flex items-start gap-3 rounded-2xl bg-white/10 px-3 py-2"
+                >
+                  <span className="text-xs font-semibold text-white/70">{event.minute}'</span>
+                  <div className="space-y-1 text-sm text-white/90">
+                    <div className="flex items-center gap-2 text-white">
+                      <span aria-hidden="true">{eventIcon[event.type]}</span>
+                      <span>{event.description}</span>
+                    </div>
+                    {event.player ? (
+                      <p className="text-xs text-white/70">{event.player}</p>
+                    ) : null}
+                    {event.scoreline ? (
+                      <p className="text-xs text-white/70">Score {event.scoreline}</p>
+                    ) : null}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {lineups ? (
+          <div className="space-y-3">
+            <h3 className="text-base font-semibold text-white">Line-ups</h3>
+            <div className="grid gap-3">
+              {(["home", "away"] as const).map((side) => {
+                const lineup = lineups[side];
+                if (!lineup) return null;
+                const team = side === "home" ? match.home : match.away;
+                return (
+                  <div key={side} className="rounded-2xl bg-white/10 p-3 text-sm text-white/80">
+                    <div className="flex items-center justify-between text-white">
+                      <span className="font-semibold">{team}</span>
+                      <span className="text-xs text-white/70">{lineup.formation}</span>
+                    </div>
+                    <p className="text-xs text-white/60">Coach {lineup.coach}</p>
+                    <ul className="mt-2 space-y-1">
+                      {lineup.starters.map((player) => (
+                        <li
+                          key={`${side}-${player.number}-${player.name}`}
+                          className="flex items-center justify-between rounded-xl bg-white/5 px-3 py-1.5"
+                        >
+                          <span>
+                            {player.number.toString().padStart(2, "0")} {player.name}
+                          </span>
+                          {player.role ? (
+                            <span className="text-xs uppercase text-white/60">{player.role}</span>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          {finishedMatches.length === 0 ? (
-            <EmptyState
-              title="No recent results"
-              description="Rayon return to action soon. Meanwhile, explore classic replays in the media hub."
-              icon="📺"
-            />
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2" role="list">
-              {finishedMatches.map((match) => (
-                <MatchCard
-                  key={match.id}
-                  match={match}
-                  onSelect={openMatchDetail}
-                  isActive={detailOpen && selectedMatch?.id === match.id}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-
-        <StandingsTable table={feed.standings} updatedAt={lastUpdated ?? feed.updatedAt} />
-      </motion.main>
-
-      <MatchDetailSheet open={detailOpen} match={selectedMatch} onClose={handleCloseDetail} />
+        ) : null}
+      </div>
     </div>
   );
 };
