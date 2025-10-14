@@ -2,9 +2,22 @@ import { NextResponse } from 'next/server';
 
 import { AdminAuthError, requireAdminSession } from '@/app/admin/api/_lib/session';
 import { getSupabaseAdmin } from '@/app/admin/api/_lib/supabase';
+import type { Tables } from '@/integrations/supabase/types';
 
 type StatusSummary = Array<{ status: string; count: number }>;
 type GateThroughput = Array<{ gate: string; perMin: number; samples: number }>;
+
+const KNOWN_TICKET_STATUSES: readonly Tables<'ticket_orders'>['status'][] = [
+  'pending',
+  'paid',
+  'cancelled',
+  'expired',
+] as const;
+
+const isKnownTicketStatus = (
+  value: string,
+): value is Tables<'ticket_orders'>['status'] =>
+  KNOWN_TICKET_STATUSES.includes(value as Tables<'ticket_orders'>['status']);
 
 export async function GET() {
   try {
@@ -14,7 +27,10 @@ export async function GET() {
     const sinceIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
     // Grouped status counts
-    const statusSummaryPromise = supabase.from('ticket_orders').select('status');
+    const statusSummaryPromise = supabase
+      .from('ticket_orders')
+      .select('status, count:id', { head: false })
+      .group('status');
 
     const [passesCount, ordersCount, statusSummary, recentPasses] = await Promise.all([
       supabase.from('ticket_passes').select('id', { count: 'exact', head: true }),
@@ -28,25 +44,35 @@ export async function GET() {
     if (statusSummary.error) throw statusSummary.error;
     if (recentPasses.error) throw recentPasses.error;
 
-    const statusAggregate = Object.values(
-      (statusSummary.data ?? []).reduce<
-        Record<string, { status: string; count: number }>
-      >((acc, row) => {
-        const key = (row as { status?: string | null }).status ?? 'unknown';
-        acc[key] = acc[key]
-          ? { status: key, count: acc[key]!.count + 1 }
-          : { status: key, count: 1 };
-        return acc;
-      }, {}),
-    );
+    const statusAggregateByKey = new Map<string, { status: string; count: number }>();
 
-    const throughputByGate: GateThroughput = Object.values(
-      (recentPasses.data ?? []).reduce<Record<string, { gate: string; total: number }>>((acc, record: any) => {
-        const gate = record.gate ?? 'Unassigned';
-        acc[gate] = acc[gate] ? { gate, total: acc[gate]!.total + 1 } : { gate, total: 1 };
-        return acc;
-      }, {}),
-    ).map(({ gate, total }) => ({
+    for (const row of statusSummary.data ?? []) {
+      const parsed = row as { status?: string | null; count?: number | null };
+      const key = parsed.status ?? 'unknown';
+      const total = typeof parsed.count === 'number' ? parsed.count : Number(parsed.count ?? 0);
+      statusAggregateByKey.set(key, { status: key, count: total });
+    }
+
+    const statusAggregate: StatusSummary = [
+      ...KNOWN_TICKET_STATUSES.map((status) =>
+        statusAggregateByKey.get(status) ?? { status, count: 0 },
+      ),
+      ...Array.from(statusAggregateByKey.entries())
+        .filter(([status]) => !isKnownTicketStatus(status))
+        .map(([, value]) => value),
+    ];
+
+    const gateTotals: Record<string, { gate: string; total: number }> = {};
+
+    for (const item of recentPasses.data ?? []) {
+      const gateValue = (item as Record<string, unknown>).gate;
+      const gate = typeof gateValue === 'string' && gateValue.length > 0 ? gateValue : 'Unassigned';
+      gateTotals[gate] = gateTotals[gate]
+        ? { gate, total: gateTotals[gate]!.total + 1 }
+        : { gate, total: 1 };
+    }
+
+    const throughputByGate: GateThroughput = Object.values(gateTotals).map(({ gate, total }) => ({
       gate,
       perMin: Number((total / 60).toFixed(2)),
       samples: total,
