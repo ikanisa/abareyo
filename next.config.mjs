@@ -13,9 +13,6 @@ const nextConfig = {
     defaultLocale: 'en',
     localeDetection: false,
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   async headers() {
     return [
       {

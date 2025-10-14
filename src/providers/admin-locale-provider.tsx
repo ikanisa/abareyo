@@ -13,7 +13,7 @@ type AdminLocaleContextValue = {
 };
 
 const STORAGE_KEY = 'admin:locale';
-const DEFAULT_PREFIX = 'admin.nav';
+const DEFAULT_PREFIX = 'admin.';
 
 const AdminLocaleContext = createContext<AdminLocaleContextValue | undefined>(undefined);
 
