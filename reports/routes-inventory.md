@@ -1,6 +1,6 @@
 # Route Inventory
 
-Generated: 2025-10-13T17:09:58.194Z
+Generated: 2025-10-14T06:36:25.478Z
 
 Total routes: 70 (static: 65, dynamic: 5)
 
