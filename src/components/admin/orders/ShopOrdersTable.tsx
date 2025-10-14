@@ -7,6 +7,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { DataTable } from '@/components/admin/DataTable';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { AttachSmsModal } from '@/components/admin/orders/AttachSmsModal';
+import { useAdminSession } from '@/providers/admin-session-provider';
 import { AdminShopOrder, PaginatedResponse, fetchAdminShopOrders } from '@/lib/api/admin/orders';
 
 const statusFilters = ['all', 'pending', 'fulfilled', 'cancelled'] as const;
@@ -24,12 +26,14 @@ export type ShopOrdersTableProps = {
 
 export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
   const { toast } = useToast();
+  const { user } = useAdminSession();
   const [data, setData] = useState(initial.data);
   const [meta, setMeta] = useState(initial.meta);
   const [status, setStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [attachTarget, setAttachTarget] = useState<{ id: string; amount: number } | null>(null);
 
   const loadOrders = useCallback(
     async ({ page, search, status: nextStatus }: { page?: number; search?: string; status?: string }) => {
@@ -87,6 +91,23 @@ export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
     setMeta(initial.meta);
   }, [initial]);
 
+  const handleAttachOpen = useCallback((order: AdminShopOrder) => {
+    setAttachTarget({ id: order.id, amount: order.total });
+  }, []);
+
+  const handleModalClose = useCallback((nextOpen: boolean) => {
+    if (!nextOpen) {
+      setAttachTarget(null);
+    }
+  }, []);
+
+  const handleAttached = useCallback(() => {
+    setAttachTarget(null);
+    startTransition(() => {
+      void loadOrders({});
+    });
+  }, [loadOrders]);
+
   const columns = useMemo<ColumnDef<AdminShopOrder, unknown>[]>(
     () => [
       {
@@ -137,8 +158,20 @@ export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
           </span>
         ),
       },
+      {
+        header: 'Actions',
+        cell: ({ row }) => (
+          <div className="flex flex-wrap gap-2">
+            {row.original.status !== 'fulfilled' && row.original.status !== 'cancelled' ? (
+              <Button variant="outline" size="sm" onClick={() => handleAttachOpen(row.original)}>
+                Attach SMS
+              </Button>
+            ) : null}
+          </div>
+        ),
+      },
     ],
-    [],
+    [handleAttachOpen],
   );
 
   return (
@@ -167,6 +200,16 @@ export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
         onSearchChange={handleSearchChange}
         searchPlaceholder="Search order ID or email"
       />
+      {attachTarget ? (
+        <AttachSmsModal
+          open={Boolean(attachTarget)}
+          onOpenChange={handleModalClose}
+          entity={{ kind: 'order', id: attachTarget.id }}
+          amount={attachTarget.amount}
+          adminUserId={user?.id}
+          onAttached={handleAttached}
+        />
+      ) : null}
     </div>
   );
 };

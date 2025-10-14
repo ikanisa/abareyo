@@ -36,31 +36,29 @@ export function InstallPrompt() {
       setShow(true);
     };
 
-    window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+    window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
     return () => {
-      window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+      window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
     };
   }, []);
 
   useEffect(() => {
     if (!hasWindow()) return;
     try {
-      if (window.localStorage.getItem(PWA_OPT_IN_KEY) === 'true') {
+      if (window.localStorage.getItem(PWA_OPT_IN_KEY) === "true") {
         setShow(false);
       }
     } catch (error) {
-      console.warn('Unable to read stored PWA preference', error);
+      console.warn("Unable to read stored PWA preference", error);
     }
   }, []);
 
   // Render iOS guidance if necessary
   if (showIosPrompt) {
     return (
-      <div className="card break-words whitespace-normal break-words whitespace-normal fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
+      <div className="card break-words whitespace-normal fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
         <span>Install GIKUNDIRO App to your Home Screen</span>
-        <p className="text-xs text-white/70">
-          Tap the Share icon and select “Add to Home Screen”.
-        </p>
+        <p className="text-xs text-white/70">Tap the Share icon and select “Add to Home Screen”.</p>
         <button className="btn" onClick={() => setShowIosPrompt(false)}>
           Close
         </button>
@@ -68,33 +66,26 @@ export function InstallPrompt() {
     );
   }
 
-  if (!show) {
-    return null;
-  }
+  if (!show) return null;
 
   const handleInstall = async () => {
-    recordPwaOptIn({ reason: 'install' });
+    recordPwaOptIn({ reason: "install" });
     try {
       await deferredPrompt?.prompt();
     } catch (error) {
-      console.warn('PWA installation prompt failed', error);
+      console.warn("PWA installation prompt failed", error);
     } finally {
       setShow(false);
     }
   };
 
   return (
-    <div className="card break-words whitespace-normal break-words whitespace-normal fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
+    <div className="card break-words whitespace-normal fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
       <span>Install GIKUNDIRO App?</span>
       <button className="btn-primary" onClick={handleInstall}>
         Install
       </button>
-      <button
-        className="btn"
-        onClick={() => {
-          setShow(false);
-        }}
-      >
+      <button className="btn" onClick={() => setShow(false)}>
         Later
       </button>
     </div>
@@ -105,26 +96,22 @@ export function OfflineBanner() {
   const [offline, setOffline] = useState(false);
 
   useEffect(() => {
-    if (!hasWindow()) {
-      return () => {};
-    }
+    if (!hasWindow()) return () => {};
 
     const handleOnline = () => setOffline(false);
     const handleOffline = () => setOffline(true);
 
     setOffline(!navigator.onLine);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
-  if (!offline) {
-    return null;
-  }
+  if (!offline) return null;
 
   return (
     <div className="fixed inset-x-0 top-14 bg-yellow-500/20 p-2 text-center text-yellow-100">

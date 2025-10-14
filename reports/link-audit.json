@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2025-10-13T17:10:11.286Z",
+  "generatedAt": "2025-10-14T06:36:31.619Z",
   "scannedFiles": 356,
   "links": [
     {
@@ -555,10 +555,10 @@
     },
     {
       "source": "app/admin/(auth)/login/page.tsx",
-      "line": 58,
-      "column": 17,
-      "type": "next/link",
-      "target": "/",
+      "line": 11,
+      "column": 5,
+      "type": "router.push",
+      "target": "/admin",
       "internal": true
     },
     {
@@ -699,7 +699,7 @@
     },
     {
       "source": "app/_components/home/RewardsWidget.tsx",
-      "line": 140,
+      "line": 146,
       "column": 11,
       "type": "anchor",
       "target": "/more",

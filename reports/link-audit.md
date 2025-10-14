@@ -1,12 +1,12 @@
 # Link Audit
 
-Generated: 2025-10-13T17:10:11.286Z
+Generated: 2025-10-14T06:36:31.619Z
 
 Files scanned: 356
 
 | Source | Line | Type | Target | Notes |
 | --- | --- | --- | --- | --- |
-| `app/_components/home/RewardsWidget.tsx` | 140 | anchor | /more |  |
+| `app/_components/home/RewardsWidget.tsx` | 146 | anchor | /more |  |
 | `app/_components/match/MatchCard.tsx` | 103 | next/link | /tickets |  |
 | `app/_components/more/EventsWidget.tsx` | 23 | router.push | /events |  |
 | `app/_components/more/FooterBrand.tsx` | 24 | next/link | /settings/about |  |
@@ -33,7 +33,7 @@ Files scanned: 356
 | `app/(routes)/shop/[slug]/not-found.tsx` | 18 | next/link | / |  |
 | `app/(routes)/shop/ShopClientPage.tsx` | 113 | next/link | /cart |  |
 | `app/(routes)/shop/ShopClientPage.tsx` | 131 | next/link | /cart |  |
-| `app/admin/(auth)/login/page.tsx` | 58 | next/link | / |  |
+| `app/admin/(auth)/login/page.tsx` | 11 | router.push | /admin |  |
 | `app/cart/CartClientPage.tsx` | 133 | next/link | /shop |  |
 | `app/cart/error.tsx` | 17 | next/link | /shop |  |
 | `app/cart/error.tsx` | 20 | next/link | / |  |
