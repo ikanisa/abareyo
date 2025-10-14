@@ -28,8 +28,14 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Type check
+        run: npm run type-check
+
       - name: Unit tests
-        run: npm run test
+        run: npm run test:unit
+
+      - name: Build
+        run: npm run build
 
       - name: Install backend deps
         working-directory: backend
@@ -51,12 +57,12 @@ jobs:
       # E2E smoke tests with mocked API (guarded by E2E_API_MOCKS)
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
-      - name: Run E2E smokes (mocked)
+      - name: Run admin smoke tests
         env:
           E2E_API_MOCKS: '1'
           NEXT_PUBLIC_BACKEND_URL: 'http://localhost:3000/api/e2e'
-        run: npm run test:e2e
-      - name: Run accessibility audits (axe)
+        run: npx playwright test tests/e2e/admin-smokes.spec.ts
+      - name: Run accessibility smoke tests
         env:
           E2E_API_MOCKS: '1'
           NEXT_PUBLIC_BACKEND_URL: 'http://localhost:3000/api/e2e'

@@ -23,7 +23,9 @@ export function InstallPrompt() {
     // Detect iOS Safari (no beforeinstallprompt event) and show a custom message
     const ua = window.navigator.userAgent.toLowerCase();
     const isiOS = /iphone|ipad|ipod/.test(ua);
-    const inStandalone = ('standalone' in window.navigator) && (window.navigator as any).standalone;
+    const navigatorWithStandalone = window.navigator as Navigator & { standalone?: boolean };
+    const inStandalone =
+      "standalone" in navigatorWithStandalone && Boolean(navigatorWithStandalone.standalone);
     if (isiOS && !inStandalone) {
       setShowIosPrompt(true);
     }

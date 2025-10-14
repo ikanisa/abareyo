@@ -1,21 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import type { ReactNode } from "react";
-
-import {
-  communityHighlights,
-  eventsSchedule,
-  fundraisingCampaigns,
-  heroActions,
-  heroContent,
-  liveTicker,
-  membershipBenefits,
-  membershipCta,
-  shopPromos,
-  sponsors,
-  stories,
-  upcomingFixtures,
-  walletSummary,
-} from "@/app/_config/home";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import Feed from "@/app/_components/home/Feed";
 import RewardsWidget from "@/app/_components/home/RewardsWidget";
@@ -23,25 +10,57 @@ import PartnerTiles from "@/app/_components/home/PartnerTiles";
 import GamificationStrip from "@/app/_components/ui/GamificationStrip";
 import QuickTiles from "@/app/_components/ui/QuickTiles";
 import EmptyState from "@/app/_components/ui/EmptyState";
-
 import HomeInteractiveLayer from "./HomeInteractiveLayer";
-import {
-  activePolicy,
-  insuranceQuoteTemplate,
-  partnerServicesPromo,
-  type PartnerServicesPromo,
-} from "@/app/_config/services";
+import { Skeleton } from "@/components/ui/skeleton";
+import type {
+  GamificationTileWithProgress,
+  HomeSurfaceData,
+  QuickActionTileWithStat,
+} from "@/lib/api/home";
+import { buildHomeSurfaceData } from "@/lib/home/surface-data";
+import { trackHomeInteraction, trackHomeSurfaceViewed } from "@/lib/observability";
+import type { PartnerServicesPromo } from "@/app/_config/services";
 
-const heroButtonClasses = (variant: (typeof heroActions)[number]["variant"]) =>
-  variant === "primary" ? "btn-primary" : "btn";
+import { useHomeContent } from "./useHomeContent";
 
-const formatKickoff = () => `${heroContent.kickoff} — ${heroContent.subheadline}`;
+const HOME_SURFACE_CACHE_KEY = "home-surface-cache-v1";
 
-const StoryBadge = ({ label }: { label: string }) => (
-  <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide">{label}</span>
-);
+const ctaButtonClasses = (
+  variant:
+    | HomeSurfaceData["wallet"]["actions"][number]["variant"]
+    | HomeSurfaceData["hero"]["actions"][number]["variant"],
+) => (variant === "primary" ? "btn-primary" : "btn");
 
-const StoriesRail = () => {
+const formatFixtureDate = (iso: string) => {
+  const date = new Date(iso);
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+};
+
+const StoriesRail = ({
+  stories,
+  isLoading,
+  onStoryPress,
+}: {
+  stories: HomeSurfaceData["stories"];
+  isLoading: boolean;
+  onStoryPress?: (story: HomeSurfaceData["stories"][number]) => void;
+}) => {
+  if (isLoading) {
+    return (
+      <div className="flex gap-4 overflow-x-hidden pb-1" aria-hidden>
+        {Array.from({ length: 3 }).map((_, index) => (
+          <Skeleton key={`story-skeleton-${index}`} className="h-36 min-w-[180px] rounded-3xl bg-white/10" />
+        ))}
+      </div>
+    );
+  }
+
   if (stories.length === 0) {
     return (
       <EmptyState
@@ -62,10 +81,11 @@ const StoriesRail = () => {
           role="listitem"
           aria-label={`${story.title} (${story.duration})`}
           className="relative min-w-[180px] shrink-0 rounded-3xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 p-[1px]"
+          onClick={() => onStoryPress?.(story)}
         >
           <div className={`flex h-full flex-col justify-between rounded-3xl bg-gradient-to-br ${story.accent} p-5 text-white`}>
             <div className="space-y-3">
-              <StoryBadge label={story.category} />
+              <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide">{story.category}</span>
               <h3 className="text-lg font-semibold leading-tight">{story.title}</h3>
             </div>
             <span className="mt-6 text-sm text-white/80">{story.duration} read</span>
@@ -76,15 +96,28 @@ const StoriesRail = () => {
   );
 };
 
-const tickerTypeStyles: Record<(typeof liveTicker)[number]["type"], string> = {
+const tickerTypeStyles: Record<HomeSurfaceData["liveTicker"][number]["type"], string> = {
   goal: "bg-emerald-500/15 text-emerald-100",
   card: "bg-amber-500/15 text-amber-100",
   substitution: "bg-blue-500/15 text-blue-100",
   info: "bg-white/10 text-white/80",
 };
 
-const LiveTicker = () => {
-  if (liveTicker.length === 0) {
+const LiveTicker = ({ updates, isLoading }: { updates: HomeSurfaceData["liveTicker"]; isLoading: boolean }) => {
+  if (isLoading) {
+    return (
+      <div className="card space-y-3" aria-hidden>
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div key={`ticker-skeleton-${index}`} className="flex items-start gap-3">
+            <Skeleton className="h-6 w-12 rounded-full bg-white/10" />
+            <Skeleton className="h-6 flex-1 rounded-full bg-white/10" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (updates.length === 0) {
     return (
       <EmptyState
         title="Match updates resume soon"
@@ -95,8 +128,8 @@ const LiveTicker = () => {
   }
 
   return (
-    <div className="card break-words whitespace-normal break-words whitespace-normal space-y-3" aria-live="polite">
-      {liveTicker.map((update) => (
+    <div className="card space-y-3" aria-live="polite">
+      {updates.map((update) => (
         <div key={update.id} className="flex items-start gap-3">
           <span className={`rounded-full px-2 py-1 text-xs font-semibold ${tickerTypeStyles[update.type]}`}>
             {update.minute}'
@@ -108,19 +141,30 @@ const LiveTicker = () => {
   );
 };
 
-const formatFixtureDate = (iso: string) => {
-  const date = new Date(iso);
-  return new Intl.DateTimeFormat(undefined, {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-};
+const UpcomingFixtures = ({
+  fixtures,
+  isLoading,
+  onFixturePress,
+}: {
+  fixtures: HomeSurfaceData["fixtures"];
+  isLoading: boolean;
+  onFixturePress?: (fixture: HomeSurfaceData["fixtures"][number]) => void;
+}) => {
+  if (isLoading) {
+    return (
+      <div className="space-y-3" aria-hidden>
+        {Array.from({ length: 2 }).map((_, index) => (
+          <div key={`fixture-skeleton-${index}`} className="card space-y-3">
+            <Skeleton className="h-6 w-48 bg-white/10" />
+            <Skeleton className="h-4 w-32 bg-white/10" />
+            <Skeleton className="h-9 w-full bg-white/10" />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
-const UpcomingFixtures = () => {
-  if (upcomingFixtures.length === 0) {
+  if (fixtures.length === 0) {
     return (
       <EmptyState
         title="Fixtures to be announced"
@@ -133,8 +177,8 @@ const UpcomingFixtures = () => {
 
   return (
     <div className="space-y-3">
-      {upcomingFixtures.map((fixture) => (
-        <article key={fixture.id} className="card break-words whitespace-normal break-words whitespace-normal flex flex-col gap-3">
+      {fixtures.map((fixture) => (
+        <article key={fixture.id} className="card flex flex-col gap-3">
           <div className="flex flex-col gap-1">
             <h3 className="text-lg font-semibold">Rayon Sports vs {fixture.opponent}</h3>
             <p className="text-sm text-white/70">{fixture.competition}</p>
@@ -144,7 +188,11 @@ const UpcomingFixtures = () => {
             <span className="rounded-full bg-white/10 px-3 py-1">{fixture.venue}</span>
             <span className="rounded-full bg-white/10 px-3 py-1">{fixture.broadcast}</span>
           </div>
-          <Link className="btn-primary w-full text-center" href="/tickets">
+          <Link
+            className="btn-primary w-full text-center"
+            href="/tickets"
+            onClick={() => onFixturePress?.(fixture)}
+          >
             View tickets
           </Link>
         </article>
@@ -153,51 +201,71 @@ const UpcomingFixtures = () => {
   );
 };
 
-const WalletSummary = () => {
+const WalletSummary = ({
+  summary,
+  isLoading,
+  onAction,
+}: {
+  summary: HomeSurfaceData["wallet"];
+  isLoading: boolean;
+  onAction?: (action: HomeSurfaceData["wallet"]["actions"][number]) => void;
+}) => {
+  if (isLoading) {
+    return (
+      <div className="card space-y-5" aria-hidden>
+        <Skeleton className="h-6 w-32 bg-white/10" />
+        <Skeleton className="h-10 w-40 bg-white/10" />
+        <Skeleton className="h-4 w-48 bg-white/10" />
+        <div className="grid grid-cols-2 gap-3">
+          <Skeleton className="h-16 rounded-2xl bg-white/10" />
+          <Skeleton className="h-16 rounded-2xl bg-white/10" />
+        </div>
+      </div>
+    );
+  }
+
   const currencyFormatter = new Intl.NumberFormat(undefined, {
     style: "currency",
-    currency: walletSummary.currency,
+    currency: summary.currency,
     maximumFractionDigits: 0,
   });
-
-  const formattedBalance = currencyFormatter.format(walletSummary.balance);
+  const formattedBalance = currencyFormatter.format(summary.balance);
 
   return (
-    <div className="card break-words whitespace-normal break-words whitespace-normal space-y-5" aria-labelledby="wallet-balance-heading">
+    <div className="card space-y-5" aria-labelledby="wallet-balance-heading">
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <h3 id="wallet-balance-heading" className="text-lg font-semibold">
             Wallet balance
           </h3>
           <span className="rounded-full bg-white/15 px-3 py-1 text-xs uppercase tracking-wide">
-            {walletSummary.tier} tier
+            {summary.tier} tier
           </span>
         </div>
         <p className="text-3xl font-bold text-white">{formattedBalance}</p>
-        <p className="text-sm text-white/70">{walletSummary.lastUpdated}</p>
+        <p className="text-sm text-white/70">{summary.lastUpdated}</p>
       </div>
       <div className="grid grid-cols-2 gap-3 text-sm">
-        <div className="rounded-2xl bg-white/10 p-3">
-          <p className="text-xs uppercase tracking-wide text-white/60">Loyalty points</p>
-          <p className="mt-1 text-xl font-semibold text-white">{walletSummary.loyaltyPoints}</p>
-        </div>
-        <div className="rounded-2xl bg-white/10 p-3">
-          <p className="text-xs uppercase tracking-wide text-white/60">Quick action</p>
-          <p className="mt-1 text-sm text-white/80">Tap a CTA below to manage your balance.</p>
-        </div>
+        {summary.insights.slice(0, 2).map((insight) => (
+          <div key={insight.label} className="rounded-2xl bg-white/10 p-3">
+            <p className="text-xs uppercase tracking-wide text-white/60">{insight.label}</p>
+            <p className="mt-1 text-xl font-semibold text-white">{insight.value}</p>
+          </div>
+        ))}
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        {walletSummary.actions.length === 0 ? (
+        {summary.actions.length === 0 ? (
           <p className="text-sm text-white/70">
             Wallet top ups are temporarily unavailable. Try again later or visit the ticket office.
           </p>
         ) : (
-          walletSummary.actions.map((action) => (
+          summary.actions.map((action) => (
             <Link
               key={action.id}
               href={action.href}
               aria-label={action.ariaLabel}
-              className={`${heroButtonClasses(action.variant)} w-full text-center`}
+              className={`${ctaButtonClasses(action.variant)} w-full text-center`}
+              onClick={() => onAction?.(action)}
             >
               {action.label}
             </Link>
@@ -208,31 +276,16 @@ const WalletSummary = () => {
   );
 };
 
-const resolvePartnerBanner = (): PartnerServicesPromo | null => {
-  const ticketPerk = insuranceQuoteTemplate.ticketPerk;
-  const hasUnlockedTicket =
-    Boolean(ticketPerk?.eligible) && Boolean(activePolicy) && !activePolicy.ticketPerkIssued;
-
-  if (hasUnlockedTicket) {
-    return {
-      id: "ticket-perk-unlocked",
-      badge: "Perk unlocked",
-      message: "Free Blue Zone ticket ready to claim",
-      description: "Your Akili Insurance policy unlocked a match ticket. Tap to confirm your seat.",
-      href: "/services?focus=insurance#policy-card",
-      cta: "Claim ticket",
-    } satisfies PartnerServicesPromo;
+const PartnerServicesBanner = ({
+  banner,
+  isLoading,
+}: {
+  banner: PartnerServicesPromo | null;
+  isLoading: boolean;
+}) => {
+  if (isLoading) {
+    return <Skeleton className="h-32 w-full rounded-3xl bg-white/10" aria-hidden />;
   }
-
-  if (partnerServicesPromo) {
-    return partnerServicesPromo;
-  }
-
-  return null;
-};
-
-const PartnerServicesBanner = () => {
-  const banner = resolvePartnerBanner();
 
   if (!banner) {
     return null;
@@ -241,7 +294,7 @@ const PartnerServicesBanner = () => {
   return (
     <Link
       href={banner.href}
-      className="card break-words whitespace-normal break-words whitespace-normal relative flex flex-col gap-3 overflow-hidden bg-white/10"
+      className="card relative flex flex-col gap-3 overflow-hidden bg-white/10"
       aria-label={banner.message}
     >
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-transparent to-emerald-500/10" aria-hidden="true" />
@@ -259,28 +312,38 @@ const PartnerServicesBanner = () => {
   );
 };
 
-const MembershipSection = () => {
-  if (membershipBenefits.length === 0) {
+const MembershipSection = ({
+  membership,
+  isLoading,
+}: {
+  membership: HomeSurfaceData["membership"];
+  isLoading: boolean;
+}) => {
+  if (isLoading) {
+    return <Skeleton className="h-48 w-full rounded-3xl bg-white/10" aria-hidden />;
+  }
+
+  if (membership.benefits.length === 0) {
     return (
       <EmptyState
         title="Membership perks being refreshed"
         description="We are updating the benefit catalogue. Come back soon to renew or upgrade your plan."
         icon="💙"
-        action={membershipCta?.action}
+        action={membership.cta.action}
       />
     );
   }
 
   return (
-    <div className="card break-words whitespace-normal break-words whitespace-normal space-y-4">
+    <div className="card space-y-4">
       <div>
-        <h3 className="text-xl font-semibold">{membershipCta.heading}</h3>
-        <p className="text-sm text-white/70">{membershipCta.description}</p>
+        <h3 className="text-xl font-semibold">{membership.cta.heading}</h3>
+        <p className="text-sm text-white/70">{membership.cta.description}</p>
       </div>
       <ul className="space-y-3">
-        {membershipBenefits.map((benefit) => (
+        {membership.benefits.map((benefit) => (
           <li key={benefit.id} className="flex items-start gap-3">
-            <span aria-hidden="true" className="mt-1 text-lg">
+            <span aria-hidden className="mt-1 text-lg">
               ⭐
             </span>
             <div>
@@ -290,15 +353,25 @@ const MembershipSection = () => {
           </li>
         ))}
       </ul>
-      <Link className="btn-primary w-full text-center" href={membershipCta.action.href}>
-        {membershipCta.action.label}
+      <Link className="btn-primary w-full text-center" href={membership.cta.action.href}>
+        {membership.cta.action.label}
       </Link>
     </div>
   );
 };
 
-const ShopPromotions = () => {
-  if (shopPromos.length === 0) {
+const ShopPromotions = ({ promos, isLoading }: { promos: HomeSurfaceData["shopPromos"]; isLoading: boolean }) => {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2" aria-hidden>
+        {Array.from({ length: 2 }).map((_, index) => (
+          <Skeleton key={`shop-skeleton-${index}`} className="h-36 rounded-3xl bg-white/10" />
+        ))}
+      </div>
+    );
+  }
+
+  if (promos.length === 0) {
     return (
       <EmptyState
         title="No merch drops today"
@@ -311,11 +384,11 @@ const ShopPromotions = () => {
 
   return (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-2" role="list">
-      {shopPromos.map((promo) => (
+      {promos.map((promo) => (
         <Link
           key={promo.id}
           href={promo.href}
-          className="card break-words whitespace-normal break-words whitespace-normal flex h-full flex-col justify-between gap-3"
+          className="card flex h-full flex-col justify-between gap-3"
           aria-label={`${promo.title} promotion`}
           role="listitem"
         >
@@ -333,8 +406,24 @@ const ShopPromotions = () => {
   );
 };
 
-const FundraisingSpotlight = () => {
-  if (fundraisingCampaigns.length === 0) {
+const FundraisingSpotlight = ({
+  campaigns,
+  isLoading,
+}: {
+  campaigns: HomeSurfaceData["fundraising"];
+  isLoading: boolean;
+}) => {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2" aria-hidden>
+        {Array.from({ length: 2 }).map((_, index) => (
+          <Skeleton key={`fundraising-skeleton-${index}`} className="h-40 rounded-3xl bg-white/10" />
+        ))}
+      </div>
+    );
+  }
+
+  if (campaigns.length === 0) {
     return (
       <EmptyState
         title="No active fundraising campaigns"
@@ -347,49 +436,55 @@ const FundraisingSpotlight = () => {
 
   return (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-2" role="list">
-      {fundraisingCampaigns.map((campaign) => {
-        const progress = Math.min(100, Math.round((campaign.raised / campaign.target) * 100));
-
-        return (
-          <Link
-            key={campaign.id}
-            href={campaign.href}
-            className="card break-words whitespace-normal break-words whitespace-normal space-y-4"
-            aria-label={`${campaign.title} fundraising campaign`}
-            role="listitem"
-          >
-            <div>
-              <h3 className="text-lg font-semibold">{campaign.title}</h3>
-              <p className="text-sm text-white/70">{campaign.description}</p>
+      {campaigns.map((campaign) => (
+        <Link
+          key={campaign.id}
+          href={campaign.href}
+          className="card space-y-4"
+          aria-label={`${campaign.title} fundraising campaign`}
+          role="listitem"
+        >
+          <div>
+            <h3 className="text-lg font-semibold">{campaign.title}</h3>
+            <p className="text-sm text-white/70">{campaign.description}</p>
+          </div>
+          <div>
+            <div className="mb-2 flex items-center justify-between text-xs text-white/70">
+              <span>Raised {campaign.progress}%</span>
+              <span>
+                {campaign.raised.toLocaleString()} / {campaign.target.toLocaleString()} RWF
+              </span>
             </div>
-            <div>
-              <div className="mb-2 flex items-center justify-between text-xs text-white/70">
-                <span>Raised {progress}%</span>
-                <span>
-                  {campaign.raised.toLocaleString()} / {campaign.target.toLocaleString()} RWF
-                </span>
-              </div>
-              <div
-                className="h-2 w-full overflow-hidden rounded-full bg-white/10"
-                role="progressbar"
-                aria-valuenow={progress}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label={`${campaign.title} progress ${progress}%`}
-              >
-                <div className="h-full bg-blue-400" style={{ width: `${progress}%` }} />
-              </div>
+            <div
+              className="h-2 w-full overflow-hidden rounded-full bg-white/10"
+              role="progressbar"
+              aria-valuenow={campaign.progress}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`${campaign.title} progress ${campaign.progress}%`}
+            >
+              <div className="h-full bg-blue-400" style={{ width: `${campaign.progress}%` }} />
             </div>
-            <span className="text-sm font-semibold text-white/80">Support now →</span>
-          </Link>
-        );
-      })}
+          </div>
+          <span className="text-sm font-semibold text-white/80">Support now →</span>
+        </Link>
+      ))}
     </div>
   );
 };
 
-const EventsSchedule = () => {
-  if (eventsSchedule.length === 0) {
+const EventsSchedule = ({ events, isLoading }: { events: HomeSurfaceData["events"]; isLoading: boolean }) => {
+  if (isLoading) {
+    return (
+      <div className="card space-y-3" aria-hidden>
+        {Array.from({ length: 3 }).map((_, index) => (
+          <Skeleton key={`event-skeleton-${index}`} className="h-5 w-full bg-white/10" />
+        ))}
+      </div>
+    );
+  }
+
+  if (events.length === 0) {
     return (
       <EmptyState
         title="No upcoming events"
@@ -400,10 +495,10 @@ const EventsSchedule = () => {
   }
 
   return (
-    <div className="card break-words whitespace-normal break-words whitespace-normal space-y-4">
+    <div className="card space-y-4">
       <h3 className="text-lg font-semibold">Upcoming club events</h3>
       <ul className="space-y-3">
-        {eventsSchedule.map((event) => (
+        {events.map((event) => (
           <li key={event.id} className="flex flex-col gap-1">
             <Link className="font-medium text-white" href={event.href}>
               {event.title}
@@ -417,8 +512,26 @@ const EventsSchedule = () => {
   );
 };
 
-const CommunityHighlights = () => {
-  if (communityHighlights.length === 0) {
+const CommunityHighlights = ({
+  highlights,
+  isLoading,
+  onHighlightPress,
+}: {
+  highlights: HomeSurfaceData["community"];
+  isLoading: boolean;
+  onHighlightPress?: (highlight: HomeSurfaceData["community"][number]) => void;
+}) => {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2" aria-hidden>
+        {Array.from({ length: 2 }).map((_, index) => (
+          <Skeleton key={`community-skeleton-${index}`} className="h-32 rounded-3xl bg-white/10" />
+        ))}
+      </div>
+    );
+  }
+
+  if (highlights.length === 0) {
     return (
       <EmptyState
         title="Community news pending"
@@ -431,13 +544,14 @@ const CommunityHighlights = () => {
 
   return (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-2" role="list">
-      {communityHighlights.map((highlight) => (
+      {highlights.map((highlight) => (
         <Link
           key={highlight.id}
           href={highlight.href}
-          className="card break-words whitespace-normal break-words whitespace-normal flex h-full flex-col justify-between gap-3"
+          className="card flex h-full flex-col justify-between gap-3"
           aria-label={highlight.title}
           role="listitem"
+          onClick={() => onHighlightPress?.(highlight)}
         >
           <div>
             <h3 className="text-lg font-semibold">{highlight.title}</h3>
@@ -450,7 +564,20 @@ const CommunityHighlights = () => {
   );
 };
 
-const SponsorsGrid = () => {
+const SponsorsGrid = ({ sponsors, isLoading }: { sponsors: HomeSurfaceData["sponsors"]; isLoading: boolean }) => {
+  if (isLoading) {
+    return (
+      <div className="card space-y-4" aria-hidden>
+        <Skeleton className="h-6 w-48 bg-white/10" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <Skeleton key={`sponsor-skeleton-${index}`} className="h-20 rounded-2xl bg-white/10" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (sponsors.length === 0) {
     return (
       <EmptyState
@@ -463,7 +590,7 @@ const SponsorsGrid = () => {
   }
 
   return (
-    <div className="card break-words whitespace-normal break-words whitespace-normal space-y-4">
+    <div className="card space-y-4">
       <h3 className="text-lg font-semibold">Our partners</h3>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" role="list">
         {sponsors.map((sponsor) => (
@@ -487,115 +614,214 @@ const Section = ({ title, children }: { title: string; children: ReactNode }) =>
     {children}
   </section>
 );
+const HomeClient = ({ hero }: { hero?: ReactNode }) => {
+  const homeQuery = useHomeContent();
+  const { data, isLoading, isError, refetch } = homeQuery;
 
-const HeroHeading = () => (
-  <div>
-    <h1 className="text-2xl font-bold md:text-3xl" aria-live="polite">
-      {heroContent.headline}
-    </h1>
-    <p className="muted mt-1">{formatKickoff()}</p>
-  </div>
-);
+  const fallbackData = useMemo(() => buildHomeSurfaceData(), []);
+  const [cachedData, setCachedData] = useState<HomeSurfaceData>(() => fallbackData);
+  const [isOffline, setIsOffline] = useState<boolean>(() => {
+    if (typeof navigator === "undefined") {
+      return false;
+    }
 
-const HeroActions = () => {
-  if (heroActions.length === 0) {
-    return (
-      <EmptyState
-        title="Actions unavailable"
-        description="Primary CTAs appear here once enrolment windows open."
-        icon="✨"
-      />
-    );
-  }
+    return navigator.onLine === false;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      const stored = window.localStorage.getItem(HOME_SURFACE_CACHE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as HomeSurfaceData;
+        setCachedData(parsed);
+      }
+    } catch (storageError) {
+      console.warn("Failed to hydrate home cache", storageError);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!data) {
+      return;
+    }
+
+    setCachedData(data);
+
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(HOME_SURFACE_CACHE_KEY, JSON.stringify(data));
+    } catch (storageError) {
+      console.warn("Failed to persist home cache", storageError);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    setIsOffline(window.navigator.onLine === false);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  const resolvedData = data ?? cachedData ?? fallbackData;
+
+  const isInitialLoading = isLoading && !data;
+
+  useEffect(() => {
+    if (!data) {
+      return;
+    }
+
+    const modules = [
+      data.stories.length > 0 ? "stories" : null,
+      data.liveTicker.length > 0 ? "liveTicker" : null,
+      data.fixtures.length > 0 ? "fixtures" : null,
+      data.quickActions.length > 0 ? "quickActions" : null,
+      data.gamification.length > 0 ? "gamification" : null,
+      data.community.length > 0 ? "community" : null,
+      data.sponsors.length > 0 ? "sponsors" : null,
+      data.wallet.actions.length > 0 ? "wallet" : null,
+    ].filter((value): value is string => Boolean(value));
+
+    void trackHomeSurfaceViewed({ generatedAt: data.meta.generatedAt, modules });
+  }, [data]);
+
+  const handleQuickActionSelect = useCallback((tile: QuickActionTileWithStat) => {
+    void trackHomeInteraction({ action: "quick-action", id: tile.id, label: tile.label });
+  }, []);
+
+  const handleGamificationSelect = useCallback((tile: GamificationTileWithProgress) => {
+    void trackHomeInteraction({ action: "gamification", id: tile.id, label: tile.label });
+  }, []);
+
+  const handleStoryPress = useCallback((story: HomeSurfaceData["stories"][number]) => {
+    void trackHomeInteraction({ action: "story", id: story.id, label: story.title });
+  }, []);
+
+  const handleFixturePress = useCallback((fixture: HomeSurfaceData["fixtures"][number]) => {
+    void trackHomeInteraction({ action: "fixture", id: fixture.id, label: fixture.opponent });
+  }, []);
+
+  const handleWalletAction = useCallback((action: HomeSurfaceData["wallet"]["actions"][number]) => {
+    void trackHomeInteraction({ action: "wallet-action", id: action.id, label: action.label });
+  }, []);
+
+  const handleCommunityPress = useCallback((highlight: HomeSurfaceData["community"][number]) => {
+    void trackHomeInteraction({ action: "community", id: highlight.id, label: highlight.title });
+  }, []);
+
+  const quickActions = resolvedData?.quickActions ?? [];
+  const gamification = resolvedData?.gamification ?? [];
+  const feedItemsList = resolvedData?.feed ?? [];
+  const stories = resolvedData?.stories ?? [];
+  const liveTickerUpdates = resolvedData?.liveTicker ?? [];
+  const fixtures = resolvedData?.fixtures ?? [];
+  const wallet = resolvedData?.wallet ?? fallbackData.wallet;
+  const membership = resolvedData?.membership ?? fallbackData.membership;
+  const shopPromos = resolvedData?.shopPromos ?? [];
+  const fundraising = resolvedData?.fundraising ?? [];
+  const events = resolvedData?.events ?? [];
+  const community = resolvedData?.community ?? [];
+  const sponsorsList = resolvedData?.sponsors ?? [];
+  const partnerBanner = resolvedData?.partnerServicesBanner ?? null;
+
+  const offlineMode = isOffline || (isError && typeof navigator !== "undefined" && navigator.onLine === false);
+
+  const handleFeedRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   return (
-    <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3">
-      {heroActions.map((action) => (
-        <Link
-          key={action.id}
-          href={action.href}
-          aria-label={action.ariaLabel}
-          className={`${heroButtonClasses(action.variant)} w-full text-center`}
-        >
-          {action.label}
-        </Link>
-      ))}
-    </div>
+    <HomeInteractiveLayer>
+      {hero}
+
+      <Section title="Quick Actions">
+        <div className="space-y-3">
+          <QuickTiles tiles={quickActions} isLoading={isInitialLoading} onSelect={handleQuickActionSelect} />
+          <RewardsWidget />
+          <PartnerServicesBanner banner={partnerBanner} isLoading={isInitialLoading} />
+        </div>
+      </Section>
+
+      <Section title="Partner Services">
+        <PartnerTiles />
+      </Section>
+
+      <Section title="Stories">
+        <StoriesRail stories={stories} isLoading={isInitialLoading} onStoryPress={handleStoryPress} />
+      </Section>
+
+      <Section title="Live Match Centre">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <LiveTicker updates={liveTickerUpdates} isLoading={isInitialLoading} />
+          <UpcomingFixtures fixtures={fixtures} isLoading={isInitialLoading} onFixturePress={handleFixturePress} />
+        </div>
+      </Section>
+
+      <Section title="Latest">
+        <Feed items={feedItemsList} isLoading={isInitialLoading} isOffline={offlineMode} onRetry={handleFeedRetry} />
+      </Section>
+
+      <Section title="Wallet">
+        <WalletSummary summary={wallet} isLoading={isInitialLoading} onAction={handleWalletAction} />
+      </Section>
+
+      <Section title="Membership">
+        <MembershipSection membership={membership} isLoading={isInitialLoading} />
+      </Section>
+
+      <Section title="Play & Earn">
+        <GamificationStrip
+          tiles={gamification}
+          isLoading={isInitialLoading}
+          isOffline={offlineMode}
+          onSelect={handleGamificationSelect}
+        />
+      </Section>
+
+      <Section title="Shop Promos">
+        <ShopPromotions promos={shopPromos} isLoading={isInitialLoading} />
+      </Section>
+
+      <Section title="Fundraising Spotlight">
+        <FundraisingSpotlight campaigns={fundraising} isLoading={isInitialLoading} />
+      </Section>
+
+      <Section title="Events">
+        <EventsSchedule events={events} isLoading={isInitialLoading} />
+      </Section>
+
+      <Section title="Community">
+        <CommunityHighlights
+          highlights={community}
+          isLoading={isInitialLoading}
+          onHighlightPress={handleCommunityPress}
+        />
+      </Section>
+
+      <Section title="Sponsors">
+        <SponsorsGrid sponsors={sponsorsList} isLoading={isInitialLoading} />
+      </Section>
+    </HomeInteractiveLayer>
   );
 };
-
-const Hero = () => (
-  <section className="card break-words whitespace-normal break-words whitespace-normal overflow-hidden animate-in fade-in slide-in-from-bottom-2 motion-reduce:animate-none">
-    <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-      <HeroHeading />
-      <HeroActions />
-    </div>
-  </section>
-);
-
-const HomeClient = () => (
-  <HomeInteractiveLayer>
-    <Hero />
-
-    <Section title="Quick Actions">
-      <div className="space-y-3">
-        <QuickTiles />
-        <RewardsWidget />
-        <PartnerServicesBanner />
-      </div>
-    </Section>
-
-    <Section title="Partner Services">
-      <PartnerTiles />
-    </Section>
-
-    <Section title="Stories">
-      <StoriesRail />
-    </Section>
-
-    <Section title="Live Match Centre">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <LiveTicker />
-        <UpcomingFixtures />
-      </div>
-    </Section>
-
-    <Section title="Latest">
-      <Feed />
-    </Section>
-
-    <Section title="Wallet">
-      <WalletSummary />
-    </Section>
-
-    <Section title="Membership">
-      <MembershipSection />
-    </Section>
-
-    <Section title="Play & Earn">
-      <GamificationStrip />
-    </Section>
-
-    <Section title="Shop Promos">
-      <ShopPromotions />
-    </Section>
-
-    <Section title="Fundraising Spotlight">
-      <FundraisingSpotlight />
-    </Section>
-
-    <Section title="Events">
-      <EventsSchedule />
-    </Section>
-
-    <Section title="Community">
-      <CommunityHighlights />
-    </Section>
-
-    <Section title="Sponsors">
-      <SponsorsGrid />
-    </Section>
-  </HomeInteractiveLayer>
-);
 
 export default HomeClient;
