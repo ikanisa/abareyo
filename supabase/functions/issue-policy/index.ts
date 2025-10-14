@@ -28,8 +28,8 @@ serve(async (_req) => {
     new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 
   async function findNearestUpcomingMatch() {
-    // Try matches.date
     const now = nowIso();
+    // Try matches.date
     let { data: byDate, error: dateErr } = await db
       .from("matches")
       .select("*")
@@ -59,7 +59,6 @@ serve(async (_req) => {
       .eq("user_id", userId)
       .eq("momo_ref", "FREE-TICKET-PERK")
       .limit(1);
-
     if (t1 && t1.length) return true;
 
     const { data: t2 } = await db
@@ -101,7 +100,7 @@ serve(async (_req) => {
     if (orderErr || !order?.id) return false;
 
     // Create one Blue pass; store a token hash (raw token or UUID)
-    const rawToken = crypto.randomUUID(); // keep simple; hashing optional if your DB expects hash
+    const rawToken = crypto.randomUUID(); // Deno's global crypto
     const { error: passErr } = await db
       .from("ticket_passes")
       .insert({
