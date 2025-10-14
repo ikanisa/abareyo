@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,42 +13,68 @@ import { getSupabase } from '@/app/_lib/supabase';
  * messages on WhatsApp. The modal appears only if the user has not
  * completed onboarding previously.
  */
+const DEFAULT_COUNTRY_CODE = "+250";
+
+const getStorage = () => (typeof window === "undefined" ? null : window.localStorage);
+
+const ensurePersonalCode = (storage: Storage | null) => {
+  if (!storage) return "";
+  let code = storage.getItem("personalCode");
+  if (!code) {
+    code = Math.floor(100000 + Math.random() * 900000).toString();
+    storage.setItem("personalCode", code);
+  }
+  return code;
+};
+
 export function OnboardingModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [countryCode, setCountryCode] = useState("+250");
+  const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE);
   const [waNumber, setWaNumber] = useState("");
   const [consentWhatsApp, setConsentWhatsApp] = useState(true);
   const [momoSame, setMomoSame] = useState(true);
   const [momoNumber, setMomoNumber] = useState("");
   const [personalCode, setPersonalCode] = useState("");
+  const previousOpen = useRef(open);
 
   // Check if the user has already completed onboarding on mount.
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const complete = localStorage.getItem("profileComplete");
+    const storage = getStorage();
+    if (!storage) return;
+
+    const complete = storage.getItem("profileComplete");
     if (complete) {
       // Hide the modal immediately if profile is complete.
       onClose();
       return;
     }
     // Generate or retrieve a unique 6‑digit code for the user.
-    let code = localStorage.getItem("personalCode");
-    if (!code) {
-      code = Math.floor(100000 + Math.random() * 900000).toString();
-      localStorage.setItem("personalCode", code);
-    }
-    setPersonalCode(code);
+    setPersonalCode(ensurePersonalCode(storage));
   }, []);
+
+  useEffect(() => {
+    if (open && !previousOpen.current) {
+      setCountryCode(DEFAULT_COUNTRY_CODE);
+      setWaNumber("");
+      setConsentWhatsApp(true);
+      setMomoSame(true);
+      setMomoNumber("");
+    }
+    previousOpen.current = open;
+  }, [open]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     const whatsappFull = `${countryCode}${waNumber}`;
     const momoFull = momoSame ? whatsappFull : momoNumber;
 
+    const storage = getStorage();
+    const code = personalCode || ensurePersonalCode(storage);
+
     try {
       const supabase = getSupabase && getSupabase();
-      if (supabase) {
+      if (supabase && code) {
         await supabase.from("profiles").upsert({
-          id: personalCode,
+          id: code,
           whatsapp: whatsappFull,
           momo: momoFull,
           consent_whatsapp: consentWhatsApp,
@@ -58,7 +84,12 @@ export function OnboardingModal({ open, onClose }: { open: boolean; onClose: () 
       console.error(error);
     }
     // Mark profile as complete so the modal won't show again.
-    localStorage.setItem("profileComplete", "1");
+    if (storage) {
+      if (!personalCode && code) {
+        setPersonalCode(code);
+      }
+      storage.setItem("profileComplete", "1");
+    }
     onClose();
   }
 
@@ -78,16 +109,21 @@ export function OnboardingModal({ open, onClose }: { open: boolean; onClose: () 
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">WhatsApp number</label>
+            <label htmlFor="whatsapp-number" className="mb-1 block text-sm font-medium">
+              WhatsApp number
+            </label>
             <div className="flex items-center gap-2">
               <Input
-  type="tel"
-  value={countryCode}
-  onChange={(e) => setCountryCode(e.target.value)}
-  placeholder="+250"
-  className="w-20"
-/>
+                id="whatsapp-country-code"
+                type="tel"
+                value={countryCode}
+                onChange={(e) => setCountryCode(e.target.value)}
+                placeholder="+250"
+                className="w-20"
+                aria-label="Country code"
+              />
               <Input
+                id="whatsapp-number"
                 type="tel"
                 required
                 value={waNumber}
@@ -123,6 +159,7 @@ export function OnboardingModal({ open, onClose }: { open: boolean; onClose: () 
             </div>
             {!momoSame && (
               <Input
+                id="momo-number"
                 type="tel"
                 value={momoNumber}
                 onChange={(e) => setMomoNumber(e.target.value)}

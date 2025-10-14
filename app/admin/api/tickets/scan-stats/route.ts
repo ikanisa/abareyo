@@ -3,17 +3,39 @@ import { NextResponse } from 'next/server';
 import { AdminAuthError, requireAdminSession } from '@/app/admin/api/_lib/session';
 import { getSupabaseAdmin } from '@/app/admin/api/_lib/supabase';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
+const isSupabaseConfigured = () => {
+  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return Boolean(url && serviceKey);
+};
+
 type StatusSummary = Array<{ status: string; count: number }>;
 type GateThroughput = Array<{ gate: string; perMin: number; samples: number }>;
+type TicketPassRecord = { gate?: string | null };
 
 export async function GET() {
   try {
     await requireAdminSession();
-    const supabase = getSupabaseAdmin();
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json(
+        { error: 'supabase_not_configured', passes: 0, orders: 0, statusSummary: [], throughputPerGate: [] },
+        { status: 503, headers: { 'x-admin-offline': 'supabase-missing' } },
+      );
+    }
 
+    const supabase = getSupabaseAdmin();
     const sinceIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
-    const statusSummaryPromise = supabase.from('ticket_orders').select('status');
+    // Grouped status counts (let Postgrest aggregate for us)
+    const statusSummaryPromise = supabase
+      .from('ticket_orders')
+      .select('status, count:id', { head: false })
+      .group('status');
 
     const [passesCount, ordersCount, statusSummary, recentPasses] = await Promise.all([
       supabase.from('ticket_passes').select('id', { count: 'exact', head: true }),
@@ -27,22 +49,25 @@ export async function GET() {
     if (statusSummary.error) throw statusSummary.error;
     if (recentPasses.error) throw recentPasses.error;
 
-    const statusAggregateMap = (statusSummary.data ?? []).reduce<Record<string, number>>((acc, row: any) => {
-      const key = row.status ?? 'unknown';
-      acc[key] = (acc[key] ?? 0) + 1;
-      return acc;
-    }, {});
-    const statusAggregate: StatusSummary = Object.entries(statusAggregateMap).map(([status, count]) => ({
-      status,
-      count,
-    }));
+    // Build status summary from aggregated rows
+    const statusAggregate: StatusSummary = (statusSummary.data ?? []).map((row) => {
+      const r = row as { status?: string | null; count?: number | null };
+      return {
+        status: r.status ?? 'unknown',
+        count: typeof r.count === 'number' ? r.count : Number(r.count ?? 0),
+      };
+    });
 
+    // Throughput per gate (last hour)
     const throughputByGate: GateThroughput = Object.values(
-      (recentPasses.data ?? []).reduce<Record<string, { gate: string; total: number }>>((acc, record: any) => {
-        const gate = record.gate ?? 'Unassigned';
-        acc[gate] = acc[gate] ? { gate, total: acc[gate]!.total + 1 } : { gate, total: 1 };
-        return acc;
-      }, {}),
+      (recentPasses.data ?? []).reduce<Record<string, { gate: string; total: number }>>(
+        (acc, record: TicketPassRecord) => {
+          const gate = record.gate && record.gate.length > 0 ? record.gate : 'Unassigned';
+          acc[gate] = acc[gate] ? { gate, total: acc[gate].total + 1 } : { gate, total: 1 };
+          return acc;
+        },
+        {},
+      ),
     ).map(({ gate, total }) => ({
       gate,
       perMin: Number((total / 60).toFixed(2)),
@@ -61,7 +86,6 @@ export async function GET() {
     if (error instanceof AdminAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-
     console.error('Failed to compute scan dashboard stats', error);
     return NextResponse.json({ error: 'scan_stats_failed' }, { status: 500 });
   }
