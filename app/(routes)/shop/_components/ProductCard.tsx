@@ -21,7 +21,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const image = product.images[0];
 
   const handleAdd = () => {
-    if (!cheapestVariant) return;
+    if (!cheapestVariant || cheapestVariant.stock <= 0) return;
     const item: CartItem = {
       productId: product.id,
       variantId: cheapestVariant.id,
