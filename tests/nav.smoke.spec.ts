@@ -16,7 +16,7 @@ test('bottom nav works', async ({ page }) => {
   await page.goto('http://localhost:3000/');
   const nav = page.locator('nav[aria-label="Primary"]');
   if ((await nav.count()) === 0) {
-    test.skip('Bottom nav not rendered at current viewport');
+    test.skip(true, 'Bottom nav not rendered at current viewport');
   }
   await expect(nav).toHaveCount(1);
 
