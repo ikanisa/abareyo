@@ -7,7 +7,8 @@ interface EmptyStateProps {
   icon?: ReactNode;
   action?: {
     label: string;
-    href: string;
+    href?: string;
+    onClick?: () => void;
   };
 }
 
@@ -19,9 +20,19 @@ const EmptyState = ({ title, description, icon, action }: EmptyStateProps) => (
         <h3 className="text-base font-semibold text-white">{title}</h3>
         <p className="text-sm text-white/70">{description}</p>
         {action ? (
-          <Link className="text-sm font-semibold text-white/80 underline" href={action.href}>
-            {action.label}
-          </Link>
+          action.href ? (
+            <Link className="text-sm font-semibold text-white/80 underline" href={action.href}>
+              {action.label}
+            </Link>
+          ) : action.onClick ? (
+            <button
+              type="button"
+              className="text-sm font-semibold text-white/80 underline"
+              onClick={action.onClick}
+            >
+              {action.label}
+            </button>
+          ) : null
         ) : null}
       </div>
     </div>

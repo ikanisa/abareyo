@@ -28,60 +28,27 @@ serve(async (_req) => {
     new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 
   async function findNearestUpcomingMatch() {
-    // Try matches.date
     const now = nowIso();
-    let { data: byDate, error: dateErr } = await db
-      .from("matches")
-      .select("*")
-      .gte("date", now)
-      .order("date", { ascending: true })
-      .limit(1);
-
-    if (!dateErr && byDate && byDate.length) return byDate[0];
-
-    // Fallback: matches.kickoff
-    const { data: byKick, error: kickErr } = await db
+    const { data, error: kickErr } = await db
       .from("matches")
       .select("*")
       .gte("kickoff", now)
       .order("kickoff", { ascending: true })
       .limit(1);
 
-    if (!kickErr && byKick && byKick.length) return byKick[0];
+    if (!kickErr && data && data.length) return data[0];
     return null;
   }
 
   async function hasExistingPerk(userId: string) {
-    // Check BOTH schemas for prior perk
-    const { data: t1 } = await db
-      .from("tickets")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("momo_ref", "FREE-TICKET-PERK")
-      .limit(1);
-
-    if (t1 && t1.length) return true;
-
-    const { data: t2 } = await db
+    const { data: orders } = await db
       .from("ticket_orders")
       .select("id")
       .eq("user_id", userId)
       .eq("sms_ref", "FREE-TICKET-PERK")
       .limit(1);
 
-    return !!(t2 && t2.length);
-  }
-
-  async function grantPerkTicketLegacy(userId: string, matchId: string) {
-    const { error: tErr } = await db.from("tickets").insert({
-      user_id: userId,
-      match_id: matchId,
-      zone: "Blue",
-      price: 0,
-      paid: true,
-      momo_ref: "FREE-TICKET-PERK",
-    });
-    return !tErr;
+    return !!(orders && orders.length);
   }
 
   async function grantPerkTicketNew(userId: string, matchId: string, policyId: string) {
@@ -180,28 +147,8 @@ serve(async (_req) => {
         if (perkFlag && q.user_id) {
           if (!(await hasExistingPerk(q.user_id))) {
             const match = await findNearestUpcomingMatch();
-            if (match) {
-              // Try new schema first; if it fails, fallback to legacy tickets table
-              const okNew = await grantPerkTicketNew(q.user_id, match.id, pol.id);
-              if (okNew) {
-                perkTickets++;
-              } else {
-                const okLegacy = await grantPerkTicketLegacy(q.user_id, match.id);
-                if (okLegacy) {
-                  perkTickets++;
-                  // Best-effort log
-                  await db
-                    .from("rewards_events")
-                    .insert({
-                      user_id: q.user_id,
-                      source: "policy_perk",
-                      ref_id: pol.id,
-                      points: 0,
-                      meta: { perk: "free_blue_ticket", match_id: match.id },
-                    })
-                    .catch(() => {});
-                }
-              }
+            if (match && (await grantPerkTicketNew(q.user_id, match.id, pol.id))) {
+              perkTickets++;
             }
           }
         }
