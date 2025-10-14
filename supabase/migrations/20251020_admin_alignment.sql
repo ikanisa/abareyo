@@ -263,6 +263,7 @@ RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
   add_points int := rewards_points_for(NEW.kind, NEW.amount);
   owning_user uuid;
+  deposit_id uuid;
 BEGIN
   IF add_points > 0 THEN
     IF NEW.ticket_order_id IS NOT NULL THEN
@@ -270,6 +271,26 @@ BEGIN
     ELSIF NEW.order_id IS NOT NULL THEN
       SELECT user_id INTO owning_user FROM orders WHERE id = NEW.order_id;
     END IF;
+
+    IF owning_user IS NULL AND NEW.metadata ? 'user_id' THEN
+      BEGIN
+        owning_user := (NEW.metadata ->> 'user_id')::uuid;
+      EXCEPTION WHEN others THEN
+        owning_user := NULL;
+      END;
+    END IF;
+
+    IF owning_user IS NULL AND NEW.metadata ? 'sacco_deposit_id' THEN
+      BEGIN
+        deposit_id := (NEW.metadata ->> 'sacco_deposit_id')::uuid;
+        IF deposit_id IS NOT NULL THEN
+          SELECT user_id INTO owning_user FROM sacco_deposits WHERE id = deposit_id;
+        END IF;
+      EXCEPTION WHEN others THEN
+        owning_user := NULL;
+      END;
+    END IF;
+
     IF owning_user IS NOT NULL THEN
       UPDATE users SET points = COALESCE(points,0) + add_points WHERE id = owning_user;
       INSERT INTO rewards_events (user_id, source, ref_id, points, meta)
