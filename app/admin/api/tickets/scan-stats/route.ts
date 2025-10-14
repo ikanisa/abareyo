@@ -40,11 +40,11 @@ export async function GET() {
         { status: 503, headers: { 'x-admin-offline': 'supabase-missing' } },
       );
     }
-    const supabase = getSupabaseAdmin();
 
+    const supabase = getSupabaseAdmin();
     const sinceIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
-    // Grouped status counts
+    // Grouped status counts (aggregation done by PostgREST)
     const statusSummaryPromise = supabase
       .from('ticket_orders')
       .select('status, count:id', { head: false })
@@ -62,28 +62,25 @@ export async function GET() {
     if (statusSummary.error) throw statusSummary.error;
     if (recentPasses.error) throw recentPasses.error;
 
-    // Use the aggregated `count` returned by Supabase, not just number of rows.
+    // Build status summary with stable ordering for known statuses + extras
     const statusAggregateByKey = new Map<string, { status: string; count: number }>();
     for (const row of statusSummary.data ?? []) {
       const parsed = row as { status?: string | null; count?: number | null };
       const key = parsed.status ?? 'unknown';
-      const total =
-        typeof parsed.count === 'number' ? parsed.count : Number(parsed.count ?? 0);
+      const total = typeof parsed.count === 'number' ? parsed.count : Number(parsed.count ?? 0);
       statusAggregateByKey.set(key, { status: key, count: total });
     }
 
     const statusAggregate: StatusSummary = [
-      // Known statuses in stable order
       ...KNOWN_TICKET_STATUSES.map((status) =>
         statusAggregateByKey.get(status) ?? { status, count: 0 },
       ),
-      // Any extra statuses we don't recognize
       ...Array.from(statusAggregateByKey.entries())
         .filter(([status]) => !isKnownTicketStatus(status))
         .map(([, value]) => value),
     ];
 
-    // Throughput per gate over last hour
+    // Throughput per gate over last hour (per minute)
     const gateTotals = (recentPasses.data ?? []).reduce<Record<string, { gate: string; total: number }>>(
       (acc, record: TicketPassRecord) => {
         const gate = record.gate && record.gate.length > 0 ? record.gate : 'Unassigned';
@@ -111,7 +108,6 @@ export async function GET() {
     if (error instanceof AdminAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-
     console.error('Failed to compute scan dashboard stats', error);
     return NextResponse.json({ error: 'scan_stats_failed' }, { status: 500 });
   }

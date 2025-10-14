@@ -18,11 +18,8 @@ type MatchesListProps = {
 };
 
 function formatOpponent(match: MatchItem) {
-  if (match.opponent) {
-    return match.opponent;
-  }
-  const home = match.home;
-  const away = match.away;
+  if (match.opponent) return match.opponent;
+  const { home, away } = match;
   if (!home && !away) return "Fixture";
   const isRayonHome = home?.toLowerCase().includes("rayon");
   const opponentName = isRayonHome ? away : home;
@@ -30,7 +27,7 @@ function formatOpponent(match: MatchItem) {
 }
 
 function formatKickoff(match: MatchItem) {
-  const kickoff = match.kickoff;
+  const { kickoff } = match;
   if (!kickoff) return "TBD";
   const date = new Date(kickoff);
   if (Number.isNaN(date.getTime())) return kickoff;
@@ -89,6 +86,7 @@ export default function MatchesList({ matches }: MatchesListProps) {
           );
         })}
       </div>
+
       {open ? <MatchDetailSheet id={open} onClose={() => setOpen(null)} /> : null}
     </>
   );

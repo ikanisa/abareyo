@@ -34,17 +34,14 @@ function parseHistory(value: unknown): HistoryItem[] {
     year: "numeric",
   });
   const toTime = (input: string) => {
-    const timestamp = new Date(input).getTime();
-    return Number.isNaN(timestamp) ? 0 : timestamp;
+    const t = new Date(input).getTime();
+    return Number.isNaN(t) ? 0 : t;
   };
   return value
     .filter(isRewardHistory)
     .map((event) => {
-      let formattedDate = event.date;
-      const date = new Date(event.date);
-      if (!Number.isNaN(date.getTime())) {
-        formattedDate = formatter.format(date);
-      }
+      const d = new Date(event.date);
+      const formattedDate = Number.isNaN(d.getTime()) ? event.date : formatter.format(d);
       return { ...event, formattedDate };
     })
     .sort((a, b) => toTime(b.date) - toTime(a.date));
@@ -58,6 +55,7 @@ function formatPoints(points: number) {
 export default function RewardsPage() {
   const [data, setData] = useState<RewardsResponse | null>(null);
   const [loading, setLoading] = useState(true);
+
   const history = useMemo(() => parseHistory(data?.events), [data?.events]);
   const hasHistory = history.length > 0;
 
@@ -111,7 +109,7 @@ export default function RewardsPage() {
     <PageShell>
       <section className="card">
         <h1>Rewards</h1>
-        <div className="flex items-center justify-between mt-2">
+        <div className="mt-2 flex items-center justify-between">
           <div>
             <div className="text-white/90 font-semibold">{user.points ?? 0} pts</div>
             <div className="muted text-xs">Tier: {user.tier ?? "fan"}</div>
@@ -137,22 +135,19 @@ export default function RewardsPage() {
             {perk ? `Free BLUE ticket for match ${perk.match_id}` : "No active perk yet"}
           </div>
         </div>
+
         <div className="card space-y-3">
           <div>
             <h2 className="section-title">History</h2>
             <p className="muted text-xs">Track your recent points activity.</p>
           </div>
+
           {hasHistory ? (
             <ul className="grid gap-2">
               {history.map((event) => (
-                <li
-                  key={event.id}
-                  className="tile flex flex-col items-start gap-1 text-left"
-                >
+                <li key={event.id} className="tile flex flex-col items-start gap-1 text-left">
                   <div className="flex w-full items-start justify-between gap-2">
-                    <span className="text-sm font-semibold text-white/90">
-                      {event.title}
-                    </span>
+                    <span className="text-sm font-semibold text-white/90">{event.title}</span>
                     <span
                       className={`text-xs font-semibold ${
                         event.points >= 0 ? "text-emerald-200" : "text-amber-200"
@@ -174,10 +169,13 @@ export default function RewardsPage() {
           ) : (
             <div className="tile flex flex-col items-start gap-1 text-left">
               <p className="text-sm font-semibold text-white/90">No reward history</p>
-              <p className="muted text-xs">Earn points with match attendance and partner services.</p>
+              <p className="muted text-xs">
+                Earn points with match attendance and partner services.
+              </p>
             </div>
           )}
         </div>
+
         {rules ? (
           <div className="card space-y-2">
             <h2 className="section-title">How it works</h2>
