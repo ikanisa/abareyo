@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { recordAudit } from '@/app/admin/api/_lib/audit';
 import { AdminAuthError, requireAdminSession } from '@/app/admin/api/_lib/session';
 import { getSupabaseAdmin } from '@/app/admin/api/_lib/supabase';
+import type { Tables } from '@/integrations/supabase/types';
 
 const ORDER_SELECT = `
   id,
@@ -15,12 +16,24 @@ const ORDER_SELECT = `
   payments:payments(id, amount, status, created_at)
 `;
 
+const ORDER_STATUSES: readonly Tables<'orders'>['status'][] = [
+  'pending',
+  'paid',
+  'ready',
+  'pickedup',
+] as const;
+
+const isValidOrderStatus = (
+  value: string | undefined,
+): value is Tables<'orders'>['status'] =>
+  value !== undefined && ORDER_STATUSES.includes(value as Tables<'orders'>['status']);
+
 export async function GET(request: NextRequest) {
   try {
     await requireAdminSession();
     const supabase = getSupabaseAdmin();
     const { searchParams } = request.nextUrl;
-    const status = searchParams.get('status') ?? undefined;
+    const requestedStatus = searchParams.get('status') ?? undefined;
     const query = searchParams.get('q') ?? undefined;
     const limit = Math.min(Number.parseInt(searchParams.get('limit') ?? '50', 10), 200);
     const offset = Number.parseInt(searchParams.get('offset') ?? '0', 10);
@@ -31,8 +44,8 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (status) {
-      builder = builder.eq('status', status);
+    if (isValidOrderStatus(requestedStatus)) {
+      builder = builder.eq('status', requestedStatus);
     }
 
     if (query) {
@@ -85,7 +98,12 @@ export async function PATCH(request: NextRequest) {
     if (!before) return NextResponse.json({ error: 'shop_order_not_found' }, { status: 404 });
 
     const updates: Record<string, unknown> = {};
-    if (payload.status) updates.status = payload.status;
+    if (payload.status) {
+      if (!isValidOrderStatus(payload.status)) {
+        return NextResponse.json({ error: 'invalid_status' }, { status: 400 });
+      }
+      updates.status = payload.status;
+    }
     if (payload.momo_ref !== undefined) updates.momo_ref = payload.momo_ref;
 
     if (Object.keys(updates).length === 0) {
