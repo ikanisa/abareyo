@@ -4,8 +4,20 @@ import { AdminAuthError, requireAdminSession } from '@/app/admin/api/_lib/sessio
 import { getSupabaseAdmin } from '@/app/admin/api/_lib/supabase';
 import type { Tables } from '@/integrations/supabase/types';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
+const isSupabaseConfigured = () => {
+  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return Boolean(url && serviceKey);
+};
+
 type StatusSummary = Array<{ status: string; count: number }>;
 type GateThroughput = Array<{ gate: string; perMin: number; samples: number }>;
+type TicketPassRecord = { gate?: string | null };
 
 const KNOWN_TICKET_STATUSES: readonly Tables<'ticket_orders'>['status'][] = [
   'pending',
@@ -22,6 +34,12 @@ const isKnownTicketStatus = (
 export async function GET() {
   try {
     await requireAdminSession();
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json(
+        { error: 'supabase_not_configured', passes: 0, orders: 0, statusSummary: [], throughputPerGate: [] },
+        { status: 503, headers: { 'x-admin-offline': 'supabase-missing' } },
+      );
+    }
     const supabase = getSupabaseAdmin();
 
     const sinceIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
@@ -44,33 +62,36 @@ export async function GET() {
     if (statusSummary.error) throw statusSummary.error;
     if (recentPasses.error) throw recentPasses.error;
 
+    // Use the aggregated `count` returned by Supabase, not just number of rows.
     const statusAggregateByKey = new Map<string, { status: string; count: number }>();
-
     for (const row of statusSummary.data ?? []) {
       const parsed = row as { status?: string | null; count?: number | null };
       const key = parsed.status ?? 'unknown';
-      const total = typeof parsed.count === 'number' ? parsed.count : Number(parsed.count ?? 0);
+      const total =
+        typeof parsed.count === 'number' ? parsed.count : Number(parsed.count ?? 0);
       statusAggregateByKey.set(key, { status: key, count: total });
     }
 
     const statusAggregate: StatusSummary = [
+      // Known statuses in stable order
       ...KNOWN_TICKET_STATUSES.map((status) =>
         statusAggregateByKey.get(status) ?? { status, count: 0 },
       ),
+      // Any extra statuses we don't recognize
       ...Array.from(statusAggregateByKey.entries())
         .filter(([status]) => !isKnownTicketStatus(status))
         .map(([, value]) => value),
     ];
 
-    const gateTotals: Record<string, { gate: string; total: number }> = {};
-
-    for (const item of recentPasses.data ?? []) {
-      const gateValue = (item as Record<string, unknown>).gate;
-      const gate = typeof gateValue === 'string' && gateValue.length > 0 ? gateValue : 'Unassigned';
-      gateTotals[gate] = gateTotals[gate]
-        ? { gate, total: gateTotals[gate]!.total + 1 }
-        : { gate, total: 1 };
-    }
+    // Throughput per gate over last hour
+    const gateTotals = (recentPasses.data ?? []).reduce<Record<string, { gate: string; total: number }>>(
+      (acc, record: TicketPassRecord) => {
+        const gate = record.gate && record.gate.length > 0 ? record.gate : 'Unassigned';
+        acc[gate] = acc[gate] ? { gate, total: acc[gate].total + 1 } : { gate, total: 1 };
+        return acc;
+      },
+      {},
+    );
 
     const throughputByGate: GateThroughput = Object.values(gateTotals).map(({ gate, total }) => ({
       gate,

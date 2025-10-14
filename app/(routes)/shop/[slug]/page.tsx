@@ -36,7 +36,7 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
   }
 
   const colorKeys = Array.from(
-    new Set<Color>(product.variants.map((variant) => variant.color)),
+    new Set<Color>(product.variants.map((variant) => variant.color))
   );
   const colors = colorKeys.map((key) => colorTokens[key]);
 
@@ -68,28 +68,31 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
           productId={product.id}
           price={baseVariant.price}
           colors={colors}
-          variants={product.variants}
         />
 
         <div className="space-y-2 rounded-2xl bg-white/10 p-3 text-xs text-white/80">
           {product.materials ? (
             <p>
-              <span className="font-semibold text-white">Materials:</span> {product.materials}
+              <span className="font-semibold text-white">Materials:</span>{" "}
+              {product.materials}
             </p>
           ) : null}
           {product.care ? (
             <p>
-              <span className="font-semibold text-white">Care:</span> {product.care}
+              <span className="font-semibold text-white">Care:</span>{" "}
+              {product.care}
             </p>
           ) : null}
           {product.shipping ? (
             <p>
-              <span className="font-semibold text-white">Shipping:</span> {product.shipping}
+              <span className="font-semibold text-white">Shipping:</span>{" "}
+              {product.shipping}
             </p>
           ) : null}
           {product.returnPolicy ? (
             <p>
-              <span className="font-semibold text-white">Returns:</span> {product.returnPolicy}
+              <span className="font-semibold text-white">Returns:</span>{" "}
+              {product.returnPolicy}
             </p>
           ) : null}
         </div>

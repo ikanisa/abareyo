@@ -39,6 +39,11 @@ export type RequireAdminResult =
   | { context: AdminContext; response?: undefined }
   | { context?: undefined; response: NextResponse };
 
+type RequireAdminOptions = {
+  permission?: string;
+  anyOf?: string[];
+};
+
 type RoleLink = { role_id: string; admin_roles?: { name: string } | null };
 
 const normalizeRoles = (roleLinks: RoleLink[]) => {
@@ -131,7 +136,7 @@ export const fetchAdminContextForToken = async (
 
 export const requireAdmin = async (
   req: Request,
-  options?: { permission?: string },
+  options?: RequireAdminOptions,
 ): Promise<RequireAdminResult> => {
   const token = parseCookie(req.headers.get('cookie'));
   if (!token) {
@@ -144,9 +149,17 @@ export const requireAdmin = async (
       return { response: NextResponse.json({ message: 'Unauthorized' }, { status: 401 }) };
     }
 
-    if (options?.permission) {
-      const allowed =
-        context.permissions.includes(options.permission) || context.permissions.includes('*');
+    const requiredPermissions = [
+      ...(options?.permission ? [options.permission] : []),
+      ...(options?.anyOf ?? []),
+    ];
+
+    if (requiredPermissions.length) {
+      const allowed = requiredPermissions.some(
+        (permissionKey) =>
+          context.permissions.includes(permissionKey) || context.permissions.includes('*'),
+      );
+
       if (!allowed) {
         return { response: NextResponse.json({ message: 'Forbidden' }, { status: 403 }) };
       }

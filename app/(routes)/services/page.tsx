@@ -1,29 +1,19 @@
-import Link from "next/link";
-
 import PageShell from "@/app/_components/shell/PageShell";
-import { buildRouteMetadata } from "@/app/_lib/navigation";
 
-export const metadata = buildRouteMetadata("/services");
-
-const ServicesPage = async () => {
+export default function Services() {
   return (
     <PageShell>
-      <section className="card space-y-3">
-        <div>
-          <h1>Partner Services</h1>
-          <p className="muted">Insurance and savings wizards open in quick sheets.</p>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Link href="/services/insurance" className="tile">
+      <section className="card">
+        <h1>Partner Services</h1>
+        <div className="grid grid-cols-2 gap-3 mt-3">
+          <a className="tile text-center" href="/services/insurance">
             🚗 Insurance
-          </Link>
-          <Link href="/services/savings" className="tile">
+          </a>
+          <a className="tile text-center" href="/services/savings">
             🏦 Savings
-          </Link>
+          </a>
         </div>
       </section>
     </PageShell>
   );
-};
-
-export default ServicesPage;
+}
