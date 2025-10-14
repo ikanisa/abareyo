@@ -7,7 +7,7 @@ type WalletPass = {
   order_id?: string | null;
   zone?: string | null;
   gate?: string | null;
-  state?: string | null;
+  state?: string | null; // "active" | "used" | "transferred"
   qr_token_hash?: string | null;
   match?: {
     id?: string;
@@ -28,8 +28,8 @@ const stateLabelMap: Record<string, string> = {
 
 function titleCaseState(state?: string | null) {
   if (!state) return "Active";
-  const normalised = state.toLowerCase();
-  return stateLabelMap[normalised] ?? state.charAt(0).toUpperCase() + state.slice(1);
+  const normalized = state.toLowerCase();
+  return stateLabelMap[normalized] ?? state.charAt(0).toUpperCase() + state.slice(1);
 }
 
 function formatKickoffDate(kickoff?: string | null) {
@@ -69,7 +69,11 @@ export default function WalletPasses({ items }: WalletPassesProps) {
         const orderLabel = isFree ? "Free perk" : pass.order_id ? `Order ${pass.order_id}` : "Issued";
 
         return (
-          <div className="card space-y-3" key={pass.id} data-ticket-free={isFree ? 1 : 0}>
+          <div
+            className="card space-y-3"
+            key={pass.id}
+            data-ticket-free={isFree ? 1 : 0}
+          >
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="text-white/90 font-semibold">
@@ -88,12 +92,17 @@ export default function WalletPasses({ items }: WalletPassesProps) {
                   {stateLabel}
                 </span>
                 {hasQr ? (
-                  <Link className="btn px-3 py-1 text-xs" href={`/mytickets?pass=${pass.id}`} prefetch={false}>
+                  <Link
+                    className="btn px-3 py-1 text-xs"
+                    href={`/mytickets?pass=${encodeURIComponent(pass.id)}`}
+                    prefetch={false}
+                  >
                     Show QR
                   </Link>
                 ) : null}
               </div>
             </div>
+
             <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-wide">
               <span
                 className={`rounded-lg bg-white/10 px-2 py-1 ${
@@ -106,7 +115,9 @@ export default function WalletPasses({ items }: WalletPassesProps) {
                 {hasQr ? "QR ready" : "Collect at gate"}
               </span>
               {pass.state === "transferred" ? (
-                <span className="rounded-lg bg-white/10 px-2 py-1 text-amber-200">Transfer sent</span>
+                <span className="rounded-lg bg-white/10 px-2 py-1 text-amber-200">
+                  Transfer sent
+                </span>
               ) : null}
             </div>
           </div>

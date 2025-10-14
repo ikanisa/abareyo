@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-
 import type { Match, MatchEvent, MatchStatBar } from "@/app/_data/matches";
 
 type MatchDetailSheetProps = {
@@ -27,9 +26,7 @@ function formatKickoff(kickoff?: string) {
 }
 
 function eventMinute(event: MatchEvent) {
-  if (typeof event.minute === "number") {
-    return `${event.minute}'`;
-  }
+  if (typeof event.minute === "number") return `${event.minute}'`;
   return "";
 }
 
@@ -54,12 +51,8 @@ export default function MatchDetailSheet({ id, onClose }: MatchDetailSheetProps)
           throw new Error(message);
         }
         const payload = (await response.json()) as { match?: Match };
-        if (!payload.match) {
-          throw new Error("Match data missing");
-        }
-        if (!cancelled) {
-          setState({ status: "ready", match: payload.match });
-        }
+        if (!payload.match) throw new Error("Match data missing");
+        if (!cancelled) setState({ status: "ready", match: payload.match });
       } catch (error) {
         if (cancelled) return;
         const message = error instanceof Error ? error.message : "Unable to load match centre";
@@ -67,11 +60,7 @@ export default function MatchDetailSheet({ id, onClose }: MatchDetailSheetProps)
       }
     }
 
-    load().catch(() => {
-      if (!cancelled) {
-        setState({ status: "error", message: "Unable to load match centre" });
-      }
-    });
+    load();
 
     return () => {
       cancelled = true;
@@ -81,16 +70,14 @@ export default function MatchDetailSheet({ id, onClose }: MatchDetailSheetProps)
 
   const match = state.status === "ready" ? state.match : null;
   const kickoffLabel = match ? formatKickoff(match.kickoff) : null;
+
   const timeline = useMemo(() => {
     if (!match) return [] as MatchEvent[];
-    if (Array.isArray(match.timeline) && match.timeline.length > 0) {
-      return match.timeline;
-    }
-    if (Array.isArray(match.events) && match.events.length > 0) {
-      return match.events;
-    }
+    if (Array.isArray(match.timeline) && match.timeline.length > 0) return match.timeline;
+    if (Array.isArray(match.events) && match.events.length > 0) return match.events;
     return [] as MatchEvent[];
   }, [match]);
+
   const stats = match?.stats ?? [];
 
   return (
@@ -126,12 +113,12 @@ export default function MatchDetailSheet({ id, onClose }: MatchDetailSheetProps)
               </div>
             ) : (
               <div className="text-lg font-semibold text-white">
-                {match?.status === "upcoming" ? "VS" : match?.liveMinute || match?.status?.toUpperCase() || ""}
+                {match?.status === "upcoming"
+                  ? "VS"
+                  : match?.liveMinute || match?.status?.toUpperCase() || ""}
               </div>
             )}
-            {match?.liveMinute ? (
-              <p className="muted text-xs">{match.liveMinute}</p>
-            ) : null}
+            {match?.liveMinute ? <p className="muted text-xs">{match.liveMinute}</p> : null}
           </div>
           <button className="btn" onClick={onClose} type="button" aria-label="Close match centre">
             ✖
@@ -155,7 +142,10 @@ export default function MatchDetailSheet({ id, onClose }: MatchDetailSheetProps)
               {timeline.length ? (
                 <div className="grid gap-2">
                   {timeline.slice(0, 4).map((event) => (
-                    <div key={event.id ?? `${event.minute}-${event.description}`} className="tile flex-col items-start gap-1 text-left">
+                    <div
+                      key={event.id ?? `${event.minute}-${event.description}`}
+                      className="tile flex-col items-start gap-1 text-left"
+                    >
                       <div className="flex w-full items-center justify-between text-[11px] text-white/60">
                         <span>{eventMinute(event)}</span>
                         {event.scoreline ? <span>{event.scoreline}</span> : null}
@@ -202,12 +192,16 @@ export default function MatchDetailSheet({ id, onClose }: MatchDetailSheetProps)
                 <div className="grid gap-2 sm:grid-cols-2">
                   <div className="tile flex-col items-start gap-1 text-left">
                     <span className="muted text-xs uppercase tracking-wide">{match.home}</span>
-                    <span className="text-sm font-medium text-white/90">{match.lineups.home?.formation}</span>
+                    <span className="text-sm font-medium text-white/90">
+                      {match.lineups.home?.formation}
+                    </span>
                     <span className="muted text-xs">Coach: {match.lineups.home?.coach}</span>
                   </div>
                   <div className="tile flex-col items-start gap-1 text-left">
                     <span className="muted text-xs uppercase tracking-wide">{match.away}</span>
-                    <span className="text-sm font-medium text-white/90">{match.lineups.away?.formation}</span>
+                    <span className="text-sm font-medium text-white/90">
+                      {match.lineups.away?.formation}
+                    </span>
                     <span className="muted text-xs">Coach: {match.lineups.away?.coach}</span>
                   </div>
                 </div>

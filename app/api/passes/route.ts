@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { matches as fixtureMatches } from "@/app/_data/matches";
+
+export const runtime = "edge";
 
 type Pass = {
   id: string;
@@ -10,37 +13,37 @@ type Pass = {
   match?: {
     id: string;
     opponent: string;
-    kickoff: string;
+    kickoff: string | null;
   };
 };
 
-const samplePasses: Pass[] = [
-  {
-    id: "pass-001",
-    order_id: "order-7781",
-    zone: "BLUE",
-    gate: "B2",
-    state: "active",
-    qr_token_hash: "hash-7781",
-    match: {
-      id: "rayon-apr",
-      opponent: "APR FC",
-      kickoff: "2024-06-21T18:00:00+02:00",
-    },
-  },
-  {
-    id: "pass-002",
-    zone: "VIP",
-    gate: "A1",
-    state: "used",
-    match: {
-      id: "rayon-police",
-      opponent: "Police FC",
-      kickoff: "2024-06-14T19:30:00+02:00",
-    },
-  },
-];
-
 export async function GET() {
-  return NextResponse.json({ passes: samplePasses });
+  const sample: Pass[] = fixtureMatches.slice(0, 3).map((match, index) => {
+    const home = typeof match.home === "string" ? match.home : "";
+    const away = typeof match.away === "string" ? match.away : "";
+    const opponent = home.toLowerCase().includes("rayon")
+      ? away || "Opponent"
+      : home || away || "Opponent";
+
+    return {
+      id: `pass-${String(match.id ?? index)}`,
+      order_id: index === 0 ? `order-${index + 101}` : null,
+      zone: index === 1 ? "BLUE" : "VIP",
+      gate: ["A", "C", "B"][index % 3],
+      state: index === 2 ? "used" : "active",
+      qr_token_hash: null,
+      match: {
+        id: String(match.id ?? `fixture-${index}`),
+        opponent,
+        kickoff:
+          typeof match.kickoff === "string"
+            ? match.kickoff
+            : typeof match.date === "string"
+            ? match.date
+            : null,
+      },
+    };
+  });
+
+  return NextResponse.json({ passes: sample });
 }

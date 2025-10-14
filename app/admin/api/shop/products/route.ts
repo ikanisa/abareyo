@@ -5,7 +5,7 @@ import { AdminAuthError, requireAdminSession } from '@/app/admin/api/_lib/sessio
 import { getSupabaseAdmin } from '@/app/admin/api/_lib/supabase';
 import type { Tables } from '@/integrations/supabase/types';
 
-const PRODUCT_SELECT = 'id, name, category, price, stock, description, image_url, images, badge, created_at';
+const PRODUCT_SELECT = 'id, name, category, price, stock, description, image_url, badge';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,7 +15,10 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') ?? undefined;
     const query = searchParams.get('q') ?? undefined;
 
-    let builder = supabase.from('shop_products').select(PRODUCT_SELECT).order('name', { ascending: true });
+    let builder = supabase
+      .from('shop_products')
+      .select(PRODUCT_SELECT)
+      .order('name', { ascending: true });
 
     if (category) {
       builder = builder.eq('category', category);
@@ -23,11 +26,13 @@ export async function GET(request: NextRequest) {
 
     if (query) {
       const sanitized = query.replace(/'/g, "''");
-      builder = builder.or([
-        `name.ilike.%${sanitized}%`,
-        `description.ilike.%${sanitized}%`,
-        `badge.ilike.%${sanitized}%`,
-      ].join(','));
+      builder = builder.or(
+        [
+          `name.ilike.%${sanitized}%`,
+          `description.ilike.%${sanitized}%`,
+          `badge.ilike.%${sanitized}%`,
+        ].join(',')
+      );
     }
 
     const { data, error } = await builder;
@@ -38,7 +43,6 @@ export async function GET(request: NextRequest) {
     if (error instanceof AdminAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-
     console.error('Failed to load shop products', error);
     return NextResponse.json({ error: 'products_fetch_failed' }, { status: 500 });
   }
@@ -68,7 +72,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'name_and_price_required' }, { status: 400 });
     }
 
-    const gallery = Array.isArray(payload.images) ? payload.images.filter(Boolean) : [];
     const insert = {
       name: payload.name,
       category: payload.category ?? 'general',
@@ -76,8 +79,9 @@ export async function POST(request: NextRequest) {
       stock: payload.stock ?? 0,
       description: payload.description ?? null,
       badge: payload.badge ?? null,
-      image_url: payload.image_url ?? gallery[0] ?? null,
-      images: gallery,
+      image_url:
+        payload.image_url ??
+        (Array.isArray(payload.images) ? payload.images.find(Boolean) ?? null : null),
     };
 
     const { data, error } = await supabase
@@ -87,12 +91,13 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) throw error;
-
     if (!data || Array.isArray(data) || 'code' in data) {
       throw new Error('product_insert_invalid_response');
     }
 
-    const product = data as unknown as Tables<'shop_products'> & { images?: string[] } & Record<string, unknown>;
+    const product = data as unknown as Tables<'shop_products'> & {
+      images?: string[];
+    } & Record<string, unknown>;
 
     await recordAudit(supabase, {
       action: 'shop_products.insert',
@@ -110,7 +115,6 @@ export async function POST(request: NextRequest) {
     if (error instanceof AdminAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-
     console.error('Failed to create product', error, payload);
     return NextResponse.json({ error: 'product_create_failed' }, { status: 500 });
   }
@@ -137,11 +141,6 @@ export async function PATCH(request: NextRequest) {
     if (beforeError) throw beforeError;
     if (!before) return NextResponse.json({ error: 'product_not_found' }, { status: 404 });
 
-    const existingImages = (before as unknown as { images?: string[] | null }).images ?? [];
-    const gallery = Array.isArray(payload.images)
-      ? payload.images.filter(Boolean)
-      : (existingImages ?? []);
-
     const updates: Record<string, unknown> = {};
     if (payload.name !== undefined) updates.name = payload.name;
     if (payload.category !== undefined) updates.category = payload.category;
@@ -150,9 +149,11 @@ export async function PATCH(request: NextRequest) {
     if (payload.description !== undefined) updates.description = payload.description;
     if (payload.badge !== undefined) updates.badge = payload.badge;
     if (payload.image_url !== undefined) updates.image_url = payload.image_url;
-    updates.images = gallery;
-    if (updates.image_url === undefined && gallery.length > 0) {
-      updates.image_url = gallery[0];
+
+    // If explicit image_url not provided, derive from images[] (first truthy).
+    if (updates.image_url === undefined && Array.isArray(payload.images)) {
+      const firstImage = payload.images.find(Boolean);
+      if (firstImage) updates.image_url = firstImage;
     }
 
     const { data: updated, error: updateError } = await supabase
@@ -163,12 +164,13 @@ export async function PATCH(request: NextRequest) {
       .single();
 
     if (updateError) throw updateError;
-
     if (!updated || Array.isArray(updated) || 'code' in updated) {
       throw new Error('product_update_invalid_response');
     }
 
-    const product = updated as unknown as Tables<'shop_products'> & { images?: string[] } & Record<string, unknown>;
+    const product = updated as unknown as Tables<'shop_products'> & {
+      images?: string[];
+    } & Record<string, unknown>;
 
     await recordAudit(supabase, {
       action: 'shop_products.update',
@@ -186,7 +188,6 @@ export async function PATCH(request: NextRequest) {
     if (error instanceof AdminAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-
     console.error('Failed to update product', error, payload);
     return NextResponse.json({ error: 'product_update_failed' }, { status: 500 });
   }
@@ -231,7 +232,6 @@ export async function DELETE(request: NextRequest) {
     if (error instanceof AdminAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-
     console.error('Failed to delete product', error);
     return NextResponse.json({ error: 'product_delete_failed' }, { status: 500 });
   }

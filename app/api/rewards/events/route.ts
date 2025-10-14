@@ -1,26 +1,49 @@
 import { NextResponse } from "next/server";
-import { history, rewardSummary } from "@/app/_data/rewards";
+import { matches as fixtureMatches } from "@/app/_data/matches";
 
-const freeTicketPerks = [
-  {
-    id: "perk-free-blue",
-    match_id: "rayon-apr",
-    zone: "BLUE",
-    expiresOn: "2024-06-21",
-  },
-];
+export const runtime = "edge";
 
 export async function GET() {
+  const nextFixture =
+    fixtureMatches.find((match) => match.status === "upcoming") ?? fixtureMatches[0];
+
+  const freeTickets = nextFixture
+    ? [
+        {
+          id: `perk-${nextFixture.id}`,
+          match_id: nextFixture.id,
+          zone: "BLUE",
+          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // +24h
+        },
+      ]
+    : [];
+
   return NextResponse.json({
     user: {
-      points: rewardSummary.points,
-      tier: rewardSummary.tier.toLowerCase(),
+      id: "demo-user",
+      points: 180,
+      tier: "silver",
     },
-    freeTickets: freeTicketPerks,
-    events: history,
-    rules: {
-      earn: "Earn points via match attendance, SACCO deposits, and partner services.",
-      redeem: "Redeem via USSD or in-app for tickets and merch.",
-    },
+    freeTickets,
+    events: [
+      {
+        id: "evt-1",
+        type: "points-earned",
+        amount: 40,
+        description: "Matchday merchandise purchase",
+        occurredAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+      },
+      {
+        id: "evt-2",
+        type: "perk-redeemed",
+        amount: -80,
+        description: "Redeemed store discount",
+        occurredAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
+      },
+    ],
+    rules: [
+      "Earn 10 points per 1,000 RWF spent via USSD top-ups.",
+      "Refer friends to unlock extra perks each month.",
+    ],
   });
 }
