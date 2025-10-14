@@ -21,7 +21,7 @@ export const listTranslationLanguages = async (): Promise<string[]> => {
     return ['en', 'rw'];
   }
   const client = getServiceClient();
-  const { data, error } = await client
+  const { data, error } = await (client as any)
     .from('translations')
     .select('lang')
     .order('lang', { ascending: true });
@@ -49,7 +49,7 @@ export const fetchTranslationsPage = async (
   const start = (page - 1) * pageSize;
   const end = start + pageSize - 1;
 
-  let query = client
+  let query = (client as any)
     .from('translations')
     .select('lang, key, value, updated_at, admin_users:updated_by(display_name)', { count: 'exact' })
     .eq('lang', lang)
@@ -84,7 +84,7 @@ export const fetchDictionary = async (
     return {};
   }
   const client = getServiceClient();
-  let query = client.from('translations').select('key, value').eq('lang', lang);
+  let query = (client as any).from('translations').select('key, value').eq('lang', lang);
 
   if (prefix) {
     query = query.ilike('key', `${prefix}%`);

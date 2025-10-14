@@ -37,7 +37,6 @@ export const writeAuditLog = async ({
   before,
   after,
   request,
-  context,
 }: AuditInput) => {
   try {
     const client = getServiceClient();
@@ -51,7 +50,6 @@ export const writeAuditLog = async ({
       after: toJson(after),
       ip: meta.ip,
       ua: meta.ua ?? null,
-      context: toJson(context),
     };
     await client.from('audit_logs').insert(payload);
   } catch (error) {

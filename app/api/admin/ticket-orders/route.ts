@@ -5,9 +5,18 @@ import { getServiceClient } from '@/app/api/admin/_lib/db';
 import { requireAdmin } from '@/app/api/admin/_lib/session';
 import type { Tables } from '@/integrations/supabase/types';
 
+type MatchPreview = {
+  id: string;
+  title: string;
+  date: string;
+  venue: string | null;
+  home_team: string | null;
+  away_team: string | null;
+};
+
 type TicketOrderRow = Tables<'ticket_orders'> & {
   users: Pick<Tables<'users'>, 'id' | 'phone' | 'name'> | null;
-  matches: Pick<Tables<'matches'>, 'id' | 'opponent' | 'kickoff' | 'venue'> | null;
+  matches: MatchPreview | null;
   payments: Array<Pick<Tables<'payments'>, 'id' | 'amount' | 'status' | 'created_at' | 'metadata'>> | null;
 };
 
@@ -31,6 +40,14 @@ type SerializedOrder = {
     | { id: string; opponent: string | null; kickoff: string | null; venue: string | null }
     | null;
   payments: SerializedPayment[];
+};
+
+const resolveMatchOpponent = (match: MatchPreview) => {
+  const home = match.home_team ?? '';
+  const away = match.away_team ?? '';
+  if (home.toLowerCase().includes('rayon')) return away || match.title;
+  if (away.toLowerCase().includes('rayon')) return home || match.title;
+  return match.title;
 };
 
 const parsePagination = (request: Request) => {
@@ -57,8 +74,8 @@ const serializeOrder = (row: TicketOrderRow): SerializedOrder => ({
   match: row.matches
     ? {
         id: row.matches.id,
-        opponent: row.matches.opponent ?? null,
-        kickoff: row.matches.kickoff ?? null,
+        opponent: resolveMatchOpponent(row.matches),
+        kickoff: row.matches.date ?? null,
         venue: row.matches.venue ?? null,
       }
     : null,
@@ -81,7 +98,7 @@ export const GET = async (request: Request) => {
   let query = client
     .from('ticket_orders')
     .select(
-      'id, status, total, created_at, expires_at, sms_ref, users:users(id, phone, name), matches:matches(id, opponent, kickoff, venue), payments:payments!payments_ticket_order_id_fkey(id, amount, status, created_at, metadata)',
+      'id, status, total, created_at, expires_at, sms_ref, users:users(id, phone, name), matches:matches(id, title, date, venue, home_team, away_team), payments:payments!payments_ticket_order_id_fkey(id, amount, status, created_at, metadata)',
       { count: 'exact' },
     )
     .order('created_at', { ascending: false });
