@@ -116,6 +116,7 @@ export const AdminShell = ({ user, environment = 'dev', children }: AdminShellPr
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={false}
                 className={cn(
                   'rounded-xl px-3 py-2 text-sm transition-colors hover:bg-primary/10 hover:text-primary',
                   isActive ? 'bg-primary text-primary-foreground shadow-lg' : 'text-slate-300',
