@@ -36,7 +36,7 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
   }
 
   const colorKeys = Array.from(
-    new Set<Color>(product.variants.map((variant) => variant.color)),
+    new Set<Color>(product.variants.map((variant) => variant.color))
   );
   const colors = colorKeys.map((key) => colorTokens[key]);
 
@@ -79,12 +79,14 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
           ) : null}
           {product.care ? (
             <p>
-              <span className="font-semibold text-white">Care:</span> {product.care}
+              <span className="font-semibold text-white">Care:</span>{" "}
+              {product.care}
             </p>
           ) : null}
           {product.shipping ? (
             <p>
-              <span className="font-semibold text-white">Shipping:</span> {product.shipping}
+              <span className="font-semibold text-white">Shipping:</span>{" "}
+              {product.shipping}
             </p>
           ) : null}
           {product.returnPolicy ? (
