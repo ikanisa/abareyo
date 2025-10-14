@@ -95,11 +95,11 @@ export async function GET(req: Request) {
     if (!user) return NextResponse.json({ error: "no_user" }, { status: 404 });
 
     const { data: freeTickets } = await db
-      .from("tickets")
-      .select("id, match_id, created_at, price, momo_ref")
+      .from("ticket_orders")
+      .select("id, match_id, created_at, total, sms_ref")
       .eq("user_id", user.id)
-      .eq("price", 0)
-      .eq("momo_ref", "FREE-TICKET-PERK")
+      .eq("total", 0)
+      .eq("sms_ref", "FREE-TICKET-PERK")
       .order("created_at", { ascending: false })
       .limit(1);
 
@@ -152,11 +152,11 @@ export async function GET(req: Request) {
   }
 
   const { data: freeTickets } = await db
-    .from("tickets")
-    .select("id, match_id, created_at, price, momo_ref")
+    .from("ticket_orders")
+    .select("id, match_id, created_at, total, sms_ref")
     .eq("user_id", user.id)
-    .eq("price", 0)
-    .eq("momo_ref", "FREE-TICKET-PERK")
+    .eq("total", 0)
+    .eq("sms_ref", "FREE-TICKET-PERK")
     .order("created_at", { ascending: false })
     .limit(1);
 

@@ -33,6 +33,264 @@ export type Database = {
         };
         Relationships: [];
       };
+      admin_roles: {
+        Row: {
+          id: string;
+          name: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+        };
+        Relationships: [];
+      };
+      admin_sessions: {
+        Row: {
+          admin_user_id: string;
+          created_at: string;
+          expires_at: string | null;
+          id: string;
+          last_seen_at: string | null;
+          revoked: boolean;
+          token_hash: string;
+        };
+        Insert: {
+          admin_user_id: string;
+          created_at?: string;
+          expires_at?: string | null;
+          id?: string;
+          last_seen_at?: string | null;
+          revoked?: boolean;
+          token_hash: string;
+        };
+        Update: {
+          admin_user_id?: string;
+          created_at?: string;
+          expires_at?: string | null;
+          id?: string;
+          last_seen_at?: string | null;
+          revoked?: boolean;
+          token_hash?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "admin_sessions_admin_user_id_fkey";
+            columns: ["admin_user_id"];
+            referencedRelation: "admin_users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      admin_users: {
+        Row: {
+          display_name: string | null;
+          email: string;
+          id: string;
+          last_login: string | null;
+          password_hash: string;
+          status: string;
+        };
+        Insert: {
+          display_name?: string | null;
+          email: string;
+          id?: string;
+          last_login?: string | null;
+          password_hash: string;
+          status?: string;
+        };
+        Update: {
+          display_name?: string | null;
+          email?: string;
+          id?: string;
+          last_login?: string | null;
+          password_hash?: string;
+          status?: string;
+        };
+        Relationships: [];
+      };
+      admin_users_roles: {
+        Row: {
+          admin_user_id: string;
+          role_id: string;
+        };
+        Insert: {
+          admin_user_id: string;
+          role_id: string;
+        };
+        Update: {
+          admin_user_id?: string;
+          role_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "admin_users_roles_admin_user_id_fkey";
+            columns: ["admin_user_id"];
+            referencedRelation: "admin_users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "admin_users_roles_role_id_fkey";
+            columns: ["role_id"];
+            referencedRelation: "admin_roles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      audit_logs: {
+        Row: {
+          action: string;
+          admin_user_id: string | null;
+          after: Json | null;
+          at: string;
+          before: Json | null;
+          entity_id: string | null;
+          entity_type: string | null;
+          id: string;
+          ip: string | null;
+          ua: string | null;
+        };
+        Insert: {
+          action: string;
+          admin_user_id?: string | null;
+          after?: Json | null;
+          at?: string;
+          before?: Json | null;
+          entity_id?: string | null;
+          entity_type?: string | null;
+          id?: string;
+          ip?: string | null;
+          ua?: string | null;
+        };
+        Update: {
+          action?: string;
+          admin_user_id?: string | null;
+          after?: Json | null;
+          at?: string;
+          before?: Json | null;
+          entity_id?: string | null;
+          entity_type?: string | null;
+          id?: string;
+          ip?: string | null;
+          ua?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_admin_user_id_fkey";
+            columns: ["admin_user_id"];
+            referencedRelation: "admin_users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      feature_flags: {
+        Row: {
+          key: string;
+          updated_at: string;
+          updated_by: string | null;
+          value: Json | null;
+        };
+        Insert: {
+          key: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          value?: Json | null;
+        };
+        Update: {
+          key?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          value?: Json | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "feature_flags_updated_by_fkey";
+            columns: ["updated_by"];
+            referencedRelation: "admin_users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      permissions: {
+        Row: {
+          description: string | null;
+          id: string;
+          key: string;
+        };
+        Insert: {
+          description?: string | null;
+          id?: string;
+          key: string;
+        };
+        Update: {
+          description?: string | null;
+          id?: string;
+          key?: string;
+        };
+        Relationships: [];
+      };
+      roles_permissions: {
+        Row: {
+          permission_id: string;
+          role_id: string;
+        };
+        Insert: {
+          permission_id: string;
+          role_id: string;
+        };
+        Update: {
+          permission_id?: string;
+          role_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "roles_permissions_permission_id_fkey";
+            columns: ["permission_id"];
+            referencedRelation: "permissions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "roles_permissions_role_id_fkey";
+            columns: ["role_id"];
+            referencedRelation: "admin_roles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      translations: {
+        Row: {
+          key: string;
+          lang: string;
+          updated_at: string;
+          updated_by: string | null;
+          value: string;
+        };
+        Insert: {
+          key: string;
+          lang: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          value: string;
+        };
+        Update: {
+          key?: string;
+          lang?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          value?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "translations_updated_by_fkey";
+            columns: ["updated_by"];
+            referencedRelation: "admin_users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       fan_posts: {
         Row: {
           comments: number;
@@ -115,54 +373,113 @@ export type Database = {
       };
       matches: {
         Row: {
-          away_team: string | null;
-          blue_price: number | null;
-          comp: string | null;
-          date: string;
-          home_team: string | null;
           id: string;
-          regular_price: number | null;
-          seats_blue: number | null;
-          seats_regular: number | null;
-          seats_vip: number | null;
-          status: Database["public"]["Enums"]["match_status"];
-          title: string;
+          opponent: string;
+          kickoff: string;
           venue: string | null;
+          status: Database["public"]["Enums"]["match_status"];
           vip_price: number | null;
+          regular_price: number | null;
+          seats_vip: number | null;
+          seats_regular: number | null;
+          seats_blue: number | null;
         };
         Insert: {
-          away_team?: string | null;
-          blue_price?: number | null;
-          comp?: string | null;
-          date: string;
-          home_team?: string | null;
           id?: string;
-          regular_price?: number | null;
-          seats_blue?: number | null;
-          seats_regular?: number | null;
-          seats_vip?: number | null;
-          status?: Database["public"]["Enums"]["match_status"];
-          title: string;
+          opponent: string;
+          kickoff: string;
           venue?: string | null;
+          status?: Database["public"]["Enums"]["match_status"];
           vip_price?: number | null;
+          regular_price?: number | null;
+          seats_vip?: number | null;
+          seats_regular?: number | null;
+          seats_blue?: number | null;
         };
         Update: {
-          away_team?: string | null;
-          blue_price?: number | null;
-          comp?: string | null;
-          date?: string;
-          home_team?: string | null;
           id?: string;
-          regular_price?: number | null;
-          seats_blue?: number | null;
-          seats_regular?: number | null;
-          seats_vip?: number | null;
-          status?: Database["public"]["Enums"]["match_status"];
-          title?: string;
+          opponent?: string;
+          kickoff?: string;
           venue?: string | null;
+          status?: Database["public"]["Enums"]["match_status"];
           vip_price?: number | null;
+          regular_price?: number | null;
+          seats_vip?: number | null;
+          seats_regular?: number | null;
+          seats_blue?: number | null;
         };
         Relationships: [];
+      };
+      match_gates: {
+        Row: {
+          created_at: string;
+          id: string;
+          location: string | null;
+          match_id: string;
+          max_throughput: number | null;
+          name: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          location?: string | null;
+          match_id: string;
+          max_throughput?: number | null;
+          name: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          location?: string | null;
+          match_id?: string;
+          max_throughput?: number | null;
+          name?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "match_gates_match_id_fkey";
+            columns: ["match_id"];
+            referencedRelation: "matches";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      match_zones: {
+        Row: {
+          capacity: number;
+          created_at: string;
+          default_gate: string | null;
+          id: string;
+          match_id: string;
+          name: string;
+          price: number;
+        };
+        Insert: {
+          capacity?: number;
+          created_at?: string;
+          default_gate?: string | null;
+          id?: string;
+          match_id: string;
+          name: string;
+          price?: number;
+        };
+        Update: {
+          capacity?: number;
+          created_at?: string;
+          default_gate?: string | null;
+          id?: string;
+          match_id?: string;
+          name?: string;
+          price?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "match_zones_match_id_fkey";
+            columns: ["match_id"];
+            referencedRelation: "matches";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       order_items: {
         Row: {
@@ -330,13 +647,80 @@ export type Database = {
           }
         ];
       };
+      sms_parsed: {
+        Row: {
+          amount: number;
+          confidence: number | null;
+          created_at: string;
+          currency: string | null;
+          id: string;
+          matched_entity: string | null;
+          payer_mask: string | null;
+          ref: string | null;
+          sms_id: string;
+        };
+        Insert: {
+          amount: number;
+          confidence?: number | null;
+          created_at?: string;
+          currency?: string | null;
+          id?: string;
+          matched_entity?: string | null;
+          payer_mask?: string | null;
+          ref?: string | null;
+          sms_id: string;
+        };
+        Update: {
+          amount?: number;
+          confidence?: number | null;
+          created_at?: string;
+          currency?: string | null;
+          id?: string;
+          matched_entity?: string | null;
+          payer_mask?: string | null;
+          ref?: string | null;
+          sms_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sms_parsed_sms_id_fkey";
+            columns: ["sms_id"];
+            referencedRelation: "sms_raw";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      sms_raw: {
+        Row: {
+          from_msisdn: string | null;
+          id: string;
+          received_at: string;
+          source: string | null;
+          text: string;
+        };
+        Insert: {
+          from_msisdn?: string | null;
+          id?: string;
+          received_at?: string;
+          source?: string | null;
+          text: string;
+        };
+        Update: {
+          from_msisdn?: string | null;
+          id?: string;
+          received_at?: string;
+          source?: string | null;
+          text?: string;
+        };
+        Relationships: [];
+      };
       shop_products: {
         Row: {
           badge: string | null;
           category: string | null;
           description: string | null;
           id: string;
-          image_url: string | null;
+          images: Json | null;
           name: string;
           price: number;
           stock: number;
@@ -346,7 +730,7 @@ export type Database = {
           category?: string | null;
           description?: string | null;
           id?: string;
-          image_url?: string | null;
+          images?: Json | null;
           name: string;
           price: number;
           stock?: number;
@@ -356,7 +740,7 @@ export type Database = {
           category?: string | null;
           description?: string | null;
           id?: string;
-          image_url?: string | null;
+          images?: Json | null;
           name?: string;
           price?: number;
           stock?: number;
@@ -401,6 +785,7 @@ export type Database = {
           id: string;
           match_id: string | null;
           momo_ref: string | null;
+          sms_ref: string | null;
           status: Database["public"]["Enums"]["ticket_order_status"];
           total: number;
           user_id: string | null;
@@ -412,6 +797,7 @@ export type Database = {
           id?: string;
           match_id?: string | null;
           momo_ref?: string | null;
+          sms_ref?: string | null;
           status?: Database["public"]["Enums"]["ticket_order_status"];
           total: number;
           user_id?: string | null;
@@ -423,6 +809,7 @@ export type Database = {
           id?: string;
           match_id?: string | null;
           momo_ref?: string | null;
+          sms_ref?: string | null;
           status?: Database["public"]["Enums"]["ticket_order_status"];
           total?: number;
           user_id?: string | null;
@@ -443,106 +830,94 @@ export type Database = {
           }
         ];
       };
-      tickets: {
+      ticket_passes: {
         Row: {
           created_at: string;
           gate: string | null;
           id: string;
-          match_id: string | null;
-          momo_ref: string | null;
           order_id: string | null;
-          paid: boolean;
-          price: number;
-          qr_token: string | null;
-          state: string;
-          updated_at: string;
-          user_id: string | null;
+          qr_token_hash: string | null;
+          state: Database["public"]["Enums"]["ticket_pass_state"];
           zone: Database["public"]["Enums"]["ticket_zone"];
         };
         Insert: {
           created_at?: string;
           gate?: string | null;
           id?: string;
-          match_id?: string | null;
-          momo_ref?: string | null;
           order_id?: string | null;
-          paid?: boolean;
-          price: number;
-          qr_token?: string | null;
-          state?: string;
-          updated_at?: string;
-          user_id?: string | null;
+          qr_token_hash?: string | null;
+          state?: Database["public"]["Enums"]["ticket_pass_state"];
           zone: Database["public"]["Enums"]["ticket_zone"];
         };
         Update: {
           created_at?: string;
           gate?: string | null;
           id?: string;
-          match_id?: string | null;
-          momo_ref?: string | null;
           order_id?: string | null;
-          paid?: boolean;
-          price?: number;
-          qr_token?: string | null;
-          state?: string;
-          updated_at?: string;
-          user_id?: string | null;
+          qr_token_hash?: string | null;
+          state?: Database["public"]["Enums"]["ticket_pass_state"];
           zone?: Database["public"]["Enums"]["ticket_zone"];
         };
         Relationships: [
           {
-            foreignKeyName: "tickets_order_id_fkey";
+            foreignKeyName: "ticket_passes_order_id_fkey";
             columns: ["order_id"];
             referencedRelation: "ticket_orders";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "tickets_match_id_fkey";
-            columns: ["match_id"];
-            referencedRelation: "matches";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "tickets_user_id_fkey";
-            columns: ["user_id"];
-            referencedRelation: "users";
             referencedColumns: ["id"];
           }
         ];
       };
-      transactions: {
+      payments: {
         Row: {
           amount: number;
           created_at: string;
           id: string;
-          ref: string | null;
-          status: Database["public"]["Enums"]["transaction_status"];
-          type: Database["public"]["Enums"]["transaction_type"];
-          user_id: string | null;
+          kind: Database["public"]["Enums"]["payment_kind"];
+          metadata: Json | null;
+          order_id: string | null;
+          sms_parsed_id: string | null;
+          status: Database["public"]["Enums"]["payment_status"];
+          ticket_order_id: string | null;
         };
         Insert: {
           amount: number;
           created_at?: string;
           id?: string;
-          ref?: string | null;
-          status?: Database["public"]["Enums"]["transaction_status"];
-          type: Database["public"]["Enums"]["transaction_type"];
-          user_id?: string | null;
+          kind: Database["public"]["Enums"]["payment_kind"];
+          metadata?: Json | null;
+          order_id?: string | null;
+          sms_parsed_id?: string | null;
+          status?: Database["public"]["Enums"]["payment_status"];
+          ticket_order_id?: string | null;
         };
         Update: {
           amount?: number;
           created_at?: string;
           id?: string;
-          ref?: string | null;
-          status?: Database["public"]["Enums"]["transaction_status"];
-          type?: Database["public"]["Enums"]["transaction_type"];
-          user_id?: string | null;
+          kind?: Database["public"]["Enums"]["payment_kind"];
+          metadata?: Json | null;
+          order_id?: string | null;
+          sms_parsed_id?: string | null;
+          status?: Database["public"]["Enums"]["payment_status"];
+          ticket_order_id?: string | null;
         };
         Relationships: [
           {
-            foreignKeyName: "transactions_user_id_fkey";
-            columns: ["user_id"];
-            referencedRelation: "users";
+            foreignKeyName: "payments_order_id_fkey";
+            columns: ["order_id"];
+            referencedRelation: "orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_sms_parsed_id_fkey";
+            columns: ["sms_parsed_id"];
+            referencedRelation: "sms_parsed";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_ticket_order_id_fkey";
+            columns: ["ticket_order_id"];
+            referencedRelation: "ticket_orders";
             referencedColumns: ["id"];
           }
         ];
@@ -626,10 +1001,11 @@ export type Database = {
       match_status: "upcoming" | "live" | "ft";
       order_status: "pending" | "paid" | "ready" | "pickedup";
       sacco_status: "pending" | "confirmed";
+      payment_kind: "ticket" | "shop" | "deposit" | "policy";
+      payment_status: "pending" | "confirmed" | "failed";
+      ticket_order_status: "pending" | "paid" | "cancelled";
+      ticket_pass_state: "active" | "used" | "refunded";
       ticket_zone: "VIP" | "Regular" | "Blue";
-      ticket_order_status: "pending" | "paid" | "cancelled" | "expired";
-      transaction_status: "pending" | "confirmed" | "failed" | "manual_review";
-      transaction_type: "deposit" | "purchase" | "refund" | "reward";
       user_tier: "guest" | "fan" | "gold";
     };
     CompositeTypes: {

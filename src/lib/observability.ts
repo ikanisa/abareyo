@@ -104,3 +104,44 @@ export const recordAppStateEvent = async (
 ) => {
   await dispatchTelemetryEvent({ ...state, type: state.type }, endpoint);
 };
+
+export type HomeInteractionEvent = {
+  action:
+    | "quick-action"
+    | "gamification"
+    | "story"
+    | "fixture"
+    | "wallet-action"
+    | "sponsor"
+    | "community";
+  id: string;
+  label?: string;
+};
+
+export const trackHomeInteraction = async (
+  event: HomeInteractionEvent,
+  endpoint: string = DEFAULT_TELEMETRY_ENDPOINT,
+) => {
+  await dispatchTelemetryEvent(
+    {
+      type: "home-interaction",
+      ...event,
+      timestamp: Date.now(),
+    },
+    endpoint,
+  );
+};
+
+export const trackHomeSurfaceViewed = async (
+  payload: { generatedAt: string; modules: string[] },
+  endpoint: string = DEFAULT_TELEMETRY_ENDPOINT,
+) => {
+  await dispatchTelemetryEvent(
+    {
+      type: "home-surface-view",
+      generatedAt: payload.generatedAt,
+      modules: payload.modules,
+    },
+    endpoint,
+  );
+};
