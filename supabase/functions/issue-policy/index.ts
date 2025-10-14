@@ -29,8 +29,9 @@ serve(async (_req) => {
 
   async function findNearestUpcomingMatch() {
     const now = nowIso();
-    // Try matches.date
-    let { data: byDate, error: dateErr } = await db
+
+    // Try matches.date first
+    const { data: byDate, error: dateErr } = await db
       .from("matches")
       .select("*")
       .gte("date", now)
@@ -69,18 +70,6 @@ serve(async (_req) => {
       .limit(1);
 
     return !!(t2 && t2.length);
-  }
-
-  async function grantPerkTicketLegacy(userId: string, matchId: string) {
-    const { error: tErr } = await db.from("tickets").insert({
-      user_id: userId,
-      match_id: matchId,
-      zone: "Blue",
-      price: 0,
-      paid: true,
-      momo_ref: "FREE-TICKET-PERK",
-    });
-    return !tErr;
   }
 
   async function grantPerkTicketNew(userId: string, matchId: string, policyId: string) {
@@ -179,28 +168,8 @@ serve(async (_req) => {
         if (perkFlag && q.user_id) {
           if (!(await hasExistingPerk(q.user_id))) {
             const match = await findNearestUpcomingMatch();
-            if (match) {
-              // Try new schema first; if it fails, fallback to legacy tickets table
-              const okNew = await grantPerkTicketNew(q.user_id, match.id, pol.id);
-              if (okNew) {
-                perkTickets++;
-              } else {
-                const okLegacy = await grantPerkTicketLegacy(q.user_id, match.id);
-                if (okLegacy) {
-                  perkTickets++;
-                  // Best-effort log
-                  await db
-                    .from("rewards_events")
-                    .insert({
-                      user_id: q.user_id,
-                      source: "policy_perk",
-                      ref_id: pol.id,
-                      points: 0,
-                      meta: { perk: "free_blue_ticket", match_id: match.id },
-                    })
-                    .catch(() => {});
-                }
-              }
+            if (match && (await grantPerkTicketNew(q.user_id, match.id, pol.id))) {
+              perkTickets++;
             }
           }
         }
