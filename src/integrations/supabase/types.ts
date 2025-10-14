@@ -12,6 +12,122 @@ export type Database = {
   };
   public: {
     Tables: {
+      admin_roles: {
+        Row: {
+          id: string;
+          name: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+        };
+        Relationships: [];
+      };
+      admin_users: {
+        Row: {
+          display_name: string | null;
+          email: string;
+          id: string;
+          last_login: string | null;
+          password_hash: string;
+          status: string | null;
+        };
+        Insert: {
+          display_name?: string | null;
+          email: string;
+          id?: string;
+          last_login?: string | null;
+          password_hash: string;
+          status?: string | null;
+        };
+        Update: {
+          display_name?: string | null;
+          email?: string;
+          id?: string;
+          last_login?: string | null;
+          password_hash?: string;
+          status?: string | null;
+        };
+        Relationships: [];
+      };
+      admin_users_roles: {
+        Row: {
+          admin_user_id: string;
+          role_id: string;
+        };
+        Insert: {
+          admin_user_id: string;
+          role_id: string;
+        };
+        Update: {
+          admin_user_id?: string;
+          role_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "admin_users_roles_admin_user_id_fkey";
+            columns: ["admin_user_id"];
+            referencedRelation: "admin_users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "admin_users_roles_role_id_fkey";
+            columns: ["role_id"];
+            referencedRelation: "admin_roles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      audit_logs: {
+        Row: {
+          action: string | null;
+          admin_user_id: string | null;
+          after: Json | null;
+          at: string | null;
+          before: Json | null;
+          entity_id: string | null;
+          entity_type: string | null;
+          id: string;
+          ip: string | null;
+          ua: string | null;
+        };
+        Insert: {
+          action?: string | null;
+          admin_user_id?: string | null;
+          after?: Json | null;
+          at?: string | null;
+          before?: Json | null;
+          entity_id?: string | null;
+          entity_type?: string | null;
+          id?: string;
+          ip?: string | null;
+          ua?: string | null;
+        };
+        Update: {
+          action?: string | null;
+          admin_user_id?: string | null;
+          after?: Json | null;
+          at?: string | null;
+          before?: Json | null;
+          entity_id?: string | null;
+          entity_type?: string | null;
+          id?: string;
+          ip?: string | null;
+          ua?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_admin_user_id_fkey";
+            columns: ["admin_user_id"];
+            referencedRelation: "admin_users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       fan_clubs: {
         Row: {
           city: string | null;
@@ -330,6 +446,24 @@ export type Database = {
           }
         ];
       };
+      permissions: {
+        Row: {
+          description: string | null;
+          id: string;
+          key: string;
+        };
+        Insert: {
+          description?: string | null;
+          id?: string;
+          key: string;
+        };
+        Update: {
+          description?: string | null;
+          id?: string;
+          key?: string;
+        };
+        Relationships: [];
+      };
       shop_products: {
         Row: {
           badge: string | null;
@@ -543,6 +677,34 @@ export type Database = {
             foreignKeyName: "transactions_user_id_fkey";
             columns: ["user_id"];
             referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      roles_permissions: {
+        Row: {
+          permission_id: string;
+          role_id: string;
+        };
+        Insert: {
+          permission_id: string;
+          role_id: string;
+        };
+        Update: {
+          permission_id?: string;
+          role_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "roles_permissions_permission_id_fkey";
+            columns: ["permission_id"];
+            referencedRelation: "permissions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "roles_permissions_role_id_fkey";
+            columns: ["role_id"];
+            referencedRelation: "admin_roles";
             referencedColumns: ["id"];
           }
         ];
