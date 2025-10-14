@@ -1,151 +1,47 @@
 {
-  "generatedAt": "2025-10-13T17:08:39.329Z",
-  "baseUrl": "http://localhost:3000",
+  "generatedAt": "2025-10-14T06:38:03.271Z",
   "results": [
     {
       "target": "/",
       "status": 200,
-      "heading": "Quick Actions"
+      "heading": "Rayon Sports vs APR",
+      "navigatedVia": "linked"
     },
     {
       "target": "/admin",
       "status": 200,
-      "heading": "Quick Actions"
+      "heading": null,
+      "navigatedVia": "direct"
     },
     {
       "target": "/admin/login",
       "status": 200,
-      "heading": "Admin Console"
+      "heading": null,
+      "navigatedVia": "direct"
     },
     {
       "target": "/cart",
       "status": 200,
-      "heading": "Your cartIgikapu cyawe"
+      "heading": null,
+      "navigatedVia": "direct"
     },
     {
       "target": "/community",
       "status": 200,
-      "heading": "Community"
+      "heading": null,
+      "navigatedVia": "linked"
     },
     {
       "target": "/events",
       "status": 200,
-      "heading": "Club events & match activations"
+      "heading": null,
+      "navigatedVia": "direct"
     },
     {
       "target": "/fundraising",
       "status": 200,
-      "heading": "Fundraising"
-    },
-    {
-      "target": "/legal/privacy",
-      "status": 200,
-      "heading": "Privacy policy"
-    },
-    {
-      "target": "/legal/terms",
-      "status": 200,
-      "heading": "Terms & conditions"
-    },
-    {
-      "target": "/matches",
-      "status": 200,
-      "heading": "Match Centre"
-    },
-    {
-      "target": "/membership",
-      "status": 200,
-      "heading": "Gikundiro Membership"
-    },
-    {
-      "target": "/membership/upgrade",
-      "status": 200,
-      "heading": "Upgrade your membership"
-    },
-    {
-      "target": "/more",
-      "status": 200,
-      "heading": "My Account"
-    },
-    {
-      "target": "/more/rewards",
-      "status": 200,
-      "heading": "Your supporter rewards"
-    },
-    {
-      "target": "/mytickets",
-      "status": 200,
-      "heading": "Buy Match Tickets"
-    },
-    {
-      "target": "/onboarding",
-      "status": 200,
-      "heading": "Quick Actions"
-    },
-    {
-      "target": "/profile",
-      "status": 200,
-      "heading": "Marie Uwase"
-    },
-    {
-      "target": "/services",
-      "status": 200,
-      "heading": "Partner Services"
-    },
-    {
-      "target": "/services?focus=sacco",
-      "status": 200,
-      "heading": "Partner Services"
-    },
-    {
-      "target": "/settings",
-      "status": 200,
-      "heading": "Settings & preferences"
-    },
-    {
-      "target": "/settings/about",
-      "status": 200,
-      "heading": "About this experience"
-    },
-    {
-      "target": "/shop",
-      "status": 200,
-      "heading": "From drop to pickup — tailor-made for Aline"
-    },
-    {
-      "target": "/support",
-      "status": 200,
-      "heading": "Support & assistance"
-    },
-    {
-      "target": "/tickets",
-      "status": 200,
-      "heading": "Buy Match Tickets"
-    },
-    {
-      "target": "/tickets/transfer",
-      "status": 200,
-      "heading": "Transfer Ticket"
-    },
-    {
-      "target": "/tickets?tab=past",
-      "status": 200,
-      "heading": "Buy Match Tickets"
-    },
-    {
-      "target": "/wallet",
-      "status": 200,
-      "heading": "Wallet"
-    },
-    {
-      "target": "/wallet/history",
-      "status": 200,
-      "heading": "Transaction history"
-    },
-    {
-      "target": "/wallet/top-up",
-      "status": 200,
-      "heading": "Top up your wallet"
+      "heading": null,
+      "navigatedVia": "linked"
     }
   ]
 }

@@ -23,7 +23,11 @@ export function InstallPrompt() {
     // Detect iOS Safari (no beforeinstallprompt event) and show a custom message
     const ua = window.navigator.userAgent.toLowerCase();
     const isiOS = /iphone|ipad|ipod/.test(ua);
-    const inStandalone = ('standalone' in window.navigator) && (window.navigator as any).standalone;
+    const navigatorWithStandalone = window.navigator as Navigator & {
+      standalone?: boolean;
+    };
+    const inStandalone =
+      "standalone" in navigatorWithStandalone && Boolean(navigatorWithStandalone.standalone);
     if (isiOS && !inStandalone) {
       setShowIosPrompt(true);
     }
@@ -54,7 +58,7 @@ export function InstallPrompt() {
   // Render iOS guidance if necessary
   if (showIosPrompt) {
     return (
-      <div className="card break-words whitespace-normal break-words whitespace-normal fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
+      <div className="card break-words whitespace-normal fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
         <span>Install GIKUNDIRO App to your Home Screen</span>
         <p className="text-xs text-white/70">
           Tap the Share icon and select “Add to Home Screen”.
@@ -82,7 +86,7 @@ export function InstallPrompt() {
   };
 
   return (
-    <div className="card break-words whitespace-normal break-words whitespace-normal fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
+    <div className="card break-words whitespace-normal fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
       <span>Install GIKUNDIRO App?</span>
       <button className="btn-primary" onClick={handleInstall}>
         Install
