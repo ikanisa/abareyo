@@ -40,6 +40,11 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
   );
   const colors = colorKeys.map((key) => colorTokens[key]);
 
+  const variants = product.variants.map((variant) => ({
+    size: variant.size,
+    stock: variant.stock,
+  }));
+
   const heroImage = product.images[0]?.src;
 
   return (
@@ -68,6 +73,7 @@ const ProductPage = ({ params }: { params: { slug: string } }) => {
           productId={product.id}
           price={baseVariant.price}
           colors={colors}
+          variants={variants}
         />
 
         <div className="space-y-2 rounded-2xl bg-white/10 p-3 text-xs text-white/80">
