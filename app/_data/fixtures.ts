@@ -31,6 +31,21 @@ export type Order = {
 
 export const fixtures: Fixture[] = [
   {
+    id: "rayon-gicumbi",
+    title: "Rayon Sports vs Gicumbi FC",
+    comp: "Rwanda Premier League",
+    date: "Sat, 21 Dec 2024",
+    time: "18:00",
+    venue: "Amahoro Stadium",
+    status: "upcoming",
+    heroImage: "/tickets/rayon-apr.svg",
+    zones: [
+      { id: "vip-main", name: "VIP", price: 30000, seatsLeft: 54, totalSeats: 320 },
+      { id: "regular-south", name: "Regular", price: 12000, seatsLeft: 212, totalSeats: 950 },
+      { id: "fan-blue-stand", name: "Fan", price: 6000, seatsLeft: 188, totalSeats: 600 },
+    ],
+  },
+  {
     id: "rcl-2024-11-03",
     title: "Rayon Sports vs APR FC",
     comp: "Rwanda Premier League",
