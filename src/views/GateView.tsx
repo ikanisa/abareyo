@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import type { Result } from "@zxing/library";
@@ -68,6 +68,79 @@ export default function Gate() {
     setLocalHistory(loadLocalHistory());
   }, []);
 
+  const mutation = useMutation({
+    mutationFn: async (inputToken: string) => {
+      if (!inputToken.trim()) {
+        throw new Error("Enter a pass token");
+      }
+      return verifyTicketPass(inputToken.trim(), {
+        dryRun,
+        stewardId: stewardId.trim() || undefined,
+      });
+    },
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : "Verification failed";
+      toast({ title: "Could not verify", description: message, variant: "destructive" });
+    },
+  });
+  const { mutate: mutateVerification, data: result, isPending } = mutation;
+
+  const historyQuery = useQuery({
+    queryKey: ["gate", "history"],
+    queryFn: fetchGateHistory,
+    retry: 1,
+  });
+  const refetchHistory = historyQuery.refetch;
+
+  const combinedHistory = useMemo(() => {
+    const remote = historyQuery.data ?? [];
+    const mappedRemote = remote.map((scan) => ({
+      id: scan.id,
+      token: scan.passId,
+      status: scan.result,
+      stewardId: scan.stewardId ?? undefined,
+      zone: scan.pass.zone,
+      timestamp: scan.createdAt,
+    } satisfies LocalHistoryItem));
+
+    return [...mappedRemote, ...localHistory].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }, [historyQuery.data, localHistory]);
+
+  const appendLocalHistory = useCallback((status: string, zone?: string | null) => {
+    const entry: LocalHistoryItem = {
+      id: crypto.randomUUID(),
+      token,
+      status,
+      zone: zone ?? null,
+      stewardId: stewardId.trim() || undefined,
+      timestamp: new Date().toISOString(),
+    };
+    setLocalHistory((prev) => {
+      const next = [entry, ...prev].slice(0, LOCAL_HISTORY_LIMIT);
+      saveLocalHistory(next);
+      return next;
+    });
+  }, [stewardId, token]);
+
+  const handleVerification = useCallback((inputToken: string) => {
+    mutateVerification(inputToken, {
+      onSuccess: (res) => {
+        if (dryRun) {
+          appendLocalHistory(`${res.status}-preview`, res.zone);
+        } else {
+          appendLocalHistory(res.status, res.zone);
+          refetchHistory();
+        }
+      },
+    });
+  }, [appendLocalHistory, dryRun, mutateVerification, refetchHistory]);
+
+  const handleScanResult = useCallback((result: Result) => {
+    const text = result.getText();
+    setToken(text);
+    handleVerification(text);
+  }, [handleVerification]);
+
   useEffect(() => {
     if (!cameraActive) {
       const reader = scannerRef.current as (BrowserMultiFormatReader & { reset?: () => void }) | null;
@@ -92,9 +165,9 @@ export default function Gate() {
         if (!deviceId) {
           throw new Error("No camera available");
         }
-        return reader.decodeFromVideoDevice(deviceId, videoRef.current!, (result) => {
-          if (result) {
-            handleScanResult(result);
+        return reader.decodeFromVideoDevice(deviceId, videoRef.current!, (scanResult) => {
+          if (scanResult) {
+            handleScanResult(scanResult);
           }
         });
       })
@@ -110,62 +183,7 @@ export default function Gate() {
       const stream = videoRef.current?.srcObject as MediaStream | null;
       stream?.getTracks().forEach((track) => track.stop());
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cameraActive]);
-
-  const mutation = useMutation({
-    mutationFn: async (inputToken: string) => {
-      if (!inputToken.trim()) {
-        throw new Error("Enter a pass token");
-      }
-      return verifyTicketPass(inputToken.trim(), {
-        dryRun,
-        stewardId: stewardId.trim() || undefined,
-      });
-    },
-    onError: (err: unknown) => {
-      const message = err instanceof Error ? err.message : "Verification failed";
-      toast({ title: "Could not verify", description: message, variant: "destructive" });
-    },
-  });
-
-  const historyQuery = useQuery({
-    queryKey: ["gate", "history"],
-    queryFn: fetchGateHistory,
-    retry: 1,
-  });
-
-  const result = mutation.data;
-
-  const combinedHistory = useMemo(() => {
-    const remote = historyQuery.data ?? [];
-    const mappedRemote = remote.map((scan) => ({
-      id: scan.id,
-      token: scan.passId,
-      status: scan.result,
-      stewardId: scan.stewardId ?? undefined,
-      zone: scan.pass.zone,
-      timestamp: scan.createdAt,
-    } satisfies LocalHistoryItem));
-
-    return [...mappedRemote, ...localHistory].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  }, [historyQuery.data, localHistory]);
-
-  const appendLocalHistory = (status: string, zone?: string | null) => {
-    const entry: LocalHistoryItem = {
-      id: crypto.randomUUID(),
-      token,
-      status,
-      zone: zone ?? null,
-      stewardId: stewardId.trim() || undefined,
-      timestamp: new Date().toISOString(),
-    };
-    setLocalHistory((prev) => {
-      const next = [entry, ...prev].slice(0, LOCAL_HISTORY_LIMIT);
-      saveLocalHistory(next);
-      return next;
-    });
-  };
+  }, [cameraActive, handleScanResult, toast]);
 
   useEffect(() => {
     if (!socket) return;
@@ -184,34 +202,14 @@ export default function Gate() {
         saveLocalHistory(next);
         return next;
       });
-      historyQuery.refetch();
+      refetchHistory();
     };
 
     socket.on('tickets.gate.scan', handleRemoteScan);
     return () => {
       socket.off('tickets.gate.scan', handleRemoteScan);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket]);
-
-  const handleVerification = (inputToken: string) => {
-    mutation.mutate(inputToken, {
-      onSuccess: (res) => {
-        if (dryRun) {
-          appendLocalHistory(`${res.status}-preview`, res.zone);
-        } else {
-          appendLocalHistory(res.status, res.zone);
-          historyQuery.refetch();
-        }
-      },
-    });
-  };
-
-  const handleScanResult = (result: Result) => {
-    const text = result.getText();
-    setToken(text);
-    handleVerification(text);
-  };
+  }, [socket, refetchHistory]);
 
   return (
     <div className="min-h-screen pb-24 px-4">
@@ -262,7 +260,7 @@ export default function Gate() {
           <Button
             variant="hero"
             onClick={() => handleVerification(token)}
-            disabled={mutation.isPending}
+            disabled={isPending}
           >
             {mutation.isPending ? "Checking..." : "Verify"}
           </Button>
@@ -322,7 +320,7 @@ export default function Gate() {
       <GlassCard className="mt-6 p-6 space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-foreground">Recent Scans</h3>
-          <Button variant="glass" size="sm" onClick={() => historyQuery.refetch()} disabled={historyQuery.isFetching}>
+          <Button variant="glass" size="sm" onClick={() => refetchHistory()} disabled={historyQuery.isFetching}>
             <RefreshCw className="w-4 h-4" /> Refresh
           </Button>
         </div>
