@@ -132,13 +132,13 @@ export default function MembersListClient() {
 
   const debouncedSearch = useDebouncedValue(search, 320);
 
-  const membersQuery = useQuery({
+  const membersQuery = useQuery<PublicMember[]>({
     queryKey: ['members', { q: debouncedSearch, region, fanClub, sort }],
     queryFn: () => fetchMembers({ q: debouncedSearch, region, fanClub, sort }),
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 
-  const countQuery = useQuery({
+  const countQuery = useQuery<number>({
     queryKey: ['members', 'count'],
     queryFn: fetchCount,
     staleTime: 60_000,

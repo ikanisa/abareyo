@@ -249,7 +249,7 @@ export default function AdminLoginForm() {
           return;
         }
 
-        const accessToken = verifyData?.session?.access_token;
+        const accessToken = verifyData?.access_token;
         if (accessToken) {
           await completeAdminSignIn(accessToken);
           return;
