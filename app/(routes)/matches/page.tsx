@@ -41,12 +41,18 @@ export default async function MatchesPage() {
 
   const normalized = matchesSource.map((match, index) => {
     const kickoff =
-      (typeof match.kickoff === "string" && match.kickoff) ||
-      (typeof match.date === "string" ? match.date : null);
+      typeof match.kickoff === "string" && match.kickoff
+        ? match.kickoff
+        : typeof match.date === "string" && match.date
+          ? match.date
+          : undefined;
 
     const venue =
-      (typeof match.venue === "string" && match.venue) ||
-      (typeof match.stadium === "string" ? match.stadium : null);
+      typeof match.venue === "string" && match.venue
+        ? match.venue
+        : typeof match.stadium === "string" && match.stadium
+          ? match.stadium
+          : undefined;
 
     const status =
       (typeof match.status === "string" && match.status) || (match.score ? "live" : "upcoming");

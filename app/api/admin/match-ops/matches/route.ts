@@ -3,37 +3,13 @@ import { NextResponse } from 'next/server';
 import { writeAuditLog } from '@/app/api/admin/_lib/audit';
 import { getServiceClient } from '@/app/api/admin/_lib/db';
 import { requireAdmin } from '@/app/api/admin/_lib/session';
-type MatchRow = {
-  id: string;
-  title: string;
-  date: string;
-  venue: string | null;
-  status: string;
-  vip_price: number | null;
-  regular_price: number | null;
-  seats_vip: number | null;
-  seats_regular: number | null;
-  seats_blue: number | null;
-  home_team: string | null;
-  away_team: string | null;
-};
+import type { Tables } from '@/integrations/supabase/types';
 
-type MatchZoneRow = {
-  id: string;
-  match_id: string;
-  name: string;
-  capacity: number;
-  price: number;
-  default_gate: string | null;
-};
+type MatchRow = Tables<'matches'>;
 
-type MatchGateRow = {
-  id: string;
-  match_id: string;
-  name: string;
-  location: string | null;
-  max_throughput: number | null;
-};
+type MatchZoneRow = Tables<'match_zones'>;
+
+type MatchGateRow = Tables<'match_gates'>;
 
 type SerializedZone = {
   id: string;
