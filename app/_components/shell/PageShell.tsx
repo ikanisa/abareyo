@@ -22,7 +22,7 @@ export default function PageShell({
   mainClassName,
 }: PageShellProps) {
   return (
-    <div className={clsx("min-h-screen bg-rs-gradient text-white pb-16", className)}>
+    <div className={clsx("min-h-screen bg-rs-gradient text-white pb-24", className)}>
       <main className={clsx("max-w-md mx-auto p-3 space-y-6", mainClassName)}>{children}</main>
     </div>
   );
