@@ -3,6 +3,8 @@ Production Environment & Secrets
 Required runtime env vars
 
 - Backend (NestJS)
+  - SUPABASE_URL (Supabase project URL)
+  - SUPABASE_SERVICE_ROLE_KEY (Supabase service role key)
   - APP_HOST, APP_PORT (optional; defaults 0.0.0.0:5000)
   - CORS_ORIGIN (comma-separated allowlist; no wildcard in prod)
   - BACKEND_BASE_URL (public URL of API)
@@ -19,6 +21,8 @@ Required runtime env vars
   - APP_ENABLE_CSP=1 (enable Helmet CSP in prod)
 
 - Frontend (Next.js)
+  - NEXT_PUBLIC_SUPABASE_URL (Supabase project URL)
+  - NEXT_PUBLIC_SUPABASE_ANON_KEY (Supabase anonymous public key)
   - NEXT_PUBLIC_BACKEND_URL (points at /api gateway that fronts Nest API)
   - NEXT_PUBLIC_ENVIRONMENT_LABEL (optional ribbon)
   - NEXT_PUBLIC_ADMIN_SESSION_COOKIE (optional; default admin_session)
