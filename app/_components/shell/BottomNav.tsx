@@ -48,9 +48,9 @@ export default function BottomNav({ localePrefix, activePath }: BottomNavProps) 
     })();
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
+    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-3">
       <nav
-        className="pointer-events-auto flex h-16 items-center gap-1 rounded-full border border-white/25 bg-white/20 px-1 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.4)] backdrop-blur-2xl"
+        className="pointer-events-auto grid h-14 w-full max-w-sm grid-cols-5 items-stretch gap-1 rounded-full border border-white/25 bg-white/20 px-1 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.4)] backdrop-blur-2xl"
         style={{ WebkitBackdropFilter: "blur(22px)" }}
       >
         {items.map((item) => {
@@ -61,15 +61,15 @@ export default function BottomNav({ localePrefix, activePath }: BottomNavProps) 
               key={item.href}
               href={href || item.href}
               className={clsx(
-                "group relative mx-1 flex items-center gap-2 rounded-full px-3 py-2 text-white/90 transition",
+                "group relative flex h-full w-full min-w-0 flex-col items-center justify-center gap-1 rounded-full px-1 py-2 text-[13px] font-semibold text-white/90 transition sm:px-2 sm:text-sm",
                 isActive
-                  ? "bg-white/30 font-semibold text-white shadow-inner shadow-white/20"
+                  ? "bg-white/30 text-white shadow-inner shadow-white/20"
                   : "hover:bg-white/10 hover:text-white active:bg-white/15",
               )}
               aria-current={isActive ? "page" : undefined}
             >
               <item.icon className="h-5 w-5 opacity-95" />
-              <span className="text-[13px] font-semibold leading-none">{item.label}</span>
+              <span className="leading-none">{item.label}</span>
             </Link>
           );
         })}
