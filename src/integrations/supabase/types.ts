@@ -818,31 +818,49 @@ export type Database = {
         Row: {
           avatar_url: string | null;
           created_at: string;
+          display_name: string | null;
+          fan_club: string | null;
           id: string;
+          joined_at: string | null;
+          language: string | null;
           momo_number: string | null;
           name: string | null;
           phone: string | null;
           points: number;
+          public_profile: boolean | null;
+          region: string | null;
           tier: Database["public"]["Enums"]["user_tier"];
         };
         Insert: {
           avatar_url?: string | null;
           created_at?: string;
+          display_name?: string | null;
+          fan_club?: string | null;
           id?: string;
+          joined_at?: string | null;
+          language?: string | null;
           momo_number?: string | null;
           name?: string | null;
           phone?: string | null;
           points?: number;
+          public_profile?: boolean | null;
+          region?: string | null;
           tier?: Database["public"]["Enums"]["user_tier"];
         };
         Update: {
           avatar_url?: string | null;
           created_at?: string;
+          display_name?: string | null;
+          fan_club?: string | null;
           id?: string;
+          joined_at?: string | null;
+          language?: string | null;
           momo_number?: string | null;
           name?: string | null;
           phone?: string | null;
           points?: number;
+          public_profile?: boolean | null;
+          region?: string | null;
           tier?: Database["public"]["Enums"]["user_tier"];
         };
         Relationships: [];
@@ -886,6 +904,17 @@ export type Database = {
           parsed_count_7d: number | null;
           raw_count_7d: number | null;
           success_rate: number | null;
+        };
+        Relationships: [];
+      };
+      public_members: {
+        Row: {
+          avatar_url: string;
+          display_name: string;
+          fan_club: string;
+          id: string;
+          joined_at: string | null;
+          region: string;
         };
         Relationships: [];
       };
