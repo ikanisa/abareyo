@@ -47,8 +47,7 @@ export async function GET() {
     // Grouped status counts (aggregation done by PostgREST)
     const statusSummaryPromise = supabase
       .from('ticket_orders')
-      .select('status, count:count(id)', { head: false })
-      .group('status');
+      .select('status, count:count(id)', { head: false });
 
     const [passesCount, ordersCount, statusSummary, recentPasses] = await Promise.all([
       supabase.from('ticket_passes').select('id', { count: 'exact', head: true }),
