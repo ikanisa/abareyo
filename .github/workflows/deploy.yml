@@ -27,6 +27,12 @@ jobs:
       ADMIN_SESSION_SECRET: ${{ secrets.ADMIN_SESSION_SECRET }}
       FAN_SESSION_SECRET: ${{ secrets.FAN_SESSION_SECRET }}
       HEALTH_URL: ${{ secrets.HEALTH_URL }}
+      KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG_B64 }}
+      INSTALL_CERT_MANAGER: ${{ secrets.INSTALL_CERT_MANAGER }}
+      CERT_MANAGER_EMAIL: ${{ secrets.CERT_MANAGER_EMAIL }}
+      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+      INGRESS_HOST: ${{ secrets.INGRESS_HOST }}
+      TLS_SECRET: ${{ secrets.TLS_SECRET }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -95,43 +101,41 @@ jobs:
             ghcr.io/${{ github.repository }}-backend:${{ github.sha }}
 
       - name: Setup kubectl (optional)
-        if: secrets.KUBE_CONFIG_B64 != ''
+        if: env.KUBE_CONFIG_B64 != ''
         uses: azure/setup-kubectl@v4
 
       - name: Configure kubeconfig (optional)
-        if: secrets.KUBE_CONFIG_B64 != ''
+        if: env.KUBE_CONFIG_B64 != ''
         run: |
           mkdir -p "$HOME/.kube"
           echo "${KUBE_CONFIG_B64}" | base64 -d > "$HOME/.kube/config"
         env:
-          KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG_B64 }}
+          KUBE_CONFIG_B64: ${{ env.KUBE_CONFIG_B64 }}
 
       - name: Install cert-manager (optional)
-        if: secrets.KUBE_CONFIG_B64 != '' && env.INSTALL_CERT_MANAGER == '1'
+        if: env.KUBE_CONFIG_B64 != '' && env.INSTALL_CERT_MANAGER == '1'
         run: |
           kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.15.1/cert-manager.yaml
-        env:
-          INSTALL_CERT_MANAGER: ${{ secrets.INSTALL_CERT_MANAGER }}
 
       - name: Apply ClusterIssuer (optional)
-        if: secrets.KUBE_CONFIG_B64 != '' && env.CERT_MANAGER_EMAIL != ''
+        if: env.KUBE_CONFIG_B64 != '' && env.CERT_MANAGER_EMAIL != ''
         run: |
           sed "s/__LETSENCRYPT_EMAIL__/${CERT_MANAGER_EMAIL}/g" k8s/cert-issuer.yaml | kubectl apply -f -
-        env:
-          CERT_MANAGER_EMAIL: ${{ secrets.CERT_MANAGER_EMAIL }}
 
       - name: Create GHCR imagePullSecret (optional)
-        if: secrets.KUBE_CONFIG_B64 != '' && secrets.GHCR_TOKEN != ''
+        if: env.KUBE_CONFIG_B64 != '' && env.GHCR_TOKEN != ''
         run: |
           kubectl -n rayon create secret docker-registry ghcr \
             --docker-server=ghcr.io \
             --docker-username=${{ github.actor }} \
-            --docker-password=${{ secrets.GHCR_TOKEN }} \
+            --docker-password="$GHCR_TOKEN" \
             --dry-run=client -o yaml | kubectl apply -f -
           kubectl -n rayon patch serviceaccount default --type merge -p '{"imagePullSecrets":[{"name":"ghcr"}]}' || true
+        env:
+          GHCR_TOKEN: ${{ env.GHCR_TOKEN }}
 
       - name: Apply Kubernetes manifests (optional)
-        if: secrets.KUBE_CONFIG_B64 != ''
+        if: env.KUBE_CONFIG_B64 != ''
         run: |
           kubectl apply -f k8s/namespace.yaml
           kubectl apply -f k8s/backend-deployment.yaml
@@ -141,12 +145,9 @@ jobs:
           else \
             echo "Skipping ingress apply (missing INGRESS_HOST/TLS_SECRET secrets)" ; \
           fi
-        env:
-          INGRESS_HOST: ${{ secrets.INGRESS_HOST }}
-          TLS_SECRET: ${{ secrets.TLS_SECRET }}
 
       - name: Set images to current SHA (optional)
-        if: secrets.KUBE_CONFIG_B64 != ''
+        if: env.KUBE_CONFIG_B64 != ''
         run: |
           kubectl -n rayon set image deployment/backend backend=ghcr.io/${{ github.repository }}-backend:${{ github.sha }} --record=true || true
           kubectl -n rayon set image deployment/frontend frontend=ghcr.io/${{ github.repository }}-frontend:${{ github.sha }} --record=true || true
@@ -155,7 +156,7 @@ jobs:
           kubectl -n rayon get pods -o wide
 
       - name: In-cluster health check (optional)
-        if: secrets.KUBE_CONFIG_B64 != '' && env.HEALTH_URL == ''
+        if: env.KUBE_CONFIG_B64 != '' && env.HEALTH_URL == ''
         run: |
           kubectl -n rayon run curl --image=curlimages/curl:8.8.0 -i --rm --restart=Never -- \
             sh -lc 'curl -fsS http://backend:5000/api/health || exit 1' || true
