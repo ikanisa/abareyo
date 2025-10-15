@@ -1,5 +1,7 @@
 Production Environment & Secrets
 
+> ℹ️ For the full Supabase admin authentication checklist (including seeding and troubleshooting), see [runbooks/admin-supabase-email-login.md](runbooks/admin-supabase-email-login.md).
+
 Required runtime env vars
 
 - Backend (NestJS)
