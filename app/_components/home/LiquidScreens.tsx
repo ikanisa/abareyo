@@ -3,6 +3,7 @@
 import Link from "next/link";
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import MembersWidget from "./MembersWidget";
 
 type IconProps = { className?: string };
 
@@ -45,6 +46,8 @@ export default function LiquidHomeScreen() {
             <ActionTile key={action.label} icon={action.icon} label={action.label} href={action.href} />
           ))}
         </div>
+
+        <MembersWidget className="mt-4" />
 
         <GlassCard className="mt-4 p-5">
           <h3 className="text-lg font-semibold text-white">What’s Next</h3>
