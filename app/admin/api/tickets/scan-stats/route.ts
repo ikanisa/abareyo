@@ -29,7 +29,7 @@ export async function GET() {
     // Grouped status counts
     const statusSummaryPromise = supabase
       .from('ticket_orders')
-      .select('status, count:id', { head: false })
+      .select('status, count:count(id)', { head: false })
       .group('status');
 
     const [passesCount, ordersCount, statusSummary, recentPasses] = await Promise.all([
