@@ -135,7 +135,7 @@ export default function MembersListClient() {
   const membersQuery = useQuery({
     queryKey: ['members', { q: debouncedSearch, region, fanClub, sort }],
     queryFn: () => fetchMembers({ q: debouncedSearch, region, fanClub, sort }),
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 
   const countQuery = useQuery({
