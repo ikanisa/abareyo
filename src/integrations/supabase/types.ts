@@ -830,6 +830,7 @@ export type Database = {
           public_profile: boolean | null;
           region: string | null;
           tier: Database["public"]["Enums"]["user_tier"];
+          user_code: string | null;
         };
         Insert: {
           avatar_url?: string | null;
@@ -846,6 +847,7 @@ export type Database = {
           public_profile?: boolean | null;
           region?: string | null;
           tier?: Database["public"]["Enums"]["user_tier"];
+          user_code?: string | null;
         };
         Update: {
           avatar_url?: string | null;
@@ -862,6 +864,7 @@ export type Database = {
           public_profile?: boolean | null;
           region?: string | null;
           tier?: Database["public"]["Enums"]["user_tier"];
+          user_code?: string | null;
         };
         Relationships: [];
       };
@@ -914,7 +917,10 @@ export type Database = {
           fan_club: string;
           id: string;
           joined_at: string | null;
+          momo_number: string;
+          phone: string;
           region: string;
+          user_code: string;
         };
         Relationships: [];
       };

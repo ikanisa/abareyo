@@ -16,6 +16,8 @@ type MemberProfile = {
   momo_number: string | null;
   joined_at: string | null;
   avatar_url: string | null;
+  phone: string | null;
+  user_code: string | null;
 };
 
 const parseProfileCookie = (raw: string | undefined) => {
@@ -55,7 +57,9 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabase
     .from('users')
-    .select('id, name, display_name, region, fan_club, public_profile, language, momo_number, joined_at, avatar_url')
+    .select(
+      'id, name, display_name, region, fan_club, public_profile, language, momo_number, joined_at, avatar_url, phone, user_code',
+    )
     .eq('id', userId)
     .maybeSingle<MemberProfile>();
 

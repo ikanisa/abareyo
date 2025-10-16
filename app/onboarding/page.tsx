@@ -1,75 +1,53 @@
 'use client';
 
-import clsx from 'clsx';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PageShell from '@/app/_components/shell/PageShell';
-import { useToast } from '@/components/ui/use-toast';
 import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/components/ui/use-toast';
+import { useAnonymousSupabaseUser } from '@/hooks/useAnonymousSupabaseUser';
 import { dispatchTelemetryEvent } from '@/lib/observability';
 
 type MemberProfile = {
   id: string;
-  name: string | null;
   display_name: string | null;
-  region: string | null;
-  fan_club: string | null;
-  public_profile: boolean | null;
-  language: string | null;
+  phone: string | null;
   momo_number: string | null;
-  joined_at: string | null;
-  avatar_url: string | null;
+  public_profile: boolean | null;
+  user_code: string | null;
 };
 
 type MeResponse = { me: MemberProfile | null };
-type SaveResponse = { ok?: boolean; id?: string; error?: string };
+type SaveResponse = { ok?: boolean; id?: string; error?: string; code?: string };
 
-type Step = 1 | 2 | 3;
-
-const REGIONS = [
-  'Kigali',
-  'Huye',
-  'Musanze',
-  'Rubavu',
-  'Rusizi',
-  'Nyagatare',
-  'Rwamagana',
-  'Bugesera',
-  'Muhanga',
-  'Karongi',
-];
-
-const FAN_CLUBS = [
-  'Rayon SC Kigali',
-  'Rayon SC Huye',
-  'Rayon SC Rubavu',
-  'Rayon SC Musanze',
-  'Rayon SC Rusizi',
-  'Rayon SC Diaspora',
-];
+const deriveMomoPreview = (whatsapp: string) => {
+  const digits = whatsapp.replace(/[^0-9+]/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('+2507')) {
+    return `0${digits.slice(4)}`;
+  }
+  if (digits.startsWith('2507')) {
+    return `0${digits.slice(3)}`;
+  }
+  if (digits.startsWith('07')) {
+    return digits;
+  }
+  return digits;
+};
 
 export default function OnboardingWizard() {
   const router = useRouter();
   const { toast } = useToast();
-  const [step, setStep] = useState<Step>(1);
+  const auth = useAnonymousSupabaseUser();
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [fullName, setFullName] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [language, setLanguage] = useState<'rw' | 'en'>('rw');
-  const [region, setRegion] = useState('');
-  const [fanClub, setFanClub] = useState('');
-  const [publicProfile, setPublicProfile] = useState(true);
+  const [whatsapp, setWhatsapp] = useState('');
+  const [useSameMomo, setUseSameMomo] = useState(true);
   const [momoNumber, setMomoNumber] = useState('');
-  const [consent, setConsent] = useState(false);
+  const [publicProfile, setPublicProfile] = useState(true);
+  const [userCode, setUserCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  const canContinueStep1 = useMemo(() => fullName.trim().length >= 2, [fullName]);
-  const canContinueStep2 = useMemo(() => region.trim().length > 0, [region]);
-  const canSubmit = useMemo(
-    () => canContinueStep1 && canContinueStep2 && consent && !submitting,
-    [canContinueStep1, canContinueStep2, consent, submitting],
-  );
 
   useEffect(() => {
     let cancelled = false;
@@ -88,14 +66,13 @@ export default function OnboardingWizard() {
         const json = (await response.json()) as MeResponse;
         if (!cancelled && json.me) {
           const me = json.me;
-          setFullName(me.name ?? '');
-          setDisplayName(me.display_name ?? '');
-          setRegion(me.region ?? '');
-          setFanClub(me.fan_club ?? '');
-          setPublicProfile(Boolean(me.public_profile ?? false));
-          setLanguage(me.language === 'en' ? 'en' : 'rw');
-          setMomoNumber(me.momo_number ?? '');
-          setConsent(true);
+          setWhatsapp(me.phone ?? '');
+          setUserCode(me.user_code ?? null);
+          setPublicProfile(Boolean(me.public_profile ?? true));
+          if (me.momo_number) {
+            setMomoNumber(me.momo_number);
+            setUseSameMomo(deriveMomoPreview(me.phone ?? '') === me.momo_number);
+          }
         }
       } catch (fetchError) {
         if (!cancelled) {
@@ -117,22 +94,27 @@ export default function OnboardingWizard() {
     };
   }, []);
 
+  const momoPreview = useMemo(() => deriveMomoPreview(whatsapp), [whatsapp]);
+  const canSubmit = useMemo(() => {
+    if (!whatsapp.trim()) return false;
+    if (!useSameMomo && !momoNumber.trim()) return false;
+    return !submitting && auth.status !== 'loading';
+  }, [auth.status, momoNumber, submitting, useSameMomo, whatsapp]);
+
   const handleSubmit = async () => {
     if (!canSubmit) {
       return;
     }
+
     setSubmitting(true);
     setError(null);
 
     const payload = {
-      fullName,
-      displayName,
-      language,
-      region,
-      fanClub,
+      user_id: auth.session?.user.id,
+      whatsappNumber: whatsapp,
+      useWhatsappForMomo: useSameMomo,
+      momoNumber: useSameMomo ? undefined : momoNumber,
       publicProfile,
-      momoNumber: momoNumber.trim() ? momoNumber.trim() : null,
-      consent: true,
     };
 
     try {
@@ -146,18 +128,20 @@ export default function OnboardingWizard() {
         throw new Error(json.error ?? 'save_failed');
       }
 
+      if (json.code) {
+        setUserCode(json.code);
+      }
+
       toast({
-        title: 'Profile saved',
+        title: 'Profile synced',
         description: publicProfile
-          ? 'Welcome to the public directory. You can hide anytime from settings.'
-          : 'Your profile is private. Update it later from Settings.',
+          ? 'Your WhatsApp number now powers the live fan directory.'
+          : 'You are hidden for now. Rejoin anytime from settings.',
       });
 
       void dispatchTelemetryEvent({
         type: 'onboarding_completed',
         public_profile: publicProfile,
-        region: region || '—',
-        fan_club: fanClub || '—',
       });
 
       router.push('/members');
@@ -169,220 +153,142 @@ export default function OnboardingWizard() {
     }
   };
 
-  const renderStep = () => {
-    if (loading) {
-      return (
-        <div className="space-y-4" aria-busy="true">
-          <div className="h-5 w-36 animate-pulse rounded bg-white/15" />
-          <div className="h-12 w-full animate-pulse rounded-xl bg-white/10" />
-          <div className="h-12 w-full animate-pulse rounded-xl bg-white/10" />
-        </div>
-      );
+  const renderStatus = () => {
+    if (auth.status === 'loading') {
+      return 'Securing connection…';
     }
-
-    if (step === 1) {
-      return (
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="full-name" className="muted text-sm">
-              Full name
-            </label>
-            <input
-              id="full-name"
-              className="w-full rounded-xl bg-black/25 px-3 py-3 text-white outline-none"
-              placeholder="Your full name"
-              value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
-              autoComplete="name"
-            />
-          </div>
-          <div>
-            <label htmlFor="display-name" className="muted text-sm">
-              Preferred display name (optional)
-            </label>
-            <input
-              id="display-name"
-              className="w-full rounded-xl bg-black/25 px-3 py-3 text-white outline-none"
-              placeholder="What should others see?"
-              value={displayName}
-              onChange={(event) => setDisplayName(event.target.value)}
-            />
-          </div>
-          <div>
-            <span className="muted text-sm">Language</span>
-            <div className="mt-2 grid grid-cols-2 gap-3">
-              {[
-                { value: 'rw' as const, label: 'Kinyarwanda' },
-                { value: 'en' as const, label: 'English' },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  className={clsx(
-                    'tile min-h-[48px] text-sm font-semibold',
-                    language === option.value && 'bg-white/30 text-black',
-                  )}
-                  onClick={() => setLanguage(option.value)}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex justify-end">
-            <button
-              type="button"
-              className="btn-primary min-h-[44px] px-6"
-              disabled={!canContinueStep1}
-              onClick={() => setStep(2)}
-            >
-              Continue
-            </button>
-          </div>
-        </div>
-      );
+    if (auth.status === 'error') {
+      return 'Offline mode';
     }
-
-    if (step === 2) {
-      return (
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="region" className="muted text-sm">
-              Region / City
-            </label>
-            <select
-              id="region"
-              className="w-full rounded-xl bg-black/25 px-3 py-3 text-white outline-none"
-              value={region}
-              onChange={(event) => setRegion(event.target.value)}
-            >
-              <option value="" disabled>
-                Select your region
-              </option>
-              {REGIONS.map((entry) => (
-                <option key={entry} value={entry}>
-                  {entry}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="fan-club" className="muted text-sm">
-              Fan Club (optional)
-            </label>
-            <select
-              id="fan-club"
-              className="w-full rounded-xl bg-black/25 px-3 py-3 text-white outline-none"
-              value={fanClub}
-              onChange={(event) => setFanClub(event.target.value)}
-            >
-              <option value="">No fan club yet</option>
-              {FAN_CLUBS.map((entry) => (
-                <option key={entry} value={entry}>
-                  {entry}
-                </option>
-              ))}
-              <option value="Other">
-                Request new club…
-              </option>
-            </select>
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            <button type="button" className="btn min-h-[44px] px-5" onClick={() => setStep(1)}>
-              Back
-            </button>
-            <button
-              type="button"
-              className="btn-primary min-h-[44px] px-6"
-              disabled={!canContinueStep2}
-              onClick={() => setStep(3)}
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-4">
-        <div className="rounded-2xl bg-white/10 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="text-white/90 font-semibold">Show me in the Member Directory</div>
-              <p className="muted text-xs">You control what is public. You can hide anytime.</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch
-                id="public-profile"
-                aria-label="Show me in the Member Directory"
-                checked={publicProfile}
-                onCheckedChange={(value) => setPublicProfile(value)}
-              />
-            </div>
-          </div>
-        </div>
-        <div>
-          <label htmlFor="momo" className="muted text-sm">
-            MoMo number (optional)
-          </label>
-          <input
-            id="momo"
-            className="w-full rounded-xl bg-black/25 px-3 py-3 text-white outline-none"
-            placeholder="07xxxxxxxx"
-            inputMode="tel"
-            value={momoNumber}
-            onChange={(event) => setMomoNumber(event.target.value)}
-          />
-          <p className="muted mt-1 text-xs">Add it for future perks. Payments stay offline for now.</p>
-        </div>
-        <div className="flex items-center gap-3 rounded-2xl bg-black/20 px-4 py-3">
-          <input
-            id="consent"
-            type="checkbox"
-            checked={consent}
-            onChange={(event) => setConsent(event.target.checked)}
-            className="h-5 w-5 rounded border border-white/30 bg-black/40"
-          />
-          <label htmlFor="consent" className="muted text-sm">
-            I agree to share these details with GIKUNDIRO for membership services.
-          </label>
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <button type="button" className="btn min-h-[44px] px-5" onClick={() => setStep(2)}>
-            Back
-          </button>
-          <button
-            type="button"
-            className="btn-primary min-h-[44px] px-6"
-            disabled={!canSubmit}
-            onClick={handleSubmit}
-          >
-            {submitting ? 'Saving…' : 'Finish'}
-          </button>
-        </div>
-      </div>
-    );
+    return 'Ready';
   };
 
   return (
     <PageShell>
-      <section className="card space-y-5" aria-labelledby="onboarding-title">
-        <div>
-          <p className="muted text-sm">Step {step} of 3</p>
-          <h1 id="onboarding-title" className="mt-1 text-white">
-            Join GIKUNDIRO Members
-          </h1>
-          <p className="muted text-sm">Set your profile in under a minute. We’ll keep it safe.</p>
-        </div>
-
-        {error ? (
-          <div className="rounded-xl border border-red-400/50 bg-red-500/10 px-4 py-3 text-sm text-red-200" role="alert">
-            {error}
+      <section className="space-y-6" aria-labelledby="onboarding-title">
+        <div className="rounded-[32px] bg-gradient-to-br from-[#0EA5E9]/20 via-[#1D4ED8]/20 to-[#312E81]/40 p-[1px]">
+          <div className="rounded-[30px] bg-slate-950/80 p-6 backdrop-blur">
+            <div className="flex flex-col gap-2">
+              <p className="text-xs uppercase tracking-[0.3em] text-white/60">Step 1</p>
+              <h1 id="onboarding-title" className="text-3xl font-semibold text-white">
+                Light up the fan registry
+              </h1>
+              <p className="text-sm text-white/70">
+                We only need your WhatsApp contact and MoMo readiness. Names are optional—your six-digit fan code is how the
+                crew recognises you.
+              </p>
+            </div>
+            <div
+              className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)]"
+              aria-busy={loading ? 'true' : 'false'}
+            >
+              <div className="space-y-5">
+                <div>
+                  <label htmlFor="whatsapp" className="muted text-sm">
+                    WhatsApp number (with country code)
+                  </label>
+                  <input
+                    id="whatsapp"
+                    className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none"
+                    placeholder="e.g. +2507xxxxxxx"
+                    value={whatsapp}
+                    onChange={(event) => setWhatsapp(event.target.value)}
+                    autoComplete="tel"
+                    inputMode="tel"
+                    disabled={loading || submitting}
+                  />
+                  <p className="muted mt-2 text-xs">
+                    Tip: fans outside Rwanda can share any country code—your MoMo hint adapts instantly.
+                  </p>
+                </div>
+                <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium text-white">MoMo matches my WhatsApp</p>
+                    <p className="muted text-xs">
+                      {useSameMomo ? `Will use ${momoPreview || 'your WhatsApp digits'}` : 'Add a different MoMo number below.'}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={useSameMomo}
+                    onCheckedChange={setUseSameMomo}
+                    aria-label="Use same number for MoMo"
+                    disabled={loading || submitting}
+                  />
+                </div>
+                {!useSameMomo ? (
+                  <div>
+                    <label htmlFor="momo" className="muted text-sm">
+                      MoMo number
+                    </label>
+                    <input
+                      id="momo"
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none"
+                      placeholder="07xxxxxxxx"
+                      value={momoNumber}
+                      onChange={(event) => setMomoNumber(event.target.value)}
+                      autoComplete="tel"
+                      inputMode="tel"
+                      disabled={loading || submitting}
+                    />
+                  </div>
+                ) : null}
+                <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium text-white">Show me in the fan directory</p>
+                    <p className="muted text-xs">Toggle anytime after onboarding.</p>
+                  </div>
+                  <Switch
+                    checked={publicProfile}
+                    onCheckedChange={setPublicProfile}
+                    aria-label="Public profile"
+                    disabled={loading || submitting}
+                  />
+                </div>
+                {error ? (
+                  <div className="rounded-2xl border border-red-400/60 bg-red-500/10 px-4 py-3 text-sm text-red-200" role="alert">
+                    {error}
+                  </div>
+                ) : null}
+                <button
+                  type="button"
+                  className="btn-primary min-h-[48px] w-full justify-center"
+                  disabled={!canSubmit}
+                  onClick={handleSubmit}
+                >
+                  {submitting ? 'Syncing…' : 'Save & join directory'}
+                </button>
+              </div>
+              <div className="space-y-4 rounded-3xl border border-white/10 bg-black/40 p-5">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-xs uppercase tracking-[0.28em] text-white/60">Your fan code</p>
+                  <p className="mt-3 text-4xl font-semibold text-white">{userCode ?? '••••••'}</p>
+                  <p className="muted mt-2 text-xs">
+                    Each new supporter gets six random digits. Share it when joining fan clubs or redeeming perks.
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-xs uppercase tracking-[0.28em] text-white/60">Session</p>
+                  <p className="mt-2 text-sm font-semibold text-white">{renderStatus()}</p>
+                  {auth.error ? <p className="muted mt-1 text-xs">{auth.error}</p> : null}
+                  <button
+                    type="button"
+                    className="btn mt-3 w-full justify-center"
+                    onClick={() => auth.refresh()}
+                    disabled={auth.status === 'loading'}
+                  >
+                    Refresh connection
+                  </button>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">
+                  <p className="font-semibold">Why WhatsApp?</p>
+                  <p className="muted mt-1 text-xs">
+                    It lets us coordinate match-day pushes, reward drops, and MoMo confirmations instantly—no extra passwords.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-        ) : null}
-
-        {renderStep()}
+        </div>
       </section>
     </PageShell>
   );
