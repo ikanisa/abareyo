@@ -4,6 +4,9 @@ import Link from "next/link";
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import MembersWidget from "./MembersWidget";
+import Feed from "./Feed";
+import CommunityStrip from "./CommunityStrip";
+import RewardsWidget from "./RewardsWidget";
 
 type IconProps = { className?: string };
 
@@ -49,6 +52,10 @@ export default function LiquidHomeScreen() {
 
         <MembersWidget className="mt-4" />
 
+        <RewardsWidget />
+        <CommunityStrip />
+        <Feed />
+
         <GlassCard className="mt-4 p-5">
           <h3 className="text-lg font-semibold text-white">What’s Next</h3>
           <p className="mt-1 text-white/80">Get a free Blue Ticket with an insurance policy.</p>
@@ -57,11 +64,6 @@ export default function LiquidHomeScreen() {
         <GlassCard className="mt-4 p-5">
           <h3 className="text-lg font-semibold text-white">Savings Streak</h3>
           <p className="mt-1 text-white/80">Earn points with SACCO deposits via USSD.</p>
-        </GlassCard>
-
-        <GlassCard className="mt-4 p-5">
-          <h3 className="text-lg font-semibold text-white">Rewards</h3>
-          <p className="mt-1 text-white/80">No rewards info yet.</p>
         </GlassCard>
       </div>
     </div>
