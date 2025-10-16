@@ -1,4 +1,7 @@
+import type { PostgrestFilterBuilder } from '@supabase/postgrest-js';
+
 import { getServiceClient } from '@/app/api/admin/_lib/db';
+import type { Database } from '@/integrations/supabase/types';
 
 export type TranslationRow = {
   lang: string;
@@ -21,7 +24,7 @@ export const listTranslationLanguages = async (): Promise<string[]> => {
     return ['en', 'rw'];
   }
   const client = getServiceClient();
-  const { data, error } = await (client as any)
+  const { data, error } = await client
     .from('translations')
     .select('lang')
     .order('lang', { ascending: true });
@@ -49,7 +52,11 @@ export const fetchTranslationsPage = async (
   const start = (page - 1) * pageSize;
   const end = start + pageSize - 1;
 
-  let query = (client as any)
+  let query: PostgrestFilterBuilder<
+    Database['public']['Tables']['translations']['Row'],
+    Database['public']['Tables']['translations']['Row'],
+    Database['public']['Tables']['translations']['Row']
+  > = client
     .from('translations')
     .select('lang, key, value, updated_at, admin_users:updated_by(display_name)', { count: 'exact' })
     .eq('lang', lang)
@@ -84,7 +91,11 @@ export const fetchDictionary = async (
     return {};
   }
   const client = getServiceClient();
-  let query = (client as any).from('translations').select('key, value').eq('lang', lang);
+  let query: PostgrestFilterBuilder<
+    Database['public']['Tables']['translations']['Row'],
+    Database['public']['Tables']['translations']['Row'],
+    Database['public']['Tables']['translations']['Row']
+  > = client.from('translations').select('key, value').eq('lang', lang);
 
   if (prefix) {
     query = query.ilike('key', `${prefix}%`);
