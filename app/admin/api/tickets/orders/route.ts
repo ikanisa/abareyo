@@ -21,24 +21,25 @@ const ORDER_SELECT = `
   payments:payments(id, amount, status, created_at)
 `;
 
-const TICKET_STATUSES: readonly Tables<'ticket_orders'>['status'][] = [
+const TICKET_STATUSES = [
   'pending',
   'paid',
   'cancelled',
   'expired',
-] as const;
+] as const satisfies ReadonlyArray<Tables<'ticket_orders'>['status']>;
 
-const isValidTicketStatus = (
-  value: string | undefined,
-): value is Tables<'ticket_orders'>['status'] =>
-  value !== undefined && TICKET_STATUSES.includes(value as Tables<'ticket_orders'>['status']);
+const isTicketStatus = (
+  value: string | null,
+): value is (typeof TICKET_STATUSES)[number] =>
+  typeof value === 'string' && (TICKET_STATUSES as readonly string[]).includes(value);
 
 export async function GET(request: NextRequest) {
   try {
     await requireAdminSession();
     const supabase = getSupabaseAdmin();
     const { searchParams } = request.nextUrl;
-    const statusParam = searchParams.get('status') ?? undefined;
+    const requestedStatus = searchParams.get('status');
+    const statusParam = isTicketStatus(requestedStatus) ? requestedStatus : undefined;
     const matchId = searchParams.get('match_id') ?? undefined;
     const query = searchParams.get('q') ?? undefined;
     const limit = Math.min(Number.parseInt(searchParams.get('limit') ?? '50', 10), 200);
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (isValidTicketStatus(statusParam)) {
+    if (statusParam) {
       builder = builder.eq('status', statusParam);
     }
 
@@ -119,8 +120,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updates: Record<string, unknown> = {};
-    if (payload.status) {
-      if (!isValidTicketStatus(payload.status)) {
+    if (payload.status !== undefined) {
+      if (!isTicketStatus(payload.status)) {
         return NextResponse.json({ error: 'invalid_status' }, { status: 400 });
       }
       updates.status = payload.status;
