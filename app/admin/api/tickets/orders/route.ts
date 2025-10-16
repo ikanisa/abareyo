@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (isValidTicketStatus(statusParam)) {
+    if (isTicketStatus(statusParam)) {
       builder = builder.eq('status', statusParam);
     }
 
@@ -121,7 +121,7 @@ export async function PATCH(request: NextRequest) {
 
     const updates: Record<string, unknown> = {};
     if (payload.status) {
-      if (!isValidTicketStatus(payload.status)) {
+      if (!isTicketStatus(payload.status)) {
         return NextResponse.json({ error: 'invalid_status' }, { status: 400 });
       }
       updates.status = payload.status;
