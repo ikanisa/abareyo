@@ -108,7 +108,7 @@ export const fetchAdminContextForToken = async (
 
   let permissions: string[] = [];
   if (roleIds.length) {
-    const { data: permLinks } = await (client as any)
+    const { data: permLinks } = await client
       .from('roles_permissions')
       .select('permissions(key)')
       .in('role_id', roleIds);
