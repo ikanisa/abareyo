@@ -49,8 +49,11 @@ const hopByHopHeaders = new Set([
 type RouteParams = { params: { path?: string[] } };
 
 const buildUpstreamUrl = (request: Request, segments: string[] | undefined) => {
-  const relativePath = segments?.length ? `/${segments.join("/")}` : "/";
-  const url = new URL(relativePath, upstreamUrl);
+  const url = new URL(upstreamUrl);
+  const baseSegments = upstreamUrl.pathname.split("/").filter(Boolean);
+  const nextSegments = segments?.filter((segment) => segment.length > 0) ?? [];
+  const pathnameSegments = [...baseSegments, ...nextSegments];
+  url.pathname = pathnameSegments.length > 0 ? `/${pathnameSegments.join("/")}` : "/";
   const incoming = new URL(request.url);
   if (incoming.search) {
     url.search = incoming.search;
