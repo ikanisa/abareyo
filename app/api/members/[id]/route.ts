@@ -9,7 +9,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 
   const { data, error } = await supabase
     .from('public_members')
-    .select('id, display_name, region, fan_club, joined_at, avatar_url')
+    .select('id, display_name, region, fan_club, joined_at, avatar_url, phone, momo_number, user_code')
     .eq('id', params.id)
     .maybeSingle();
 

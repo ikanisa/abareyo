@@ -9,9 +9,11 @@ export default function MembersPage() {
       <section className="card space-y-3" aria-labelledby="members-title">
         <div>
           <h1 id="members-title" className="text-white">
-            Member Directory
+            Fan Energy Directory
           </h1>
-          <p className="muted text-sm">Explore visible GIKUNDIRO fans across regions.</p>
+          <p className="muted text-sm">
+            See who is live on WhatsApp, linked for MoMo perks, and carrying GIKUNDIRO vibes around the world.
+          </p>
         </div>
       </section>
       <MembersListClient />
