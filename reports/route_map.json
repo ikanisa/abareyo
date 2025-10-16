@@ -119,7 +119,7 @@
     {
       "type": "page",
       "path": "/community",
-      "file": "app/(routes)/community/page.tsx"
+      "file": "app/community/page.tsx"
     },
     {
       "type": "page",
