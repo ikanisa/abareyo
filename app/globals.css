@@ -5,9 +5,18 @@
 :root{
   --rs-blue:#0033FF; --rs-azure:#00A1DE; --rs-yellow:#FAD201; --rs-green:#20603D;
   --glass-bg:rgba(255,255,255,.14); --glass-stroke:rgba(255,255,255,.22);
-  --shadow-lg:0 8px 24px rgba(0,0,0,.25);
-  --radius-xl:16px; --radius-2xl:24px;
+  --shadow-lg:0 8px 24px rgba(0,0,0,.25); --radius-xl:16px; --radius-2xl:24px;
 }
+
+.bg-rs-gradient{ background:linear-gradient(135deg,var(--rs-blue),var(--rs-azure),var(--rs-yellow),var(--rs-green)); }
+.glass{ background:var(--glass-bg); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border:1px solid var(--glass-stroke); border-radius:var(--radius-2xl); box-shadow:var(--shadow-lg); }
+.card{ @apply glass p-4 md:p-6; }
+.tile{ @apply glass px-4 py-3 rounded-2xl text-white/90 text-sm font-medium; }
+.btn{ @apply px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white transition inline-flex items-center justify-center gap-2; }
+.btn-primary{ @apply px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition inline-flex items-center justify-center gap-2; }
+.btn-ghost{ @apply px-4 py-2 rounded-xl text-white/80 hover:bg-white/10 inline-flex items-center justify-center gap-2; }
+.muted{ @apply text-white/70; }
+.section-title{ @apply text-lg md:text-xl font-semibold text-white; }
 
 @layer base {
   *, *::before, *::after {
@@ -25,18 +34,6 @@
   h2 {
     @apply text-[20px] leading-6 font-semibold;
   }
-}
-
-@layer components {
-  .bg-rs-gradient{ background:linear-gradient(135deg,var(--rs-blue),var(--rs-azure),var(--rs-yellow),var(--rs-green)); }
-  .glass{ background:var(--glass-bg); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border:1px solid var(--glass-stroke); border-radius:var(--radius-2xl); box-shadow:var(--shadow-lg); }
-  .card{ @apply glass p-4 md:p-6; }
-  .tile{ @apply glass px-4 py-3 rounded-2xl text-white/90 text-sm font-medium flex items-center justify-center text-center; }
-  .btn{ @apply px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white transition inline-flex items-center justify-center gap-2; }
-  .btn-primary{ @apply px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition inline-flex items-center justify-center gap-2; }
-  .btn-ghost{ @apply px-4 py-2 rounded-xl text-white/80 hover:bg-white/10 inline-flex items-center justify-center gap-2; }
-  .muted{ @apply text-white/70; }
-  .section-title{ @apply text-lg md:text-xl font-semibold text-white; }
 }
 
 @media (prefers-reduced-motion: reduce){ *{ animation:none!important; transition:none!important; } }

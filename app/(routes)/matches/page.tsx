@@ -3,6 +3,7 @@ import PageShell from "@/app/_components/shell/PageShell";
 import { buildBackendUrl } from "@/app/(routes)/_lib/backend-url";
 
 import MatchesList from "./_components/MatchesList";
+import LiveTicker from "./_components/LiveTicker";
 
 export const dynamic = "force-dynamic";
 
@@ -86,6 +87,7 @@ export default async function MatchesPage() {
 
   return (
     <PageShell>
+      {normalized.length ? <LiveTicker id={normalized[0].id} /> : null}
       <section className="card">
         <h1>Matches</h1>
         <p className="muted">Pick a game. One tap to buy or view live centre.</p>
