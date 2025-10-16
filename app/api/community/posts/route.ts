@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+import { ff } from "@/lib/flags";
+
 const supabase = () =>
   createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_ANON_KEY!, {
     auth: { persistSession: false },
@@ -62,7 +64,28 @@ async function resolveUserId(db: ReturnType<typeof supabase>, payload: PostPaylo
   return created.id;
 }
 
-export async function GET() {
+function formatResponse(records: FanPostRecord[], wantsObject: boolean) {
+  return wantsObject ? { posts: records } : records;
+}
+
+export async function GET(req: Request) {
+  const wantsObject = new URL(req.url).searchParams.get("format") === "object";
+
+  if (!ff("community.light", false)) {
+    const sample: FanPostRecord[] = [
+      {
+        id: "p1",
+        text: "Allez Gikundiro!",
+        media_url: null,
+        likes: 0,
+        comments: 0,
+        created_at: new Date().toISOString(),
+        user: { id: "fan-1", name: "Fan", phone: null, avatar_url: null },
+      },
+    ];
+    return NextResponse.json(formatResponse(sample, wantsObject));
+  }
+
   const db = supabase();
   const { data, error } = await db
     .from("fan_posts")
@@ -72,10 +95,14 @@ export async function GET() {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  return NextResponse.json((data ?? []) as FanPostRecord[]);
+  return NextResponse.json(formatResponse((data ?? []) as FanPostRecord[], wantsObject));
 }
 
 export async function POST(req: Request) {
+  if (!ff("community.light", false)) {
+    return NextResponse.json({ error: "community_disabled" }, { status: 503 });
+  }
+
   const db = supabase();
   const payload = (await req.json()) as PostPayload;
   if (!payload.text || !payload.text.trim()) {
