@@ -26,7 +26,7 @@ const TICKET_STATUSES = [
   'paid',
   'cancelled',
   'expired',
- ] as const satisfies ReadonlyArray<Tables<'ticket_orders'>['status']>;
+] as const satisfies ReadonlyArray<Tables<'ticket_orders'>['status']>;
 
 const isTicketStatus = (
   value: string | null,
@@ -120,8 +120,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updates: Record<string, unknown> = {};
-    if (payload.status) {
-      if (!isValidTicketStatus(payload.status)) {
+    if (payload.status !== undefined) {
+      if (!isTicketStatus(payload.status)) {
         return NextResponse.json({ error: 'invalid_status' }, { status: 400 });
       }
       updates.status = payload.status;
