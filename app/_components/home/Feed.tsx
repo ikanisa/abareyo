@@ -1,102 +1,54 @@
-import Link from "next/link";
+"use client";
 
-import type { FeedItem } from "@/app/_config/home";
+import useSWR from "swr";
 
-import { Skeleton } from "@/components/ui/skeleton";
-
-import EmptyState from "../ui/EmptyState";
-
-const skeletonItems = Array.from({ length: 3 }, (_, index) => index);
-
-const typeLabels: Record<FeedItem["type"], string> = {
-  news: "Club news",
-  video: "Video",
-  poll: "Fan poll",
-  update: "Update",
-};
-
-const typeStyles: Record<FeedItem["type"], string> = {
-  news: "bg-blue-500/15 text-blue-100",
-  video: "bg-emerald-500/15 text-emerald-100",
-  poll: "bg-violet-500/15 text-violet-100",
-  update: "bg-white/10 text-white/80",
-};
+type FeedItem = { id: string; title: string };
 
 type FeedProps = {
-  items: FeedItem[];
-  isLoading: boolean;
-  isOffline: boolean;
+  items?: FeedItem[];
+  isLoading?: boolean;
+  isOffline?: boolean;
   onRetry?: () => void;
 };
 
-const Feed = ({ items, isLoading, isOffline, onRetry }: FeedProps) => {
-  if (isLoading) {
+export default function Feed({ items: providedItems, isLoading, isOffline, onRetry }: FeedProps = {}) {
+  const shouldFetch = typeof providedItems === "undefined";
+  const { data } = useSWR(shouldFetch ? "/api/feed" : null, (url: string) => fetch(url).then((res) => res.json()));
+  const items: FeedItem[] = providedItems ?? data?.items ?? [];
+
+  if (isOffline) {
     return (
-      <div className="grid gap-4 md:grid-cols-2" aria-hidden="true">
-        {skeletonItems.map((item) => (
-          <Skeleton key={`feed-skeleton-${item}`} className="h-36 rounded-3xl bg-white/10" />
-        ))}
-      </div>
+      <section className="card space-y-2">
+        <div className="muted text-sm">You are offline. Latest stories will appear once reconnected.</div>
+        {onRetry ? (
+          <button className="btn w-full" type="button" onClick={onRetry}>
+            Retry
+          </button>
+        ) : null}
+      </section>
     );
   }
 
-  if (items.length === 0) {
-    if (isOffline) {
-      return (
-        <EmptyState
-          title="Offline mode"
-          description="We&apos;ll refresh the latest club updates automatically once you reconnect."
-          icon="📡"
-          action={
-            onRetry
-              ? {
-                  label: "Retry now",
-                  onClick: onRetry,
-                }
-              : undefined
-          }
-        />
-      );
-    }
-
+  if (isLoading || (shouldFetch && !data)) {
     return (
-      <EmptyState
-        title="No updates available"
-        description="Match reports, polls and highlights will show up here once the media team publishes new items."
-        icon="📰"
-      />
+      <section className="card space-y-2" aria-busy="true">
+        <div className="h-4 w-1/2 animate-pulse rounded bg-white/10" />
+        <div className="h-4 w-2/3 animate-pulse rounded bg-white/10" />
+      </section>
     );
+  }
+
+  if (!items.length) {
+    return null;
   }
 
   return (
-    <div className="space-y-3">
-      {isOffline ? (
-        <div
-          className="card border border-dashed border-white/20 bg-white/5 px-4 py-3 text-sm text-white/80"
-          role="status"
-          aria-live="polite"
-        >
-          Offline mode — showing the most recently saved updates.
+    <section className="grid gap-2">
+      {items.map((item) => (
+        <div key={item.id} className="card">
+          {item.title}
         </div>
-      ) : null}
-      <div className="grid gap-4 md:grid-cols-2" role="list">
-        {items.map((item) => (
-          <article key={item.id} className="card space-y-3 break-words whitespace-normal" role="listitem">
-            <header className="space-y-2">
-              <span className={`inline-flex rounded-full px-3 py-1 text-xs uppercase tracking-wide ${typeStyles[item.type]}`}>
-                {typeLabels[item.type]}
-              </span>
-              <h3 className="text-lg font-semibold text-white">{item.title}</h3>
-            </header>
-            <p className="text-sm text-white/70">{item.description}</p>
-            <Link className="text-sm font-semibold text-white/80" href={item.href}>
-              View details →
-            </Link>
-          </article>
-        ))}
-      </div>
-    </div>
+      ))}
+    </section>
   );
-};
-
-export default Feed;
+}

@@ -49,6 +49,33 @@ if (self.workbox) {
   );
 
   workbox.routing.registerRoute(
+    ({ url }) => url.pathname.startsWith('/api/feed') || url.pathname.startsWith('/api/community/posts'),
+    new workbox.strategies.StaleWhileRevalidate({
+      cacheName: 'rayon-home-feed',
+      plugins: [new workbox.expiration.ExpirationPlugin({ maxEntries: 30, maxAgeSeconds: 60 * 5 })],
+    }),
+    'GET',
+  );
+
+  workbox.routing.registerRoute(
+    ({ url }) => url.pathname.startsWith('/api/rewards/summary'),
+    new workbox.strategies.StaleWhileRevalidate({
+      cacheName: 'rayon-rewards-summary',
+      plugins: [new workbox.expiration.ExpirationPlugin({ maxEntries: 10, maxAgeSeconds: 60 * 5 })],
+    }),
+    'GET',
+  );
+
+  workbox.routing.registerRoute(
+    ({ url }) => url.pathname.startsWith('/api/media/highlights') || url.pathname.startsWith('/api/live/match'),
+    new workbox.strategies.StaleWhileRevalidate({
+      cacheName: 'rayon-media-live',
+      plugins: [new workbox.expiration.ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 60 * 2 })],
+    }),
+    'GET',
+  );
+
+  workbox.routing.registerRoute(
     ({ request }) => request.destination === 'document',
     new workbox.strategies.NetworkFirst({ cacheName: 'rayon-pages' }),
   );

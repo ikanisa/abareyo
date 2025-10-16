@@ -1,5 +1,5 @@
-import LiquidHomeScreen from "@/app/_components/home/LiquidScreens";
+import HomeDashboard from "@/app/_components/home/HomeDashboard";
 
 export default function Home() {
-  return <LiquidHomeScreen />;
+  return <HomeDashboard />;
 }

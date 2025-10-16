@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIKUNDIRO Fan App Prototype</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-shell">
+        <header class="header">
+            <div class="logo">GIKUNDIRO</div>
+            <div class="header-actions">
+                <div class="member-pill" aria-label="Loyalty level">
+                    <span class="member-label">Sky Blue Member</span>
+                    <span class="member-points">1,245 pts</span>
+                </div>
+                <div class="header-icons">
+                    <button class="icon-btn" aria-label="Notifications">
+                        🔔
+                    </button>
+                    <button class="icon-btn" aria-label="Search">
+                        🔍
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <section class="hero" aria-labelledby="hero-title">
+                <div class="hero-overlay"></div>
+                <div class="hero-content">
+                    <p class="hero-tag">Matchday 24 &middot; Saturday 18:00</p>
+                    <h1 id="hero-title">Rayon Sports vs APR FC</h1>
+                    <p class="hero-subtitle">Kigali Pelé Stadium &mdash; Live on Gikundiro TV</p>
+                    <div class="hero-cta">
+                        <button class="btn primary">Watch Live</button>
+                        <button class="btn secondary">Buy Ticket</button>
+                    </div>
+                    <dl class="hero-meta">
+                        <div class="meta-item">
+                            <dt>Form</dt>
+                            <dd>W&nbsp;W&nbsp;D&nbsp;W</dd>
+                        </div>
+                        <div class="meta-item">
+                            <dt>Table</dt>
+                            <dd>2nd &mdash; 45 pts</dd>
+                        </div>
+                        <div class="meta-item">
+                            <dt>Kick-off</dt>
+                            <dd>02h 14m</dd>
+                        </div>
+                    </dl>
+                </div>
+            </section>
+
+            <section class="status-row" aria-label="Club overview">
+                <article class="status-card">
+                    <span class="status-label">Season Progress</span>
+                    <div class="status-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="72">
+                        <div class="status-progress__fill" style="width: 72%"></div>
+                    </div>
+                    <span class="status-value">72% complete</span>
+                </article>
+                <article class="status-card">
+                    <span class="status-label">Average Attendance</span>
+                    <span class="status-value">18,540</span>
+                    <span class="status-subvalue">+12% vs last season</span>
+                </article>
+                <article class="status-card">
+                    <span class="status-label">Merch Sales</span>
+                    <span class="status-value">RWF 86M</span>
+                    <span class="status-subvalue">Top seller: 2024 Home Kit</span>
+                </article>
+            </section>
+
+            <nav class="quick-actions" aria-label="Quick actions">
+                <a href="#" class="action-btn">
+                    <span class="action-icon" aria-hidden="true">🎟️</span>
+                    Tickets
+                </a>
+                <a href="#" class="action-btn">
+                    <span class="action-icon" aria-hidden="true">🛍️</span>
+                    Shop
+                </a>
+                <a href="#" class="action-btn">
+                    <span class="action-icon" aria-hidden="true">📺</span>
+                    Live TV
+                </a>
+                <a href="#" class="action-btn">
+                    <span class="action-icon" aria-hidden="true">⭐</span>
+                    Rewards
+                </a>
+                <a href="#" class="action-btn">
+                    <span class="action-icon" aria-hidden="true">🚌</span>
+                    Away Travel
+                </a>
+                <a href="#" class="action-btn">
+                    <span class="action-icon" aria-hidden="true">🎧</span>
+                    Podcasts
+                </a>
+            </nav>
+
+            <section class="match-center" aria-labelledby="match-center-title">
+                <header class="section-header">
+                    <h2 id="match-center-title">Match Center</h2>
+                    <button class="section-link" type="button">View full schedule →</button>
+                </header>
+                <div class="scoreboard" data-scoreboard>
+                    <div class="scoreboard__teams" aria-live="polite">
+                        <div class="team team--home">
+                            <span class="team-crest" aria-hidden="true">🔵</span>
+                            <span class="team-name">Rayon Sports</span>
+                            <span class="team-score">2</span>
+                        </div>
+                        <div class="scoreboard__timer" role="timer">58'</div>
+                        <div class="team team--away">
+                            <span class="team-crest" aria-hidden="true">⚫</span>
+                            <span class="team-name">APR FC</span>
+                            <span class="team-score">1</span>
+                        </div>
+                    </div>
+                    <ul class="scoreboard__events" data-scoreboard-events>
+                        <li>58' &mdash; Goal! Mugisha (Assist: Niyonzima)</li>
+                        <li>44' &mdash; Save! Kwizera denies APR header</li>
+                        <li>31' &mdash; Goal! APR equalises through Tuyisenge</li>
+                    </ul>
+                </div>
+                <div class="match-stats" data-stats-board>
+                    <article class="stat-card">
+                        <span class="stat-label">Possession</span>
+                        <div class="stat-bar" role="img" aria-label="Rayon 62 percent, APR 38 percent">
+                            <div class="stat-bar__home" style="width: 62%"></div>
+                        </div>
+                        <div class="stat-values"><span>62%</span><span>38%</span></div>
+                    </article>
+                    <article class="stat-card">
+                        <span class="stat-label">Total Shots</span>
+                        <div class="stat-bar" role="img" aria-label="Rayon 11 shots, APR 6 shots">
+                            <div class="stat-bar__home" style="width: 65%"></div>
+                        </div>
+                        <div class="stat-values"><span>11</span><span>6</span></div>
+                    </article>
+                    <article class="stat-card">
+                        <span class="stat-label">Chances Created</span>
+                        <div class="stat-bar" role="img" aria-label="Rayon 7 chances, APR 4 chances">
+                            <div class="stat-bar__home" style="width: 64%"></div>
+                        </div>
+                        <div class="stat-values"><span>7</span><span>4</span></div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="fixtures" aria-labelledby="fixtures-title">
+                <header class="section-header">
+                    <h2 id="fixtures-title">Club Agenda</h2>
+                    <div class="tablist" role="tablist" aria-label="Select fixture type">
+                        <button class="tab-button is-active" role="tab" aria-selected="true" data-fixtures-tab="upcoming">Upcoming</button>
+                        <button class="tab-button" role="tab" aria-selected="false" data-fixtures-tab="results">Results</button>
+                    </div>
+                </header>
+                <div class="fixtures-list" data-fixtures-list>
+                    <article class="fixture-card">
+                        <h3>Rayon Sports vs APR FC</h3>
+                        <p>Saturday &middot; 18:00 &middot; Kigali Pelé Stadium</p>
+                    </article>
+                    <article class="fixture-card">
+                        <h3>Gasogi United vs Rayon Sports</h3>
+                        <p>Wed 20 Mar &middot; 20:30 &middot; Kigali Arena</p>
+                    </article>
+                    <article class="fixture-card">
+                        <h3>Rayon Sports vs Kiyovu</h3>
+                        <p>Sun 31 Mar &middot; 17:00 &middot; Nyamirambo</p>
+                    </article>
+                </div>
+            </section>
+
+            <section class="community" aria-labelledby="community-title">
+                <div class="community-grid">
+                    <article class="feed-card" aria-labelledby="community-title">
+                        <h2 id="community-title">Gikundiro Stories</h2>
+                        <ul class="feed-list">
+                            <li>
+                                <h3>🎥 Player Focus: Hakizimana&rsquo;s creative spark</h3>
+                                <p>Midfielder Moïse Hakizimana breaks down the tactical tweaks that unlocked APR&rsquo;s defence.</p>
+                            </li>
+                            <li>
+                                <h3>📝 Tactics Board</h3>
+                                <p>Analyst Diana Uwase explains Rayon&rsquo;s high press and how it fuels their unbeaten run.</p>
+                            </li>
+                            <li>
+                                <h3>🎧 Matchday Playlist</h3>
+                                <p>DJ Kalisa curates the tracks to soundtrack your journey to the stadium.</p>
+                            </li>
+                        </ul>
+                        <a href="#" class="feed-link">See all stories →</a>
+                    </article>
+
+                    <article class="poll-card" data-poll>
+                        <header>
+                            <h2>Fan Pulse</h2>
+                            <p class="poll-subtitle">Who has been your player of the month?</p>
+                        </header>
+                        <div class="poll-options" role="group" aria-label="Player of the month poll">
+                            <button class="poll-option" type="button" data-option="hakizimana" data-votes="1240">
+                                <span class="poll-player">Moïse Hakizimana</span>
+                                <span class="poll-meta">3 goals &middot; 4 assists</span>
+                                <span class="poll-percent" aria-live="polite">62%</span>
+                            </button>
+                            <button class="poll-option" type="button" data-option="kwizera" data-votes="540">
+                                <span class="poll-player">Emery Kwizera</span>
+                                <span class="poll-meta">92% save rate</span>
+                                <span class="poll-percent" aria-live="polite">27%</span>
+                            </button>
+                            <button class="poll-option" type="button" data-option="mugisha" data-votes="220">
+                                <span class="poll-player">Didier Mugisha</span>
+                                <span class="poll-meta">Late winner vs APR</span>
+                                <span class="poll-percent" aria-live="polite">11%</span>
+                            </button>
+                        </div>
+                        <p class="poll-total" data-total-votes>2,000 votes</p>
+                        <p class="poll-disclaimer">One vote per member. Results update live.</p>
+                    </article>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <nav class="bottom-nav" aria-label="Primary">
+                <a href="#" class="nav-item active">Home</a>
+                <a href="#" class="nav-item">Matches</a>
+                <a href="#" class="nav-item">Tickets</a>
+                <a href="#" class="nav-item">Shop</a>
+                <a href="#" class="nav-item">More</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

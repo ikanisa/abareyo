@@ -1,51 +1,27 @@
-import { notFound } from "next/navigation";
-
 import PageShell from "@/app/_components/shell/PageShell";
-import ZoneSelector from "@/app/_components/tickets/ZoneSelector";
-import { fixtures } from "@/app/_data/fixtures";
+import UssdPayButton from "@/app/_components/payments/UssdPayButton";
 
-type TicketParams = {
-  params: { id: string };
-};
-
-const getFixture = (id: string) => fixtures.find((fixture) => fixture.id === id);
-
-export const generateMetadata = ({ params }: TicketParams) => {
-  const fixture = getFixture(params.id);
-  if (!fixture) {
-    return {};
-  }
-  return {
-    title: `${fixture.title} | Tickets`,
-    description: `${fixture.comp} at ${fixture.venue}`,
-  };
-};
-
-const TicketPage = ({ params }: TicketParams) => {
-  const fixture = getFixture(params.id);
-  if (!fixture) {
-    notFound();
-  }
-
-  const zones = fixture.zones.map((zone) => ({
-    id: zone.id,
-    name: zone.name,
-    price: zone.price,
-  }));
+export default function TicketPDP({ params }: { params: { id: string } }) {
+  const price = 5000;
 
   return (
     <PageShell>
-      <section className="card space-y-3">
-        <div>
-          <h1>{fixture.title}</h1>
-          <p className="muted">
-            {fixture.venue} • {fixture.date} {fixture.time}
-          </p>
+      <section className="card" data-match-id={params.id}>
+        <h1>Rayon vs APR</h1>
+        <div className="muted">Amahoro • Sat 18:00</div>
+
+        <div className="mt-3 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Zone">
+          {["VIP", "Regular", "Blue"].map((zone) => (
+            <button key={zone} className="tile text-center" role="radio" aria-checked={zone === "Blue"}>
+              {zone}
+            </button>
+          ))}
         </div>
-        <ZoneSelector zones={zones} matchId={fixture.id} />
+
+        <div className="mt-4">
+          <UssdPayButton amount={price} />
+        </div>
       </section>
     </PageShell>
   );
-};
-
-export default TicketPage;
+}
