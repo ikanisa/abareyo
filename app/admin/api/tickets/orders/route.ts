@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (isValidTicketStatus(statusParam)) {
+    if (statusParam) {
       builder = builder.eq('status', statusParam);
     }
 
