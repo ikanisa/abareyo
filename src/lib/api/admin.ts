@@ -54,6 +54,38 @@ export type SmsManualAttachRequestContract = {
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api';
 const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_API_TOKEN ?? '';
 
+const normalisedBaseUrl = BASE_URL.replace(/\/$/, '');
+
+const buildAdminUrl = (path: string) =>
+  `${normalisedBaseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+
+const withAdminHeaders = (init?: RequestInit): RequestInit => {
+  const headers = new Headers(init?.headers);
+  if (ADMIN_TOKEN) {
+    headers.set('x-admin-token', ADMIN_TOKEN);
+  }
+
+  return {
+    ...init,
+    headers,
+  };
+};
+
+const adminFetch = async (path: string, init?: RequestInit) => {
+  const response = await fetch(buildAdminUrl(path), withAdminHeaders(init));
+
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+
+  return response;
+};
+
+const extractData = async <T>(response: Response) => {
+  const { data } = (await response.json()) as { data: T };
+  return data;
+};
+
 export interface SmsRecord {
   id: string;
   text: string;
@@ -72,32 +104,13 @@ export interface SmsRecord {
 }
 
 export async function fetchInboundSms() {
-  const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/sms/inbound`, {
-    headers: {
-      'x-admin-token': ADMIN_TOKEN,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
-
-  const { data } = (await response.json()) as { data: SmsRecord[] };
-  return data;
+  const response = await adminFetch('/sms/inbound');
+  return extractData<SmsRecord[]>(response);
 }
 
 export async function fetchManualReviewSms() {
-  const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/sms/manual-review`, {
-    headers: {
-      'x-admin-token': ADMIN_TOKEN,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
-
-  const { data } = (await response.json()) as { data: SmsManualReviewItemContract[] };
+  const response = await adminFetch('/sms/manual-review');
+  const data = await extractData<SmsManualReviewItemContract[]>(response);
   return data.map((sms) => ({
     ...sms,
     parsed: sms.parsed
@@ -110,17 +123,8 @@ export async function fetchManualReviewSms() {
 }
 
 export async function fetchManualReviewPayments() {
-  const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/payments/manual-review`, {
-    headers: {
-      'x-admin-token': ADMIN_TOKEN,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
-
-  const { data } = (await response.json()) as { data: ManualReviewPaymentContract[] };
+  const response = await adminFetch('/payments/manual-review');
+  const data = await extractData<ManualReviewPaymentContract[]>(response);
   return data.map((payment) => ({
     ...payment,
     smsParsed: payment.smsParsed
@@ -133,18 +137,13 @@ export async function fetchManualReviewPayments() {
 }
 
 export async function attachSmsToPayment(payload: SmsManualAttachRequestContract) {
-  const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/sms/manual-review/attach`, {
+  const response = await adminFetch('/sms/manual-review/attach', {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      'x-admin-token': ADMIN_TOKEN,
     },
     body: JSON.stringify(payload),
   });
-
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
 
   return response.json();
 }
