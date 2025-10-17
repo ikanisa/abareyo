@@ -26,18 +26,18 @@ const PASS_SELECT = `
   )
 `;
 
-const PASS_STATES: readonly Tables<'ticket_passes'>['state'][] = ['active', 'used', 'refunded'] as const;
-const PASS_ZONES: readonly Tables<'ticket_passes'>['zone'][] = ['VIP', 'Regular', 'Blue'] as const;
+const PASS_STATES = ['active', 'used', 'refunded'] as const satisfies readonly Tables<'ticket_passes'>['state'][];
+type PassState = (typeof PASS_STATES)[number];
+const PASS_ZONES = ['VIP', 'Regular', 'Blue'] as const satisfies readonly Tables<'ticket_passes'>['zone'][];
+type PassZone = (typeof PASS_ZONES)[number];
 
 const isValidPassState = (
-  value: string | undefined,
-): value is Tables<'ticket_passes'>['state'] =>
-  value !== undefined && PASS_STATES.includes(value as Tables<'ticket_passes'>['state']);
+  value: string | null | undefined,
+): value is PassState => typeof value === 'string' && PASS_STATES.includes(value as PassState);
 
 const isValidPassZone = (
-  value: string | undefined,
-): value is Tables<'ticket_passes'>['zone'] =>
-  value !== undefined && PASS_ZONES.includes(value as Tables<'ticket_passes'>['zone']);
+  value: string | null | undefined,
+): value is PassZone => typeof value === 'string' && PASS_ZONES.includes(value as PassZone);
 
 export async function GET(request: NextRequest) {
   try {
@@ -127,16 +127,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'invalid_state' }, { status: 400 });
     }
 
-    const zone = isValidPassZone(payload.zone) ? payload.zone : payload.zone ? null : 'Blue';
+    const state: PassState = isValidPassState(payload.state) ? payload.state : 'active';
+    const zone: PassZone | null =
+      isValidPassZone(payload.zone) ? payload.zone : payload.zone ? null : 'Blue';
+
     if (payload.zone && !zone) {
       return NextResponse.json({ error: 'invalid_zone' }, { status: 400 });
     }
 
     const insert: TablesInsert<'ticket_passes'> = {
       order_id: payload.order_id,
-      zone: (zone ?? 'Blue') as Tables<'ticket_passes'>['zone'],
+      zone: zone ?? 'Blue',
       gate: payload.gate ?? 'Main',
-      state: (payload.state as Tables<'ticket_passes'>['state']) ?? 'active',
+      state,
       qr_token_hash: randomUUID(),
     };
 

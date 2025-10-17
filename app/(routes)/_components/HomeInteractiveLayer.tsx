@@ -88,7 +88,7 @@ const HomeInteractiveLayer = ({ children }: { children: ReactNode }) => {
 
   return (
     <>
-      <PageShell mainClassName="space-y-6 pb-24 pt-4">
+      <PageShell mainClassName="pb-28">
         <TopAppBar right={rightActions} />
         <OfflineBanner offline={isOffline} />
         {children}

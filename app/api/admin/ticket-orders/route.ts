@@ -5,14 +5,7 @@ import { getServiceClient } from '@/app/api/admin/_lib/db';
 import { requireAdmin } from '@/app/api/admin/_lib/session';
 import type { Tables } from '@/integrations/supabase/types';
 
-type MatchPreview = {
-  id: string;
-  title: string;
-  date: string;
-  venue: string | null;
-  home_team: string | null;
-  away_team: string | null;
-};
+type MatchPreview = Pick<Tables<'matches'>, 'id' | 'opponent' | 'kickoff' | 'venue'>;
 
 type TicketOrderRow = Tables<'ticket_orders'> & {
   users: Pick<Tables<'users'>, 'id' | 'phone' | 'name'> | null;
@@ -23,8 +16,8 @@ type TicketOrderRow = Tables<'ticket_orders'> & {
 type SerializedPayment = {
   id: string;
   amount: number;
-  status: string;
-  createdAt: string;
+  status: Tables<'payments'>['status'] | null;
+  createdAt: string | null;
   metadata: Tables<'payments'>['metadata'];
 };
 
@@ -32,7 +25,7 @@ type SerializedOrder = {
   id: string;
   status: Tables<'ticket_orders'>['status'];
   total: number;
-  createdAt: string;
+  createdAt: string | null;
   expiresAt: string | null;
   smsRef: string | null;
   user: { id: string; phoneMask: string | null; name: string | null } | null;
@@ -42,13 +35,7 @@ type SerializedOrder = {
   payments: SerializedPayment[];
 };
 
-const resolveMatchOpponent = (match: MatchPreview) => {
-  const home = match.home_team ?? '';
-  const away = match.away_team ?? '';
-  if (home.toLowerCase().includes('rayon')) return away || match.title;
-  if (away.toLowerCase().includes('rayon')) return home || match.title;
-  return match.title;
-};
+const resolveMatchOpponent = (match: MatchPreview) => match.opponent ?? 'TBD opponent';
 
 const parsePagination = (request: Request) => {
   const url = new URL(request.url);
@@ -75,7 +62,7 @@ const serializeOrder = (row: TicketOrderRow): SerializedOrder => ({
     ? {
         id: row.matches.id,
         opponent: resolveMatchOpponent(row.matches),
-        kickoff: row.matches.date ?? null,
+        kickoff: row.matches.kickoff ?? null,
         venue: row.matches.venue ?? null,
       }
     : null,
@@ -98,7 +85,7 @@ export const GET = async (request: Request) => {
   let query = client
     .from('ticket_orders')
     .select(
-      'id, status, total, created_at, expires_at, sms_ref, users:users(id, phone, name), matches:matches(id, title, date, venue, home_team, away_team), payments:payments!payments_ticket_order_id_fkey(id, amount, status, created_at, metadata)',
+      'id, status, total, created_at, expires_at, sms_ref, users:users(id, phone, name), matches:matches(id, opponent, kickoff, venue), payments:payments!payments_ticket_order_id_fkey(id, amount, status, created_at, metadata)',
       { count: 'exact' },
     )
     .order('created_at', { ascending: false });

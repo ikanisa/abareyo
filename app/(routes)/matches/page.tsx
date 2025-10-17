@@ -1,5 +1,6 @@
 import { matches as fallbackMatches } from "@/app/_data/matches";
 import PageShell from "@/app/_components/shell/PageShell";
+import SubpageHeader from "@/app/_components/shell/SubpageHeader";
 import { buildBackendUrl } from "@/app/(routes)/_lib/backend-url";
 
 import MatchesList from "./_components/MatchesList";
@@ -87,12 +88,13 @@ export default async function MatchesPage() {
 
   return (
     <PageShell>
+      <SubpageHeader
+        title="Matches"
+        eyebrow="Fixture hub"
+        description="Pick a game to jump into the live centre or secure your seat."
+        backHref="/"
+      />
       {normalized.length ? <LiveTicker id={normalized[0].id} /> : null}
-      <section className="card">
-        <h1>Matches</h1>
-        <p className="muted">Pick a game. One tap to buy or view live centre.</p>
-      </section>
-
       <MatchesList matches={normalized} />
     </PageShell>
   );

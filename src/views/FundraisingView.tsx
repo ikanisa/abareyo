@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { HeartHandshake, Flame, PhoneCall, Copy, Loader2, Target } from "lucide-react";
@@ -172,12 +173,14 @@ export default function Fundraising() {
               className="p-5 space-y-3 border border-transparent hover:border-primary/40 transition-all"
             >
               {project.coverImageUrl && (
-                <div className="h-36 w-full overflow-hidden rounded-2xl">
-                  <img
+                <div className="relative h-36 w-full overflow-hidden rounded-2xl">
+                  <Image
                     src={project.coverImageUrl}
                     alt={project.title}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover"
+                    unoptimized={project.coverImageUrl.startsWith("http")}
                   />
                 </div>
               )}

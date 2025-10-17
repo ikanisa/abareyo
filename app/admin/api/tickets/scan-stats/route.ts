@@ -27,8 +27,9 @@ const KNOWN_TICKET_STATUSES: readonly Tables<'ticket_orders'>['status'][] = [
 ] as const;
 
 const isKnownTicketStatus = (
-  value: string,
+  value: string | null | undefined,
 ): value is Tables<'ticket_orders'>['status'] =>
+  typeof value === 'string' &&
   KNOWN_TICKET_STATUSES.includes(value as Tables<'ticket_orders'>['status']);
 
 export async function GET() {
@@ -71,9 +72,10 @@ export async function GET() {
     }
 
     const statusAggregate: StatusSummary = [
-      ...KNOWN_TICKET_STATUSES.map((status) =>
-        statusAggregateByKey.get(status) ?? { status, count: 0 },
-      ),
+      ...KNOWN_TICKET_STATUSES.map((status) => {
+        const key = status ?? 'unknown';
+        return statusAggregateByKey.get(key) ?? { status: key, count: 0 };
+      }),
       ...Array.from(statusAggregateByKey.entries())
         .filter(([status]) => !isKnownTicketStatus(status))
         .map(([, value]) => value),

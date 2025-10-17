@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { writeAuditLog } from '@/app/api/admin/_lib/audit';
 import { getServiceClient } from '@/app/api/admin/_lib/db';
 import { requireAdmin } from '@/app/api/admin/_lib/session';
-import type { Tables } from '@/integrations/supabase/types';
+import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 
 type MatchRow = Tables<'matches'>;
 
@@ -28,13 +28,7 @@ type SerializedGate = {
   matchId: string;
 };
 
-const resolveOpponent = (row: MatchRow) => {
-  const home = row.home_team ?? '';
-  const away = row.away_team ?? '';
-  if (home.toLowerCase().includes('rayon')) return away || row.title;
-  if (away.toLowerCase().includes('rayon')) return home || row.title;
-  return row.title;
-};
+const resolveOpponent = (row: MatchRow) => row.opponent ?? 'TBD opponent';
 
 const serializeMatch = (
   row: MatchRow,
@@ -42,12 +36,13 @@ const serializeMatch = (
   gates: Record<string, SerializedGate[]>,
 ) => ({
   id: row.id,
-  opponent: resolveOpponent(row) ?? row.title,
-  kickoff: row.date,
+  opponent: resolveOpponent(row),
+  kickoff: row.kickoff,
   venue: row.venue,
   status: row.status === 'upcoming' ? 'scheduled' : row.status,
   vipPrice: row.vip_price,
   regularPrice: row.regular_price,
+  bluePrice: row.blue_price,
   seats: {
     vip: row.seats_vip,
     regular: row.seats_regular,
@@ -65,9 +60,9 @@ export const GET = async (request: Request) => {
   const { data: matches, error } = await client
     .from('matches')
     .select(
-      'id, title, date, venue, status, vip_price, regular_price, seats_vip, seats_regular, seats_blue, home_team, away_team',
+      'id, opponent, kickoff, venue, status, vip_price, regular_price, blue_price, seats_vip, seats_regular, seats_blue',
     )
-    .order('date', { ascending: true });
+    .order('kickoff', { ascending: true });
 
   if (error) {
     return NextResponse.json({ message: error.message }, { status: 500 });
@@ -140,18 +135,17 @@ export const POST = async (request: Request) => {
   }
 
   const insertPayload = {
-    title: opponent,
-    date: kickoff,
+    opponent: opponent || null,
+    kickoff,
     venue,
     status,
-    away_team: opponent,
-    home_team: 'Rayon Sports',
     vip_price: typeof body.vipPrice === 'number' ? body.vipPrice : null,
     regular_price: typeof body.regularPrice === 'number' ? body.regularPrice : null,
+    blue_price: typeof body.bluePrice === 'number' ? body.bluePrice : null,
     seats_vip: typeof body.seatsVip === 'number' ? body.seatsVip : 0,
     seats_regular: typeof body.seatsRegular === 'number' ? body.seatsRegular : 0,
     seats_blue: typeof body.seatsBlue === 'number' ? body.seatsBlue : 0,
-  };
+  } satisfies TablesInsert<'matches'>;
 
   const { data, error } = await client.from('matches').insert(insertPayload).select().single();
   if (error || !data) {

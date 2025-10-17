@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -182,12 +183,19 @@ function PostCard({
           {Boolean(post.media?.length) && (
             <div className="grid grid-cols-2 gap-2">
               {post.media?.map((url) => (
-                <img
+                <div
                   key={url}
-                  src={url}
-                  alt="Post attachment"
-                  className="h-32 w-full object-cover rounded-xl border border-border/60"
-                />
+                  className="relative h-32 w-full overflow-hidden rounded-xl border border-border/60"
+                >
+                  <Image
+                    src={url}
+                    alt="Post attachment"
+                    fill
+                    sizes="(max-width: 768px) 45vw, 30vw"
+                    className="object-cover"
+                    unoptimized={url.startsWith("http")}
+                  />
+                </div>
               ))}
             </div>
           )}

@@ -4,37 +4,21 @@ import { writeAuditLog } from '@/app/api/admin/_lib/audit';
 import { getServiceClient } from '@/app/api/admin/_lib/db';
 import { requireAdmin } from '@/app/api/admin/_lib/session';
 
-type MatchRow = {
-  id: string;
-  title: string;
-  date: string;
-  venue: string | null;
-  status: string;
-  vip_price: number | null;
-  regular_price: number | null;
-  seats_vip: number | null;
-  seats_regular: number | null;
-  seats_blue: number | null;
-  home_team: string | null;
-  away_team: string | null;
-};
+import type { Tables, TablesUpdate } from '@/integrations/supabase/types';
 
-const resolveOpponent = (row: MatchRow) => {
-  const home = row.home_team ?? '';
-  const away = row.away_team ?? '';
-  if (home.toLowerCase().includes('rayon')) return away || row.title;
-  if (away.toLowerCase().includes('rayon')) return home || row.title;
-  return row.title;
-};
+type MatchRow = Tables<'matches'>;
+
+const resolveOpponent = (row: MatchRow) => row.opponent ?? 'TBD opponent';
 
 const serialize = (row: MatchRow) => ({
   id: row.id,
-  opponent: resolveOpponent(row) ?? row.title,
-  kickoff: row.date,
+  opponent: resolveOpponent(row),
+  kickoff: row.kickoff,
   venue: row.venue,
   status: row.status === 'upcoming' ? 'scheduled' : row.status,
   vipPrice: row.vip_price,
   regularPrice: row.regular_price,
+  bluePrice: row.blue_price,
   seats: {
     vip: row.seats_vip,
     regular: row.seats_regular,
@@ -49,7 +33,7 @@ export const GET = async (request: Request, context: { params: { matchId: string
   const client = getServiceClient();
   const { data, error } = await client
     .from('matches')
-    .select('id, title, date, venue, status, vip_price, regular_price, seats_vip, seats_regular, seats_blue, home_team, away_team')
+    .select('id, opponent, kickoff, venue, status, vip_price, regular_price, blue_price, seats_vip, seats_regular, seats_blue')
     .eq('id', context.params.matchId)
     .maybeSingle();
 
@@ -89,18 +73,21 @@ export const PATCH = async (request: Request, context: { params: { matchId: stri
     return NextResponse.json({ message: 'Invalid payload' }, { status: 400 });
   }
 
-  const update: Record<string, unknown> = {};
+  const allowedStatuses = new Set<MatchRow['status']>(['upcoming', 'live', 'ft']);
+  const update: TablesUpdate<'matches'> = {};
   if (typeof payload.opponent === 'string') {
     const trimmed = payload.opponent.trim();
-    update.away_team = trimmed;
-    update.title = trimmed;
+    update.opponent = trimmed || null;
   }
-  if (typeof payload.kickoff === 'string') update.date = payload.kickoff;
+  if (typeof payload.kickoff === 'string') update.kickoff = payload.kickoff;
   if (typeof payload.venue === 'string' || payload.venue === null) update.venue = payload.venue;
-  if (typeof payload.status === 'string') update.status = payload.status;
+  if (typeof payload.status === 'string' && allowedStatuses.has(payload.status as MatchRow['status'])) {
+    update.status = payload.status as MatchRow['status'];
+  }
   if (typeof payload.vipPrice === 'number' || payload.vipPrice === null) update.vip_price = payload.vipPrice;
   if (typeof payload.regularPrice === 'number' || payload.regularPrice === null)
     update.regular_price = payload.regularPrice;
+  if (typeof payload.bluePrice === 'number' || payload.bluePrice === null) update.blue_price = payload.bluePrice;
   if (typeof payload.seatsVip === 'number') update.seats_vip = payload.seatsVip;
   if (typeof payload.seatsRegular === 'number') update.seats_regular = payload.seatsRegular;
   if (typeof payload.seatsBlue === 'number') update.seats_blue = payload.seatsBlue;
@@ -113,7 +100,7 @@ export const PATCH = async (request: Request, context: { params: { matchId: stri
     .from('matches')
     .update(update)
     .eq('id', context.params.matchId)
-    .select('id, title, date, venue, status, vip_price, regular_price, seats_vip, seats_regular, seats_blue, home_team, away_team')
+    .select('id, opponent, kickoff, venue, status, vip_price, regular_price, blue_price, seats_vip, seats_regular, seats_blue')
     .maybeSingle();
 
   if (error || !data) {

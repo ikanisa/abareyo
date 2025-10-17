@@ -1,4 +1,5 @@
 import PageShell from "@/app/_components/shell/PageShell";
+import SubpageHeader from "@/app/_components/shell/SubpageHeader";
 import TicketsGrid from "./_components/TicketsGrid";
 
 export const dynamic = "force-dynamic";
@@ -13,10 +14,12 @@ export default async function Tickets() {
 
   return (
     <PageShell>
-      <section className="card">
-        <h1>Upcoming Matches</h1>
-        <div className="muted">Choose a match, pick a zone, pay via USSD.</div>
-      </section>
+      <SubpageHeader
+        title="Upcoming Matches"
+        eyebrow="Tickets"
+        description="Choose a match, pick your zone, and pay seamlessly via mobile money."
+        backHref="/"
+      />
       <TicketsGrid matches={matches} />
     </PageShell>
   );

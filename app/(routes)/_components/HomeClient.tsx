@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 
 import Feed from "@/app/_components/home/Feed";
 import RewardsWidget from "@/app/_components/home/RewardsWidget";
@@ -11,6 +13,7 @@ import GamificationStrip from "@/app/_components/ui/GamificationStrip";
 import QuickTiles from "@/app/_components/ui/QuickTiles";
 import EmptyState from "@/app/_components/ui/EmptyState";
 import HomeInteractiveLayer from "./HomeInteractiveLayer";
+import HomeHeroSection from "./HomeHeroSection";
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
   GamificationTileWithProgress,
@@ -18,6 +21,7 @@ import type {
   QuickActionTileWithStat,
 } from "@/lib/api/home";
 import { buildHomeSurfaceData } from "@/lib/home/surface-data";
+import { clientConfig } from "@/config/client";
 import { trackHomeInteraction, trackHomeSurfaceViewed } from "@/lib/observability";
 import type { PartnerServicesPromo } from "@/app/_config/services";
 
@@ -363,7 +367,7 @@ const MembershipSection = ({
 const ShopPromotions = ({ promos, isLoading }: { promos: HomeSurfaceData["shopPromos"]; isLoading: boolean }) => {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2" aria-hidden>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3" aria-hidden>
         {Array.from({ length: 2 }).map((_, index) => (
           <Skeleton key={`shop-skeleton-${index}`} className="h-36 rounded-3xl bg-white/10" />
         ))}
@@ -383,7 +387,7 @@ const ShopPromotions = ({ promos, isLoading }: { promos: HomeSurfaceData["shopPr
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-2" role="list">
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3" role="list">
       {promos.map((promo) => (
         <Link
           key={promo.id}
@@ -415,7 +419,7 @@ const FundraisingSpotlight = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2" aria-hidden>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3" aria-hidden>
         {Array.from({ length: 2 }).map((_, index) => (
           <Skeleton key={`fundraising-skeleton-${index}`} className="h-40 rounded-3xl bg-white/10" />
         ))}
@@ -435,7 +439,7 @@ const FundraisingSpotlight = ({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-2" role="list">
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3" role="list">
       {campaigns.map((campaign) => (
         <Link
           key={campaign.id}
@@ -523,7 +527,7 @@ const CommunityHighlights = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2" aria-hidden>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3" aria-hidden>
         {Array.from({ length: 2 }).map((_, index) => (
           <Skeleton key={`community-skeleton-${index}`} className="h-32 rounded-3xl bg-white/10" />
         ))}
@@ -543,7 +547,7 @@ const CommunityHighlights = ({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-2" role="list">
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3" role="list">
       {highlights.map((highlight) => (
         <Link
           key={highlight.id}
@@ -592,7 +596,7 @@ const SponsorsGrid = ({ sponsors, isLoading }: { sponsors: HomeSurfaceData["spon
   return (
     <div className="card space-y-4">
       <h3 className="text-lg font-semibold">Our partners</h3>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" role="list">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" role="list">
         {sponsors.map((sponsor) => (
           <div
             key={sponsor.id}
@@ -608,15 +612,30 @@ const SponsorsGrid = ({ sponsors, isLoading }: { sponsors: HomeSurfaceData["spon
   );
 };
 
-const Section = ({ title, children }: { title: string; children: ReactNode }) => (
-  <section className="space-y-3">
-    <h2 className="section-title">{title}</h2>
-    {children}
-  </section>
-);
+const MotionSection = motion.section;
+
+const Section = ({ title, children }: { title: string; children: ReactNode }) => {
+  const reduceMotion = useReducedMotion();
+
+  return (
+    <MotionSection
+      className="space-y-3"
+      initial={reduceMotion ? undefined : { opacity: 0, y: 24 }}
+      whileInView={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={reduceMotion ? undefined : { duration: 0.35, ease: "easeOut" }}
+    >
+      <h2 className="section-title">{title}</h2>
+      {children}
+    </MotionSection>
+  );
+};
 const HomeClient = ({ hero }: { hero?: ReactNode }) => {
   const homeQuery = useHomeContent();
   const { data, isLoading, isError, refetch } = homeQuery;
+  const router = useRouter();
+  const telemetryEndpoint = clientConfig.telemetryEndpoint;
+  const prefetchedRoutes = useRef<Set<string>>(new Set());
 
   const fallbackData = useMemo(() => buildHomeSurfaceData(), []);
   const [cachedData, setCachedData] = useState<HomeSurfaceData>(() => fallbackData);
@@ -701,32 +720,50 @@ const HomeClient = ({ hero }: { hero?: ReactNode }) => {
       data.wallet.actions.length > 0 ? "wallet" : null,
     ].filter((value): value is string => Boolean(value));
 
-    void trackHomeSurfaceViewed({ generatedAt: data.meta.generatedAt, modules });
-  }, [data]);
+    void trackHomeSurfaceViewed({ generatedAt: data.meta.generatedAt, modules }, telemetryEndpoint);
+  }, [data, telemetryEndpoint]);
 
-  const handleQuickActionSelect = useCallback((tile: QuickActionTileWithStat) => {
-    void trackHomeInteraction({ action: "quick-action", id: tile.id, label: tile.label });
-  }, []);
+  const handleQuickActionSelect = useCallback(
+    (tile: QuickActionTileWithStat) => {
+      void trackHomeInteraction({ action: "quick-action", id: tile.id, label: tile.label }, telemetryEndpoint);
+    },
+    [telemetryEndpoint],
+  );
 
-  const handleGamificationSelect = useCallback((tile: GamificationTileWithProgress) => {
-    void trackHomeInteraction({ action: "gamification", id: tile.id, label: tile.label });
-  }, []);
+  const handleGamificationSelect = useCallback(
+    (tile: GamificationTileWithProgress) => {
+      void trackHomeInteraction({ action: "gamification", id: tile.id, label: tile.label }, telemetryEndpoint);
+    },
+    [telemetryEndpoint],
+  );
 
-  const handleStoryPress = useCallback((story: HomeSurfaceData["stories"][number]) => {
-    void trackHomeInteraction({ action: "story", id: story.id, label: story.title });
-  }, []);
+  const handleStoryPress = useCallback(
+    (story: HomeSurfaceData["stories"][number]) => {
+      void trackHomeInteraction({ action: "story", id: story.id, label: story.title }, telemetryEndpoint);
+    },
+    [telemetryEndpoint],
+  );
 
-  const handleFixturePress = useCallback((fixture: HomeSurfaceData["fixtures"][number]) => {
-    void trackHomeInteraction({ action: "fixture", id: fixture.id, label: fixture.opponent });
-  }, []);
+  const handleFixturePress = useCallback(
+    (fixture: HomeSurfaceData["fixtures"][number]) => {
+      void trackHomeInteraction({ action: "fixture", id: fixture.id, label: fixture.opponent }, telemetryEndpoint);
+    },
+    [telemetryEndpoint],
+  );
 
-  const handleWalletAction = useCallback((action: HomeSurfaceData["wallet"]["actions"][number]) => {
-    void trackHomeInteraction({ action: "wallet-action", id: action.id, label: action.label });
-  }, []);
+  const handleWalletAction = useCallback(
+    (action: HomeSurfaceData["wallet"]["actions"][number]) => {
+      void trackHomeInteraction({ action: "wallet-action", id: action.id, label: action.label }, telemetryEndpoint);
+    },
+    [telemetryEndpoint],
+  );
 
-  const handleCommunityPress = useCallback((highlight: HomeSurfaceData["community"][number]) => {
-    void trackHomeInteraction({ action: "community", id: highlight.id, label: highlight.title });
-  }, []);
+  const handleCommunityPress = useCallback(
+    (highlight: HomeSurfaceData["community"][number]) => {
+      void trackHomeInteraction({ action: "community", id: highlight.id, label: highlight.title }, telemetryEndpoint);
+    },
+    [telemetryEndpoint],
+  );
 
   const quickActions = resolvedData?.quickActions ?? [];
   const gamification = resolvedData?.gamification ?? [];
@@ -742,6 +779,63 @@ const HomeClient = ({ hero }: { hero?: ReactNode }) => {
   const community = resolvedData?.community ?? [];
   const sponsorsList = resolvedData?.sponsors ?? [];
   const partnerBanner = resolvedData?.partnerServicesBanner ?? null;
+  const heroActions = resolvedData?.hero?.actions ?? [];
+  const walletActions = wallet?.actions ?? [];
+  const heroData = resolvedData?.hero ?? fallbackData.hero;
+  const heroNode = useMemo(() => <HomeHeroSection hero={heroData} />, [heroData]);
+
+  const prefetchTargets = useMemo(() => {
+    const hrefs = new Set<string>();
+
+    const collect = (href?: string | null) => {
+      if (!href || typeof href !== "string") {
+        return;
+      }
+
+      if (!href.startsWith("/")) {
+        return;
+      }
+
+      hrefs.add(href);
+    };
+
+    quickActions.forEach((tile) => collect(tile.href));
+    gamification.forEach((tile) => collect(tile.href));
+    stories.forEach((story) => collect(story.href));
+    feedItemsList.slice(0, 3).forEach((item) => collect(item.href));
+    heroActions.forEach((action) => collect(action.href));
+    walletActions.forEach((action) => collect(action.href));
+    shopPromos.forEach((promo) => collect(promo.href));
+    fundraising.forEach((campaign) => collect(campaign.href));
+    events.forEach((event) => collect(event.href));
+    community.forEach((highlight) => collect(highlight.href));
+
+    if (partnerBanner) {
+      collect(partnerBanner.href);
+    }
+
+    return Array.from(hrefs);
+  }, [community, events, feedItemsList, fundraising, gamification, heroActions, partnerBanner, quickActions, shopPromos, stories, walletActions]);
+
+  useEffect(() => {
+    if (prefetchTargets.length === 0) {
+      return;
+    }
+
+    prefetchTargets.forEach((href) => {
+      if (prefetchedRoutes.current.has(href)) {
+        return;
+      }
+
+      prefetchedRoutes.current.add(href);
+
+      try {
+        void router.prefetch(href);
+      } catch {
+        prefetchedRoutes.current.delete(href);
+      }
+    });
+  }, [prefetchTargets, router]);
 
   const offlineMode = isOffline || (isError && typeof navigator !== "undefined" && navigator.onLine === false);
 
@@ -749,9 +843,11 @@ const HomeClient = ({ hero }: { hero?: ReactNode }) => {
     void refetch();
   }, [refetch]);
 
+  const heroSlot = hero ?? heroNode;
+
   return (
     <HomeInteractiveLayer>
-      {hero}
+      {heroSlot}
 
       <Section title="Quick Actions">
         <div className="space-y-3">
@@ -770,7 +866,7 @@ const HomeClient = ({ hero }: { hero?: ReactNode }) => {
       </Section>
 
       <Section title="Live Match Centre">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           <LiveTicker updates={liveTickerUpdates} isLoading={isInitialLoading} />
           <UpcomingFixtures fixtures={fixtures} isLoading={isInitialLoading} onFixturePress={handleFixturePress} />
         </div>
