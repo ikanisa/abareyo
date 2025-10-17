@@ -133,7 +133,7 @@ const renderStaticArticle = (article: Article) => (
   </PageShell>
 );
 
-const renderDynamicArticle = (article: Awaited<ReturnType<typeof findContent>>) => (
+const renderDynamicArticle = (article: NonNullable<Awaited<ReturnType<typeof findContent>>>) => (
   <PageShell>
     <SubpageHeader
       title={article.title}
@@ -180,7 +180,7 @@ export default async function NewsArticle({ params }: { params: { slug: string }
   const { slug } = params;
 
   const contentEnabled = ff("features.curatedContent", true);
-  let dynamicArticle = null;
+  let dynamicArticle: Awaited<ReturnType<typeof findContent>> | null = null;
 
   if (contentEnabled) {
     try {
