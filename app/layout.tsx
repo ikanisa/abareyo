@@ -3,8 +3,10 @@ import "@/index.css";
 import "./globals.css";
 import ClientErrorBoundary from "./_components/telemetry/ClientErrorBoundary";
 import { Providers } from "./providers";
-import BottomNavContainer from "./_components/BottomNavContainer";
 import { InstallPrompt, OfflineBanner } from "./_components/pwa/PwaHelpers";
+import BottomNavContainer from "./_components/BottomNavContainer";
+import { Suspense } from "react";
+import PageViewTracker from "./_components/telemetry/PageViewTracker";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 const metadataBase = (() => {
@@ -48,6 +50,9 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => (
           <>
             {children}
             <BottomNavContainer />
+            <Suspense fallback={null}>
+              <PageViewTracker />
+            </Suspense>
           </>
         </Providers>
       </ClientErrorBoundary>

@@ -56,15 +56,19 @@ export default function LiquidHomeScreen() {
         <CommunityStrip />
         <Feed />
 
-        <GlassCard className="mt-4 p-5">
-          <h3 className="text-lg font-semibold text-white">What’s Next</h3>
-          <p className="mt-1 text-white/80">Get a free Blue Ticket with an insurance policy.</p>
-        </GlassCard>
+        <Link href="/services" className="block mt-4" aria-label="Open What’s Next offers">
+          <GlassCard className="p-5">
+            <h3 className="text-lg font-semibold text-white">What’s Next</h3>
+            <p className="mt-1 text-white/80">Get a free Blue Ticket with an insurance policy.</p>
+          </GlassCard>
+        </Link>
 
-        <GlassCard className="mt-4 p-5">
-          <h3 className="text-lg font-semibold text-white">Savings Streak</h3>
-          <p className="mt-1 text-white/80">Earn points with SACCO deposits via USSD.</p>
-        </GlassCard>
+        <Link href="/services/savings" className="block mt-4" aria-label="Open Savings Streak">
+          <GlassCard className="p-5">
+            <h3 className="text-lg font-semibold text-white">Savings Streak</h3>
+            <p className="mt-1 text-white/80">Earn points with SACCO deposits via USSD.</p>
+          </GlassCard>
+        </Link>
       </div>
     </div>
   );
@@ -188,7 +192,7 @@ export function MatchesLiveScreen() {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mb-2 mt-4 px-1 text-sm font-semibold uppercase tracking-wide text-white/85">{children}</div>
+    <h2 className="mb-2 mt-4 px-1 text-sm font-semibold uppercase tracking-wide text-white/85">{children}</h2>
   );
 }
 

@@ -16,7 +16,7 @@ type SerializedShopOrder = {
   id: string;
   status: Tables<'orders'>['status'];
   total: number;
-  createdAt: string;
+  createdAt: string | null;
   user: { id: string; phoneMask: string | null; name: string | null } | null;
   items: Array<{
     id: string;
@@ -24,7 +24,12 @@ type SerializedShopOrder = {
     price: number;
     product: { id: string; name: string | null } | null;
   }>;
-  payments: Array<{ id: string; amount: number; status: string; createdAt: string }>;
+  payments: Array<{
+    id: string;
+    amount: number;
+    status: Tables<'payments'>['status'] | null;
+    createdAt: string | null;
+  }>;
 };
 
 const parsePagination = (request: Request) => {

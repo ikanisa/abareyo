@@ -59,7 +59,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
     .eq('id', params.id)
     .maybeSingle<PublicMember>();
 
-  if (error || !data) {
+  if (error || !data || !data.id) {
     return (
       <PageShell>
         <section className="card space-y-3 text-center">

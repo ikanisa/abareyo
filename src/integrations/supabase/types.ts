@@ -3051,6 +3051,7 @@ export type Database = {
           points: number
           public_profile: boolean | null
           region: string | null
+          user_code: string | null
           tier: Database["public"]["Enums"]["user_tier"]
         }
         Insert: {
@@ -3067,6 +3068,7 @@ export type Database = {
           points?: number
           public_profile?: boolean | null
           region?: string | null
+          user_code?: string | null
           tier?: Database["public"]["Enums"]["user_tier"]
         }
         Update: {
@@ -3083,6 +3085,7 @@ export type Database = {
           points?: number
           public_profile?: boolean | null
           region?: string | null
+          user_code?: string | null
           tier?: Database["public"]["Enums"]["user_tier"]
         }
         Relationships: []
@@ -3246,7 +3249,10 @@ export type Database = {
           fan_club: string | null
           id: string | null
           joined_at: string | null
+          momo_number: string | null
+          phone: string | null
           region: string | null
+          user_code: string | null
         }
         Insert: {
           avatar_url?: never
@@ -3254,7 +3260,10 @@ export type Database = {
           fan_club?: never
           id?: string | null
           joined_at?: string | null
+          momo_number?: never
+          phone?: never
           region?: never
+          user_code?: never
         }
         Update: {
           avatar_url?: never
@@ -3262,7 +3271,10 @@ export type Database = {
           fan_club?: never
           id?: string | null
           joined_at?: string | null
+          momo_number?: never
+          phone?: never
           region?: never
+          user_code?: never
         }
         Relationships: []
       }
@@ -3453,4 +3465,3 @@ export const Constants = {
     },
   },
 } as const
-

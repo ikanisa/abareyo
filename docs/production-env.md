@@ -25,7 +25,8 @@ Required runtime env vars
 - Frontend (Next.js)
   - NEXT_PUBLIC_SUPABASE_URL (Supabase project URL)
   - NEXT_PUBLIC_SUPABASE_ANON_KEY (Supabase anonymous public key)
-  - NEXT_PUBLIC_BACKEND_URL (points at /api gateway that fronts Nest API)
+  - NEXT_PUBLIC_BACKEND_URL (points at /api gateway that fronts Nest API; must be an absolute HTTPS URL in hosted environments)
+  - NEXT_PUBLIC_TELEMETRY_URL (optional override for telemetry beacons; defaults to `/api/telemetry/app-state`)
   - NEXT_PUBLIC_ENVIRONMENT_LABEL (optional ribbon)
   - NEXT_PUBLIC_ADMIN_SESSION_COOKIE (optional; default admin_session)
 
@@ -43,4 +44,3 @@ Health and protections
 - Backend must reject unknown origins; verify CORS.
 - `/metrics` returns 401 without Authorization: Bearer $METRICS_TOKEN.
 - Check boot log for warnings/errors about session secrets.
-

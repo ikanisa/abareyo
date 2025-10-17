@@ -5,8 +5,8 @@ import { dispatchTelemetryEvent } from '@/lib/observability';
 
 type MemberProfileAnalyticsProps = {
   memberId: string;
-  region: string;
-  fanClub: string;
+  region: string | null;
+  fanClub: string | null;
 };
 
 export default function MemberProfileAnalytics({ memberId, region, fanClub }: MemberProfileAnalyticsProps) {

@@ -1,55 +1,59 @@
-import { buildRouteMetadata } from '@/app/_lib/navigation';
-import { eventsSchedule } from '@/app/_config/home';
+import Link from "next/link";
 
-export const metadata = buildRouteMetadata('/events');
+import { buildRouteMetadata } from "@/app/_lib/navigation";
+import PageShell from "@/app/_components/shell/PageShell";
+import SubpageHeader from "@/app/_components/shell/SubpageHeader";
+import { eventsSchedule } from "@/app/_config/home";
+
+export const metadata = buildRouteMetadata("/events");
 
 const formatDate = (iso: string) =>
-  new Intl.DateTimeFormat('en-GB', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
+  new Intl.DateTimeFormat("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
   }).format(new Date(iso));
 
 const EventsPage = () => (
-  <div className="min-h-screen bg-rs-gradient px-4 py-12 text-white">
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-6">
-      <header className="glass space-y-3 rounded-3xl px-6 py-8 text-center">
-        <p className="text-sm uppercase tracking-[0.3em] text-white/60">GIKUNDIRO calendar</p>
-        <h1 className="text-3xl font-semibold">Club events & match activations</h1>
-        <p className="text-sm text-white/80">
-          Track Rayon Sports appearances, fan festivals, and premium experiences. Tap any event to secure tickets or add to your calendar.
-        </p>
-      </header>
+  <PageShell>
+    <SubpageHeader
+      title="Club Events"
+      eyebrow="Calendar"
+      description="Track Rayon Sports appearances, fan festivals, and premium experiences across the season."
+      backHref="/"
+      actions={
+        <span className="rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white/80">
+          {eventsSchedule.length} upcoming
+        </span>
+      }
+    />
 
-      <section className="space-y-4">
-        {eventsSchedule.map((event) => (
-          <article key={event.id} className="card break-words whitespace-normal break-words whitespace-normal flex flex-col gap-2" aria-label={event.title}>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-lg font-semibold text-white">{event.title}</h2>
-            </div>
-            <p className="text-sm text-white/70">{event.description ?? 'Club activation hosted by Rayon Sports partners.'}</p>
-            <div className="flex flex-wrap items-center gap-3 text-sm text-white/80">
-              <span className="rounded-full bg-white/10 px-3 py-1">{formatDate(event.date)}</span>
-              <span className="rounded-full bg-white/10 px-3 py-1">{event.location}</span>
-            </div>
-            <div className="flex flex-wrap gap-3 pt-2">
-              <a href="/tickets" className="btn-primary" aria-label={`Buy tickets for ${event.title}`}>
-                Secure tickets
-              </a>
-              <a
-                href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${encodeURIComponent(event.date)}`}
-                className="btn"
-              >
-                Add to calendar
-              </a>
-            </div>
-          </article>
-        ))}
-      </section>
-    </main>
-  </div>
+    <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {eventsSchedule.map((event) => (
+        <article
+          key={event.id}
+          className="tile flex h-48 flex-col justify-between border border-white/15 bg-white/10 p-5 text-left"
+          aria-label={event.title}
+        >
+          <div>
+            <p className="text-xs uppercase tracking-[0.24em] text-white/70">{formatDate(event.date)}</p>
+            <h2 className="mt-2 text-xl font-semibold text-white">{event.title}</h2>
+            <p className="mt-2 text-sm text-white/75">
+              {event.description ?? "Club activation hosted by Rayon Sports partners."}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 pt-2 text-sm text-white/70">
+            <span className="rounded-full bg-white/10 px-3 py-1">{event.location}</span>
+            <Link className="rounded-full bg-white/15 px-3 py-1 text-white" href="/tickets">
+              Secure tickets
+            </Link>
+          </div>
+        </article>
+      ))}
+    </section>
+  </PageShell>
 );
 
 export default EventsPage;

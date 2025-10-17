@@ -1,5 +1,6 @@
 'use client';
 
+import NextImage from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ImagePlus, Pencil, Plus, Trash2 } from 'lucide-react';
@@ -167,40 +168,52 @@ export default function AdminShopProductsPage() {
         <GlassCard className="p-6 text-center text-sm text-slate-400">No products yet.</GlassCard>
       ) : (
         <div className="grid gap-4 md:grid-cols-3">
-          {products.map((product) => (
-            <GlassCard key={product.id} className="space-y-3 p-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="text-lg font-semibold text-slate-100">{product.name}</div>
-                  <div className="text-xs uppercase tracking-wide text-slate-400">{product.category ?? 'misc'}</div>
+          {products.map((product) => {
+            const coverImage = product.images[0];
+            return (
+              <GlassCard key={product.id} className="space-y-3 p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="text-lg font-semibold text-slate-100">{product.name}</div>
+                    <div className="text-xs uppercase tracking-wide text-slate-400">{product.category ?? 'misc'}</div>
+                  </div>
+                  <Badge variant="secondary" className="bg-white/10 text-xs text-slate-100">
+                    {product.price.toLocaleString()} RWF
+                  </Badge>
                 </div>
-                <Badge variant="secondary" className="bg-white/10 text-xs text-slate-100">
-                  {product.price.toLocaleString()} RWF
-                </Badge>
-              </div>
-              {product.images.length > 0 ? (
-                <img src={product.images[0]} alt={product.name} className="h-32 w-full rounded-xl object-cover" />
-              ) : (
-                <div className="flex h-32 w-full items-center justify-center rounded-xl border border-dashed border-white/10 text-xs text-slate-400">
-                  No image
+                {coverImage ? (
+                  <div className="relative h-32 w-full overflow-hidden rounded-xl">
+                    <NextImage
+                      src={coverImage}
+                      alt={product.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-cover"
+                      unoptimized={coverImage.startsWith('http')}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-32 w-full items-center justify-center rounded-xl border border-dashed border-white/10 text-xs text-slate-400">
+                    No image
+                  </div>
+                )}
+                <div className="text-xs text-slate-400">Stock {product.stock}</div>
+                <div className="flex items-center gap-2">
+                  <Button variant="secondary" size="sm" onClick={() => startEdit(product)} className="flex items-center gap-2">
+                    <Pencil className="h-4 w-4" /> Edit
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => deleteMutation.mutate(product.id)}
+                    disabled={deleteMutation.isPending}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-              )}
-              <div className="text-xs text-slate-400">Stock {product.stock}</div>
-              <div className="flex items-center gap-2">
-                <Button variant="secondary" size="sm" onClick={() => startEdit(product)} className="flex items-center gap-2">
-                  <Pencil className="h-4 w-4" /> Edit
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => deleteMutation.mutate(product.id)}
-                  disabled={deleteMutation.isPending}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </GlassCard>
-          ))}
+              </GlassCard>
+            );
+          })}
         </div>
       )}
 
@@ -294,8 +307,15 @@ export default function AdminShopProductsPage() {
                 </div>
                 <div className="flex flex-wrap gap-3">
                   {form.images.map((image) => (
-                    <div key={image} className="group relative">
-                      <img src={image} alt="Product" className="h-20 w-20 rounded-xl object-cover" />
+                    <div key={image} className="group relative h-20 w-20 overflow-hidden rounded-xl">
+                      <NextImage
+                        src={image}
+                        alt="Product"
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                        unoptimized={image.startsWith('http')}
+                      />
                       <button
                         type="button"
                         className="absolute right-1 top-1 hidden rounded-full bg-black/60 p-1 text-white group-hover:block"

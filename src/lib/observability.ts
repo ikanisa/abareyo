@@ -105,6 +105,50 @@ export const recordAppStateEvent = async (
   await dispatchTelemetryEvent({ ...state, type: state.type }, endpoint);
 };
 
+export const recordPageView = async (
+  event: {
+    path: string;
+    locale?: string | null;
+    referrer?: string | null;
+    title?: string | null;
+  },
+  endpoint: string = DEFAULT_TELEMETRY_ENDPOINT,
+) => {
+  await dispatchTelemetryEvent(
+    {
+      type: "page-view",
+      path: event.path,
+      locale: event.locale ?? null,
+      referrer: event.referrer ?? null,
+      title: event.title ?? null,
+      timestamp: Date.now(),
+    },
+    endpoint,
+  );
+};
+
+export const recordNavigationEvent = async (
+  event: {
+    source: string;
+    destination: string;
+    label?: string;
+    locale?: string | null;
+  },
+  endpoint: string = DEFAULT_TELEMETRY_ENDPOINT,
+) => {
+  await dispatchTelemetryEvent(
+    {
+      type: "navigation",
+      source: event.source,
+      destination: event.destination,
+      label: event.label ?? null,
+      locale: event.locale ?? null,
+      timestamp: Date.now(),
+    },
+    endpoint,
+  );
+};
+
 export type HomeInteractionEvent = {
   action:
     | "quick-action"
