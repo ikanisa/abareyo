@@ -14,6 +14,7 @@ The login page instantiates a Supabase browser client and forwards the resulting
 | `SUPABASE_URL` | Backend (NestJS) | Supabase project URL used by the service-role client that verifies the token and reads admin users.【F:backend/src/modules/admin/auth/supabase-admin-auth.service.ts†L10-L47】 |
 | `SUPABASE_SERVICE_ROLE_KEY` | Backend (NestJS) | Service-role key required for `supabase.auth.getUser` and querying `admin_users`.【F:backend/src/modules/admin/auth/supabase-admin-auth.service.ts†L10-L47】 |
 | `ADMIN_SESSION_SECRET`, `FAN_SESSION_SECRET`, etc. | Backend (NestJS) | Secrets for signing session cookies. See [production-env.md](../production-env.md) for the complete list.【F:docs/production-env.md†L6-L33】 |
+| `ADMIN_DEFAULT_EMAIL`, `ADMIN_DEFAULT_PASSWORD`, `ADMIN_DEFAULT_NAME` | Backend (NestJS) & Frontend | Fallback credentials used to auto-bootstrap an admin account and service the Supabase login form (`bosco@ikanisa.com` / `MoMo!!0099`).【F:backend/src/modules/admin/auth/admin-auth.service.ts†L62-L119】 |
 
 ### Vercel configuration
 
@@ -43,8 +44,8 @@ The Supabase login flow requires a matching row in the `admin_users` table. Seed
      last_login timestamptz
    );
    ```
-2. Create a Supabase auth user for the admin email via **Auth → Users** (or a one-off script using `auth.signUp`).
-3. Insert an `admin_users` row with the same email and `status = 'active'`.
+2. If `ADMIN_DEFAULT_EMAIL` / `ADMIN_DEFAULT_PASSWORD` are set (see `.env`), the first successful login automatically seeds `admin_users` and the corresponding roles. Otherwise, manually create a Supabase auth user for the admin email via **Auth → Users** (or a one-off script using `auth.signUp`).
+3. Insert an `admin_users` row with the same email and `status = 'active'` if you are not using the default bootstrap flow.
 4. Optional: set `password_hash` if you also plan to use the legacy NestJS-only login endpoint (`/admin/auth/login`).
 
 You can automate the above locally or in CI by providing `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD_HASH`, and `ADMIN_SEED_NAME` when running `npm --prefix backend run seed`.【F:backend/prisma/seed.ts†L8-L120】
