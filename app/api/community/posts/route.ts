@@ -1,19 +1,17 @@
 import { randomUUID } from 'crypto';
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server';
+
+import { requireAuthUser } from '@/app/_lib/auth';
+import { getSupabase } from '@/app/_lib/supabase';
 
 type CommunityPostRecord = {
   id: string;
-  user_id: string;
+  user_id: string | null;
   text: string;
   media_url: string | null;
   status: 'visible' | 'hidden';
   created_at: string;
 };
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const server = supabaseUrl && supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : null;
 
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -29,6 +27,8 @@ const memoryPosts: CommunityPostRecord[] = [
 ];
 
 export async function GET() {
+  const server = getSupabase();
+
   if (!server) {
     return NextResponse.json({ posts: memoryPosts });
   }
@@ -47,7 +47,7 @@ export async function GET() {
   return NextResponse.json({ posts: data ?? [] });
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const text: string = (body.text ?? '').trim();
   const mediaUrl: string | null = body.media_url ? String(body.media_url) : null;
@@ -60,23 +60,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'text_too_long' }, { status: 400 });
   }
 
-  const post: CommunityPostRecord = {
-    id: randomUUID(),
-    user_id: DEMO_USER_ID,
-    text,
-    media_url: mediaUrl,
-    status: 'visible',
-    created_at: new Date().toISOString(),
-  };
+  const server = getSupabase();
 
   if (!server) {
+    const post: CommunityPostRecord = {
+      id: randomUUID(),
+      user_id: DEMO_USER_ID,
+      text,
+      media_url: mediaUrl,
+      status: 'visible',
+      created_at: new Date().toISOString(),
+    };
     memoryPosts.unshift(post);
     return NextResponse.json({ post }, { status: 201 });
   }
 
+  let userId: string | null = null;
+  const auth = await requireAuthUser(request, server);
+  if ('user' in auth) {
+    userId = auth.user.id;
+  } else if (auth.response.status !== 401) {
+    return auth.response;
+  }
+
   const { data, error } = await server
     .from('community_posts')
-    .insert({ user_id: DEMO_USER_ID, text, media_url: mediaUrl ?? undefined })
+    .insert({ user_id: userId ?? undefined, text, media_url: mediaUrl ?? undefined })
     .select('id,user_id,text,media_url,status,created_at')
     .single();
 

@@ -1,20 +1,28 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server';
+
+import { requireAuthUser } from '@/app/_lib/auth';
+import { getSupabase } from '@/app/_lib/supabase';
 
 const DEFAULT_PREFS = {
   language: 'rw',
   notifications: { goals: true, kickoff: true, final: true, club: true },
 };
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const server = supabaseUrl && supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : null;
+const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 const memoryPrefs = new Map<string, typeof DEFAULT_PREFS>();
 
-export async function GET() {
-  // MVP fetch default user (replace with session)
-  const user_id = '00000000-0000-0000-0000-000000000001';
+export async function GET(req: NextRequest) {
+  const server = getSupabase();
+
+  let user_id = DEMO_USER_ID;
+  if (server) {
+    const auth = await requireAuthUser(req, server);
+    if ('response' in auth) {
+      return auth.response;
+    }
+    user_id = auth.user.id;
+  }
 
   if (!server) {
     return NextResponse.json({ prefs: memoryPrefs.get(user_id) ?? DEFAULT_PREFS });
@@ -33,9 +41,19 @@ export async function GET() {
   return NextResponse.json({ prefs: data || DEFAULT_PREFS });
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const server = getSupabase();
+
+  let user_id = DEMO_USER_ID;
+  if (server) {
+    const auth = await requireAuthUser(req, server);
+    if ('response' in auth) {
+      return auth.response;
+    }
+    user_id = auth.user.id;
+  }
+
   const body = await req.json();
-  const user_id = '00000000-0000-0000-0000-000000000001';
   const upsert = {
     user_id,
     language: body.language || 'rw',
