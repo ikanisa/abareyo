@@ -13,7 +13,7 @@ This note captures the proposed “single source of truth” for overlapping tab
 | Domain | Keep | Drop (new migration) | Notes |
 | --- | --- | --- | --- |
 | Ticketing | `ticket_orders`, `ticket_order_items`, `ticket_passes`, `ticket_zones`, `match_gates` | `"TicketOrder"`, `"TicketOrderItem"`, `"TicketPass"`, `"TicketZone"`, `"MatchGate"` | RLS, policies, and admin views already target snake_case tables. |
-| Wallets | `wallet`, `transactions` | `"User"`/`"Wallet"` permutations | Legacy plural tables (`wallets`) remain for audit; drop once data confirmed empty. |
+| Wallets | `wallet`, `transactions` | (legacy tables removed in `20251113123000_phase2_schema_alignment.sql`) | ✅ Legacy `wallets` table dropped; service flows rely on canonical tables only. |
 | Orders & Payments | `orders`, `order_items`, `payments`, `shop_products` | `"Order"`, `"OrderItem"`, `"Payment"`, `"Product"` | Supabase SQL enforces snake_case FKs; camel versions had no data. |
 | Admin/Auth | `admin_users`, `admin_roles`, `admin_sessions`, `admin_users_roles`, `audit_logs`, `feature_flags`, `translations`, `ussd_template`, `sms_parsed`, `sms_raw` | CamelCase equivalents | `20251112_cleanup_camelcase.sql` removes the duplicates. |
 | Community/Content | `community_posts`, `community_reports`, `content_items`, `fan_posts` | `"Post"`, `"PostReaction"`, `"FanClub"`, `"FanClubMember"` | Preserve snake_case views powering dashboards. |
@@ -28,6 +28,5 @@ Partners gap addressed via `20251111_add_partners_table.sql`; keep `public.partn
 
 ## Upcoming Tasks
 
-1. Snapshot/diff `wallets` vs. `wallet` before removing `wallets`.
-2. Rebuild Prisma models with explicit `@@map` if we decide to keep camelCase field names in application code.
-3. Update runbooks once the cleanup migration ships to staging/production.
+1. Rebuild Prisma models with explicit `@@map` if we decide to keep camelCase field names in application code.
+2. Update runbooks once the Phase 2 schema alignment ships to staging/production.
