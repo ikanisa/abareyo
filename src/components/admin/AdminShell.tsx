@@ -59,7 +59,7 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
     }
     setIsLoggingOut(true);
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api'}/admin/auth/logout`, {
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? '/api'}/admin/auth/logout`, {
         method: 'POST',
         credentials: 'include',
       });

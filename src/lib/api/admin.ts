@@ -51,7 +51,7 @@ export type SmsManualAttachRequestContract = {
   paymentId: string;
 };
 
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api';
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? '/api';
 const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_API_TOKEN ?? '';
 
 const normalisedBaseUrl = BASE_URL.replace(/\/$/, '');

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 const ADMIN_COOKIE_NAME = process.env.NEXT_PUBLIC_ADMIN_SESSION_COOKIE ?? "admin_session";
 const BACKEND_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
-const FALLBACK_BACKEND = "http://localhost:5000/api";
+const FALLBACK_BACKEND = "/api";
 
 export async function redirectIfAuthenticated(destination = "/staff") {
   const cookieStore = cookies();
