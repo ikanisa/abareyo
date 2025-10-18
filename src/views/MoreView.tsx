@@ -25,6 +25,7 @@ import TopAppBar from "@/app/_components/ui/TopAppBar";
 import HeroBlock from "@/app/_components/widgets/HeroBlock";
 import { SectionHeader } from "@/app/_components/widgets/SectionHeader";
 import { GlassCard } from "@/components/ui/glass-card";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/providers/i18n-provider";
 import { useAuth } from "@/providers/auth-provider";
@@ -78,6 +79,7 @@ export default function More() {
   const { t } = useI18n();
   const { user, logout } = useAuth();
   const { toast } = useToast();
+  const supabase = getSupabaseBrowserClient();
 
   const labels = useMenuLabels();
   const menuItems = baseMenuItems.map((item) => {
@@ -200,44 +202,66 @@ export default function More() {
       </section>
 
       <section className="space-y-3">
-        <SectionHeader title={t("auth.logout", "Log out")} />
-        <GlassCard
-          className="p-4 transition-all hover:border-destructive/40"
-          role="button"
-          tabIndex={0}
-          onClick={async () => {
-            try {
-              await logout();
-              toast({ title: t("auth.loggedOut", "Signed out") });
-              router.replace("/onboarding");
-              router.refresh();
-            } catch (error) {
-              toast({
-                title: t("auth.logoutFailed", "Logout failed"),
-                description:
-                  error instanceof Error ? error.message : t("auth.tryAgain", "Please try again."),
-                variant: "destructive",
-              });
-            }
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              (event.currentTarget as HTMLDivElement).click();
-            }
-          }}
-        >
-          <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10">
-              <LogOut className="h-5 w-5 text-destructive" />
+        <SectionHeader title={user ? t("auth.logout", "Log out") : t("auth.login", "Log in")} />
+        {user ? (
+          <GlassCard
+            className="p-4 transition-all hover:border-destructive/40"
+            role="button"
+            tabIndex={0}
+            onClick={async () => {
+              try {
+                if (supabase) {
+                  await supabase.auth.signOut();
+                }
+                await logout();
+                toast({ title: t("auth.loggedOut", "Signed out") });
+                router.replace("/onboarding");
+                router.refresh();
+              } catch (error) {
+                toast({
+                  title: t("auth.logoutFailed", "Logout failed"),
+                  description:
+                    error instanceof Error ? error.message : t("auth.tryAgain", "Please try again."),
+                  variant: "destructive",
+                });
+              }
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                (event.currentTarget as HTMLDivElement).click();
+              }
+            }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10">
+                <LogOut className="h-5 w-5 text-destructive" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-foreground">{t("auth.logout", "Log out")}</p>
+                <p className="text-xs text-muted-foreground">{t("copy.logoutSubtitle", "Switch accounts or exit the app")}</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </div>
-            <div className="flex-1">
-              <p className="font-semibold text-foreground">{t("auth.logout", "Log out")}</p>
-              <p className="text-xs text-muted-foreground">{t("copy.logoutSubtitle", "Switch accounts or exit the app")}</p>
+          </GlassCard>
+        ) : (
+          <GlassCard className="flex items-center justify-between gap-4 p-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                <User className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">{t("auth.login", "Log in")}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t("copy.loginSubtitle", "Sign in to sync wallet, tickets, and rewards across devices.")}
+                </p>
+              </div>
             </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          </div>
-        </GlassCard>
+            <Link className="btn-primary" href="/auth/login">
+              {t("auth.login", "Log in")}
+            </Link>
+          </GlassCard>
+        )}
       </section>
     </PageShell>
   );

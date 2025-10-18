@@ -3,7 +3,7 @@
 import { createContext, ReactNode, useContext, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { fetchFanSession, finalizeFanOnboarding, logoutFan } from "@/lib/api/fan";
+import { fetchFanSession, finalizeFanOnboarding, loginWithSupabaseAccessToken, logoutFan } from "@/lib/api/fan";
 import type { FanSession } from "@/lib/api/fan";
 
 type FanSessionData = Awaited<ReturnType<typeof fetchFanSession>>;
@@ -15,6 +15,7 @@ type AuthContextValue = {
   onboardingStatus: string | null;
   loading: boolean;
   login: (sessionId: string) => Promise<void>;
+  loginWithSupabase: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
 };
@@ -38,6 +39,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     },
   });
 
+  const loginSupabaseMutation = useMutation({
+    mutationFn: async (accessToken: string) => {
+      await loginWithSupabaseAccessToken(accessToken);
+      await queryClient.invalidateQueries({ queryKey: ['fan', 'session'] });
+    },
+  });
+
   const logoutMutation = useMutation({
     mutationFn: async () => {
       await logoutFan();
@@ -55,9 +63,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         sessionQuery.isLoading ||
         sessionQuery.isFetching ||
         loginMutation.isPending ||
+        loginSupabaseMutation.isPending ||
         logoutMutation.isPending,
       login: async (sessionId: string) => {
         await loginMutation.mutateAsync(sessionId);
+      },
+      loginWithSupabase: async (accessToken: string) => {
+        await loginSupabaseMutation.mutateAsync(accessToken);
       },
       logout: async () => {
         await logoutMutation.mutateAsync();
@@ -69,6 +81,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [
     loginMutation,
     loginMutation.isPending,
+    loginSupabaseMutation,
+    loginSupabaseMutation.isPending,
     logoutMutation,
     logoutMutation.isPending,
     queryClient,

@@ -9,6 +9,10 @@ class FinalizeOnboardingDto {
   sessionId!: string;
 }
 
+class SupabaseLoginDto {
+  accessToken!: string;
+}
+
 @Controller('auth/fan')
 export class FanAuthController {
   private readonly isProd: boolean;
@@ -28,6 +32,26 @@ export class FanAuthController {
       throw new BadRequestException('sessionId is required');
     }
     const result = await this.fanAuthService.finalizeFromOnboarding(body.sessionId, {
+      ip: request.ip,
+      userAgent: request.headers['user-agent'] as string | undefined,
+    });
+
+    this.setFanCookie(reply, result.session.id);
+    return { data: result };
+  }
+
+  @Post('supabase')
+  @HttpCode(HttpStatus.CREATED)
+  async loginWithSupabase(
+    @Body() body: SupabaseLoginDto,
+    @Req() request: FastifyRequest,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
+    if (!body.accessToken) {
+      throw new BadRequestException('accessToken is required');
+    }
+
+    const result = await this.fanAuthService.loginWithSupabaseToken(body.accessToken, {
       ip: request.ip,
       userAgent: request.headers['user-agent'] as string | undefined,
     });

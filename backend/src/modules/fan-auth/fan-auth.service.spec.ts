@@ -16,7 +16,12 @@ describe('FanAuthService', () => {
     },
   });
 
-  const service = new FanAuthService(prisma as any, config as any);
+  const supabase = {
+    isEnabled: false,
+    getUserFromAccessToken: jest.fn(),
+  };
+
+  const service = new FanAuthService(prisma as any, config as any, supabase as any);
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -105,6 +110,7 @@ function createMockPrisma() {
     onboardingSession: {
       findUnique: jest.fn(),
       findFirst: jest.fn(),
+      create: jest.fn(),
     },
     fanSession: {
       create: jest.fn(),
@@ -115,6 +121,7 @@ function createMockPrisma() {
     },
     user: {
       update: jest.fn(),
+      upsert: jest.fn(),
     },
   };
 }
