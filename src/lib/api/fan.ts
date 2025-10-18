@@ -52,9 +52,3 @@ export const logoutFan = () =>
   request<{ status: string }>('/auth/fan/logout', {
     method: 'POST',
   });
-
-export const loginWithSupabaseAccessToken = (accessToken: string) =>
-  request<FanSession>('/auth/fan/supabase', {
-    method: 'POST',
-    body: JSON.stringify({ accessToken }),
-  });

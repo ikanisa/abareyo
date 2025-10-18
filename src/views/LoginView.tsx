@@ -1,168 +1,105 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import type { AuthError } from "@supabase/supabase-js";
+import { LifeBuoy, ShieldCheck, User } from "lucide-react";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import TopAppBar from "@/app/_components/ui/TopAppBar";
 import HeroBlock from "@/app/_components/widgets/HeroBlock";
 import { GlassCard } from "@/components/ui/glass-card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useAuth } from "@/providers/auth-provider";
 import { useI18n } from "@/providers/i18n-provider";
 
 const LoginView = () => {
-  const router = useRouter();
-  const supabase = getSupabaseBrowserClient();
-  const { loginWithSupabase, user } = useAuth();
+  const { user } = useAuth();
   const { t } = useI18n();
-  const { toast } = useToast();
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!supabase) {
-      setError(t("auth.errors.misconfigured", "Supabase configuration is missing."));
-      return;
-    }
-
-    setPending(true);
-    setError(null);
-
-    try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-
-      if (signInError) {
-        const message =
-          (signInError as AuthError).status === 400 || (signInError as AuthError).status === 401
-            ? t("auth.errors.invalidCredentials", "Email or password was incorrect.")
-            : signInError.message || t("auth.errors.generic", "Something went wrong. Try again.");
-        setError(message);
-        return;
-      }
-
-      const accessToken = data.session?.access_token;
-      if (!accessToken) {
-        setError(t("auth.errors.missingAccessToken", "Supabase did not return an access token."));
-        return;
-      }
-
-      await loginWithSupabase(accessToken).catch((loginError: unknown) => {
-        if (loginError instanceof Error) {
-          setError(loginError.message);
-        } else {
-          setError(t("auth.errors.generic", "Something went wrong. Try again."));
-        }
-        throw loginError;
-      });
-
-      setPassword("");
-      toast({
-        title: t("auth.loginSuccess", "Welcome back!"),
-        description: t("auth.loginRedirect", "Your supporter session is ready."),
-      });
-      router.push("/more");
-    } catch (err) {
-      console.error("Fan login failed", err);
-    } finally {
-      setPending(false);
-    }
-  };
-
-  if (!supabase) {
-    return (
-      <PageShell mainClassName="space-y-6 pb-24">
-        <TopAppBar />
-        <HeroBlock title={t("auth.login", "Log in")}
-          subtitle={t("auth.errors.misconfigured", "Supabase configuration is missing. Contact support.")} />
-      </PageShell>
-    );
-  }
-
-  if (user) {
-    return (
-      <PageShell mainClassName="space-y-6 pb-24">
-        <TopAppBar />
-        <HeroBlock
-          title={t("auth.alreadySignedIn", "You're already signed in")}
-          subtitle={t("auth.alreadySignedInSubtitle", "Manage your account from the More tab.")}
-          ctas={<Link className="btn-primary" href="/more">{t("nav.more", "More")}</Link>}
-        />
-      </PageShell>
-    );
-  }
 
   return (
     <PageShell mainClassName="space-y-6 pb-24">
-      <TopAppBar />
+      <TopAppBar right={<Link className="btn" href="/more">{t("nav.more", "More")}</Link>} />
       <HeroBlock
-        title={t("auth.login", "Log in")}
-        subtitle={t("auth.loginSubtitle", "Sign in with your supporter email to sync wallet and passes." )}
+        title={t("auth.loginHeadline", "You're already signed in")}
+        subtitle={t(
+          "auth.loginSubtitle",
+          "Fans receive an anonymous Supabase session on first visit, so wallet and tickets are always available.",
+        )}
         ctas={
-          <Link className="btn" href="/onboarding">
-            {t("auth.startOnboarding", "New fan? Start onboarding")}
+          <Link className="btn-primary" href="/support">
+            {t("auth.needHelp", "Need help?")}
           </Link>
         }
       />
 
       <section className="space-y-3">
-        <GlassCard className="space-y-4 p-6">
-          <header className="space-y-2">
-            <h2 className="text-xl font-semibold text-foreground">{t("auth.login", "Log in")}</h2>
-            <p className="text-sm text-muted-foreground">
-              {t("auth.loginDescription", "Use your Supabase supporter credentials to access wallet, tickets, and membership.")}
-            </p>
-          </header>
-
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-foreground" htmlFor="email">
-                {t("auth.email", "Email")}
-              </label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                required
-                placeholder="you@example.com"
-              />
+        <GlassCard className="flex flex-col gap-4 p-6">
+          <div className="flex items-start gap-3">
+            <ShieldCheck className="mt-1 h-5 w-5 text-primary" />
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">
+                {t("auth.autoLoginTitle", "How login works")}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {t(
+                  "auth.autoLoginDescription",
+                  "The app creates an anonymous Supabase session as soon as you open it. That session is linked to your supporter profile so balances, passes, and rewards follow you automatically.",
+                )}
+              </p>
             </div>
+          </div>
 
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-foreground" htmlFor="password">
-                {t("auth.password", "Password")}
-              </label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                required
-                placeholder="••••••••"
-              />
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li>• {t("auth.autoLoginBullet1", "No extra email sign-in is required for fans.")}</li>
+            <li>• {t("auth.autoLoginBullet2", "Closing the app or switching devices generates a fresh anonymous session automatically.")}</li>
+            <li>• {t("auth.autoLoginBullet3", `Your supporter ID stays the same: ${user?.id ?? 'guest'}`)}</li>
+          </ul>
+        </GlassCard>
+
+        <GlassCard className="flex flex-col gap-4 p-6">
+          <div className="flex items-start gap-3">
+            <User className="mt-1 h-5 w-5 text-accent" />
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">
+                {t("auth.adminAccounts", "Need to access the admin console?")}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {t(
+                  "auth.adminAccountsDescription",
+                  "Email-and-password authentication is reserved for staff in the admin panel.",
+                )}
+              </p>
             </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link className="btn" href="/admin/login">
+              {t("auth.openAdminLogin", "Open admin login")}
+            </Link>
+            <Link className="btn" href="/support">
+              {t("auth.requestAccess", "Request admin access")}
+            </Link>
+          </div>
+        </GlassCard>
 
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
-
-            <Button type="submit" className="w-full" disabled={pending}>
-              {pending ? t("auth.loggingIn", "Signing in…") : t("auth.login", "Log in")}
-            </Button>
-          </form>
+        <GlassCard className="flex flex-col gap-4 p-6">
+          <div className="flex items-start gap-3">
+            <LifeBuoy className="mt-1 h-5 w-5 text-secondary" />
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">
+                {t("auth.passwordResetTitle", "Password help")}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {t(
+                  "auth.passwordResetDescription",
+                  "Need to reset an admin password or revoke a shared device? Visit the admin login page and use the reset link or contact the match-ops team.",
+                )}
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {t(
+              "auth.passwordResetNote",
+              "Fan sessions do not require passwords. Clearing the app storage or logging out will simply generate a new anonymous session and keep your passes safe.",
+            )}
+          </p>
         </GlassCard>
       </section>
     </PageShell>

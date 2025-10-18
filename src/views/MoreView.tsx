@@ -245,20 +245,25 @@ export default function More() {
             </div>
           </GlassCard>
         ) : (
-          <GlassCard className="flex items-center justify-between gap-4 p-4">
-            <div className="flex items-center gap-4">
+          <GlassCard className="flex flex-wrap items-center justify-between gap-4 p-4">
+            <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
                 <User className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="font-semibold text-foreground">{t("auth.login", "Log in")}</p>
+                <p className="font-semibold text-foreground">
+                  {t("auth.autoLoginTitle", "No fan login required")}
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  {t("copy.loginSubtitle", "Sign in to sync wallet, tickets, and rewards across devices.")}
+                  {t(
+                    "auth.autoLoginCardCopy",
+                    "Fans receive an anonymous session automatically. Need help with a device or account?",
+                  )}
                 </p>
               </div>
             </div>
-            <Link className="btn-primary" href="/auth/login">
-              {t("auth.login", "Log in")}
+            <Link className="btn" href="/support">
+              {t("auth.needHelp", "Contact support")}
             </Link>
           </GlassCard>
         )}
