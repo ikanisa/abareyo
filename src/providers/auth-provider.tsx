@@ -1,9 +1,10 @@
 "use client";
 
-import { createContext, ReactNode, useContext, useMemo } from "react";
+import { createContext, ReactNode, useContext, useEffect, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { fetchFanSession, finalizeFanOnboarding, loginWithSupabaseAccessToken, logoutFan } from "@/lib/api/fan";
+import { fetchFanSession, finalizeFanOnboarding, logoutFan } from "@/lib/api/fan";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { FanSession } from "@/lib/api/fan";
 
 type FanSessionData = Awaited<ReturnType<typeof fetchFanSession>>;
@@ -15,7 +16,6 @@ type AuthContextValue = {
   onboardingStatus: string | null;
   loading: boolean;
   login: (sessionId: string) => Promise<void>;
-  loginWithSupabase: (accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
 };
@@ -24,6 +24,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const queryClient = useQueryClient();
+  const supabase = getSupabaseBrowserClient();
 
   const sessionQuery = useQuery({
     queryKey: ['fan', 'session'],
@@ -35,13 +36,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const loginMutation = useMutation({
     mutationFn: async (sessionId: string) => {
       await finalizeFanOnboarding({ sessionId });
-      await queryClient.invalidateQueries({ queryKey: ['fan', 'session'] });
-    },
-  });
-
-  const loginSupabaseMutation = useMutation({
-    mutationFn: async (accessToken: string) => {
-      await loginWithSupabaseAccessToken(accessToken);
       await queryClient.invalidateQueries({ queryKey: ['fan', 'session'] });
     },
   });
@@ -63,13 +57,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         sessionQuery.isLoading ||
         sessionQuery.isFetching ||
         loginMutation.isPending ||
-        loginSupabaseMutation.isPending ||
         logoutMutation.isPending,
       login: async (sessionId: string) => {
         await loginMutation.mutateAsync(sessionId);
-      },
-      loginWithSupabase: async (accessToken: string) => {
-        await loginSupabaseMutation.mutateAsync(accessToken);
       },
       logout: async () => {
         await logoutMutation.mutateAsync();
@@ -81,8 +71,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [
     loginMutation,
     loginMutation.isPending,
-    loginSupabaseMutation,
-    loginSupabaseMutation.isPending,
     logoutMutation,
     logoutMutation.isPending,
     queryClient,
@@ -90,6 +78,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     sessionQuery.isFetching,
     sessionQuery.isLoading,
   ]) as AuthContextValue;
+
+  useEffect(() => {
+    if (!supabase) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const ensureSession = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (cancelled) return;
+        if (!data.session) {
+          const { error } = await supabase.auth.signInAnonymously();
+          if (error) {
+            console.warn('[auth] Failed to initialise anonymous Supabase session', error.message);
+          }
+        }
+      } catch (error) {
+        console.warn('[auth] Unable to verify Supabase session', error);
+      }
+    };
+
+    ensureSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async () => {
+      await queryClient.invalidateQueries({ queryKey: ['fan', 'session'] });
+    });
+
+    return () => {
+      cancelled = true;
+      authListener?.subscription?.unsubscribe();
+    };
+  }, [supabase, queryClient]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
