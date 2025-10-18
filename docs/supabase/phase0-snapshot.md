@@ -69,7 +69,7 @@ _(Full output retained in project notes; final row confirms the pending `partner
 | Source | Notable values | Required follow-up |
 | --- | --- | --- |
 | `.env` | Publishable Supabase key + legacy project ID (`bduokvxvnscoknwamfle`); placeholders for JWT/metrics secrets. | Replace project ID once we confirm the canonical ref; keep sensitive values out of git. |
-| `.env.production` | Real session secrets, OpenAI key, metrics token, default admin credentials. | Move to Vercel/Supabase Vault and purge from git after rotation (Phase 1). |
+| `.env.production` | Now ships as template only; real secrets must be pulled from secure stores. | Ensure Vercel + Vault copies stay authoritative; remove any stray plaintext files after rotation. |
 | `.vercel/.env.development.local` | Local OIDC/development tokens. | Confirm they stay scoped to preview; document rotation cadence. |
 | `backend/.env.example` | MoMo pay codes & backend defaults. | Expand to include Twilio/Stripe/Slack placeholders so Vault list is complete. |
 
@@ -96,5 +96,6 @@ Additional gaps identified during review:
 5. Move secrets out of `.env.production`, rotate Supabase/VerceI keys, and update Vault entries per `docs/supabase/secret-rotation-plan.md`.
 6. Upgrade Supabase tier (Free → Pro) ahead of Phase 1 so cron/pooling/PITR are available; coordinate billing approval.
 7. Update `supabase/config.toml` and repository env files to the correct project ref once stakeholders verify the production project ID (still pointing at `bduokvxvnscoknwamfle` locally).
+8. Once Supabase CLI pooler access stabilises, run `supabase migration up --linked --include-all` to record `20251112120000_drop_membership_camel.sql` in the migration history (SQL already executed manually).
 
 Phase 0 is considered complete once the pending migration is deployed, the ERD is captured, secrets are staged for rotation, and the team agrees on the canonical schema plan.
