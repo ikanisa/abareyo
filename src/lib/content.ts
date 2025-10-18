@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
+import { getSupabasePublishableKey, getSupabaseUrl } from '@/integrations/supabase/env';
+
 export type ContentItem = {
   id: string;
   kind: 'article' | 'video';
@@ -13,8 +15,8 @@ export type ContentItem = {
   created_at?: string | null;
 };
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabaseUrl = getSupabaseUrl();
+const supabaseAnonKey = getSupabasePublishableKey();
 
 const VALID_KINDS = new Set<ContentItem['kind']>(['article', 'video']);
 

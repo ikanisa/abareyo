@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
 
+import { createServiceSupabaseClient } from "@/integrations/supabase/server";
+
 export async function POST(req: Request) {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !serviceKey) {
+  const db = createServiceSupabaseClient();
+  if (!db) {
     return NextResponse.json({ error: "supabase_config_missing" }, { status: 500 });
   }
-
-  const db = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
 
   try {
     const payload = await req.json().catch(() => null);

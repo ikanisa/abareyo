@@ -1,10 +1,18 @@
 // deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-const TOKEN = Deno.env.get("SMS_WEBHOOK_TOKEN")!;
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const db = createClient(SUPABASE_URL, SERVICE);
+const TOKEN = Deno.env.get("SMS_WEBHOOK_TOKEN");
+const rawSupabaseUrl = Deno.env.get("SITE_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL");
+const rawServiceKey =
+  Deno.env.get("SITE_SUPABASE_SECRET_KEY") ??
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ??
+  Deno.env.get("SUPABASE_SECRET_KEY");
+
+if (!TOKEN || !rawSupabaseUrl || !rawServiceKey) {
+  throw new Error("SMS webhook token or Supabase credentials are missing");
+}
+
+const db = createClient(rawSupabaseUrl, rawServiceKey);
 
 serve(async (req) => {
   if (req.method !== "POST") return new Response("Method Not Allowed", { status: 405 });

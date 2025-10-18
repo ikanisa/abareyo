@@ -55,7 +55,10 @@ const sumValues = (values: Array<number | null | undefined>) => {
 
 export const fetchDashboardSnapshot = async (): Promise<DashboardSnapshot> => {
   const now = new Date();
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  let client: ReturnType<typeof getServiceClient>;
+  try {
+    client = getServiceClient();
+  } catch {
     return {
       generatedAt: now.toISOString(),
       kpis: [
@@ -71,13 +74,11 @@ export const fetchDashboardSnapshot = async (): Promise<DashboardSnapshot> => {
         {
           id: 'supabase-config',
           severity: 'info',
-          message: 'Configure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to activate live metrics.',
+          message: 'Configure Supabase URL and secret key to activate live metrics.',
         },
       ],
     };
   }
-
-  const client = getServiceClient();
 
   const [kpiResponse, smsResponse, paymentResponse, gateResponse] = await Promise.all([
     client.from('admin_dashboard_kpis').select('metric, value_7d, value_30d, format'),

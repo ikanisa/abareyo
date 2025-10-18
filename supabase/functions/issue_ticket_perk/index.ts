@@ -5,11 +5,18 @@ type Payload = {
   quote_id?: string;
 };
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const rawSupabaseUrl = Deno.env.get("SITE_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL");
+const rawServiceKey =
+  Deno.env.get("SITE_SUPABASE_SECRET_KEY") ??
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ??
+  Deno.env.get("SUPABASE_SECRET_KEY");
 const TICKET_THRESHOLD = Number(Deno.env.get("TICKET_PERK_THRESHOLD") ?? "50000");
 
-const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
+if (!rawSupabaseUrl || !rawServiceKey) {
+  throw new Error("Supabase URL or secret key is missing");
+}
+
+const supabase = createClient(rawSupabaseUrl, rawServiceKey, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 

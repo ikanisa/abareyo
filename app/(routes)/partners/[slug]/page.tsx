@@ -1,14 +1,16 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 
+import { getSupabasePublishableKey, getSupabaseUrl } from '@/integrations/supabase/env';
+
 import PageShell from '@/app/_components/shell/PageShell';
 
 import PartnerFrame from './_components/PartnerFrame';
 
 export const dynamic = 'force-dynamic';
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabaseUrl = getSupabaseUrl();
+const supabaseAnonKey = getSupabasePublishableKey();
 
 const fallbackPartner = {
   id: 'demo-partner',

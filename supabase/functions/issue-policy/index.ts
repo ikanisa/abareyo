@@ -1,8 +1,16 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SUPABASE_URL = Deno.env.get("SITE_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL");
+const SERVICE =
+  Deno.env.get("SITE_SUPABASE_SECRET_KEY") ??
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ??
+  Deno.env.get("SUPABASE_SECRET_KEY");
+
+if (!SUPABASE_URL || !SERVICE) {
+  throw new Error("Supabase URL or secret key is missing");
+}
+
 const db = createClient(SUPABASE_URL, SERVICE);
 
 serve(async (_req) => {
