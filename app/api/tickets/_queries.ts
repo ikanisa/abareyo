@@ -57,7 +57,8 @@ export async function listTicketsForUser({ userId, phone }: ListTicketsParams) {
     .eq("user_id", resolvedUserId)
     .order("created_at", { ascending: false });
   if (error) {
-    throw error;
+    console.warn("listTicketsForUser lookup failed", error);
+    return [] as TicketRecordWithRelations[];
   }
   return (data ?? []) as TicketRecordWithRelations[];
 }
