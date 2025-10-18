@@ -348,6 +348,7 @@ export type Database = {
           action: string | null
           admin_user_id: string | null
           after: Json | null
+          context: Json | null
           at: string | null
           before: Json | null
           entity_id: string | null
@@ -360,6 +361,7 @@ export type Database = {
           action?: string | null
           admin_user_id?: string | null
           after?: Json | null
+          context?: Json | null
           at?: string | null
           before?: Json | null
           entity_id?: string | null
@@ -372,6 +374,7 @@ export type Database = {
           action?: string | null
           admin_user_id?: string | null
           after?: Json | null
+          context?: Json | null
           at?: string | null
           before?: Json | null
           entity_id?: string | null
@@ -630,6 +633,86 @@ export type Database = {
           },
         ]
       }
+      community_posts: {
+        Row: {
+          body: string
+          created_at: string
+          evidence: Json | null
+          id: string
+          media: Json | null
+          moderator_notes: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          evidence?: Json | null
+          id?: string
+          media?: Json | null
+          moderator_notes?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          evidence?: Json | null
+          id?: string
+          media?: Json | null
+          moderator_notes?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_items: {
+        Row: {
+          body: Json | null
+          created_at: string
+          id: string
+          published_at: string | null
+          slug: string | null
+          status: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          body?: Json | null
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          slug?: string | null
+          status?: string
+          title: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          body?: Json | null
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          slug?: string | null
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       FeatureFlag: {
         Row: {
           description: string | null
@@ -682,6 +765,44 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      report_schedules: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          cron: string
+          destination: string
+          id: string
+          name: string
+          payload: Json | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          cron: string
+          destination: string
+          id?: string
+          name: string
+          payload?: Json | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          cron?: string
+          destination?: string
+          id?: string
+          name?: string
+          payload?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_schedules_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fund_projects: {
         Row: {
@@ -3208,6 +3329,25 @@ export type Database = {
       }
     }
     Views: {
+      admin_community_rate_limits: {
+        Row: {
+          avatar_url: string | null
+          bans_total: number | null
+          display_name: string | null
+          flagged_total: number | null
+          last_post_at: string | null
+          limit_15m: number | null
+          limit_1h: number | null
+          limit_24h: number | null
+          posts_15m: number | null
+          posts_1h: number | null
+          posts_24h: number | null
+          rate_limited: boolean | null
+          user_id: string | null
+          warns_total: number | null
+        }
+        Relationships: []
+      }
       admin_dashboard_gate_throughput: {
         Row: {
           gate: string | null

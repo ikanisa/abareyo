@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 
 import { AdminShell } from '@/components/admin/AdminShell';
 import { AdminSessionProvider } from '@/providers/admin-session-provider';
+import { fetchAdminFeatureFlagsSnapshot } from '@/services/admin/feature-flags';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -125,9 +126,11 @@ const AdminDashboardLayout = async ({ children }: { children: ReactNode }) => {
     return <AdminOfflineNotice message={context.message} />;
   }
 
+  const featureFlags = await fetchAdminFeatureFlagsSnapshot();
+
   return (
     <AdminSessionProvider value={{ user: context.value.user, permissions: context.value.permissions }}>
-      <AdminShell user={context.value.user} environment={ENV_LABEL}>
+      <AdminShell user={context.value.user} environment={ENV_LABEL} featureFlags={featureFlags}>
         {children}
       </AdminShell>
     </AdminSessionProvider>

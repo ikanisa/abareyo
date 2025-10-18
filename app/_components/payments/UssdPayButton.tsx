@@ -1,6 +1,8 @@
 'use client'
-import { buildUssd, isIOS, type Provider } from '@/lib/ussd';
 import { useMemo } from 'react';
+
+import { UssdOnlyNotice } from '@/components/payments/UssdOnlyNotice';
+import { buildUssd, isIOS, type Provider } from '@/lib/ussd';
 
 export default function UssdPayButton({
   amount, phone, provider='mtn', block=true, onCopy
@@ -15,7 +17,7 @@ export default function UssdPayButton({
     : "btn "+(block?"w-full inline-block text-center":"");
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <a className={classes(true)} href={href} aria-label="Pay via USSD">
         Pay via USSD
       </a>
@@ -31,9 +33,7 @@ export default function UssdPayButton({
           Copy USSD (iOS)
         </button>
       )}
-      <p className="muted text-xs">
-        Dial launches your Mobile Money menu. If nothing happens on iOS, use “Copy USSD” and paste in the Phone app.
-      </p>
+      <UssdOnlyNotice className="text-left text-xs" />
     </div>
   );
 }
