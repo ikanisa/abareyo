@@ -15,6 +15,7 @@ Purpose: outline how we move production secrets out of the repository and prepar
    - Vercel Project → Environment Variables (Production, Preview, Development).
    - Supabase Vault → store server-side secrets for Edge Functions (`supabase secrets set`).
    - (Optional) 1Password/HashiCorp Vault entry for long-term backup.
+   - ✅ `.env.production` stripped of real secrets; use `.env.production.example` for local scaffolding.
 
 2. **Generate new Supabase keys**
    - Project Settings → API → Generate new publishable + service-role keys.
