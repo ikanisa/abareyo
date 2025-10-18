@@ -1,6 +1,6 @@
 # Supabase Hardening Roadmap
 
-This document captures the remaining production-readiness work for the Supabase project (`paysnhuxngsvzdpwlosv`). It is tailored to complement the new RLS migration (`supabase/migrations/20251109_security_hardening.sql`) and should be kept in sync with any future policy changes.
+This document captures the remaining production-readiness work for the Supabase project (`bduokvxvnscoknwamfle`). It is tailored to complement the new RLS migration (`supabase/migrations/20251109_security_hardening.sql`) and should be kept in sync with any future policy changes.
 
 ## 1. Database Security
 - Apply the latest migrations locally (`supabase db reset --local`) and in the remote project (`supabase db push`) once reviewed.
