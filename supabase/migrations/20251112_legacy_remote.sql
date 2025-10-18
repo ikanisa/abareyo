@@ -1,0 +1,2 @@
+-- Placeholder migration for remote history entry `20251112`.
+-- Original statements were applied directly in production before this repo snapshot.
