@@ -1,8 +1,10 @@
 import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { OnboardingStatus } from '@prisma/client';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { SupabaseFanAuthService } from './supabase-fan-auth.service.js';
 
 const HOURS_TO_MS = 60 * 60 * 1000;
 
@@ -26,7 +28,11 @@ export class FanAuthService {
 
   private readonly isProd: boolean;
 
-  constructor(private readonly prisma: PrismaService, private readonly configService: ConfigService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+    private readonly supabaseFanAuthService: SupabaseFanAuthService,
+  ) {
     this.isProd = this.configService.get<string>('app.env', 'development') === 'production';
   }
 
@@ -77,6 +83,19 @@ export class FanAuthService {
 
     const fanSession = await this.createSession(userId, metadata);
 
+    return this.composePayload(fanSession.id);
+  }
+
+  async loginWithSupabaseToken(accessToken: string, metadata: { ip?: string; userAgent?: string }) {
+    if (!this.supabaseFanAuthService.isEnabled) {
+      throw new UnauthorizedException('Supabase authentication is not available.');
+    }
+
+    const supabaseUser = await this.supabaseFanAuthService.getUserFromAccessToken(accessToken);
+    await this.ensureUserFromSupabaseUser(supabaseUser);
+    await this.ensureCompletedOnboarding(supabaseUser.id);
+
+    const fanSession = await this.createSession(supabaseUser.id, metadata);
     return this.composePayload(fanSession.id);
   }
 
@@ -158,5 +177,46 @@ export class FanAuthService {
       whatsappNumber: user.whatsappNumber,
       momoNumber: user.momoNumber,
     };
+  }
+
+  private async ensureUserFromSupabaseUser(supabaseUser: SupabaseUser) {
+    const userId = supabaseUser.id;
+    if (!userId) {
+      throw new UnauthorizedException('Supabase user is missing an ID.');
+    }
+
+    const locale =
+      typeof supabaseUser.user_metadata?.locale === 'string' && supabaseUser.user_metadata.locale.trim().length > 0
+        ? supabaseUser.user_metadata.locale
+        : 'rw';
+
+    await this.prisma.user.upsert({
+      where: { id: userId },
+      create: {
+        id: userId,
+        locale,
+        status: 'active',
+      },
+      update: {
+        locale,
+        status: 'active',
+      },
+    });
+  }
+
+  private async ensureCompletedOnboarding(userId: string) {
+    const latest = await this.prisma.onboardingSession.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      select: { status: true },
+    });
+
+    if (latest?.status === 'completed') {
+      return;
+    }
+
+    await this.prisma.onboardingSession.create({
+      data: { userId, status: 'completed' },
+    });
   }
 }
