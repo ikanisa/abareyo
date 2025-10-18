@@ -37,7 +37,7 @@ This note captures the proposed “single source of truth” for overlapping tab
 ## Partners Table Gap
 
 - Migration `20251021_add_partner_slug.sql` assumes a `public.partners` table. No create statement exists in repo migrations or Prisma schema.
-- **Decision:** Either (a) add a Supabase migration to define `public.partners` (id uuid PK, name text, metadata jsonb) or (b) delete the slug migration if partners now live in another service.
+- **Decision:** Either (a) add a Supabase migration to define `public.partners` (id uuid PK, name text, metadata jsonb) or (b) delete the slug migration if partners now live in another service. _New file `20251111_add_partners_table.sql` covers option (a); coordinate deployment before removing this note._
 - Needs product confirmation before Phase 1 – add as a backlog ticket.
 
 ## Next Steps
