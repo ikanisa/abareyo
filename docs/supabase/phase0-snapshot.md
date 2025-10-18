@@ -30,7 +30,7 @@ This update captures the Phase 0 due diligence now that we have CLI access to 
 | 18 | `20251111_add_partners_table.sql` | Creates `public.partners` + `updated_at` trigger. | **pending** |
 
 - `supabase/config.toml` still references project `bduokvxvnscoknwamfle`. Update it once the team confirms that `paysnhuxngsvzdpwlosv` is the canonical production project.
-- `supabase migration list --linked` output is stored in the appendix below for tracking.
+- `supabase migration list --linked` output is stored in the appendix below for tracking. (Pooler hiccups prevented listing during the Oct 18 cleanup window; use direct `psql` if the CLI refuses to connect.)
 - Remote DDL snapshot captured at `docs/supabase/phase0-production-schema.sql` (generated with `supabase db dump --db-url postgresql://postgres:***@db.paysnhuxngsvzdpwlosv.supabase.co:5432/postgres --schema public`). Use this file for runbooks until a new dump replaces it.
 - Prisma migrations live under `backend/prisma/migrations` (8 directories through `202502051900_fan_sessions`). `npx prisma generate --schema backend/prisma/schema.prisma` succeeds. A diff against production (`npx prisma migrate diff --from-url <REMOTE_URL> --to-schema-datamodel backend/prisma/schema.prisma`) reveals:
   - Missing tables on production relative to Prisma: `OnboardingSession`, `OnboardingMessage`, `PostComment`.
@@ -61,7 +61,7 @@ _(Full output retained in project notes; final row confirms the pending `partner
   - Core duplicates: `orders`, `order_items`, `payments`, `tickets`, `wallets`, `users`, `products`, `shop_products`.
   - MVP features: `sacco_deposits`, `insurance_quotes`, `fan_posts`, `community_reports`, `fund_projects`, `fund_donations`, `rewards_events`, `user_prefs`, `user_favorites`, `transactions_legacy`, `tickets_legacy`.
 - Existing SQL views (`admin_dashboard_*`) depend on the legacy snake_case tables; any cleanup must refresh those views.
-- `docs/supabase/phase0-production-schema.sql` and `docs/supabase/erd-20251018.svg` form the current schema baseline. If Studio’s ERD diverges, regenerate both assets and update this section.
+- `docs/supabase/phase0-production-schema.sql` and `docs/supabase/erd-20251018.svg` form the current schema baseline. If Studio’s ERD diverges, regenerate both assets and update this section. (Updated Oct 18 2025 after camelCase cleanup.)
 - ERD snapshot generated Oct 18 2025 via `eralchemy2 -i postgresql://... -s public -o docs/supabase/erd-20251018.svg`. Re-run the command after future schema changes.
 
 ## 3. Secrets & Environment Snapshot
@@ -91,9 +91,10 @@ Additional gaps identified during review:
 
 1. (Done Oct 18 2025) `20251111_add_partners_table.sql` applied via `supabase migration up --linked`; `public.partners` now exists remotely.
 2. (Done Oct 18 2025) ERD exported (CLI substitute via eralchemy2) to `docs/supabase/erd-20251018.svg`.
-3. Decide canonical tables vs. legacy duplicates (`wallet` vs `wallets`, etc.) and author follow-up migrations to drop/rename during Phase 1. Track decisions in `docs/supabase/canonical-table-plan.md`.
-4. Confirm whether Prisma or Supabase SQL drives schema ownership. If Prisma is authoritative, backfill migrations for the missing onboarding/post comment tables; otherwise adjust Prisma schema to match production.
+3. (Done Oct 18 2025) Canonical tables set to snake_case. `supabase/migrations/20251112_cleanup_camelcase.sql` + `20251112120000_drop_membership_camel.sql` remove camelCase duplicates; see `docs/supabase/canonical-table-plan.md`.
+4. (Done Oct 18 2025) Prisma schema re-introspected from production (`npx prisma db pull`) so backend models follow the Supabase-owned snake_case tables.
 5. Move secrets out of `.env.production`, rotate Supabase/VerceI keys, and update Vault entries per `docs/supabase/secret-rotation-plan.md`.
-6. Update `supabase/config.toml` and repository env files to the correct project ref once stakeholders verify the production project ID.
+6. Upgrade Supabase tier (Free → Pro) ahead of Phase 1 so cron/pooling/PITR are available; coordinate billing approval.
+7. Update `supabase/config.toml` and repository env files to the correct project ref once stakeholders verify the production project ID (still pointing at `bduokvxvnscoknwamfle` locally).
 
 Phase 0 is considered complete once the pending migration is deployed, the ERD is captured, secrets are staged for rotation, and the team agrees on the canonical schema plan.
