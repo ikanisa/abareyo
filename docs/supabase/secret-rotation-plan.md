@@ -5,7 +5,7 @@ Purpose: outline how we move production secrets out of the repository and prepar
 ## Inventory
 
 - `.env` → Local dev: contains publishable Supabase key and placeholders for sensitive tokens.
-- `.env.production` → Checked in: includes live admin session secrets, OpenAI key, metrics token.
+- `.env.production` → Template only (no secrets); real values live in Vercel/Supabase Vault.
 - `.vercel/.env.development.local` → Dev preview tokens (onboarding agent).
 - `backend/.env.example` → Sample backend secrets (MoMo pay codes etc.).
 
