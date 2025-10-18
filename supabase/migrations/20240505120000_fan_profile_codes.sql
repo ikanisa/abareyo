@@ -11,8 +11,8 @@ drop view if exists public.public_members;
 create view public.public_members as
 select
   id,
-  coalesce(user_code, lpad(right(id, 6), 6, '0')) as user_code,
-  coalesce(display_name, 'Fan #' || coalesce(user_code, lpad(right(id, 6), 6, '0'))) as display_name,
+  coalesce(user_code, lpad(right(id::text, 6), 6, '0')) as user_code,
+  coalesce(display_name, 'Fan #' || coalesce(user_code, lpad(right(id::text, 6), 6, '0'))) as display_name,
   coalesce(region, 'Global') as region,
   coalesce(fan_club, 'Worldwide') as fan_club,
   joined_at,
