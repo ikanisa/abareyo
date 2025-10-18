@@ -14,6 +14,7 @@ if (!SUPABASE_URL || !SERVICE) {
 const db = createClient(SUPABASE_URL, SERVICE);
 
 serve(async (_req) => {
+  console.log('[edge:issue-policy] start', { at: new Date().toISOString() });
   // 1) Pull a small batch of paid quotes
   const { data: quotes, error } = await db
     .from("insurance_quotes")
@@ -196,6 +197,7 @@ serve(async (_req) => {
     }
   }
 
+  console.log('[edge:issue-policy] complete', { inspected, issued, perkTickets, errors: errors.length });
   return new Response(
     JSON.stringify({
       ok: true,

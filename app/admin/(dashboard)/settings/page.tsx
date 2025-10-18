@@ -27,16 +27,30 @@ const FeatureFlagsTable = dynamic<FeatureFlagsTableProps>(
   { ssr: false, loading: () => <div className="text-sm text-slate-300">Loading feature flags…</div> },
 );
 
+const AdminAuditLogTable = dynamic(
+  () => import('@/components/admin/settings/AdminAuditLogTable').then((mod) => mod.AdminAuditLogTable),
+  { ssr: false, loading: () => <div className="text-sm text-slate-300">Loading audit logs…</div> },
+);
+
 export default async function AdminSettingsPage() {
   const flags = await fetchWithSession<{ data: AdminFeatureFlag[] }>(`/admin/feature-flags`, 'settings');
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold text-slate-100">Admin Settings</h1>
-        <p className="text-sm text-slate-400">Feature flags</p>
+    <div className="space-y-10">
+      <header className="space-y-2">
+        <h1 className="text-3xl font-bold text-slate-100">Admin Settings</h1>
+        <p className="text-sm text-slate-400">Manage rollout guards and review immutable audit history.</p>
       </header>
-      <FeatureFlagsTable initial={flags.data} />
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold text-slate-100">Feature flags</h2>
+          <p className="text-sm text-slate-400">Toggle module availability and staged rollout contexts.</p>
+        </div>
+        <FeatureFlagsTable initial={flags.data} />
+      </section>
+
+      <AdminAuditLogTable />
     </div>
   );
 }

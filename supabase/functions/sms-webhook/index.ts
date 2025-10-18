@@ -21,6 +21,10 @@ serve(async (req) => {
 
   const payload = await req.json().catch(() => ({}));
   const txt = String(payload?.text ?? "");
+  console.log("[edge:sms-webhook] inbound", {
+    received: new Date().toISOString(),
+    length: txt.length,
+  });
   const refMatch = txt.match(/Ref[: ]+([A-Z0-9\-]+)/i);
   const amtMatch = txt.match(/RWF[: ]*([\d,]+)/i);
   const REF = refMatch?.[1] ?? crypto.randomUUID().slice(0, 8).toUpperCase();
@@ -123,5 +127,6 @@ serve(async (req) => {
   }
 
   const result = await matchAndConfirm();
+  console.log("[edge:sms-webhook] processed", { ref: REF, amount: AMT, result: result.kind });
   return new Response(JSON.stringify({ ok: true, parsed: { REF, AMT }, result }), { status: 200 });
 });
