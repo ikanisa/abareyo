@@ -61,7 +61,8 @@ _(Full output retained in project notes; final row confirms the pending `partner
   - Core duplicates: `orders`, `order_items`, `payments`, `tickets`, `wallets`, `users`, `products`, `shop_products`.
   - MVP features: `sacco_deposits`, `insurance_quotes`, `fan_posts`, `community_reports`, `fund_projects`, `fund_donations`, `rewards_events`, `user_prefs`, `user_favorites`, `transactions_legacy`, `tickets_legacy`.
 - Existing SQL views (`admin_dashboard_*`) depend on the legacy snake_case tables; any cleanup must refresh those views.
-- `docs/supabase/phase0-production-schema.sql` should be referenced for column-level detail until we export an ERD. Studio export is still required (manual action) to satisfy the visual baseline request; see Phase 0 TODOs below.
+- `docs/supabase/phase0-production-schema.sql` and `docs/supabase/erd-20251018.svg` form the current schema baseline. If Studio’s ERD diverges, regenerate both assets and update this section.
+- ERD snapshot generated Oct 18 2025 via `eralchemy2 -i postgresql://... -s public -o docs/supabase/erd-20251018.svg`. Re-run the command after future schema changes.
 
 ## 3. Secrets & Environment Snapshot
 
@@ -88,8 +89,8 @@ Additional gaps identified during review:
 
 ## 5. Outstanding Phase 0 Actions
 
-1. Apply `20251111_add_partners_table.sql` to staging → production (`supabase migration up`). Validate there is no pre-existing `public.partners` table before deploying.
-2. Export ERD from Supabase Studio (Database → ERD → Export) and commit to `docs/supabase/` (e.g., `docs/supabase/erd-2025-10-18.svg`). CLI-only workflow not available.
+1. (Done Oct 18 2025) `20251111_add_partners_table.sql` applied via `supabase migration up --linked`; `public.partners` now exists remotely.
+2. (Done Oct 18 2025) ERD exported (CLI substitute via eralchemy2) to `docs/supabase/erd-20251018.svg`.
 3. Decide canonical tables vs. legacy duplicates (`wallet` vs `wallets`, etc.) and author follow-up migrations to drop/rename during Phase 1. Track decisions in `docs/supabase/canonical-table-plan.md`.
 4. Confirm whether Prisma or Supabase SQL drives schema ownership. If Prisma is authoritative, backfill migrations for the missing onboarding/post comment tables; otherwise adjust Prisma schema to match production.
 5. Move secrets out of `.env.production`, rotate Supabase/VerceI keys, and update Vault entries per `docs/supabase/secret-rotation-plan.md`.
