@@ -29,7 +29,6 @@ const loadTickets = async () => {
     const tickets = await listTicketsForUser({ phone: fanProfile.phone });
     return { tickets: tickets.map(toTicketRecord), error: null as string | null };
   } catch (error) {
-    console.error("Failed to load tickets", error);
     return {
       tickets: [] as TicketRecord[],
       error: error instanceof Error ? error.message : "Unable to fetch tickets",

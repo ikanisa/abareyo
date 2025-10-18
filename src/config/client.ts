@@ -3,7 +3,12 @@ const DEFAULT_TELEMETRY_ENDPOINT = '/api/telemetry/app-state';
 
 const warnings: string[] = [];
 
+const isProductionBuild = process.env.NEXT_PHASE === 'phase-production-build';
+
 const logWarning = (message: string) => {
+  if (isProductionBuild) {
+    return;
+  }
   if (process.env.NODE_ENV === 'production') {
     console.error(message);
   } else {
