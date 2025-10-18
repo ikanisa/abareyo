@@ -476,31 +476,32 @@ describe('admin API helpers', () => {
       json: async () => ({ data: [] }),
     });
 
+    const expectLastCallAuthHeader = () => {
+      const lastCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.at(-1);
+      const init = (lastCall?.[1] ?? {}) as RequestInit;
+      const headers = new Headers(init.headers);
+      expect(headers.get('x-admin-token')).toBe('admin-token');
+    };
+
     await fetchLegacyInboundSms();
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/sms/inbound'),
-      expect.objectContaining({ headers: expect.objectContaining({ 'x-admin-token': 'admin-token' }) }),
-    );
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/sms/inbound'), expect.anything());
+    expectLastCallAuthHeader();
 
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       json: async () => ({ data: [] }),
     });
     await fetchLegacyManualSms();
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/sms/manual-review'),
-      expect.objectContaining({ headers: expect.objectContaining({ 'x-admin-token': 'admin-token' }) }),
-    );
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/sms/manual-review'), expect.anything());
+    expectLastCallAuthHeader();
 
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       json: async () => ({ data: [] }),
     });
     await fetchLegacyManualPayments();
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/payments/manual-review'),
-      expect.objectContaining({ headers: expect.objectContaining({ 'x-admin-token': 'admin-token' }) }),
-    );
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/payments/manual-review'), expect.anything());
+    expectLastCallAuthHeader();
 
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
@@ -511,11 +512,13 @@ describe('admin API helpers', () => {
       expect.stringContaining('/sms/manual-review/attach'),
       expect.objectContaining({
         method: 'POST',
-        headers: expect.objectContaining({
-          'x-admin-token': 'admin-token',
-          'content-type': 'application/json',
-        }),
+        headers: expect.anything(),
       }),
     );
+    expectLastCallAuthHeader();
+    const lastCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.at(-1);
+    const init = (lastCall?.[1] ?? {}) as RequestInit;
+    const headers = new Headers(init.headers);
+    expect(headers.get('content-type')).toBe('application/json');
   });
 });
