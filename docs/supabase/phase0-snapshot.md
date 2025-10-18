@@ -29,7 +29,7 @@ This update captures the Phase 0 due diligence now that we have CLI access to 
 | 17 | `20251110_personalization_schema.sql` | Adds personalization tables (`content_items`, `community_*`, etc.). | applied |
 | 18 | `20251111_add_partners_table.sql` | Creates `public.partners` + `updated_at` trigger. | **pending** |
 
-- `supabase/config.toml` still references project `bduokvxvnscoknwamfle`. Update it once the team confirms that `paysnhuxngsvzdpwlosv` is the canonical production project.
+- `supabase/config.toml` now points at the active production project (`paysnhuxngsvzdpwlosv`); ensure future migrations continue to target this ref.
 - `supabase migration list --linked` output is stored in the appendix below for tracking. (Pooler hiccups prevented listing during the Oct 18 cleanup window; use direct `psql` if the CLI refuses to connect.)
 - Remote DDL snapshot captured at `docs/supabase/phase0-production-schema.sql` (generated with `supabase db dump --db-url postgresql://postgres:***@db.paysnhuxngsvzdpwlosv.supabase.co:5432/postgres --schema public`). Use this file for runbooks until a new dump replaces it.
 - Prisma migrations live under `backend/prisma/migrations` (8 directories through `202502051900_fan_sessions`). `npx prisma generate --schema backend/prisma/schema.prisma` succeeds. A diff against production (`npx prisma migrate diff --from-url <REMOTE_URL> --to-schema-datamodel backend/prisma/schema.prisma`) reveals:
@@ -68,7 +68,7 @@ _(Full output retained in project notes; final row confirms the pending `partner
 
 | Source | Notable values | Required follow-up |
 | --- | --- | --- |
-| `.env` | Publishable Supabase key + legacy project ID (`bduokvxvnscoknwamfle`); placeholders for JWT/metrics secrets. | Replace project ID once we confirm the canonical ref; keep sensitive values out of git. |
+| `.env` | Publishable Supabase key placeholder + updated project ID (`paysnhuxngsvzdpwlosv`). | Fill in a fresh publishable key from Supabase dashboard when ready; keep secrets out of git. |
 | `.env.production` | Now ships as template only; real secrets must be pulled from secure stores. | Ensure Vercel + Vault copies stay authoritative; remove any stray plaintext files after rotation. |
 | `.vercel/.env.development.local` | Local OIDC/development tokens. | Confirm they stay scoped to preview; document rotation cadence. |
 | `backend/.env.example` | MoMo pay codes & backend defaults. | Expand to include Twilio/Stripe/Slack placeholders so Vault list is complete. |
@@ -95,7 +95,7 @@ Additional gaps identified during review:
 4. (Done Oct 18 2025) Prisma schema re-introspected from production (`npx prisma db pull`) so backend models follow the Supabase-owned snake_case tables.
 5. Move secrets out of `.env.production`, rotate Supabase/VerceI keys, and update Vault entries per `docs/supabase/secret-rotation-plan.md`.
 6. Upgrade Supabase tier (Free → Pro) ahead of Phase 1 so cron/pooling/PITR are available; coordinate billing approval.
-7. Update `supabase/config.toml` and repository env files to the correct project ref once stakeholders verify the production project ID (still pointing at `bduokvxvnscoknwamfle` locally).
-8. Once Supabase CLI pooler access stabilises, run `supabase migration up --linked --include-all` to record `20251112120000_drop_membership_camel.sql` in the migration history (SQL already executed manually).
+7. Pull a fresh publishable key from Supabase and populate `.env`/Vercel once the rotation window is approved.
+8. Complete Supabase migration reconciliation: `20251112_cleanup_camelcase` is applied locally/remotely; remote history manually repaired for `20251112120000_drop_membership_camel`. Re-run `supabase migration list` after every deploy to keep parity.
 
 Phase 0 is considered complete once the pending migration is deployed, the ERD is captured, secrets are staged for rotation, and the team agrees on the canonical schema plan.
