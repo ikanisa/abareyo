@@ -1,93 +1,98 @@
-# Supabase Phase 0 Snapshot (bduokvxvnscoknwamfle)
+# Supabase Phase 0 Snapshot (paysnhuxngsvzdpwlosv)
 
 _Generated: 2025-10-18 (UTC)_
 
-Phase 0 asks us to reconcile schema history, capture a usable inventory, document secrets, and confirm the infra tier assumptions before tightening security. Everything below is based on the repository state on main (`supabase/config.toml` → project `bduokvxvnscoknwamfle`); remote parity still needs human validation against the live Supabase project.
+This update captures the Phase 0 due diligence now that we have CLI access to the live Supabase project (`supabase link --project-ref paysnhuxngsvzdpwlosv`). Use this document alongside `docs/supabase/secret-rotation-plan.md` and `docs/supabase/canonical-table-plan.md` as the authoritative baseline before moving into Phase 1.
 
 ## 1. Migration Alignment
 
-- Supabase SQL history contains 17 files under `supabase/migrations`. The table below captures the intent of each file and any notable drift risks we spotted.
+- `supabase/migrations` contains 18 SQL files. The table below lists their intent and whether production has applied each file (`supabase migration list --linked`, Oct 18 2025).
 
-| Seq | File | Scope & Notes |
-| --- | --- | --- |
-| 1 | `20240505120000_fan_profile_codes.sql` | Adds `user_code` (+ index) and rebuilds `public_members` view for fan directory tooling. |
-| 2 | `20251011000000_core.sql` | Establishes the current core tables (users, ticketing, memberships, shop, fundraising, admin/audit) without dropping the MVP prototype data. |
-| 3 | `202510110001_rls.sql` | Enables baseline RLS for public tables and grants public read on matches/products/projects. |
-| 4 | `20251012_rayon_schema.sql` | Attempts to reset the original MVP tables via `drop table` / `create table` with custom enums. This conflicts with later migrations that expect the `public.*` variant (for example `wallet` vs `public.wallets`). |
-| 5 | `202510130001_mvp_schema.sql` | Recreates MVP tables with `create table if not exists` in the `public` schema. Leaves both `wallet` **and** `wallets`, `tickets` **and** `ticket_orders`, etc. |
-| 6 | `202510130002_admin_indexes.sql` | Adds shop/product indexes, ticket/order indexes, and ensures `shop_products.images` exists. |
-| 7 | `202510130003_rayon_ticket_orders.sql` | Introduces `ticket_orders` + `ticket_order_items` (non-schema-qualified) to bridge legacy ticket data. |
-| 8 | `202510130004_rewards_engine.sql` | Creates `public.rewards_events` and a trigger to award points on `transactions`. |
-| 9 | `202510130005_shop_promotions.sql` | Adds `public.shop_promotions` with activation index. |
-| 10 | `20251020_admin_alignment.sql` | Normalises match/ticket structures, migrates legacy ticket rows, adds `match_zones`, `match_gates`, admin session tables, feature flags, translations, etc. |
-| 11 | `20251021_add_partner_slug.sql` | Adds `slug` to `public.partners` **but no migration ever creates `public.partners`**. Confirm whether the table comes from Prisma or production-only DDL. |
-| 12 | `20251025000000_p4_dashboard_i18n.sql` | Seeds dashboard/translation permissions. |
-| 13 | `202510251001_p4_dashboard_views.sql` | Installs admin KPI & SMS analytics views on top of ticket/orders/payments. |
-| 14 | `20251030_member_directory.sql` | Extends `public.users`, rebuilds `public_members` view with richer metadata. |
-| 15 | `20251106_security_views.sql` | Blanket-enables + forces RLS across nearly every table and reapplies public/owner policies. Keeps permissive `p_service_role_all` fallback for the service role. |
-| 16 | `20251109_security_hardening.sql` | Refines owner policies, introduces wallet/transaction select guards, and locks down insurance/SACCO flows. |
-| 17 | `20251110_personalization_schema.sql` | Adds personalization tables (`user_prefs`, `user_favorites`, `content_items`, `community_*`). |
+| Seq | File | Scope & notes | Remote |
+| --- | --- | --- | --- |
+| 1 | `20240505120000_fan_profile_codes.sql` | Adds `user_code` + index; rebuilds `public_members` view. | applied |
+| 2 | `20251011000000_core.sql` | Establishes core ticketing/membership/shop/admin tables without dropping MVP data. | applied |
+| 3 | `202510110001_rls.sql` | Baseline RLS + grants on matches/products/projects. | applied |
+| 4 | `20251012_rayon_schema.sql` | Recreates MVP tables without schema qualification; leaves snake_case copies. | applied |
+| 5 | `202510130001_mvp_schema.sql` | Adds `create table if not exists` variants in `public`, leaving duplicate tables (`wallet` vs `wallets`, etc.). | applied |
+| 6 | `202510130002_admin_indexes.sql` | Adds admin/shop indexes and ensures `shop_products.images`. | applied |
+| 7 | `202510130003_rayon_ticket_orders.sql` | Creates bridge tables for legacy ticket data. | applied |
+| 8 | `202510130004_rewards_engine.sql` | Creates `public.rewards_events` + trigger on `transactions`. | applied |
+| 9 | `202510130005_shop_promotions.sql` | Adds `public.shop_promotions` with activation index. | applied |
+| 10 | `20251020_admin_alignment.sql` | Normalises ticket/match schema, adds admin sessions, feature flags, translations, KPI views. | applied |
+| 11 | `20251021_add_partner_slug.sql` | Adds `slug` to `public.partners`; table itself is still missing. | applied |
+| 12 | `20251025000000_p4_dashboard_i18n.sql` | Seeds dashboard permissions/translations. | applied |
+| 13 | `202510251001_p4_dashboard_views.sql` | Installs admin KPI/SMS analytics views. | applied |
+| 14 | `20251030_member_directory.sql` | Extends `public.users`; rebuilds `public_members` view. | applied |
+| 15 | `20251106_security_views.sql` | Forces RLS across tables; introduces service-role bypass. | applied |
+| 16 | `20251109_security_hardening.sql` | Tightens owner policies for wallets/transactions/insurance. | applied |
+| 17 | `20251110_personalization_schema.sql` | Adds personalization tables (`content_items`, `community_*`, etc.). | applied |
+| 18 | `20251111_add_partners_table.sql` | Creates `public.partners` + `updated_at` trigger. | **pending** |
 
-- Prisma migrations live in `backend/prisma/migrations` (8 directories ending in `202502051900_fan_sessions`). `npx prisma generate` succeeds locally. We **did not** run `prisma migrate status` because it requires real `DATABASE_URL`/`DATABASE_SHADOW_URL`.
-- Evidence of drift:
-  - Dual tables (`wallet` vs `wallets`, `tickets` vs `ticket_orders`, `products` vs `shop_products`) mean the live database needs inspection. Decide which tables remain canonical and drop/rename the obsolete copies during Phase 1.
-  - `partners` table is referenced in SQL but absent from repo migrations. Track down the source (Prisma, manual DDL, or Supabase UI) and backfill a migration if it is needed.
-  - `docs/supabase-hardening-roadmap.md` still references project `paysnhuxngsvzdpwlosv`; update after confirming the real project ID with the team.
-- Remote parity checklist (requires Supabase CLI login):
-  1. `supabase migration list` → confirm the timestamps above exist remotely in the same order.
-  2. `supabase db remote commit --project-ref bduokvxvnscoknwamfle` (dry run) to dump production schema.
-  3. Run `diff` between the commit output and the SQL above; capture mismatches for Phase 1 backlog.
+- `supabase/config.toml` still references project `bduokvxvnscoknwamfle`. Update it once the team confirms that `paysnhuxngsvzdpwlosv` is the canonical production project.
+- `supabase migration list --linked` output is stored in the appendix below for tracking.
+- Remote DDL snapshot captured at `docs/supabase/phase0-production-schema.sql` (generated with `supabase db dump --db-url postgresql://postgres:***@db.paysnhuxngsvzdpwlosv.supabase.co:5432/postgres --schema public`). Use this file for runbooks until a new dump replaces it.
+- Prisma migrations live under `backend/prisma/migrations` (8 directories through `202502051900_fan_sessions`). `npx prisma generate --schema backend/prisma/schema.prisma` succeeds. A diff against production (`npx prisma migrate diff --from-url <REMOTE_URL> --to-schema-datamodel backend/prisma/schema.prisma`) reveals:
+  - Missing tables on production relative to Prisma: `OnboardingSession`, `OnboardingMessage`, `PostComment`.
+  - Prisma expects camelCase tables; production still contains snake_case duplicates (e.g., `wallets` vs `wallet`, `orders` vs `Order`). Legacy data must be migrated/dropped during Phase 1.
+  - Prisma enums (`OnboardingStatus`, `PaymentKind`, etc.) do not exist remotely; confirm whether supabase SQL migrations or Prisma should be authoritative before rolling forward.
+
+### Migration list (CLI output, Oct 18 2025)
+
+```
+Local          | Remote         | Time (UTC)
+20240505120000 | 20240505120000 | 2024-05-05 12:00:00
+20251011000000 | 20251011000000 | 2025-10-11 00:00:00
+202510110001   | 202510110001   | 202510110001
+...
+20251110       | 20251110       | 20251110
+20251111       |                | 20251111
+```
+
+_(Full output retained in project notes; final row confirms the pending `partners` deployment.)_
 
 ## 2. Schema Inventory vs. Code
 
-We scanned the repository (excluding migration folders) for explicit table references to understand coverage.
-
-- **Heavily used tables (≥300 code references):** `matches`, `orders`, `payments`, `tickets`, `wallet`. Any breaking change here will ripple across frontend, backend, and edge functions.
-- **Moderate usage (30–299 references):** `wallets`, `ticket_orders`, `ticket_passes`, `insurance_quotes`, `permissions`, `translations`, `shop_products`, `products`, `sms_parsed`, `sacco_deposits`, `polls`, `transactions`, `memberships`, `roles_permissions`, `admin_users`, `admin_sessions`, `feature_flags`, `community_*`.
-- **Low / zero references (≤5 references):**
-  - `content_items` (0 hits) – new personalization table not yet wired up.
-  - `fund_projects`, `fund_donations`, `gamification_events`, `user_prefs`, `user_favorites`, `match_gates`, `match_zones`, `shop_promotions`, `rewards_events`, `admin_users_roles` – referenced only in seeding, views, or admin utilities. Verify whether they are still needed or can be consolidated.
-- Use these counts to prioritise ERD review: start with the high-touch tables, then verify whether the low-touch tables should be deprecated or need follow-up stories.
-- DDL sources for runbooks:
-  - Supabase tables/views/funcs → `supabase/migrations/**.sql`.
-  - Prisma-backed Nest backend → `backend/prisma/migrations/**/migration.sql` and `backend/prisma/schema.prisma`.
-  - Edge functions that depend on specific columns are under `supabase/functions/**/index.ts`; keep those references in sync with DDL changes.
+- Remote currently exposes 97 tables in `public`; 40+ are snake_case legacy copies. The canonical Prisma models cover the camelCase set only. `psql` query: `select table_name from information_schema.tables where table_schema='public';`
+- Tables/enums Prisma expects but production lacks:
+  - Tables: `OnboardingSession`, `OnboardingMessage`, `PostComment`.
+  - Enums: `OnboardingStatus`, plus the camelCase variants of `PaymentKind`, `PaymentStatus`, etc.
+- Tables present in production but unused by Prisma (candidates for retirement):
+  - Core duplicates: `orders`, `order_items`, `payments`, `tickets`, `wallets`, `users`, `products`, `shop_products`.
+  - MVP features: `sacco_deposits`, `insurance_quotes`, `fan_posts`, `community_reports`, `fund_projects`, `fund_donations`, `rewards_events`, `user_prefs`, `user_favorites`, `transactions_legacy`, `tickets_legacy`.
+- Existing SQL views (`admin_dashboard_*`) depend on the legacy snake_case tables; any cleanup must refresh those views.
+- `docs/supabase/phase0-production-schema.sql` should be referenced for column-level detail until we export an ERD. Studio export is still required (manual action) to satisfy the visual baseline request; see Phase 0 TODOs below.
 
 ## 3. Secrets & Environment Snapshot
 
-We inventoried env files committed to the repo. Sensitive values left in plaintext here should be rotated as part of Phase 1.
-
-| Source | Keys Present | Notable Gaps / Actions |
+| Source | Notable values | Required follow-up |
 | --- | --- | --- |
-| `.env` | Supabase project/id/anon key, feature flags | `OPENAI_API_KEY`, `SMS_WEBHOOK_TOKEN`, `JWT_SECRET`, `REALTIME_SIGNING_SECRET`, `ANALYTICS_WRITE_KEY` are placeholders. Replace with secure values or load from Vault. |
-| `.env.production` | Real admin session secrets, metrics token, OpenAI key | `SUPABASE_SERVICE_ROLE_KEY` is still `<insert…>`. The file contains production secrets in git; move them to Vercel/Supabase/Vault and purge from the repo after rotation. |
-| `.vercel/.env.development.local` | Local onboarding tokens, OIDC token | Treat as development only; confirm they are not reused in production. |
-| `.env.example` / `backend/.env.example` | Developer defaults | Backend example includes MoMo pay codes but no Twilio/Stripe secrets. Document the expected third-party keys (Twilio, Stripe, Slack, etc.) for the Vault task. |
+| `.env` | Publishable Supabase key + legacy project ID (`bduokvxvnscoknwamfle`); placeholders for JWT/metrics secrets. | Replace project ID once we confirm the canonical ref; keep sensitive values out of git. |
+| `.env.production` | Real session secrets, OpenAI key, metrics token, default admin credentials. | Move to Vercel/Supabase Vault and purge from git after rotation (Phase 1). |
+| `.vercel/.env.development.local` | Local OIDC/development tokens. | Confirm they stay scoped to preview; document rotation cadence. |
+| `backend/.env.example` | MoMo pay codes & backend defaults. | Expand to include Twilio/Stripe/Slack placeholders so Vault list is complete. |
 
-Additional observations:
-- No Twilio/Stripe environment variables exist in the repo beyond docs. Phase 1 must add them before rotating keys.
-- Supabase project keys (`NEXT_PUBLIC_SUPABASE_ANON_KEY`, publishable key) match the values committed in `.env`. Generate fresh publishable/secret keys and update Vercel/Supabase before removing these copies from git.
-- Capture the authoritative env matrix (Vercel, Supabase Functions, backend) in `docs/` once the secrets are rotated.
+Additional gaps identified during review:
+- No committed values for `SUPABASE_SERVICE_ROLE_KEY`, Twilio, Stripe, Slack, CSP, or metrics bearer token in the repo. Ensure Vault + Vercel hold the definitive copies.
+- Generate fresh Supabase publishable/service-role keys as part of Phase 1, then delete the old values from `.env`/`.env.production`.
+- Capture a single source of truth for environment variables (Prod/Preview/Dev) in `docs/` once rotation completes.
 
 ## 4. Tier & Platform Considerations
 
-- Current Supabase usage includes:
-  - Row Level Security on almost every table (`20251106` migration forces RLS + service-role policy).
-  - 11 edge functions (`supabase/functions/**`) for MoMo/insurance/ticket flows.
-  - Admin KPI views and heavy transactional tables (`orders`, `tickets`, `payments`).
-- The Free tier lacks:
-  - Connection pooling and read replicas — needed once Edge Functions and Prisma share the database.
-  - Point-in-time recovery (PITR) beyond 1 day — risky given audit_logs and financial data requirements.
-  - pg_cron/queues — required for the cron/queue wrappers planned in Phase 3.
-- Recommendation: budget for Supabase **Pro** (or at least the Teams plan) before completing Phase 1 so we can enable read replicas, PITR, and Cron/Queues without surprise downtime.
+- Production uses RLS on nearly every table, multiple edge functions, and admin analytics views. Free-tier limits on connection pooling, PITR, cron/queues, and observability will block later phases.
+- Recommendation: plan the Supabase **Pro** upgrade before Phase 1 so we can:
+  - Enable longer PITR (financial data + audit logs require it).
+  - Use pg_cron/queues for scheduled digests and cleanup jobs.
+  - Provision read replicas to isolate Prisma + Edge Function traffic.
+  - Increase connection pool limits for admin dashboards and upcoming partners work.
 
-## 5. Next Actions Before Entering Phase 1
+## 5. Outstanding Phase 0 Actions
 
-1. **Validate remote schema:** Run the Supabase CLI commands above, export the ERD from Supabase Studio, and attach both assets to the repo (e.g., `docs/supabase/erd-2025-10-18.svg`). _CLI attempt (2025-10-18) blocked pending Supabase login/password._
-2. **Decide canonical tables:** Confirm whether `wallet` → `wallets`, `tickets` → `ticket_orders`, etc. remain; author follow-up migrations to drop/rename the legacy copies. _See `docs/supabase/canonical-table-plan.md` for the proposed direction._
-3. **Backfill missing DDL:** Either add Prisma migration(s) or Supabase SQL to create `public.partners` (or remove the slug migration if obsolete). _Added `supabase/migrations/20251111_add_partners_table.sql`; wait for prod rollout confirmation._
-4. **Secrets plan:** Move real values out of `.env.production`, populate Vault + Vercel, and schedule rotations for publishable/service-role keys, JWT signer, metrics token. _Detailed steps captured in `docs/supabase/secret-rotation-plan.md`._
-5. **Tier sign-off:** Confirm with stakeholders that we will upgrade Supabase to the Pro tier once Phase 1 starts; note the billing impact alongside the Cron/Queues rollout.
-6. **Documentation:** Update `docs/supabase-hardening-roadmap.md` with the correct project ID and link back to this snapshot so the Ops runbook stays consistent.
+1. Apply `20251111_add_partners_table.sql` to staging → production (`supabase migration up`). Validate there is no pre-existing `public.partners` table before deploying.
+2. Export ERD from Supabase Studio (Database → ERD → Export) and commit to `docs/supabase/` (e.g., `docs/supabase/erd-2025-10-18.svg`). CLI-only workflow not available.
+3. Decide canonical tables vs. legacy duplicates (`wallet` vs `wallets`, etc.) and author follow-up migrations to drop/rename during Phase 1. Track decisions in `docs/supabase/canonical-table-plan.md`.
+4. Confirm whether Prisma or Supabase SQL drives schema ownership. If Prisma is authoritative, backfill migrations for the missing onboarding/post comment tables; otherwise adjust Prisma schema to match production.
+5. Move secrets out of `.env.production`, rotate Supabase/VerceI keys, and update Vault entries per `docs/supabase/secret-rotation-plan.md`.
+6. Update `supabase/config.toml` and repository env files to the correct project ref once stakeholders verify the production project ID.
 
-Once the above checklist is complete (and verified against production), Phase 0 can be marked done and we can proceed with RLS rewrites and secret rotation in Phase 1.
+Phase 0 is considered complete once the pending migration is deployed, the ERD is captured, secrets are staged for rotation, and the team agrees on the canonical schema plan.
