@@ -96,6 +96,6 @@ Additional gaps identified during review:
 5. Move secrets out of `.env.production`, rotate Supabase/VerceI keys, and update Vault entries per `docs/supabase/secret-rotation-plan.md`.
 6. Upgrade Supabase tier (Free → Pro) ahead of Phase 1 so cron/pooling/PITR are available; coordinate billing approval.
 7. Pull a fresh publishable key from Supabase and populate `.env`/Vercel once the rotation window is approved.
-8. Complete Supabase migration reconciliation: `20251112_cleanup_camelcase` is applied locally/remotely; remote history manually repaired for `20251112120000_drop_membership_camel`. Re-run `supabase migration list` after every deploy to keep parity.
+8. Complete Supabase migration reconciliation: `20251112_cleanup_camelcase`, `20251112120000_drop_membership_camel`, and `20251113100000_phase1_rls_policies` are applied locally/remotely (remote entries repaired via `supabase migration repair` due to pooler limits). Re-run `supabase migration list` after every deploy to keep parity.
 
 Phase 0 is considered complete once the pending migration is deployed, the ERD is captured, secrets are staged for rotation, and the team agrees on the canonical schema plan.
