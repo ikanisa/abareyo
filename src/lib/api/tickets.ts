@@ -144,7 +144,7 @@ export type RotateTicketPassResponseContract = {
   validForSeconds: number;
 };
 
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api';
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? '/api';
 const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_API_TOKEN ?? '';
 
 export async function createTicketCheckout(
