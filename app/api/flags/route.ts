@@ -28,6 +28,9 @@ export async function GET() {
     const { data, error } = await client.from('feature_flags').select('key, enabled');
 
     if (error) {
+      if ((error as { code?: string }).code === 'PGRST205') {
+        return NextResponse.json({ flags: DEFAULT_FLAGS });
+      }
       throw error;
     }
 
