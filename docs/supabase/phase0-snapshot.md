@@ -85,7 +85,7 @@ Additional observations:
 
 1. **Validate remote schema:** Run the Supabase CLI commands above, export the ERD from Supabase Studio, and attach both assets to the repo (e.g., `docs/supabase/erd-2025-10-18.svg`). _CLI attempt (2025-10-18) blocked pending Supabase login/password._
 2. **Decide canonical tables:** Confirm whether `wallet` → `wallets`, `tickets` → `ticket_orders`, etc. remain; author follow-up migrations to drop/rename the legacy copies. _See `docs/supabase/canonical-table-plan.md` for the proposed direction._
-3. **Backfill missing DDL:** Either add Prisma migration(s) or Supabase SQL to create `public.partners` (or remove the slug migration if obsolete).
+3. **Backfill missing DDL:** Either add Prisma migration(s) or Supabase SQL to create `public.partners` (or remove the slug migration if obsolete). _Added `supabase/migrations/20251111_add_partners_table.sql`; wait for prod rollout confirmation._
 4. **Secrets plan:** Move real values out of `.env.production`, populate Vault + Vercel, and schedule rotations for publishable/service-role keys, JWT signer, metrics token. _Detailed steps captured in `docs/supabase/secret-rotation-plan.md`._
 5. **Tier sign-off:** Confirm with stakeholders that we will upgrade Supabase to the Pro tier once Phase 1 starts; note the billing impact alongside the Cron/Queues rollout.
 6. **Documentation:** Update `docs/supabase-hardening-roadmap.md` with the correct project ID and link back to this snapshot so the Ops runbook stays consistent.
