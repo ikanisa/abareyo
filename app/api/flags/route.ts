@@ -48,6 +48,15 @@ export async function GET() {
 
     return NextResponse.json({ flags });
   } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'message' in error &&
+      (error as { message?: string }).message === 'Invalid API key'
+    ) {
+      console.warn('[flags] Supabase credentials invalid; serving defaults.');
+      return NextResponse.json({ flags: DEFAULT_FLAGS });
+    }
     console.error('[flags] fallback due to error', error);
     return NextResponse.json({ flags: DEFAULT_FLAGS });
   }
