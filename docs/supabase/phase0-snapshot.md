@@ -68,7 +68,7 @@ _(Full output retained in project notes; final row confirms the pending `partner
 
 | Source | Notable values | Required follow-up |
 | --- | --- | --- |
-| `.env` | Publishable Supabase key placeholder + updated project ID (`paysnhuxngsvzdpwlosv`). | Fill in a fresh publishable key from Supabase dashboard when ready; keep secrets out of git. |
+| `.env` | Publishable Supabase key placeholder + updated project ID (`paysnhuxngsvzdpwlosv`). | Fill in a fresh publishable key from Supabase dashboard when ready; keep secrets out of git. See `docs/supabase/vault-secret-map.md` for live storage locations. |
 | `.env.production` | Now ships as template only; real secrets must be pulled from secure stores. | Ensure Vercel + Vault copies stay authoritative; remove any stray plaintext files after rotation. |
 | `.vercel/.env.development.local` | Local OIDC/development tokens. | Confirm they stay scoped to preview; document rotation cadence. |
 | `backend/.env.example` | MoMo pay codes & backend defaults. | Expand to include Twilio/Stripe/Slack placeholders so Vault list is complete. |
