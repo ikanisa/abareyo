@@ -15,6 +15,7 @@ Use this checklist when copying secrets from local `.env*` files into managed st
 | `SMS_WEBHOOK_TOKEN` | Supabase Vault & Vercel | SMS ingest webhook | Keep in sync with telecom provider. |
 | `OPENAI_API_KEY` | Supabase Vault & Vercel | Onboarding agent | Replace with org-wide key; optional `OPENAI_BASE_URL`. |
 | `MTN_MOMO_PAY_CODE`, `AIRTEL_MONEY_PAY_CODE` | Supabase Vault | Payments flows | Mapped in backend config. |
+| `TICKET_PERK_THRESHOLD` | Supabase Vault | `issue_ticket_perk` function | Controls perk award trigger (default 50,000). |
 | `REDIS_URL` | Vercel | Admin login rate limiter | Required to avoid in-memory fallback. |
 | `DATABASE_URL` / `DATABASE_SHADOW_URL` | Supabase (managed by platform) | Prisma + backend | Prod values managed by Supabase; shadow only for CI/local. |
 | `S3_ENDPOINT`, `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_BASE_URL` | Vercel | Media uploads | Skip if Supabase Storage used exclusively. |
