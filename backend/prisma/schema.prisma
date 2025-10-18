@@ -8,706 +8,696 @@ datasource db {
   shadowDatabaseUrl = env("DATABASE_SHADOW_URL")
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model admin_roles {
-  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name              String              @unique
-  admin_users_roles admin_users_roles[]
-  roles_permissions roles_permissions[]
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model admin_sessions {
-  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  admin_user_id String      @db.Uuid
-  token_hash    String      @unique
-  created_at    DateTime    @default(now()) @db.Timestamptz(6)
-  expires_at    DateTime?   @db.Timestamptz(6)
-  revoked       Boolean     @default(false)
-  last_seen_at  DateTime?   @default(now()) @db.Timestamptz(6)
-  admin_users   admin_users @relation(fields: [admin_user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model admin_users {
-  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email             String              @unique
-  password_hash     String
-  display_name      String?
-  status            String?             @default("active")
-  last_login        DateTime?           @db.Timestamptz(6)
-  admin_sessions    admin_sessions[]
-  admin_users_roles admin_users_roles[]
-  audit_logs        audit_logs[]
-  feature_flags     feature_flags[]
-  translations      translations[]
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model admin_users_roles {
-  admin_user_id String      @db.Uuid
-  role_id       String      @db.Uuid
-  admin_users   admin_users @relation(fields: [admin_user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  admin_roles   admin_roles @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@id([admin_user_id, role_id])
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model audit_logs {
-  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  at            DateTime?    @default(now()) @db.Timestamptz(6)
-  admin_user_id String?      @db.Uuid
-  action        String?
-  entity_type   String?
-  entity_id     String?
-  before        Json?
-  after         Json?
-  ip            String?
-  ua            String?
-  admin_users   admin_users? @relation(fields: [admin_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model community_posts {
-  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id           String?             @db.Uuid
-  text              String?
-  media_url         String?
-  status            String?             @default("visible")
-  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
-  users             users?              @relation(fields: [user_id], references: [id], onUpdate: NoAction)
-  community_reports community_reports[]
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model community_reports {
-  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  post_id         String?          @db.Uuid
-  reason          String?
-  created_at      DateTime?        @default(now()) @db.Timestamptz(6)
-  community_posts community_posts? @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model content_items {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  kind         String
-  title        String
-  slug         String?   @unique
-  summary      String?
-  body         String?
-  media_url    String?
-  tags         String[]  @default([])
-  published_at DateTime? @db.Timestamptz(6)
-  created_at   DateTime? @default(now()) @db.Timestamptz(6)
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model fan_clubs {
-  id      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name    String
-  city    String?
-  members Int     @default(0)
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model fan_posts {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String?  @db.Uuid
-  text       String?
-  media_url  String?
-  likes      Int      @default(0)
-  comments   Int      @default(0)
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  users      users?   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model feature_flags {
-  key         String       @id
-  value       Json?
-  updated_by  String?      @db.Uuid
-  updated_at  DateTime     @default(now()) @db.Timestamptz(6)
-  admin_users admin_users? @relation(fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model fund_donations {
-  id      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id String? @db.Uuid
-  amount  Int?
-  status  String? @default("pending")
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model fund_projects {
-  id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title    String?
-  goal     Int?
-  progress Int?    @default(0)
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model gamification_events {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String?   @db.Uuid
-  kind       String?
-  value      Int?
-  context    Json?
-  created_at DateTime? @default(now()) @db.Timestamptz(6)
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model insurance_quotes {
-  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id     String?          @db.Uuid
-  moto_type   String?
-  plate       String?
-  premium     Int
-  ticket_perk Boolean          @default(false)
-  status      insurance_status @default(quoted)
-  ref         String?
-  created_at  DateTime         @default(now()) @db.Timestamptz(6)
-  users       users?           @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  policies    policies[]
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model leaderboards {
-  period  String
-  user_id String @db.Uuid
-  points  Int?
-
-  @@id([period, user_id])
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model match_gates {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  match_id       String   @db.Uuid
-  name           String
-  location       String?
-  max_throughput Int?
-  created_at     DateTime @default(now()) @db.Timestamptz(6)
-  matches        matches  @relation(fields: [match_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model match_zones {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  match_id     String   @db.Uuid
-  name         String
-  capacity     Int      @default(0)
-  price        Int      @default(0)
-  default_gate String?
-  created_at   DateTime @default(now()) @db.Timestamptz(6)
-  matches      matches  @relation(fields: [match_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model matches {
-  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  kickoff        DateTime         @db.Timestamptz(6)
-  venue          String?
-  status         match_status     @default(upcoming)
-  vip_price      Int?
-  regular_price  Int?
-  seats_vip      Int?
-  seats_regular  Int?
-  blue_price     Int?
-  seats_blue     Int?
-  opponent       String?
-  match_gates    match_gates[]
-  match_zones    match_zones[]
-  tickets        tickets[]
-  tickets_legacy tickets_legacy[]
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model membership_plans {
-  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String?
-  price       Int?
-  perks       Json?         @default("[]")
-  memberships memberships[]
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model memberships {
-  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id          String?           @db.Uuid
-  plan_id          String?           @db.Uuid
-  status           String?           @default("pending")
-  started_at       DateTime?         @db.Timestamptz(6)
-  expires_at       DateTime?         @db.Timestamptz(6)
-  membership_plans membership_plans? @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model order_items {
-  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  order_id      String?        @db.Uuid
-  product_id    String?        @db.Uuid
-  qty           Int
-  price         Int
-  orders        orders?        @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  shop_products shop_products? @relation(fields: [product_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model orders {
-  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id     String?       @db.Uuid
-  total       Int
-  momo_ref    String?
-  status      order_status  @default(pending)
-  created_at  DateTime      @default(now()) @db.Timestamptz(6)
-  order_items order_items[]
-  users       users?        @relation(fields: [user_id], references: [id], onUpdate: NoAction)
-  payments    payments[]
-
-  @@index([created_at(sort: Desc)], map: "idx_orders_created")
-  @@index([status], map: "idx_orders_status")
-}
-
-model partners {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name       String
-  category   String?
-  url        String?
-  logo_url   String?
-  slug       String
-  active     Boolean  @default(true)
-  metadata   Json?    @default("{}")
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @default(now()) @db.Timestamptz(6)
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model payments {
-  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  kind            payment_kind
-  amount          Int
-  status          payment_status? @default(pending)
-  sms_parsed_id   String?         @db.Uuid
-  order_id        String?         @db.Uuid
-  membership_id   String?         @db.Uuid
-  donation_id     String?         @db.Uuid
-  created_at      DateTime?       @default(now()) @db.Timestamptz(6)
-  ticket_order_id String?         @db.Uuid
-  metadata        Json?           @default("{}")
-  orders          orders?         @relation(fields: [order_id], references: [id], onUpdate: NoAction)
-  sms_parsed      sms_parsed?     @relation(fields: [sms_parsed_id], references: [id], onUpdate: NoAction)
-  ticket_orders   ticket_orders?  @relation(fields: [ticket_order_id], references: [id], onUpdate: NoAction)
-
-  @@index([kind], map: "idx_payments_kind")
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model permissions {
-  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  key               String              @unique
-  description       String?
-  roles_permissions roles_permissions[]
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model policies {
-  id                 String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  quote_id           String?           @db.Uuid
-  number             String
-  valid_from         DateTime          @db.Timestamptz(6)
-  valid_to           DateTime          @db.Timestamptz(6)
-  free_ticket_issued Boolean           @default(false)
-  insurance_quotes   insurance_quotes? @relation(fields: [quote_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model polls {
-  id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  question String
-  options  Json
-  results  Json    @default("{}")
-  active   Boolean @default(true)
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model products {
-  id     String  @id(map: "products_pkey1") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name   String?
-  price  Int?
-  stock  Int?    @default(0)
-  images Json?   @default("[]")
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model products_legacy {
-  id     String  @id(map: "products_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name   String?
-  price  Int?
-  stock  Int?    @default(0)
-  images Json?   @default("[]")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model rewards_events {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String?   @db.Uuid
-  source     String
-  ref_id     String?   @db.Uuid
-  points     Int
-  meta       Json?
-  created_at DateTime? @default(now()) @db.Timestamptz(6)
-  users      users?    @relation(fields: [user_id], references: [id], onUpdate: NoAction)
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model roles_permissions {
-  role_id       String      @db.Uuid
-  permission_id String      @db.Uuid
-  permissions   permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  admin_roles   admin_roles @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@id([role_id, permission_id])
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model sacco_deposits {
-  id         String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String?      @db.Uuid
-  sacco_name String
-  amount     Int
-  ref        String?
-  status     sacco_status @default(pending)
-  created_at DateTime     @default(now()) @db.Timestamptz(6)
-  users      users?       @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model shop_products {
-  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String
-  category    String?
-  price       Int
-  stock       Int           @default(0)
-  description String?
-  image_url   String?
-  badge       String?
-  images      Json?         @default("[]")
-  order_items order_items[]
-
-  @@index([category], map: "idx_shop_products_category")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model shop_promotions {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title        String
-  description  String?
-  discount_pct Decimal?  @db.Decimal
-  product_ids  String[]  @default([]) @db.Uuid
-  starts_at    DateTime  @db.Timestamptz(6)
-  ends_at      DateTime  @db.Timestamptz(6)
-  created_at   DateTime? @default(now()) @db.Timestamptz(6)
-
-  @@index([starts_at, ends_at], map: "idx_promotions_active")
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model sms_parsed {
-  id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  sms_id         String?    @db.Uuid
-  amount         Int
-  currency       String?    @default("RWF")
-  payer_mask     String?
-  ref            String?
-  matched_entity String?
-  confidence     Decimal?   @db.Decimal
-  created_at     DateTime?  @default(now()) @db.Timestamptz(6)
-  payments       payments[]
-  sms_raw        sms_raw?   @relation(fields: [sms_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@index([amount], map: "idx_sms_parsed_amount")
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model sms_raw {
-  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  received_at DateTime?    @default(now()) @db.Timestamptz(6)
-  from_msisdn String?
-  text        String
-  source      String?      @default("gsm-daemon")
-  sms_parsed  sms_parsed[]
-
-  @@index([received_at(sort: Desc)], map: "idx_sms_raw_received")
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model ticket_order_items {
-  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  order_id      String?        @db.Uuid
-  zone          ticket_zone
-  quantity      Int
-  price         Int
-  ticket_orders ticket_orders? @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model ticket_orders {
-  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id            String?              @db.Uuid
-  match_id           String?              @db.Uuid
-  total              Int
-  status             ticket_order_status? @default(pending)
-  ussd_code          String?
-  sms_ref            String?
-  created_at         DateTime?            @default(now()) @db.Timestamptz(6)
-  expires_at         DateTime?            @db.Timestamptz(6)
-  payments           payments[]
-  ticket_order_items ticket_order_items[]
-  ticket_passes      ticket_passes[]
-  tickets_legacy     tickets_legacy[]
-
-  @@index([match_id], map: "idx_ticket_orders_match")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model ticket_passes {
-  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  order_id      String?        @db.Uuid
-  zone          String?
-  gate          String?
-  qr_token_hash String?
-  state         String?        @default("active")
-  created_at    DateTime?      @default(now()) @db.Timestamptz(6)
-  ticket_orders ticket_orders? @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@index([order_id], map: "idx_ticket_passes_order")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model tickets {
-  id         String    @id(map: "tickets_pkey1") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String?   @db.Uuid
-  match_id   String?   @db.Uuid
-  zone       String
-  price      Int
-  paid       Boolean?  @default(false)
-  momo_ref   String?
-  created_at DateTime? @default(now()) @db.Timestamptz(6)
-  matches    matches?  @relation(fields: [match_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tickets_match_id_fkey1")
-  users      users?    @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "tickets_user_id_fkey1")
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model tickets_legacy {
-  id            String         @id(map: "tickets_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id       String?        @db.Uuid
-  match_id      String?        @db.Uuid
-  zone          ticket_zone
-  price         Int
-  paid          Boolean        @default(false)
-  momo_ref      String?
-  created_at    DateTime       @default(now()) @db.Timestamptz(6)
-  order_id      String?        @db.Uuid
-  gate          String?
-  state         String         @default("pending")
-  qr_token      String?
-  updated_at    DateTime       @default(now()) @db.Timestamptz(6)
-  matches       matches?       @relation(fields: [match_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tickets_match_id_fkey")
-  ticket_orders ticket_orders? @relation(fields: [order_id], references: [id], onUpdate: NoAction, map: "tickets_order_id_fkey")
-  users         users?         @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "tickets_user_id_fkey")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model transactions {
-  id         String    @id(map: "transactions_pkey1") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String?   @db.Uuid
-  kind       String?
-  amount     Int
-  ref        String?
-  created_at DateTime? @default(now()) @db.Timestamptz(6)
-  users      users?    @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "transactions_user_id_fkey1")
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model transactions_legacy {
-  id         String             @id(map: "transactions_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String?            @db.Uuid
-  type       transaction_type
-  amount     Int
-  ref        String?
-  created_at DateTime           @default(now()) @db.Timestamptz(6)
-  status     transaction_status @default(pending)
-  users      users?             @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "transactions_user_id_fkey")
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model translations {
-  lang        String
-  key         String
-  value       String
-  updated_by  String?      @db.Uuid
-  updated_at  DateTime     @default(now()) @db.Timestamptz(6)
-  admin_users admin_users? @relation(fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@id([lang, key])
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model user_favorites {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id     String?   @db.Uuid
-  entity_type String
-  entity_id   String
-  created_at  DateTime? @default(now()) @db.Timestamptz(6)
-  users       users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model user_prefs {
-  user_id       String    @id @db.Uuid
-  language      String?   @default("rw")
-  notifications Json?     @default("{\"club\": true, \"final\": true, \"goals\": true, \"kickoff\": true}")
-  created_at    DateTime? @default(now()) @db.Timestamptz(6)
-  users         users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model users {
-  id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                String?
-  phone               String?               @unique
-  momo_number         String?
-  avatar_url          String?
-  tier                user_tier             @default(guest)
-  points              Int                   @default(0)
-  created_at          DateTime              @default(now()) @db.Timestamptz(6)
-  display_name        String?
-  region              String?
-  fan_club            String?
-  public_profile      Boolean?              @default(false)
-  language            String?               @default("rw")
-  joined_at           DateTime?             @default(now()) @db.Timestamptz(6)
-  user_code           String?
-  community_posts     community_posts[]
-  fan_posts           fan_posts[]
-  insurance_quotes    insurance_quotes[]
-  orders              orders[]
-  rewards_events      rewards_events[]
-  sacco_deposits      sacco_deposits[]
-  tickets             tickets[]
-  tickets_legacy      tickets_legacy[]
-  transactions        transactions[]
-  transactions_legacy transactions_legacy[]
-  user_favorites      user_favorites[]
-  user_prefs          user_prefs?
-  wallet              wallet?
-  wallets             wallets?
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model wallet {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String?  @unique @db.Uuid
-  balance    Int      @default(0)
-  updated_at DateTime @default(now()) @db.Timestamptz(6)
-  users      users?   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model wallets {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String?   @unique @db.Uuid
-  balance    Int?      @default(0)
-  updated_at DateTime? @default(now()) @db.Timestamptz(6)
-  users      users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
-
-enum insurance_status {
+enum InsuranceStatus {
   quoted
   paid
   issued
+  @@map("insurance_status")
 }
 
-enum match_status {
+enum MatchStatus {
   upcoming
   live
   ft
+  @@map("match_status")
 }
 
-enum order_status {
+enum OrderStatus {
   pending
   paid
   ready
   pickedup
+  @@map("order_status")
 }
 
-enum payment_kind {
+enum PaymentKind {
   ticket
   shop
   deposit
   policy
+  @@map("payment_kind")
 }
 
-enum payment_status {
+enum PaymentStatus {
   pending
   confirmed
   failed
+  @@map("payment_status")
 }
 
-enum sacco_status {
+enum SaccoStatus {
   pending
   confirmed
+  @@map("sacco_status")
 }
 
-enum ticket_order_status {
+enum TicketOrderStatus {
   pending
   paid
   cancelled
   expired
+  @@map("ticket_order_status")
 }
 
-enum ticket_pass_state {
+enum TicketPassState {
   active
   used
   refunded
+  @@map("ticket_pass_state")
 }
 
-enum ticket_zone {
+enum TicketZone {
   VIP
   Regular
   Blue
+  @@map("ticket_zone")
 }
 
-enum transaction_status {
+enum TransactionStatus {
   pending
   confirmed
   failed
   manual_review
+  @@map("transaction_status")
 }
 
-enum transaction_type {
+enum TransactionType {
   deposit
   purchase
   refund
   reward
+  @@map("transaction_type")
 }
 
-enum user_tier {
+enum UserTier {
   guest
   fan
   gold
+  @@map("user_tier")
+}
+
+model AdminRole {
+  id String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String              @unique
+  adminUsersRoles AdminUsersRole[]
+  rolesPermissions RolesPermission[]
+  @@map("admin_roles")
+}
+
+model AdminSession {
+  id String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  adminUserId String      @db.Uuid @map("admin_user_id")
+  tokenHash String      @unique @map("token_hash")
+  createdAt DateTime    @default(now()) @db.Timestamptz(6) @map("created_at")
+  expiresAt DateTime?   @db.Timestamptz(6) @map("expires_at")
+  revoked Boolean     @default(false)
+  lastSeenAt DateTime?   @default(now()) @db.Timestamptz(6) @map("last_seen_at")
+  adminUser AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@map("admin_sessions")
+}
+
+model AdminUser {
+  id String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email String              @unique
+  passwordHash String @map("password_hash")
+  displayName String? @map("display_name")
+  status String?             @default("active")
+  lastLogin DateTime?           @db.Timestamptz(6) @map("last_login")
+  adminSessions AdminSession[]
+  adminUsersRoles AdminUsersRole[]
+  auditLogs AuditLog[]
+  featureFlags FeatureFlag[]
+  translations Translation[]
+  @@map("admin_users")
+}
+
+model AdminUsersRole {
+  adminUserId String      @db.Uuid @map("admin_user_id")
+  roleId String      @db.Uuid @map("role_id")
+  adminUser AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  adminRole AdminRole @relation(fields: [roleId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@id([adminUserId, roleId])
+  @@map("admin_users_roles")
+}
+
+model AuditLog {
+  id String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  at DateTime?    @default(now()) @db.Timestamptz(6)
+  adminUserId String?      @db.Uuid @map("admin_user_id")
+  action String?
+  entityType String? @map("entity_type")
+  entityId String? @map("entity_id")
+  before Json?
+  after Json?
+  ip String?
+  ua String?
+  adminUser AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@map("audit_logs")
+}
+
+model CommunityPost {
+  id String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String?             @db.Uuid @map("user_id")
+  text String?
+  mediaUrl String? @map("media_url")
+  status String?             @default("visible")
+  createdAt DateTime?           @default(now()) @db.Timestamptz(6) @map("created_at")
+  user User?              @relation(fields: [userId], references: [id], onUpdate: NoAction)
+  communityReports CommunityReport[]
+  @@map("community_posts")
+}
+
+model CommunityReport {
+  id String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  postId String?          @db.Uuid @map("post_id")
+  reason String?
+  createdAt DateTime?        @default(now()) @db.Timestamptz(6) @map("created_at")
+  communityPost CommunityPost? @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@map("community_reports")
+}
+
+model ContentItem {
+  id String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  kind String
+  title String
+  slug String?   @unique
+  summary String?
+  body String?
+  mediaUrl String? @map("media_url")
+  tags String[]  @default([])
+  publishedAt DateTime? @db.Timestamptz(6) @map("published_at")
+  createdAt DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
+  @@map("content_items")
+}
+
+model FanClub {
+  id String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String
+  city String?
+  members Int     @default(0)
+  @@map("fan_clubs")
+}
+
+model FanPost {
+  id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String?  @db.Uuid @map("user_id")
+  text String?
+  mediaUrl String? @map("media_url")
+  likes Int      @default(0)
+  comments Int      @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  user User?   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@map("fan_posts")
+}
+
+model FeatureFlag {
+  key String       @id
+  value Json?
+  updatedBy String?      @db.Uuid @map("updated_by")
+  updatedAt DateTime     @default(now()) @db.Timestamptz(6) @map("updated_at")
+  adminUser AdminUser? @relation(fields: [updatedBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@map("feature_flags")
+}
+
+model FundDonation {
+  id String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String? @db.Uuid @map("user_id")
+  amount Int?
+  status String? @default("pending")
+  @@map("fund_donations")
+}
+
+model FundProject {
+  id String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title String?
+  goal Int?
+  progress Int?    @default(0)
+  @@map("fund_projects")
+}
+
+model GamificationEvent {
+  id String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String?   @db.Uuid @map("user_id")
+  kind String?
+  value Int?
+  context Json?
+  createdAt DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
+  @@map("gamification_events")
+}
+
+model InsuranceQuote {
+  id String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String?          @db.Uuid @map("user_id")
+  motoType String? @map("moto_type")
+  plate String?
+  premium Int
+  ticketPerk Boolean          @default(false) @map("ticket_perk")
+  status InsuranceStatus @default(quoted)
+  ref String?
+  createdAt DateTime         @default(now()) @db.Timestamptz(6) @map("created_at")
+  user User?           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  policies Policy[]
+  @@map("insurance_quotes")
+}
+
+model Leaderboard {
+  period String
+  userId String @db.Uuid @map("user_id")
+  points Int?
+  @@id([period, userId])
+  @@map("leaderboards")
+}
+
+model MatchGate {
+  id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  matchId String   @db.Uuid @map("match_id")
+  name String
+  location String?
+  maxThroughput Int? @map("max_throughput")
+  createdAt DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  match Match  @relation(fields: [matchId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@map("match_gates")
+}
+
+model MatchZone {
+  id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  matchId String   @db.Uuid @map("match_id")
+  name String
+  capacity Int      @default(0)
+  price Int      @default(0)
+  defaultGate String? @map("default_gate")
+  createdAt DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  match Match  @relation(fields: [matchId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@map("match_zones")
+}
+
+model Match {
+  id String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  kickoff DateTime         @db.Timestamptz(6)
+  venue String?
+  status MatchStatus     @default(upcoming)
+  vipPrice Int? @map("vip_price")
+  regularPrice Int? @map("regular_price")
+  seatsVip Int? @map("seats_vip")
+  seatsRegular Int? @map("seats_regular")
+  bluePrice Int? @map("blue_price")
+  seatsBlue Int? @map("seats_blue")
+  opponent String?
+  matchGates MatchGate[]
+  matchZones MatchZone[]
+  tickets Ticket[]
+  ticketsLegacy TicketsLegacy[]
+  @@map("matches")
+}
+
+model MembershipPlan {
+  id String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String?
+  price Int?
+  perks Json?         @default("[]")
+  memberships Membership[]
+  @@map("membership_plans")
+}
+
+model Membership {
+  id String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String?           @db.Uuid @map("user_id")
+  planId String?           @db.Uuid @map("plan_id")
+  status String?           @default("pending")
+  startedAt DateTime?         @db.Timestamptz(6) @map("started_at")
+  expiresAt DateTime?         @db.Timestamptz(6) @map("expires_at")
+  membershipPlan MembershipPlan? @relation(fields: [planId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@map("memberships")
+}
+
+model OrderItem {
+  id String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId String?        @db.Uuid @map("order_id")
+  productId String?        @db.Uuid @map("product_id")
+  qty Int
+  price Int
+  order Order?        @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  shopProduct ShopProduct? @relation(fields: [productId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  @@map("order_items")
+}
+
+model Order {
+  id String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String?       @db.Uuid @map("user_id")
+  total Int
+  momoRef String? @map("momo_ref")
+  status OrderStatus  @default(pending)
+  createdAt DateTime      @default(now()) @db.Timestamptz(6) @map("created_at")
+  orderItems OrderItem[]
+  user User?        @relation(fields: [userId], references: [id], onUpdate: NoAction)
+  payments Payment[]
+  @@index([createdAt(sort: Desc)], map: "idx_orders_created")
+  @@index([status], map: "idx_orders_status")
+  @@map("orders")
+}
+
+model Partner {
+  id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String
+  category String?
+  url String?
+  logoUrl String? @map("logo_url")
+  slug String
+  active Boolean  @default(true)
+  metadata Json?    @default("{}")
+  createdAt DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt DateTime @default(now()) @db.Timestamptz(6) @map("updated_at")
+  @@map("partners")
+}
+
+model Payment {
+  id String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  kind PaymentKind
+  amount Int
+  status PaymentStatus? @default(pending)
+  smsParsedId String?         @db.Uuid @map("sms_parsed_id")
+  orderId String?         @db.Uuid @map("order_id")
+  membershipId String?         @db.Uuid @map("membership_id")
+  donationId String?         @db.Uuid @map("donation_id")
+  createdAt DateTime?       @default(now()) @db.Timestamptz(6) @map("created_at")
+  ticketOrderId String?         @db.Uuid @map("ticket_order_id")
+  metadata Json?           @default("{}")
+  order Order?         @relation(fields: [orderId], references: [id], onUpdate: NoAction)
+  smsParsed SmsParsed?     @relation(fields: [smsParsedId], references: [id], onUpdate: NoAction)
+  ticketOrder TicketOrder?  @relation(fields: [ticketOrderId], references: [id], onUpdate: NoAction)
+  @@index([kind], map: "idx_payments_kind")
+  @@map("payments")
+}
+
+model Permission {
+  id String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key String              @unique
+  description String?
+  rolesPermissions RolesPermission[]
+  @@map("permissions")
+}
+
+model Policy {
+  id String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quoteId String?           @db.Uuid @map("quote_id")
+  number String
+  validFrom DateTime          @db.Timestamptz(6) @map("valid_from")
+  validTo DateTime          @db.Timestamptz(6) @map("valid_to")
+  freeTicketIssued Boolean           @default(false) @map("free_ticket_issued")
+  insuranceQuote InsuranceQuote? @relation(fields: [quoteId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@map("policies")
+}
+
+model Poll {
+  id String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  question String
+  options Json
+  results Json    @default("{}")
+  active Boolean @default(true)
+  @@map("polls")
+}
+
+model Product {
+  id String  @id(map: "products_pkey1") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String?
+  price Int?
+  stock Int?    @default(0)
+  images Json?   @default("[]")
+  @@map("products")
+}
+
+model ProductsLegacy {
+  id String  @id(map: "products_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String?
+  price Int?
+  stock Int?    @default(0)
+  images Json?   @default("[]")
+  @@map("products_legacy")
+}
+
+model RewardsEvent {
+  id String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String?   @db.Uuid @map("user_id")
+  source String
+  refId String?   @db.Uuid @map("ref_id")
+  points Int
+  meta Json?
+  createdAt DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
+  user User?    @relation(fields: [userId], references: [id], onUpdate: NoAction)
+  @@map("rewards_events")
+}
+
+model RolesPermission {
+  roleId String      @db.Uuid @map("role_id")
+  permissionId String      @db.Uuid @map("permission_id")
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  adminRole AdminRole @relation(fields: [roleId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@id([roleId, permissionId])
+  @@map("roles_permissions")
+}
+
+model SaccoDeposit {
+  id String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String?      @db.Uuid @map("user_id")
+  saccoName String @map("sacco_name")
+  amount Int
+  ref String?
+  status SaccoStatus @default(pending)
+  createdAt DateTime     @default(now()) @db.Timestamptz(6) @map("created_at")
+  user User?       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@map("sacco_deposits")
+}
+
+model ShopProduct {
+  id String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String
+  category String?
+  price Int
+  stock Int           @default(0)
+  description String?
+  imageUrl String? @map("image_url")
+  badge String?
+  images Json?         @default("[]")
+  orderItems OrderItem[]
+  @@index([category], map: "idx_shop_products_category")
+  @@map("shop_products")
+}
+
+model ShopPromotion {
+  id String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title String
+  description String?
+  discountPct Decimal?  @db.Decimal @map("discount_pct")
+  productIds String[]  @default([]) @db.Uuid @map("product_ids")
+  startsAt DateTime  @db.Timestamptz(6) @map("starts_at")
+  endsAt DateTime  @db.Timestamptz(6) @map("ends_at")
+  createdAt DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
+  @@index([startsAt, endsAt], map: "idx_promotions_active")
+  @@map("shop_promotions")
+}
+
+model SmsParsed {
+  id String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  smsId String?    @db.Uuid @map("sms_id")
+  amount Int
+  currency String?    @default("RWF")
+  payerMask String? @map("payer_mask")
+  ref String?
+  matchedEntity String? @map("matched_entity")
+  confidence Decimal?   @db.Decimal
+  createdAt DateTime?  @default(now()) @db.Timestamptz(6) @map("created_at")
+  payments Payment[]
+  smsRaw SmsRaw?   @relation(fields: [smsId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@index([amount], map: "idx_sms_parsed_amount")
+  @@map("sms_parsed")
+}
+
+model SmsRaw {
+  id String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  receivedAt DateTime?    @default(now()) @db.Timestamptz(6) @map("received_at")
+  fromMsisdn String? @map("from_msisdn")
+  text String
+  source String?      @default("gsm-daemon")
+  smsParsed SmsParsed[]
+  @@index([receivedAt(sort: Desc)], map: "idx_sms_raw_received")
+  @@map("sms_raw")
+}
+
+model TicketOrderItem {
+  id String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId String?        @db.Uuid @map("order_id")
+  zone TicketZone
+  quantity Int
+  price Int
+  ticketOrder TicketOrder? @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@map("ticket_order_items")
+}
+
+model TicketOrder {
+  id String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String?              @db.Uuid @map("user_id")
+  matchId String?              @db.Uuid @map("match_id")
+  total Int
+  status TicketOrderStatus? @default(pending)
+  ussdCode String? @map("ussd_code")
+  smsRef String? @map("sms_ref")
+  createdAt DateTime?            @default(now()) @db.Timestamptz(6) @map("created_at")
+  expiresAt DateTime?            @db.Timestamptz(6) @map("expires_at")
+  payments Payment[]
+  ticketOrderItems TicketOrderItem[]
+  ticketPasses TicketPass[]
+  ticketsLegacy TicketsLegacy[]
+  @@index([matchId], map: "idx_ticket_orders_match")
+  @@map("ticket_orders")
+}
+
+model TicketPass {
+  id String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId String?        @db.Uuid @map("order_id")
+  zone String?
+  gate String?
+  qrTokenHash String? @map("qr_token_hash")
+  state String?        @default("active")
+  createdAt DateTime?      @default(now()) @db.Timestamptz(6) @map("created_at")
+  ticketOrder TicketOrder? @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@index([orderId], map: "idx_ticket_passes_order")
+  @@map("ticket_passes")
+}
+
+model Ticket {
+  id String    @id(map: "tickets_pkey1") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String?   @db.Uuid @map("user_id")
+  matchId String?   @db.Uuid @map("match_id")
+  zone String
+  price Int
+  paid Boolean?  @default(false)
+  momoRef String? @map("momo_ref")
+  createdAt DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
+  match Match?  @relation(fields: [matchId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tickets_match_id_fkey1")
+  user User?    @relation(fields: [userId], references: [id], onUpdate: NoAction, map: "tickets_user_id_fkey1")
+  @@map("tickets")
+}
+
+model TicketsLegacy {
+  id String         @id(map: "tickets_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String?        @db.Uuid @map("user_id")
+  matchId String?        @db.Uuid @map("match_id")
+  zone TicketZone
+  price Int
+  paid Boolean        @default(false)
+  momoRef String? @map("momo_ref")
+  createdAt DateTime       @default(now()) @db.Timestamptz(6) @map("created_at")
+  orderId String?        @db.Uuid @map("order_id")
+  gate String?
+  state String         @default("pending")
+  qrToken String? @map("qr_token")
+  updatedAt DateTime       @default(now()) @db.Timestamptz(6) @map("updated_at")
+  match Match?       @relation(fields: [matchId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tickets_match_id_fkey")
+  ticketOrder TicketOrder? @relation(fields: [orderId], references: [id], onUpdate: NoAction, map: "tickets_order_id_fkey")
+  user User?         @relation(fields: [userId], references: [id], onUpdate: NoAction, map: "tickets_user_id_fkey")
+  @@map("tickets_legacy")
+}
+
+model Transaction {
+  id String    @id(map: "transactions_pkey1") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String?   @db.Uuid @map("user_id")
+  kind String?
+  amount Int
+  ref String?
+  createdAt DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
+  user User?    @relation(fields: [userId], references: [id], onUpdate: NoAction, map: "transactions_user_id_fkey1")
+  @@map("transactions")
+}
+
+model TransactionsLegacy {
+  id String             @id(map: "transactions_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String?            @db.Uuid @map("user_id")
+  type TransactionType
+  amount Int
+  ref String?
+  createdAt DateTime           @default(now()) @db.Timestamptz(6) @map("created_at")
+  status TransactionStatus @default(pending)
+  user User?             @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "transactions_user_id_fkey")
+  @@map("transactions_legacy")
+}
+
+model Translation {
+  lang String
+  key String
+  value String
+  updatedBy String?      @db.Uuid @map("updated_by")
+  updatedAt DateTime     @default(now()) @db.Timestamptz(6) @map("updated_at")
+  adminUser AdminUser? @relation(fields: [updatedBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@id([lang, key])
+  @@map("translations")
+}
+
+model UserFavorite {
+  id String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String?   @db.Uuid @map("user_id")
+  entityType String @map("entity_type")
+  entityId String @map("entity_id")
+  createdAt DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
+  user User?    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@map("user_favorites")
+}
+
+model UserPref {
+  userId String    @id @db.Uuid @map("user_id")
+  language String?   @default("rw")
+  notifications Json?     @default("{\"club\": true, \"final\": true, \"goals\": true, \"kickoff\": true}")
+  createdAt DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@map("user_prefs")
+}
+
+model User {
+  id String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String?
+  phone String?               @unique
+  momoNumber String? @map("momo_number")
+  avatarUrl String? @map("avatar_url")
+  tier UserTier             @default(guest)
+  points Int                   @default(0)
+  createdAt DateTime              @default(now()) @db.Timestamptz(6) @map("created_at")
+  displayName String? @map("display_name")
+  region String?
+  fanClub String? @map("fan_club")
+  publicProfile Boolean?              @default(false) @map("public_profile")
+  language String?               @default("rw")
+  joinedAt DateTime?             @default(now()) @db.Timestamptz(6) @map("joined_at")
+  userCode String? @map("user_code")
+  communityPosts CommunityPost[]
+  fanPosts FanPost[]
+  insuranceQuotes InsuranceQuote[]
+  orders Order[]
+  rewardsEvents RewardsEvent[]
+  saccoDeposits SaccoDeposit[]
+  tickets Ticket[]
+  ticketsLegacy TicketsLegacy[]
+  transactions Transaction[]
+  transactionsLegacy TransactionsLegacy[]
+  userFavorites UserFavorite[]
+  userPref UserPref?
+  wallet Wallet?
+  walletLegacy WalletLegacy?
+  @@map("users")
+}
+
+model Wallet {
+  id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String?  @unique @db.Uuid @map("user_id")
+  balance Int      @default(0)
+  updatedAt DateTime @default(now()) @db.Timestamptz(6) @map("updated_at")
+  user User?   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@map("wallet")
+}
+
+model WalletLegacy {
+  id String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String?   @unique @db.Uuid @map("user_id")
+  balance Int?      @default(0)
+  updatedAt DateTime? @default(now()) @db.Timestamptz(6) @map("updated_at")
+  user User?    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  @@map("wallets")
 }
