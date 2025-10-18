@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+
+import { createServiceSupabaseClient } from '@/integrations/supabase/server';
 
 const DEFAULT_PREFS = {
   language: 'rw',
   notifications: { goals: true, kickoff: true, final: true, club: true },
 };
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const server = supabaseUrl && supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : null;
+const server = createServiceSupabaseClient();
+const USER_PREFS_TABLE = 'user_prefs';
 
 const memoryPrefs = new Map<string, typeof DEFAULT_PREFS>();
 
@@ -21,7 +21,7 @@ export async function GET() {
   }
 
   const { data, error } = await server
-    .from('user_prefs')
+    .from(USER_PREFS_TABLE as never)
     .select('*')
     .eq('user_id', user_id)
     .maybeSingle();
@@ -47,7 +47,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  const { error } = await server.from('user_prefs').upsert(upsert);
+  const { error } = await server
+    .from(USER_PREFS_TABLE as never)
+    .upsert(upsert as never);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

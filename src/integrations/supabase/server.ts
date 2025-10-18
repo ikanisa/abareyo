@@ -1,9 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
+
+import { getSupabaseSecretKey, getSupabaseUrl } from './env';
 import type { Database } from './types';
 
 export const createServiceSupabaseClient = () => {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = getSupabaseUrl();
+  const key = getSupabaseSecretKey();
   if (!url || !key) {
     return null;
   }

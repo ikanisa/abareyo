@@ -1,14 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
+import { createServiceSupabaseClient } from "@/integrations/supabase/server";
 
 const createServiceClient = () => {
-  const url = process.env.SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_ANON_KEY;
-  if (!url || !serviceKey) {
-    return null;
-  }
-  return createClient(url, serviceKey, {
-    auth: { persistSession: false },
-  });
+  return createServiceSupabaseClient();
 };
 
 export type TicketRecordWithRelations = {

@@ -30,6 +30,7 @@ This document captures the remaining production-readiness work for the Supabase 
   - `STRIPE_SECRET_KEY` (if Stripe wrapper is enabled)
   - Slack / Teams webhook URLs for alerts
   - `OPENAI_API_KEY`, `SMS_WEBHOOK_TOKEN`, etc. (migrate existing plain secrets)
+- Use the `SITE_SUPABASE_URL` / `SITE_SUPABASE_PUBLISHABLE_KEY` / `SITE_SUPABASE_SECRET_KEY` aliases when storing Supabase credentials in Vault or via the CLI (`SUPABASE_*` names are reserved).
 - Mirror the same secrets in Vercel / Kubernetes manifests and document rotation cadence.
 - Configure alerts for secrets expiring or being rotated.
 
@@ -101,4 +102,3 @@ This document captures the remaining production-readiness work for the Supabase 
 | Runbook & governance docs | Ops | ☐ | Publish in `docs/operations` |
 
 Keep this checklist up to date as each task progresses. Mark items complete in PR descriptions and reference supporting commits/migrations for traceability.
-

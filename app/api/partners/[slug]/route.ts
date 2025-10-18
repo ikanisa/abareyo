@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+import { getSupabasePublishableKey, getSupabaseUrl } from '@/integrations/supabase/env';
+
+const supabaseUrl = getSupabaseUrl();
+const supabaseAnonKey = getSupabasePublishableKey();
 const fallbackPartner = {
   id: 'demo-partner',
   name: 'Visit Rwanda',

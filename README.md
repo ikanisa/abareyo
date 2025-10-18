@@ -14,13 +14,18 @@ Create a root `.env` file with the following values. Keys prefixed with `NEXT_PU
 
 ```
 SUPABASE_URL=
-SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SECRET_KEY=
+# legacy fallbacks still supported during migration:
+# SUPABASE_ANON_KEY=
+# SUPABASE_SERVICE_ROLE_KEY=
 SUPABASE_PROJECT_REF=
 SMS_WEBHOOK_TOKEN=
 NEXT_PUBLIC_BACKEND_URL=http://localhost:3000
 NEXT_PUBLIC_ENVIRONMENT_LABEL=local
 ```
+
+> Supabase reserves the `SUPABASE_*` prefix for its own managed secrets when using the CLI/Vault. When setting project secrets via `supabase secrets set`, use the `SITE_SUPABASE_URL`, `SITE_SUPABASE_PUBLISHABLE_KEY`, and `SITE_SUPABASE_SECRET_KEY` aliases (they are automatically picked up by the codebase).
 
 ## Local Setup
 1. Install dependencies:

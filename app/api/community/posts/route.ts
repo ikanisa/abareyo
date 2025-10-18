@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServiceSupabaseClient } from '@/integrations/supabase/server';
 
 type CommunityPostRecord = {
   id: string;
@@ -11,9 +11,8 @@ type CommunityPostRecord = {
   created_at: string;
 };
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const server = supabaseUrl && supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : null;
+const server = createServiceSupabaseClient();
+const COMMUNITY_POSTS_TABLE = 'community_posts';
 
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -34,7 +33,7 @@ export async function GET() {
   }
 
   const { data, error } = await server
-    .from('community_posts')
+    .from(COMMUNITY_POSTS_TABLE as never)
     .select('id,user_id,text,media_url,status,created_at')
     .eq('status', 'visible')
     .order('created_at', { ascending: false })
@@ -75,8 +74,8 @@ export async function POST(request: Request) {
   }
 
   const { data, error } = await server
-    .from('community_posts')
-    .insert({ user_id: DEMO_USER_ID, text, media_url: mediaUrl ?? undefined })
+    .from(COMMUNITY_POSTS_TABLE as never)
+    .insert({ user_id: DEMO_USER_ID, text, media_url: mediaUrl ?? undefined } as never)
     .select('id,user_id,text,media_url,status,created_at')
     .single();
 

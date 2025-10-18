@@ -4,7 +4,7 @@ Use this checklist before pushing the Rayon Sports fan experience to production 
 
 ## 1. Source & Dependency Hygiene
 - Ensure dependency tree resolves with `npm install --legacy-peer-deps` (temporary workaround until Capacitor peer conflicts are fixed). Commit the resulting `package-lock.json` if changes are expected.
-- Confirm environment variables for production (`NEXT_PUBLIC_BACKEND_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_TELEMETRY_URL`, plus any analytics tokens) are present in your deployment platform. `NEXT_PUBLIC_BACKEND_URL` must be an absolute HTTPS URL when configured in Vercel.
+- Confirm environment variables for production (`NEXT_PUBLIC_BACKEND_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_TELEMETRY_URL`, plus any analytics tokens) are present in your deployment platform. `NEXT_PUBLIC_BACKEND_URL` must be an absolute HTTPS URL when configured in Vercel.
 - Run `npm run lint` (no warnings tolerated) and `npm run test` locally. The latter performs the type-check plus unit suites.
 - Enforce local quality gates by running `npm run setup:hooks` once; the repo-level pre-commit hook now executes `npm run lint` and `npm run test`.
 

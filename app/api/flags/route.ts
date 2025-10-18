@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+import { getSupabasePublishableKey, getSupabaseUrl } from '@/integrations/supabase/env';
+
 const DEFAULT_FLAGS = {
   'features.personalization': true,
   'features.liveScores': true,
@@ -14,8 +16,8 @@ const DEFAULT_FLAGS = {
 };
 
 export async function GET() {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+  const supabaseUrl = getSupabaseUrl();
+  const supabaseAnonKey = getSupabasePublishableKey();
 
   if (!supabaseUrl || !supabaseAnonKey) {
     return NextResponse.json({ flags: DEFAULT_FLAGS });

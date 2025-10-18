@@ -3,9 +3,16 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
+const rawSupabaseUrl = Deno.env.get("SITE_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL");
+const rawServiceKey =
+  Deno.env.get("SITE_SUPABASE_SECRET_KEY") ??
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ??
+  Deno.env.get("SUPABASE_SECRET_KEY");
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+
+if (!rawSupabaseUrl || !rawServiceKey || !OPENAI_API_KEY) {
+  throw new Error("Supabase URL, secret key, or OPENAI_API_KEY is missing");
+}
 
 type ParsedSMS = {
   amount?: number;
@@ -16,7 +23,7 @@ type ParsedSMS = {
   confidence?: number;
 };
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+const supabase = createClient(rawSupabaseUrl, rawServiceKey, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 

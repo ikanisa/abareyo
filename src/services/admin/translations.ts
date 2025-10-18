@@ -17,10 +17,12 @@ type TranslationQueryRow = {
 };
 
 export const listTranslationLanguages = async (): Promise<string[]> => {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  let client: ReturnType<typeof getServiceClient>;
+  try {
+    client = getServiceClient();
+  } catch {
     return ['en', 'rw'];
   }
-  const client = getServiceClient();
   const { data, error } = await client
     .from('translations')
     .select('lang')
@@ -42,10 +44,12 @@ export const fetchTranslationsPage = async (
   pageSize: number,
   search?: string,
 ): Promise<{ data: TranslationRow[]; total: number }> => {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  let client: ReturnType<typeof getServiceClient>;
+  try {
+    client = getServiceClient();
+  } catch {
     return { data: [], total: 0 };
   }
-  const client = getServiceClient();
   const start = (page - 1) * pageSize;
   const end = start + pageSize - 1;
 
@@ -80,10 +84,12 @@ export const fetchDictionary = async (
   lang: string,
   prefix?: string,
 ): Promise<Record<string, string>> => {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  let client: ReturnType<typeof getServiceClient>;
+  try {
+    client = getServiceClient();
+  } catch {
     return {};
   }
-  const client = getServiceClient();
   let query = client.from('translations').select('key, value').eq('lang', lang);
 
   if (prefix) {

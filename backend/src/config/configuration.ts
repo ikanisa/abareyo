@@ -50,8 +50,11 @@ export default () => ({
     },
   },
   supabase: {
-    url: process.env.SUPABASE_URL,
-    serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    url: process.env.SITE_SUPABASE_URL ?? process.env.SUPABASE_URL,
+    serviceRoleKey:
+      process.env.SITE_SUPABASE_SECRET_KEY ??
+      process.env.SUPABASE_SECRET_KEY ??
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
   },
   fan: {
     session: {

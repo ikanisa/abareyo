@@ -6,7 +6,7 @@ Required runtime env vars
 
 - Backend (NestJS)
   - SUPABASE_URL (Supabase project URL)
-  - SUPABASE_SERVICE_ROLE_KEY (Supabase service role key)
+  - SUPABASE_SECRET_KEY (Supabase secret key; legacy `SUPABASE_SERVICE_ROLE_KEY` still supported during migration)
   - APP_HOST, APP_PORT (optional; defaults 0.0.0.0:5000)
   - CORS_ORIGIN (comma-separated allowlist; no wildcard in prod)
   - BACKEND_BASE_URL (public URL of API)
@@ -24,11 +24,17 @@ Required runtime env vars
 
 - Frontend (Next.js)
   - NEXT_PUBLIC_SUPABASE_URL (Supabase project URL)
-  - NEXT_PUBLIC_SUPABASE_ANON_KEY (Supabase anonymous public key)
+  - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (Supabase publishable key; legacy `NEXT_PUBLIC_SUPABASE_ANON_KEY` supported for backwards compatibility)
   - NEXT_PUBLIC_BACKEND_URL (points at /api gateway that fronts Nest API; must be an absolute HTTPS URL in hosted environments)
   - NEXT_PUBLIC_TELEMETRY_URL (optional override for telemetry beacons; defaults to `/api/telemetry/app-state`)
   - NEXT_PUBLIC_ENVIRONMENT_LABEL (optional ribbon)
   - NEXT_PUBLIC_ADMIN_SESSION_COOKIE (optional; default admin_session)
+
+- Supabase Edge Functions / Vault secrets
+  - SITE_SUPABASE_URL (custom prefix required because Supabase reserves `SUPABASE_*`)
+  - SITE_SUPABASE_PUBLISHABLE_KEY (publishable key shared with the frontend)
+  - SITE_SUPABASE_SECRET_KEY (service/secret key used by edge functions)
+  - Any additional provider secrets (`SMS_WEBHOOK_TOKEN`, `OPENAI_API_KEY`, etc.)
 
 Seed and migrations
 

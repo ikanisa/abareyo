@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const server = supabaseUrl && supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : null;
+import { createServiceSupabaseClient } from '@/integrations/supabase/server';
+
+const server = createServiceSupabaseClient();
 
 export async function POST(
   _request: Request,
@@ -19,7 +18,9 @@ export async function POST(
     return NextResponse.json({ ok: true }, { status: 201 });
   }
 
-  const { error } = await server.from('community_reports').insert({ post_id: id, reason: 'user_flagged' });
+  const { error } = await server
+    .from('community_reports' as never)
+    .insert({ post_id: id, reason: 'user_flagged' } as never);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

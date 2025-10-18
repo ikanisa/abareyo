@@ -2,11 +2,15 @@ import { createClient } from '@supabase/supabase-js';
 import { randomUUID } from 'crypto';
 import type { Database } from '../src/integrations/supabase/types';
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_URL =
+  process.env.SITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SERVICE_ROLE =
+  process.env.SITE_SUPABASE_SECRET_KEY ??
+  process.env.SUPABASE_SECRET_KEY ??
+  process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!SUPABASE_URL || !SERVICE_ROLE) {
-  throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set to run the seed script');
+  throw new Error('Supabase URL and secret key must be set to run the seed script');
 }
 
 const supabase = createClient<Database>(SUPABASE_URL, SERVICE_ROLE, {
