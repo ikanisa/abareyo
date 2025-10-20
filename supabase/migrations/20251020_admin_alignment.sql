@@ -114,7 +114,33 @@ CREATE TABLE IF NOT EXISTS match_gates (
 
 -- === TICKETS ==============================================================
 ALTER TABLE ticket_orders
-  ALTER COLUMN status TYPE ticket_order_status USING status::ticket_order_status,
+  DROP CONSTRAINT IF EXISTS ticket_orders_status_check;
+
+DO $do$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'ticket_orders'
+      AND column_name = 'status'
+  ) AND NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'ticket_orders'
+      AND column_name = 'status'
+      AND data_type = 'USER-DEFINED'
+      AND udt_name = 'ticket_order_status'
+  ) THEN
+    EXECUTE 'alter table ticket_orders alter column status drop default';
+    EXECUTE 'alter table ticket_orders alter column status type ticket_order_status using status::ticket_order_status';
+    EXECUTE 'alter table ticket_orders alter column status set default ''pending''::ticket_order_status';
+  END IF;
+END
+$do$;
+
+ALTER TABLE ticket_orders
   ADD COLUMN IF NOT EXISTS sms_ref text,
   ADD COLUMN IF NOT EXISTS expires_at timestamptz,
   ADD COLUMN IF NOT EXISTS ussd_code text;
@@ -202,12 +228,55 @@ BEGIN
 END $$;
 
 -- === PAYMENTS =============================================================
-UPDATE payments SET kind = 'shop' WHERE kind IN ('purchase', 'membership');
-UPDATE payments SET kind = 'ticket' WHERE kind NOT IN ('shop', 'deposit', 'policy') AND kind IS NOT NULL;
+UPDATE payments SET kind = 'shop' WHERE kind::text IN ('purchase', 'membership');
+UPDATE payments SET kind = 'ticket' WHERE kind::text NOT IN ('shop', 'deposit', 'policy') AND kind IS NOT NULL;
+
+DO $do$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'payments'
+      AND column_name = 'kind'
+  ) AND NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'payments'
+      AND column_name = 'kind'
+      AND data_type = 'USER-DEFINED'
+      AND udt_name = 'payment_kind'
+  ) THEN
+    EXECUTE 'alter table payments drop constraint if exists payments_kind_check';
+    EXECUTE 'alter table payments alter column kind drop default';
+    EXECUTE 'alter table payments alter column kind type payment_kind using kind::payment_kind';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'payments'
+      AND column_name = 'status'
+  ) AND NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'payments'
+      AND column_name = 'status'
+      AND data_type = 'USER-DEFINED'
+      AND udt_name = 'payment_status'
+  ) THEN
+    EXECUTE 'alter table payments drop constraint if exists payments_status_check';
+    EXECUTE 'alter table payments alter column status drop default';
+    EXECUTE 'alter table payments alter column status type payment_status using status::payment_status';
+    EXECUTE 'alter table payments alter column status set default ''pending''::payment_status';
+  END IF;
+END
+$do$;
 
 ALTER TABLE payments
-  ALTER COLUMN kind TYPE payment_kind USING kind::payment_kind,
-  ALTER COLUMN status TYPE payment_status USING status::payment_status,
   ADD COLUMN IF NOT EXISTS ticket_order_id uuid,
   ADD COLUMN IF NOT EXISTS order_id uuid,
   ADD COLUMN IF NOT EXISTS metadata jsonb DEFAULT '{}'::jsonb;
@@ -220,27 +289,38 @@ ALTER TABLE payments
 DO $$
 DECLARE
   has_transactions boolean;
+  has_legacy_kind boolean;
 BEGIN
   SELECT EXISTS (
     SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='transactions'
   ) INTO has_transactions;
   IF has_transactions THEN
-    INSERT INTO payments (id, kind, amount, status, ticket_order_id, created_at, metadata)
-    SELECT
-      id,
-      CASE
-        WHEN kind = 'purchase' THEN 'shop'::payment_kind
-        WHEN kind = 'deposit' THEN 'deposit'::payment_kind
+    SELECT EXISTS (
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema='public'
+        AND table_name='transactions'
+        AND column_name='kind'
+    ) INTO has_legacy_kind;
+
+    IF has_legacy_kind THEN
+      INSERT INTO payments (id, kind, amount, status, ticket_order_id, created_at, metadata)
+      SELECT
+        t.id,
+        CASE
+          WHEN t.kind = 'purchase' THEN 'shop'::payment_kind
+        WHEN t.kind = 'deposit' THEN 'deposit'::payment_kind
         ELSE 'ticket'::payment_kind
       END,
-      amount,
-      COALESCE(status, 'pending')::payment_status,
+      t.amount,
+      'pending'::payment_status,
       NULL,
-      created_at,
-      jsonb_build_object('legacy_ref', ref, 'legacy_user_id', user_id)
-    FROM transactions
+      t.created_at,
+      jsonb_build_object('legacy_ref', t.ref, 'legacy_user_id', t.user_id)
+    FROM transactions t
     ON CONFLICT (id) DO NOTHING;
     ALTER TABLE transactions RENAME TO transactions_legacy;
+    END IF;
   END IF;
 END $$;
 
@@ -369,4 +449,3 @@ FROM (VALUES
   ('admin.manage', 'Manage admin users and roles')
 ) AS perms(key, description)
 ON CONFLICT (key) DO NOTHING;
-

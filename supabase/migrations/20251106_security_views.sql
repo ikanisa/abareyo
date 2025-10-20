@@ -117,7 +117,14 @@ begin
     execute $users_public$
       create policy p_users_public_profiles on public.users
         for select using (
-          coalesce(public_profile, false)
+          (
+            case
+              when jsonb_typeof(public_profile) = 'object' then coalesce((public_profile ->> 'isPublic')::boolean, false)
+              when public_profile = 'true'::jsonb then true
+              when public_profile = 'false'::jsonb then false
+              else false
+            end
+          )
           and coalesce(current_setting('request.jwt.claim.role', true), '') in ('anon', 'authenticated')
         );
     $users_public$;
@@ -264,31 +271,45 @@ begin
 end $$;
 
 -- Member directory columns and public view.
-alter table if exists public.users
-  add column if not exists display_name text,
-  add column if not exists region text,
-  add column if not exists fan_club text,
-  add column if not exists public_profile boolean default false,
-  add column if not exists language text default 'rw',
-  add column if not exists joined_at timestamptz default now();
+do $do$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'users'
+      and column_name = 'public_profile'
+      and data_type = 'boolean'
+  ) then
+    execute 'alter table if exists public.users add column if not exists display_name text';
+    execute 'alter table if exists public.users add column if not exists region text';
+    execute 'alter table if exists public.users add column if not exists fan_club text';
+    execute 'alter table if exists public.users add column if not exists public_profile boolean default false';
+    execute 'alter table if exists public.users add column if not exists language text default ''rw''';
+    execute 'alter table if exists public.users add column if not exists joined_at timestamptz default now()';
 
-update public.users set joined_at = coalesce(joined_at, now()) where joined_at is null;
-update public.users set language = coalesce(language, 'rw') where language is null;
-update public.users set public_profile = coalesce(public_profile, false) where public_profile is null;
+    execute 'update public.users set joined_at = coalesce(joined_at, now()) where joined_at is null';
+    execute 'update public.users set language = coalesce(language, ''rw'') where language is null';
+    execute 'update public.users set public_profile = coalesce(public_profile, false) where public_profile is null';
 
-drop view if exists public.public_members;
-create view public.public_members as
-select
-  id,
-  coalesce(display_name, name, 'Fan') as display_name,
-  coalesce(region, '—') as region,
-  coalesce(fan_club, '—') as fan_club,
-  joined_at,
-  coalesce(avatar_url, '') as avatar_url
-from public.users
-where coalesce(public_profile, false) is true;
+    execute 'drop view if exists public.public_members';
+    execute $view$
+      create view public.public_members as
+      select
+        id,
+        coalesce(display_name, name, ''Fan'') as display_name,
+        coalesce(region, ''—'') as region,
+        coalesce(fan_club, ''—'') as fan_club,
+        joined_at,
+        coalesce(avatar_url, '''') as avatar_url
+      from public.users
+      where coalesce(public_profile, false) is true
+    $view$;
 
-grant select on public.public_members to anon, authenticated;
+    execute 'grant select on public.public_members to anon, authenticated';
+  end if;
+end
+$do$;
 
 -- Admin dashboard views.
 create or replace view admin_dashboard_kpis as

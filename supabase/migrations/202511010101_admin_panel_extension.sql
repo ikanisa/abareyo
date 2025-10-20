@@ -3,7 +3,38 @@
 
 create extension if not exists "pgcrypto";
 
--- USERS & PROFILES -------------------------------------------------------
+DO $do$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'users'
+      AND column_name = 'public_profile'
+  ) AND EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'users'
+      AND column_name = 'public_profile'
+      AND data_type <> 'jsonb'
+  ) THEN
+    EXECUTE 'drop view if exists public.public_members';
+    EXECUTE 'alter table public.users alter column public_profile drop default';
+    EXECUTE $sql$
+      alter table public.users
+        alter column public_profile
+        type jsonb
+        using case
+          when public_profile is null then '{}'::jsonb
+          else jsonb_build_object('isPublic', public_profile::boolean)
+        end
+    $sql$;
+    EXECUTE 'alter table public.users alter column public_profile set default ''{}''::jsonb';
+  END IF;
+END
+$do$;
+
 alter table if exists public.users
   add column if not exists public_profile jsonb default '{}'::jsonb;
 
@@ -172,6 +203,10 @@ create table if not exists public.admin_roles (
   created_at timestamptz default now()
 );
 
+alter table if exists public.admin_roles
+  add column if not exists description text,
+  add column if not exists created_at timestamptz default now();
+
 create table if not exists public.admin_role_permissions (
   role_id uuid references public.admin_roles(id) on delete cascade,
   permission_id uuid references public.admin_permissions(id) on delete cascade,
@@ -194,6 +229,13 @@ create table if not exists public.feature_flags (
   updated_by uuid references public.admin_users(id) on delete set null,
   context jsonb default '{}'::jsonb
 );
+
+alter table if exists public.feature_flags
+  add column if not exists enabled boolean default false,
+  add column if not exists description text,
+  add column if not exists updated_at timestamptz default now(),
+  add column if not exists updated_by uuid references public.admin_users(id) on delete set null,
+  add column if not exists context jsonb default '{}'::jsonb;
 
 create table if not exists public.translations (
   id uuid primary key default gen_random_uuid(),
@@ -272,9 +314,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'ticket_orders' AND policyname = 'ticket_orders_owner'
   ) THEN
-    EXECUTE $$create policy ticket_orders_owner on public.ticket_orders
-      for select using (auth.uid() = user_id)
-      with check (auth.uid() = user_id);$$;
+    EXECUTE 'create policy ticket_orders_owner on public.ticket_orders for all using (auth.uid() = user_id) with check (auth.uid() = user_id)';
   END IF;
 END $$;
 
@@ -283,9 +323,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'orders' AND policyname = 'orders_owner'
   ) THEN
-    EXECUTE $$create policy orders_owner on public.orders
-      for select using (auth.uid() = user_id)
-      with check (auth.uid() = user_id);$$;
+    EXECUTE 'create policy orders_owner on public.orders for all using (auth.uid() = user_id) with check (auth.uid() = user_id)';
   END IF;
 END $$;
 
@@ -294,9 +332,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'sacco_deposits' AND policyname = 'sacco_deposits_owner'
   ) THEN
-    EXECUTE $$create policy sacco_deposits_owner on public.sacco_deposits
-      for select using (auth.uid() = user_id)
-      with check (auth.uid() = user_id);$$;
+    EXECUTE 'create policy sacco_deposits_owner on public.sacco_deposits for all using (auth.uid() = user_id) with check (auth.uid() = user_id)';
   END IF;
 END $$;
 
@@ -305,8 +341,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'rewards_events' AND policyname = 'rewards_events_owner'
   ) THEN
-    EXECUTE $$create policy rewards_events_owner on public.rewards_events
-      for select using (auth.uid() = user_id);$$;
+    EXECUTE 'create policy rewards_events_owner on public.rewards_events for select using (auth.uid() = user_id)';
   END IF;
 END $$;
 
@@ -315,9 +350,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'community_posts' AND policyname = 'community_posts_owner'
   ) THEN
-    EXECUTE $$create policy community_posts_owner on public.community_posts
-      for select using (auth.uid() = user_id)
-      with check (auth.uid() = user_id);$$;
+    EXECUTE 'create policy community_posts_owner on public.community_posts for all using (auth.uid() = user_id) with check (auth.uid() = user_id)';
   END IF;
 END $$;
 
@@ -459,4 +492,3 @@ where not exists (select 1 from public.feature_flags where key = 'admin.module.o
 insert into public.feature_flags(key, enabled, description)
 select 'admin.module.admin', true, 'Admin configuration module'
 where not exists (select 1 from public.feature_flags where key = 'admin.module.admin');
-

@@ -1,8 +1,29 @@
 -- Additional ticketing and transactions enhancements
 set search_path = public;
 
-create type if not exists ticket_order_status as enum ('pending','paid','cancelled','expired');
-create type if not exists transaction_status as enum ('pending','confirmed','failed','manual_review');
+do $do$
+begin
+  if not exists (
+    select 1
+    from pg_type t
+    join pg_namespace n on n.oid = t.typnamespace
+    where t.typname = 'ticket_order_status'
+      and n.nspname = 'public'
+  ) then
+    execute $$create type ticket_order_status as enum ('pending','paid','cancelled','expired')$$;
+  end if;
+
+  if not exists (
+    select 1
+    from pg_type t
+    join pg_namespace n on n.oid = t.typnamespace
+    where t.typname = 'transaction_status'
+      and n.nspname = 'public'
+  ) then
+    execute $$create type transaction_status as enum ('pending','confirmed','failed','manual_review')$$;
+  end if;
+end
+$do$;
 
 alter table matches
   add column if not exists blue_price int,
