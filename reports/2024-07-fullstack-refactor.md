@@ -40,6 +40,9 @@ focusing on three areas:
 - Replaced the legacy Supabase bootstrapper used by remaining admin APIs with
   a thin wrapper around the shared service client, preventing future drift
   even before every route is migrated.
+- Normalised the typed Supabase schema to include admin RBAC tables and
+  metadata (permissions, role links, timestamps), unblocking type-safe usage of
+  the shared service client in the migrated routes.
 
 ## Follow-Ups
 - Expand unit coverage around the new helpers (e.g. mock Supabase env states).

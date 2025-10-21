@@ -69,18 +69,111 @@ export type Database = {
       }
       admin_roles: {
         Row: {
+          created_at: string
+          description: string | null
           id: string
           name: string
         }
         Insert: {
+          created_at?: string
+          description?: string | null
           id?: string
           name: string
         }
         Update: {
+          created_at?: string
+          description?: string | null
           id?: string
           name?: string
         }
         Relationships: []
+      }
+      admin_permissions: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      admin_role_permissions: {
+        Row: {
+          created_at: string
+          permission_id: string
+          role_id: string
+        }
+        Insert: {
+          created_at?: string
+          permission_id: string
+          role_id: string
+        }
+        Update: {
+          created_at?: string
+          permission_id?: string
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_role_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "admin_permissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "admin_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_user_roles: {
+        Row: {
+          admin_user_id: string
+          assigned_at: string | null
+          role_id: string
+        }
+        Insert: {
+          admin_user_id: string
+          assigned_at?: string | null
+          role_id: string
+        }
+        Update: {
+          admin_user_id?: string
+          assigned_at?: string | null
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_user_roles_admin_user_id_fkey"
+            columns: ["admin_user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_user_roles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "admin_roles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       admin_sessions: {
         Row: {
@@ -150,14 +243,17 @@ export type Database = {
       admin_users_roles: {
         Row: {
           admin_user_id: string
+          assigned_at: string | null
           role_id: string
         }
         Insert: {
           admin_user_id: string
+          assigned_at?: string | null
           role_id: string
         }
         Update: {
           admin_user_id?: string
+          assigned_at?: string | null
           role_id?: string
         }
         Relationships: [
