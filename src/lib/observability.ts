@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
+import { clientEnv, serverEnv } from "@/config/env";
 
 type TelemetryEvent = {
   type: string;
@@ -6,8 +7,8 @@ type TelemetryEvent = {
   [key: string]: unknown;
 };
 
-const SENTRY_ENABLED = Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN);
-const DEFAULT_TELEMETRY_ENDPOINT = process.env.NEXT_PUBLIC_TELEMETRY_URL || "/api/telemetry/app-state";
+const SENTRY_ENABLED = Boolean(clientEnv.NEXT_PUBLIC_SENTRY_DSN || serverEnv.SENTRY_DSN);
+const DEFAULT_TELEMETRY_ENDPOINT = clientEnv.NEXT_PUBLIC_TELEMETRY_URL || "/api/telemetry/app-state";
 
 const isBrowser = typeof window !== "undefined";
 

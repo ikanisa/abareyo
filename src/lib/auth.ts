@@ -1,8 +1,9 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { serverEnv } from "@/config/env";
 
-const ADMIN_COOKIE_NAME = process.env.NEXT_PUBLIC_ADMIN_SESSION_COOKIE ?? "admin_session";
-const BACKEND_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
+const ADMIN_COOKIE_NAME = serverEnv.NEXT_PUBLIC_ADMIN_SESSION_COOKIE ?? "admin_session";
+const BACKEND_BASE = serverEnv.NEXT_PUBLIC_BACKEND_URL;
 const FALLBACK_BACKEND = "/api";
 
 export async function redirectIfAuthenticated(destination = "/staff") {
@@ -22,7 +23,7 @@ export async function redirectIfAuthenticated(destination = "/staff") {
       redirect(destination);
     }
   } catch (error) {
-    if (process.env.NODE_ENV !== "production") {
+    if (serverEnv.NODE_ENV !== "production") {
       console.warn("redirectIfAuthenticated check failed", error);
     }
   }

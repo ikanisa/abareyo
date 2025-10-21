@@ -33,7 +33,9 @@ export interface SendOnboardingMessageRequest {
 
 // Default to Next.js local API (/api). In production, set NEXT_PUBLIC_BACKEND_URL
 // to your external API base (e.g., https://api.example.com/api).
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? '/api';
+import { clientEnv } from "@/config/env";
+
+const BASE_URL = clientEnv.NEXT_PUBLIC_BACKEND_URL ?? '/api';
 
 const buildUrl = (path: string) => `${BASE_URL.replace(/\/$/, '')}${path}`;
 
@@ -42,7 +44,7 @@ async function apiJson<T>(path: string, init?: RequestInit) {
     ...init,
     headers: {
       'content-type': 'application/json',
-      'authorization': `Bearer ${process.env.NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN ?? ''}`,
+      'authorization': `Bearer ${clientEnv.NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN ?? ''}`,
       ...(init?.headers ?? {}),
     },
     cache: 'no-store',

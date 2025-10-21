@@ -1,7 +1,9 @@
-const FALLBACK_PORT = process.env.PORT ?? "3000";
+import { serverEnv } from "@/config/env";
+
+const FALLBACK_PORT = serverEnv.PORT ?? "3000";
 
 const resolveFallbackOrigin = () => {
-  const vercelUrl = process.env.VERCEL_URL?.trim();
+  const vercelUrl = serverEnv.VERCEL_URL?.trim();
   if (vercelUrl) {
     const normalized = vercelUrl.startsWith("http") ? vercelUrl : `https://${vercelUrl}`;
     return normalized.replace(/\/$/, "");
@@ -12,7 +14,7 @@ const resolveFallbackOrigin = () => {
 const fallbackOrigin = resolveFallbackOrigin();
 
 const resolveBackendBase = () => {
-  const raw = process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
+  const raw = serverEnv.NEXT_PUBLIC_BACKEND_URL?.trim();
   if (!raw) {
     return fallbackOrigin;
   }

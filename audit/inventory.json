@@ -1,0 +1,60 @@
+{
+  "repository": "abareyo",
+  "packageManager": {
+    "name": "npm",
+    "version": "11.4.2",
+    "lockfiles": [
+      "package-lock.json",
+      "backend/package-lock.json"
+    ],
+    "notes": "corepack-enabled workspace; bun.lockb present but superseded by npm lockfiles"
+  },
+  "node": {
+    "preferred": "20",
+    "rootEngine": ">=20.0.0 <21",
+    "backendEngine": null,
+    "notes": "Align Vercel and CI on Node 20.x"
+  },
+  "apps": [
+    {
+      "name": "web",
+      "path": "./",
+      "framework": "Next.js 14.2 (App Router)",
+      "devCommand": "npm run dev",
+      "buildCommand": "npm run build",
+      "startCommand": "npm run start",
+      "envSamples": [
+        ".env.production.example"
+      ],
+      "port": 3000,
+      "dependencies": [
+        "@sentry/nextjs",
+        "@supabase/supabase-js",
+        "next-axiom"
+      ]
+    },
+    {
+      "name": "backend",
+      "path": "backend",
+      "framework": "NestJS 11 (Fastify)",
+      "devCommand": "npm run start:dev",
+      "buildCommand": "npm run build",
+      "startCommand": "npm run start",
+      "envSamples": [],
+      "port": 5000,
+      "dependencies": [
+        "@nestjs/platform-fastify",
+        "@prisma/client",
+        "bullmq"
+      ]
+    }
+  ],
+  "packages": [
+    {
+      "name": "@rayon/contracts",
+      "path": "packages/contracts",
+      "type": "shared TypeScript contracts",
+      "entry": "src/index.ts"
+    }
+  ]
+}
