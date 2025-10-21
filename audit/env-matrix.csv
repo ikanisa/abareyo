@@ -1,0 +1,86 @@
+name,scope,exposed_to,required,default,notes
+NEXT_PUBLIC_SUPABASE_URL,frontend,client,yes,,Supabase project URL for client SDK; pulled into Supabase client helpers.
+NEXT_PUBLIC_SUPABASE_ANON_KEY,frontend,client,yes,,Anon/public key for Supabase auth.
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,frontend,client,conditional,,Either this or `NEXT_PUBLIC_SUPABASE_ANON_KEY` accepted by current clients.
+SITE_SUPABASE_URL,frontend,server,conditional,,Server-side fallback URL before client env resolves.
+SITE_SUPABASE_SECRET_KEY,frontend,server,yes,,Used for service role operations during seeds and API calls.
+SITE_SUPABASE_PUBLISHABLE_KEY,frontend,server,optional,,Legacy fallback for publishable key resolution.
+SUPABASE_URL,frontend,server,optional,,Fallback environment for Supabase helper modules.
+SUPABASE_ANON_KEY,frontend,server,optional,,Fallback env for Supabase client when public key missing.
+SUPABASE_PUBLISHABLE_KEY,frontend,server,optional,,Legacy fallback for public Supabase key.
+SUPABASE_SECRET_KEY,frontend,server,optional,,Fallback for service secret if SITE_ vars absent.
+SUPABASE_SERVICE_ROLE_KEY,shared,server,yes,,Required for Supabase admin operations (api + scripts).
+SUPABASE_SERVICE_KEY,frontend,server,optional,,Legacy fallback consumed in integrations env helper.
+VITE_SUPABASE_URL,frontend,client,optional,,Legacy fallback from Vite builds.
+VITE_SUPABASE_PUBLISHABLE_KEY,frontend,client,optional,,Legacy fallback from Vite builds.
+NEXT_PUBLIC_BACKEND_URL,frontend,client,yes,,Absolute base URL for REST requests and admin auth flows.
+NEXT_PUBLIC_SITE_URL,frontend,client,yes,,Used for metadata base + canonical links; configure per environment.
+NEXT_PUBLIC_ENVIRONMENT_LABEL,frontend,client,yes,,Label for telemetry + UI badges.
+NEXT_PUBLIC_FEATURE_FLAGS,frontend,client,optional,"{}",JSON string of feature flags.
+NEXT_PUBLIC_SOCKET_TRANSPORT,frontend,client,optional,"polling",Controls socket.io transport preference.
+NEXT_PUBLIC_SOCKET_PATH,frontend,client,optional,,Overrides socket.io namespace path when provided.
+NEXT_PUBLIC_TELEMETRY_URL,frontend,client,optional,"/api/telemetry/app-state",Custom telemetry endpoint.
+NEXT_PUBLIC_SENTRY_DSN,frontend,client,conditional,,Client SDK DSN; otherwise use server DSN fallback.
+SENTRY_DSN,shared,server,conditional,,Server DSN required if client DSN missing.
+SENTRY_TRACES_SAMPLE_RATE,shared,server,optional,"0.1",Override Sentry trace sampling.
+SENTRY_REPLAYS_SESSION_SAMPLE_RATE,frontend,client,optional,"0.05",Sentry session replay sampling.
+SENTRY_REPLAYS_ERROR_SAMPLE_RATE,frontend,client,optional,"1.0",Sentry error replay sampling.
+NEXT_PUBLIC_ADMIN_SESSION_COOKIE,frontend,client,optional,"admin_session",Aligns with backend admin session cookie.
+NEXT_PUBLIC_ADMIN_API_TOKEN,frontend,client,optional,,Used when calling admin APIs directly from browser.
+NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN,frontend,client,yes,,Public token for onboarding APIs.
+ONBOARDING_API_TOKEN,shared,server,yes,,Private token required by onboarding API routes.
+NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK,frontend,client,optional,,Enable mock onboarding responses when set to `1`.
+ONBOARDING_ALLOW_MOCK,frontend,server,optional,,Server toggle for onboarding mocks.
+NEXT_PUBLIC_OPENAI_BASE_URL,frontend,client,optional,"https://api.openai.com/v1",Overrides OpenAI base URL.
+OPENAI_API_KEY,shared,server,yes,,Used by API routes and backend for AI responses.
+AGENT_ID,frontend,server,optional,"gikundiro-onboarding",Onboarding agent identifier.
+NEXT_PUBLIC_VERCEL_URL,frontend,client,optional,,Automatically set by Vercel for preview metadata.
+VERCEL_URL,frontend,server,conditional,,Used to build canonical URLs during SSR when NEXT_PUBLIC_SITE_URL missing.
+PORT,frontend,server,optional,"3000",Fallback for local dev port.
+NEXT_PHASE,frontend,server,optional,,Injected by Next.js build process.
+NEXT_RUNTIME,frontend,server,optional,,Injected by Next.js runtime.
+CI,frontend,server,optional,,Set by CI environments.
+E2E_API_MOCKS,frontend,server,optional,,Toggles API mocks during Playwright tests.
+BACKEND_BASE_URL,backend,server,yes,,Public base URL used to construct canonical links.
+APP_HOST,backend,server,optional,"0.0.0.0",Fastify listen address.
+APP_PORT,backend,server,optional,"5000",Port for backend service.
+APP_LOG_LEVEL,backend,server,optional,"info",Pino logging level.
+APP_ENABLE_CSP,backend,server,optional,,Enable CSP response headers when `1`.
+CORS_ORIGIN,backend,server,optional,"http://localhost:3000",Allowed CORS origin.
+DATABASE_URL,backend,server,yes,,Primary Postgres connection string.
+DATABASE_SHADOW_URL,backend,server,conditional,,Shadow DB for Prisma migrations.
+REDIS_URL,backend,server,yes,,Redis connection used by queues and sessions.
+S3_ENDPOINT,backend,server,conditional,,S3-compatible endpoint for media storage.
+S3_REGION,backend,server,conditional,,Region for S3 bucket when endpoint requires it.
+S3_BUCKET,backend,server,conditional,,Bucket name for media uploads.
+S3_PUBLIC_BASE_URL,backend,server,optional,,Public CDN/base URL for generated assets.
+S3_ACCESS_KEY_ID,backend,server,conditional,,Access key for S3 provider.
+S3_SECRET_ACCESS_KEY,backend,server,conditional,,Secret access key for S3 provider.
+OPENAI_BASE_URL,backend,server,optional,,Overrides OpenAI API base.
+OPENAI_ONBOARDING_MODEL,backend,server,optional,"gpt-4.1-mini",Model selection for onboarding flows.
+SMS_WEBHOOK_TOKEN,backend,server,conditional,,Shared secret validating inbound SMS webhooks.
+SMS_PARSE_CONFIDENCE_THRESHOLD,backend,server,optional,"0.65",Threshold for SMS intent parsing.
+MTN_MOMO_PAY_CODE,backend,server,optional,"0700XXXXXX",Display label for MTN MoMo payments.
+AIRTEL_MONEY_PAY_CODE,backend,server,optional,"0700XXXXXX",Display label for Airtel Money payments.
+ADMIN_API_TOKEN,backend,server,conditional,,Server-to-server token gating admin APIs.
+ADMIN_SESSION_COOKIE,backend,server,optional,"admin_session",Cookie name for admin session.
+ADMIN_SESSION_SECRET,backend,server,yes,,Encryption secret for admin session cookies.
+ADMIN_SESSION_TTL_HOURS,backend,server,optional,"24",TTL for admin sessions.
+ADMIN_SESSION_COOKIE_DOMAIN,backend,server,optional,,Overrides cookie domain for admin session.
+ADMIN_DEFAULT_EMAIL,backend,server,conditional,,Seed admin email when auto-creating account.
+ADMIN_DEFAULT_PASSWORD,backend,server,conditional,,Seed admin password when auto-creating account.
+ADMIN_DEFAULT_NAME,backend,server,optional,"System Admin",Seed admin display name.
+ADMIN_SEED_EMAIL,backend,server,optional,,Alternate admin seeding credentials.
+ADMIN_SEED_PASSWORD_HASH,backend,server,optional,,Pre-hashed admin password for seeds.
+ADMIN_SEED_NAME,backend,server,optional,,Preconfigured admin name for seeds.
+FAN_SESSION_COOKIE,backend,server,optional,"fan_session",Cookie name for fan sessions.
+FAN_SESSION_SECRET,backend,server,yes,,Session secret for fan cookie encryption.
+FAN_SESSION_TTL_HOURS,backend,server,optional,"720",TTL for fan sessions.
+FAN_SESSION_COOKIE_DOMAIN,backend,server,optional,,Cookie domain override for fan sessions.
+METRICS_TOKEN,backend,server,optional,,Bearer token for metrics endpoint.
+SITE_SUPABASE_URL,backend,server,yes,,Shared Supabase URL for backend service operations.
+SITE_SUPABASE_SECRET_KEY,backend,server,yes,,Service role key required for backend Supabase operations.
+SUPABASE_SERVICE_ROLE_KEY,backend,server,yes,,Used interchangeably with SITE_SUPABASE_SECRET_KEY.
+SUPABASE_URL,backend,server,optional,,Legacy fallback for Supabase URL.
+SUPABASE_SECRET_KEY,backend,server,optional,,Legacy fallback for service key.
+root@e78af5dc3aac:/workspace/abareyo#

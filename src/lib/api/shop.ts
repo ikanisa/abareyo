@@ -1,4 +1,6 @@
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api';
+import { clientEnv } from "@/config/env";
+
+const BASE_URL = clientEnv.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api';
 
 export interface ShopProduct {
   id: string;

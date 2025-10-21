@@ -1,0 +1,40 @@
+name: Vercel Preview Build
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Pull Vercel environment
+        run: npx vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Validate environment schema
+        run: node scripts/check-frontend-env.mjs
+
+      - name: Build preview bundle
+        run: npx vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vercel-build-logs
+          path: .vercel/output/logs
+          if-no-files-found: warn

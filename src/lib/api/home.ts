@@ -77,7 +77,9 @@ export type HomeSurfaceData = {
   };
 };
 
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "/api";
+import { clientEnv } from "@/config/env";
+
+const BASE_URL = clientEnv.NEXT_PUBLIC_BACKEND_URL ?? "/api";
 
 const buildUrl = (path: string) => `${BASE_URL.replace(/\/$/, "")}${path}`;
 

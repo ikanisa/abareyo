@@ -7,8 +7,9 @@ import { InstallPrompt, OfflineBanner } from "./_components/pwa/PwaHelpers";
 import BottomNavContainer from "./_components/BottomNavContainer";
 import { Suspense } from "react";
 import PageViewTracker from "./_components/telemetry/PageViewTracker";
+import { clientEnv } from "@/config/env";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+const siteUrl = clientEnv.NEXT_PUBLIC_SITE_URL;
 const metadataBase = (() => {
   if (!siteUrl) {
     return undefined;
