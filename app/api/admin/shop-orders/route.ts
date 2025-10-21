@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 
-import { getServiceClient } from '@/app/api/admin/_lib/db';
+import { respondWithSupabaseNotConfigured } from '@/app/admin/api/_lib/http';
 import { requireAdmin } from '@/app/api/admin/_lib/session';
 import type { Tables } from '@/integrations/supabase/types';
+import { AdminServiceClientUnavailableError, withAdminServiceClient } from '@/services/admin/service-client';
 
 type ShopOrderRow = Tables<'orders'> & {
   users: Pick<Tables<'users'>, 'id' | 'phone' | 'name'> | null;
@@ -68,43 +69,52 @@ export const GET = async (request: Request) => {
   const result = await requireAdmin(request, { permission: 'orders.read' });
   if ('response' in result) return result.response;
 
-  const client = getServiceClient();
   const { page, pageSize, status, search } = parsePagination(request);
 
-  let query = client
-    .from('orders')
-    .select(
-      'id, status, total, created_at, users:users(id, phone, name), order_items(id, qty, price, shop_products(id, name)), payments:payments!payments_order_id_fkey(id, amount, status, created_at)',
-      { count: 'exact' },
-    )
-    .order('created_at', { ascending: false });
+  try {
+    return await withAdminServiceClient(async (client) => {
+      let query = client
+        .from('orders')
+        .select(
+          'id, status, total, created_at, users:users(id, phone, name), order_items(id, qty, price, shop_products(id, name)), payments:payments!payments_order_id_fkey(id, amount, status, created_at)',
+          { count: 'exact' },
+        )
+        .order('created_at', { ascending: false });
 
-  const allowedStatuses = new Set(['pending', 'paid', 'ready', 'pickedup']);
-  const statusFilter =
-    status && allowedStatuses.has(status) ? (status as 'pending' | 'paid' | 'ready' | 'pickedup') : undefined;
-  if (statusFilter) {
-    query = query.eq('status', statusFilter);
-  }
+      const allowedStatuses = new Set(['pending', 'paid', 'ready', 'pickedup']);
+      const statusFilter =
+        status && allowedStatuses.has(status) ? (status as 'pending' | 'paid' | 'ready' | 'pickedup') : undefined;
+      if (statusFilter) {
+        query = query.eq('status', statusFilter);
+      }
 
-  if (search) {
-    const safe = search.trim();
-    if (safe) {
-      query = query.or(`id.eq.${safe}`);
+      if (search) {
+        const safe = search.trim();
+        if (safe) {
+          query = query.or(`id.eq.${safe}`);
+        }
+      }
+
+      const start = (page - 1) * pageSize;
+      const end = start + pageSize - 1;
+      const { data, error, count } = await query.range(start, end);
+
+      if (error) {
+        return NextResponse.json({ message: error.message }, { status: 500 });
+      }
+
+      const payload = (data ?? []).map((entry) => serializeOrder(entry as unknown as ShopOrderRow));
+      return NextResponse.json({
+        status: 'ok',
+        data: payload,
+        meta: { page, pageSize, total: count ?? payload.length },
+      });
+    });
+  } catch (error) {
+    if (error instanceof AdminServiceClientUnavailableError) {
+      return respondWithSupabaseNotConfigured();
     }
+    console.error('admin.shop-orders.fetch_failed', error);
+    return NextResponse.json({ message: 'Failed to load shop orders' }, { status: 500 });
   }
-
-  const start = (page - 1) * pageSize;
-  const end = start + pageSize - 1;
-  const { data, error, count } = await query.range(start, end);
-
-  if (error) {
-    return NextResponse.json({ message: error.message }, { status: 500 });
-  }
-
-  const payload = (data ?? []).map((entry) => serializeOrder(entry as unknown as ShopOrderRow));
-  return NextResponse.json({
-    status: 'ok',
-    data: payload,
-    meta: { page, pageSize, total: count ?? payload.length },
-  });
 };

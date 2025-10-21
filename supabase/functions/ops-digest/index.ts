@@ -1,20 +1,11 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const rawSupabaseUrl = Deno.env.get("SITE_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL");
-const rawServiceKey =
-  Deno.env.get("SITE_SUPABASE_SECRET_KEY") ??
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ??
-  Deno.env.get("SUPABASE_SECRET_KEY");
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+import { getOpenAiApiKey, requireEnv } from "../_shared/env.ts";
+import { getServiceRoleClient } from "../_shared/client.ts";
+import { json, jsonError } from "../_shared/http.ts";
 
-if (!rawSupabaseUrl || !rawServiceKey || !OPENAI_API_KEY) {
-  throw new Error("Supabase URL, secret key, or OPENAI_API_KEY is missing");
-}
-
-const supabase = createClient(rawSupabaseUrl, rawServiceKey, {
-  auth: { persistSession: false, autoRefreshToken: false },
-});
+const supabase = getServiceRoleClient();
+const OPENAI_API_KEY = requireEnv(getOpenAiApiKey(), "OPENAI_API_KEY");
 
 serve(async (_req) => {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -52,17 +43,11 @@ serve(async (_req) => {
   });
 
   if (!response.ok) {
-    return new Response(JSON.stringify({ error: await response.text() }), {
-      status: 502,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonError(await response.text(), 502);
   }
 
   const body = await response.json();
   const summary = body?.choices?.[0]?.message?.content ?? "";
 
-  return new Response(JSON.stringify({ summary }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
+  return json({ summary });
 });

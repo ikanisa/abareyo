@@ -1,28 +1,26 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
+import { getOpenAiApiKey, requireEnv } from "../_shared/env.ts";
+import { json, jsonError, parseJsonBody, requireMethod } from "../_shared/http.ts";
+
+const OPENAI_API_KEY = requireEnv(getOpenAiApiKey(), "OPENAI_API_KEY");
+
+type Payload = { text?: string };
 
 serve(async (req) => {
-  if (req.method !== "POST") {
-    return new Response("Method Not Allowed", { status: 405 });
+  const methodError = requireMethod(req, "POST");
+  if (methodError) {
+    return methodError;
   }
 
-  let payload: { text?: string };
-  try {
-    payload = await req.json();
-  } catch {
-    return new Response(JSON.stringify({ error: "invalid_json" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+  const parsed = await parseJsonBody<Payload>(req);
+  if (parsed.error) {
+    return parsed.error;
   }
 
-  const text = payload.text;
+  const text = parsed.data?.text;
   if (!text) {
-    return new Response(JSON.stringify({ error: "missing_text" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonError("missing_text", 400);
   }
 
   const res = await fetch("https://api.openai.com/v1/moderations", {
@@ -35,15 +33,9 @@ serve(async (req) => {
   });
 
   if (!res.ok) {
-    return new Response(JSON.stringify({ error: await res.text() }), {
-      status: 502,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonError(await res.text(), 502);
   }
 
   const output = await res.json();
-  return new Response(JSON.stringify(output), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
+  return json(output);
 });

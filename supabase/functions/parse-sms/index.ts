@@ -1,18 +1,13 @@
 // Route: POST /parse-sms
 // Body: { sms_id: uuid }
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const rawSupabaseUrl = Deno.env.get("SITE_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL");
-const rawServiceKey =
-  Deno.env.get("SITE_SUPABASE_SECRET_KEY") ??
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ??
-  Deno.env.get("SUPABASE_SECRET_KEY");
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+import { getOpenAiApiKey, requireEnv } from "../_shared/env.ts";
+import { getServiceRoleClient } from "../_shared/client.ts";
+import { json, jsonError, parseJsonBody, requireMethod } from "../_shared/http.ts";
 
-if (!rawSupabaseUrl || !rawServiceKey || !OPENAI_API_KEY) {
-  throw new Error("Supabase URL, secret key, or OPENAI_API_KEY is missing");
-}
+const supabase = getServiceRoleClient();
+const OPENAI_API_KEY = requireEnv(getOpenAiApiKey(), "OPENAI_API_KEY");
 
 type ParsedSMS = {
   amount?: number;
@@ -23,9 +18,7 @@ type ParsedSMS = {
   confidence?: number;
 };
 
-const supabase = createClient(rawSupabaseUrl, rawServiceKey, {
-  auth: { persistSession: false, autoRefreshToken: false },
-});
+type Payload = { sms_id?: string };
 
 function redactForModel(text: string) {
   return text.replace(/\b(\+?\d[\d\s-]{6,})\b/g, (match) => {
@@ -90,26 +83,19 @@ SMS: """${redactForModel(text)}"""`;
 }
 
 serve(async (req) => {
-  if (req.method !== "POST") {
-    return new Response("Method Not Allowed", { status: 405 });
+  const methodError = requireMethod(req, "POST");
+  if (methodError) {
+    return methodError;
   }
 
-  let body: { sms_id?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return new Response(JSON.stringify({ error: "invalid_json" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+  const parsed = await parseJsonBody<Payload>(req);
+  if (parsed.error) {
+    return parsed.error;
   }
 
-  const smsId = body.sms_id;
+  const smsId = parsed.data?.sms_id;
   if (!smsId) {
-    return new Response(JSON.stringify({ error: "missing_sms_id" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonError("missing_sms_id", 400);
   }
 
   const { data: sms, error: smsError } = await supabase
@@ -119,40 +105,31 @@ serve(async (req) => {
     .single();
 
   if (smsError || !sms) {
-    return new Response(JSON.stringify({ error: "sms_not_found" }), {
-      status: 404,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonError("sms_not_found", 404);
   }
 
-  let parsed: ParsedSMS = {};
+  let parsedSms: ParsedSMS = {};
   try {
-    parsed = await callOpenAI(sms.text);
+    parsedSms = await callOpenAI(sms.text);
   } catch (err) {
-    return new Response(JSON.stringify({ error: (err as Error).message }), {
-      status: 502,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonError((err as Error).message, 502);
   }
 
   const { data: row, error } = await supabase
     .from("sms_parsed")
     .insert({
       sms_id: sms.id,
-      amount: parsed.amount ?? 0,
-      currency: parsed.currency ?? "RWF",
-      payer_mask: parsed.payer_mask ?? null,
-      ref: parsed.ref ?? null,
-      confidence: parsed.confidence ?? 0.5,
+      amount: parsedSms.amount ?? 0,
+      currency: parsedSms.currency ?? "RWF",
+      payer_mask: parsedSms.payer_mask ?? null,
+      ref: parsedSms.ref ?? null,
+      confidence: parsedSms.confidence ?? 0.5,
     })
     .select()
     .single();
 
   if (error || !row) {
-    return new Response(JSON.stringify({ error: error?.message ?? "insert_failed" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonError(error?.message ?? "insert_failed", 500);
   }
 
   try {
@@ -167,8 +144,5 @@ serve(async (req) => {
     // swallow; matching can be retried manually.
   }
 
-  return new Response(JSON.stringify({ ok: true, sms_parsed_id: row.id }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
+  return json({ ok: true, sms_parsed_id: row.id });
 });

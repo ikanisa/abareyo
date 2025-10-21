@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { createServiceSupabaseClient } from '@/integrations/supabase/server';
-
-const createSupabaseClient = () => {
-  return createServiceSupabaseClient();
-};
+import { withAdminServiceClient } from '@/services/admin/service-client';
 
 type PromotionRow = {
   id: string;
@@ -55,155 +51,161 @@ async function audit(action: string, before: PromotionRow | null, after: Promoti
   }
 }
 
+const supabaseUnavailable = () => NextResponse.json({ error: 'supabase_not_configured' }, { status: 500 });
+
 export async function GET() {
-  const db = createSupabaseClient();
-  if (!db) {
-    return NextResponse.json({ error: 'supabase_not_configured' }, { status: 500 });
-  }
-  const now = new Date().toISOString();
-  const { data, error } = await db
-    .from('shop_promotions')
-    .select('*')
-    .order('starts_at', { ascending: false });
+  return withAdminServiceClient(
+    async (db) => {
+      const now = new Date().toISOString();
+      const { data, error } = await db
+        .from('shop_promotions')
+        .select('*')
+        .order('starts_at', { ascending: false });
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
 
-  const promotions: PromotionResponse[] = (data ?? []).map((row) => ({
-    ...row,
-    active: row.starts_at <= now && row.ends_at >= now,
-  }));
+      const promotions: PromotionResponse[] = (data ?? []).map((row) => ({
+        ...row,
+        active: row.starts_at <= now && row.ends_at >= now,
+      }));
 
-  return NextResponse.json({ promotions });
+      return NextResponse.json({ promotions });
+    },
+    { fallback: supabaseUnavailable },
+  );
 }
 
 export async function POST(request: Request) {
-  const db = createSupabaseClient();
-  if (!db) {
-    return NextResponse.json({ error: 'supabase_not_configured' }, { status: 500 });
-  }
-  let payload: PromotionPayload;
-  try {
-    payload = (await request.json()) as PromotionPayload;
-  } catch {
-    return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
-  }
+  return withAdminServiceClient(
+    async (db) => {
+      let payload: PromotionPayload;
+      try {
+        payload = (await request.json()) as PromotionPayload;
+      } catch {
+        return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
+      }
 
-  const adminId = payload.adminId ?? payload.admin_id ?? null;
+      const adminId = payload.adminId ?? payload.admin_id ?? null;
 
-  const insertPayload = {
-    title: payload.title ?? '',
-    description: payload.description ?? null,
-    discount_pct: payload.discount_pct ?? null,
-    product_ids: payload.product_ids ?? [],
-    starts_at: payload.starts_at ?? new Date().toISOString(),
-    ends_at: payload.ends_at ?? new Date(Date.now() + 86_400_000).toISOString(),
-  };
+      const insertPayload = {
+        title: payload.title ?? '',
+        description: payload.description ?? null,
+        discount_pct: payload.discount_pct ?? null,
+        product_ids: payload.product_ids ?? [],
+        starts_at: payload.starts_at ?? new Date().toISOString(),
+        ends_at: payload.ends_at ?? new Date(Date.now() + 86_400_000).toISOString(),
+      };
 
-  if (!insertPayload.title.trim()) {
-    return NextResponse.json({ error: 'title_required' }, { status: 400 });
-  }
+      if (!insertPayload.title.trim()) {
+        return NextResponse.json({ error: 'title_required' }, { status: 400 });
+      }
 
-  const { data, error } = await db
-    .from('shop_promotions')
-    .insert(insertPayload)
-    .select()
-    .single();
+      const { data, error } = await db
+        .from('shop_promotions')
+        .insert(insertPayload)
+        .select()
+        .single();
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
 
-  await audit('promotion_create', null, data as PromotionRow, adminId);
+      await audit('promotion_create', null, data as PromotionRow, adminId);
 
-  return NextResponse.json({ ok: true, promotion: data });
+      return NextResponse.json({ ok: true, promotion: data });
+    },
+    { fallback: supabaseUnavailable },
+  );
 }
 
 export async function PATCH(request: Request) {
-  const db = createSupabaseClient();
-  if (!db) {
-    return NextResponse.json({ error: 'supabase_not_configured' }, { status: 500 });
-  }
-  let payload: PromotionPayload;
-  try {
-    payload = (await request.json()) as PromotionPayload;
-  } catch {
-    return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
-  }
+  return withAdminServiceClient(
+    async (db) => {
+      let payload: PromotionPayload;
+      try {
+        payload = (await request.json()) as PromotionPayload;
+      } catch {
+        return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
+      }
 
-  if (!payload.id) {
-    return NextResponse.json({ error: 'missing_id' }, { status: 400 });
-  }
+      if (!payload.id) {
+        return NextResponse.json({ error: 'missing_id' }, { status: 400 });
+      }
 
-  const adminId = payload.adminId ?? payload.admin_id ?? null;
+      const adminId = payload.adminId ?? payload.admin_id ?? null;
 
-  const { data: before, error: beforeError } = await db
-    .from('shop_promotions')
-    .select('*')
-    .eq('id', payload.id)
-    .maybeSingle();
+      const { data: before, error: beforeError } = await db
+        .from('shop_promotions')
+        .select('*')
+        .eq('id', payload.id)
+        .maybeSingle();
 
-  if (beforeError) {
-    return NextResponse.json({ error: beforeError.message }, { status: 500 });
-  }
+      if (beforeError) {
+        return NextResponse.json({ error: beforeError.message }, { status: 500 });
+      }
 
-  if (!before) {
-    return NextResponse.json({ error: 'promotion_not_found' }, { status: 404 });
-  }
+      if (!before) {
+        return NextResponse.json({ error: 'promotion_not_found' }, { status: 404 });
+      }
 
-  const updates = { ...payload };
-  delete (updates as Record<string, unknown>).id;
-  delete (updates as Record<string, unknown>).adminId;
-  delete (updates as Record<string, unknown>).admin_id;
+      const updates = { ...payload };
+      delete (updates as Record<string, unknown>).id;
+      delete (updates as Record<string, unknown>).adminId;
+      delete (updates as Record<string, unknown>).admin_id;
 
-  const { data, error } = await db
-    .from('shop_promotions')
-    .update(updates)
-    .eq('id', payload.id)
-    .select()
-    .single();
+      const { data, error } = await db
+        .from('shop_promotions')
+        .update(updates)
+        .eq('id', payload.id)
+        .select()
+        .single();
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
 
-  await audit('promotion_update', before as PromotionRow, data as PromotionRow, adminId);
+      await audit('promotion_update', before as PromotionRow, data as PromotionRow, adminId);
 
-  return NextResponse.json({ ok: true, promotion: data });
+      return NextResponse.json({ ok: true, promotion: data });
+    },
+    { fallback: supabaseUnavailable },
+  );
 }
 
 export async function DELETE(request: Request) {
-  const db = createSupabaseClient();
-  if (!db) {
-    return NextResponse.json({ error: 'supabase_not_configured' }, { status: 500 });
-  }
-  const url = new URL(request.url);
-  const id = url.searchParams.get('id');
-  if (!id) {
-    return NextResponse.json({ error: 'missing_id' }, { status: 400 });
-  }
+  return withAdminServiceClient(
+    async (db) => {
+      const url = new URL(request.url);
+      const id = url.searchParams.get('id');
+      if (!id) {
+        return NextResponse.json({ error: 'missing_id' }, { status: 400 });
+      }
 
-  const { data: before, error: beforeError } = await db
-    .from('shop_promotions')
-    .select('*')
-    .eq('id', id)
-    .maybeSingle();
+      const { data: before, error: beforeError } = await db
+        .from('shop_promotions')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
 
-  if (beforeError) {
-    return NextResponse.json({ error: beforeError.message }, { status: 500 });
-  }
+      if (beforeError) {
+        return NextResponse.json({ error: beforeError.message }, { status: 500 });
+      }
 
-  if (!before) {
-    return NextResponse.json({ error: 'promotion_not_found' }, { status: 404 });
-  }
+      if (!before) {
+        return NextResponse.json({ error: 'promotion_not_found' }, { status: 404 });
+      }
 
-  const { error } = await db.from('shop_promotions').delete().eq('id', id);
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+      const { error } = await db.from('shop_promotions').delete().eq('id', id);
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
 
-  await audit('promotion_delete', before as PromotionRow, null, null);
+      await audit('promotion_delete', before as PromotionRow, null, null);
 
-  return NextResponse.json({ ok: true });
+      return NextResponse.json({ ok: true });
+    },
+    { fallback: supabaseUnavailable },
+  );
 }

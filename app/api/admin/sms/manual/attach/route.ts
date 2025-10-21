@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 
 import { writeAuditLog } from '@/app/api/admin/_lib/audit';
-import { getServiceClient } from '@/app/api/admin/_lib/db';
+import { respondWithSupabaseNotConfigured } from '@/app/admin/api/_lib/http';
 import { requireAdmin } from '@/app/api/admin/_lib/session';
+import { AdminServiceClientUnavailableError, withAdminServiceClient } from '@/services/admin/service-client';
 
 export const POST = async (request: Request) => {
   const result = await requireAdmin(request, { permission: 'sms.attach' });
@@ -22,54 +23,63 @@ export const POST = async (request: Request) => {
     return NextResponse.json({ message: 'smsId and paymentId are required' }, { status: 400 });
   }
 
-  const client = getServiceClient();
-  const { data: sms, error: smsError } = await client.from('sms_parsed').select('*').eq('id', smsId).maybeSingle();
-  if (smsError) {
-    return NextResponse.json({ message: smsError.message }, { status: 500 });
+  try {
+    return await withAdminServiceClient(async (client) => {
+      const { data: sms, error: smsError } = await client.from('sms_parsed').select('*').eq('id', smsId).maybeSingle();
+      if (smsError) {
+        return NextResponse.json({ message: smsError.message }, { status: 500 });
+      }
+      if (!sms) {
+        return NextResponse.json({ message: 'SMS record not found' }, { status: 404 });
+      }
+
+      const { data: payment, error: paymentError } = await client
+        .from('payments')
+        .select('*')
+        .eq('id', paymentId)
+        .maybeSingle();
+      if (paymentError) {
+        return NextResponse.json({ message: paymentError.message }, { status: 500 });
+      }
+      if (!payment) {
+        return NextResponse.json({ message: 'Payment not found' }, { status: 404 });
+      }
+
+      await client
+        .from('payments')
+        .update({ status: 'confirmed', sms_parsed_id: smsId })
+        .eq('id', paymentId);
+
+      if (payment.ticket_order_id) {
+        await client.from('ticket_orders').update({ status: 'paid', sms_ref: sms.ref }).eq('id', payment.ticket_order_id);
+        await client.from('ticket_passes').update({ state: 'active' }).eq('order_id', payment.ticket_order_id);
+      }
+
+      if (payment.order_id) {
+        await client.from('orders').update({ status: 'paid', momo_ref: sms.ref }).eq('id', payment.order_id);
+      }
+
+      await client
+        .from('sms_parsed')
+        .update({ matched_entity: `payment:${paymentId}` })
+        .eq('id', smsId);
+
+      await writeAuditLog({
+        adminId: result.context.user.id,
+        action: 'sms.attach',
+        entityType: 'payment',
+        entityId: paymentId,
+        before: { payment, sms },
+        request,
+      });
+
+      return NextResponse.json({ status: 'ok' });
+    });
+  } catch (error) {
+    if (error instanceof AdminServiceClientUnavailableError) {
+      return respondWithSupabaseNotConfigured();
+    }
+    console.error('admin.sms.attach_failed', error);
+    return NextResponse.json({ message: 'Failed to attach SMS to payment' }, { status: 500 });
   }
-  if (!sms) {
-    return NextResponse.json({ message: 'SMS record not found' }, { status: 404 });
-  }
-
-  const { data: payment, error: paymentError } = await client
-    .from('payments')
-    .select('*')
-    .eq('id', paymentId)
-    .maybeSingle();
-  if (paymentError) {
-    return NextResponse.json({ message: paymentError.message }, { status: 500 });
-  }
-  if (!payment) {
-    return NextResponse.json({ message: 'Payment not found' }, { status: 404 });
-  }
-
-  await client
-    .from('payments')
-    .update({ status: 'confirmed', sms_parsed_id: smsId })
-    .eq('id', paymentId);
-
-  if (payment.ticket_order_id) {
-    await client.from('ticket_orders').update({ status: 'paid', sms_ref: sms.ref }).eq('id', payment.ticket_order_id);
-    await client.from('ticket_passes').update({ state: 'active' }).eq('order_id', payment.ticket_order_id);
-  }
-
-  if (payment.order_id) {
-    await client.from('orders').update({ status: 'paid', momo_ref: sms.ref }).eq('id', payment.order_id);
-  }
-
-  await client
-    .from('sms_parsed')
-    .update({ matched_entity: `payment:${paymentId}` })
-    .eq('id', smsId);
-
-  await writeAuditLog({
-    adminId: result.context.user.id,
-    action: 'sms.attach',
-    entityType: 'payment',
-    entityId: paymentId,
-    before: { payment, sms },
-    request,
-  });
-
-  return NextResponse.json({ status: 'ok' });
 };

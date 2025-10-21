@@ -1,21 +1,11 @@
 // Route: POST /match-payment
 // Body: { sms_parsed_id: uuid }
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const SUPABASE_URL = Deno.env.get("SITE_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL");
-const SERVICE_KEY =
-  Deno.env.get("SITE_SUPABASE_SECRET_KEY") ??
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ??
-  Deno.env.get("SUPABASE_SECRET_KEY");
+import { getServiceRoleClient } from "../_shared/client.ts";
+import { json, jsonError, parseJsonBody, requireMethod } from "../_shared/http.ts";
 
-if (!SUPABASE_URL || !SERVICE_KEY) {
-  throw new Error("Supabase URL or secret key is missing");
-}
-
-const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false },
-});
+const supabase = getServiceRoleClient();
 
 type TicketOrder = {
   id: string;
@@ -24,27 +14,23 @@ type TicketOrder = {
   status: string;
 };
 
+type Payload = { sms_parsed_id?: string };
+
 serve(async (req) => {
-  if (req.method !== "POST") {
-    return new Response("Method Not Allowed", { status: 405 });
+  const methodError = requireMethod(req, "POST");
+  if (methodError) {
+    return methodError;
   }
 
-  let payload: { sms_parsed_id?: string };
-  try {
-    payload = await req.json();
-  } catch {
-    return new Response(JSON.stringify({ error: "invalid_json" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+  const parsed = await parseJsonBody<Payload>(req);
+  if (parsed.error) {
+    return parsed.error;
   }
 
+  const payload = parsed.data ?? {};
   const smsParsedId = payload.sms_parsed_id;
   if (!smsParsedId) {
-    return new Response(JSON.stringify({ error: "missing_sms_parsed_id" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonError("missing_sms_parsed_id", 400);
   }
 
   const { data: sp, error: spError } = await supabase
@@ -54,10 +40,7 @@ serve(async (req) => {
     .single();
 
   if (spError || !sp) {
-    return new Response(JSON.stringify({ error: "parsed_not_found" }), {
-      status: 404,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonError("parsed_not_found", 404);
   }
 
   const amount = sp.amount ?? 0;
@@ -71,15 +54,12 @@ serve(async (req) => {
 
   const existingPayment = existingPayments?.[0];
   if (existingPayment) {
-    return new Response(
-      JSON.stringify({
-        ok: true,
-        kind: existingPayment.kind,
-        order_id: existingPayment.order_id,
-        reused: true,
-      }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
-    );
+    return json({
+      ok: true,
+      kind: existingPayment.kind,
+      order_id: existingPayment.order_id,
+      reused: true,
+    });
   }
 
   const { data: orders } = await supabase
@@ -142,10 +122,7 @@ serve(async (req) => {
   });
 
   if (paymentError) {
-    return new Response(JSON.stringify({ error: paymentError.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonError(paymentError.message, 500);
   }
 
   try {
@@ -163,16 +140,10 @@ serve(async (req) => {
     // Realtime fanout is best-effort.
   }
 
-  return new Response(
-    JSON.stringify({
-      ok: true,
-      kind,
-      order_id: orderId,
-      matched_entity: matchedEntity,
-    }),
-    {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    },
-  );
+  return json({
+    ok: true,
+    kind,
+    order_id: orderId,
+    matched_entity: matchedEntity,
+  });
 });

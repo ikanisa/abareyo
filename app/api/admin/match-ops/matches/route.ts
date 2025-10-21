@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 
 import { writeAuditLog } from '@/app/api/admin/_lib/audit';
-import { getServiceClient } from '@/app/api/admin/_lib/db';
+import { respondWithSupabaseNotConfigured } from '@/app/admin/api/_lib/http';
 import { requireAdmin } from '@/app/api/admin/_lib/session';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
+import { AdminServiceClientUnavailableError, withAdminServiceClient } from '@/services/admin/service-client';
 
 type MatchRow = Tables<'matches'>;
 
@@ -56,64 +57,72 @@ export const GET = async (request: Request) => {
   const result = await requireAdmin(request);
   if ('response' in result) return result.response;
 
-  const client = getServiceClient();
-  const { data: matches, error } = await client
-    .from('matches')
-    .select(
-      'id, opponent, kickoff, venue, status, vip_price, regular_price, blue_price, seats_vip, seats_regular, seats_blue',
-    )
-    .order('kickoff', { ascending: true });
+  try {
+    return await withAdminServiceClient(async (client) => {
+      const { data: matches, error } = await client
+        .from('matches')
+        .select(
+          'id, opponent, kickoff, venue, status, vip_price, regular_price, blue_price, seats_vip, seats_regular, seats_blue',
+        )
+        .order('kickoff', { ascending: true });
 
-  if (error) {
-    return NextResponse.json({ message: error.message }, { status: 500 });
-  }
+      if (error) {
+        return NextResponse.json({ message: error.message }, { status: 500 });
+      }
 
-  const ids = (matches ?? []).map((match) => match.id);
-  const zoneMap: Record<string, SerializedZone[]> = {};
-  const gateMap: Record<string, SerializedGate[]> = {};
+      const ids = (matches ?? []).map((match) => match.id);
+      const zoneMap: Record<string, SerializedZone[]> = {};
+      const gateMap: Record<string, SerializedGate[]> = {};
 
-  if (ids.length) {
-    const { data: zoneRows } = await client
-      .from('match_zones')
-      .select('id, match_id, name, capacity, price, default_gate')
-      .in('match_id', ids);
-    for (const zone of (zoneRows ?? []) as MatchZoneRow[]) {
-      zoneMap[zone.match_id] = zoneMap[zone.match_id] ?? [];
-      zoneMap[zone.match_id].push({
-        id: zone.id,
-        name: zone.name,
-        capacity: zone.capacity,
-        price: zone.price,
-        gate: zone.default_gate,
-        matchId: zone.match_id,
-      });
+      if (ids.length) {
+        const { data: zoneRows } = await client
+          .from('match_zones')
+          .select('id, match_id, name, capacity, price, default_gate')
+          .in('match_id', ids);
+        for (const zone of (zoneRows ?? []) as MatchZoneRow[]) {
+          zoneMap[zone.match_id] = zoneMap[zone.match_id] ?? [];
+          zoneMap[zone.match_id].push({
+            id: zone.id,
+            name: zone.name,
+            capacity: zone.capacity,
+            price: zone.price,
+            gate: zone.default_gate,
+            matchId: zone.match_id,
+          });
+        }
+
+        const { data: gateRows } = await client
+          .from('match_gates')
+          .select('id, match_id, name, location, max_throughput')
+          .in('match_id', ids);
+        for (const gate of (gateRows ?? []) as MatchGateRow[]) {
+          gateMap[gate.match_id] = gateMap[gate.match_id] ?? [];
+          gateMap[gate.match_id].push({
+            id: gate.id,
+            name: gate.name,
+            location: gate.location,
+            maxThroughput: gate.max_throughput,
+            matchId: gate.match_id,
+          });
+        }
+      }
+
+      const payload = (matches ?? []).map((match) => serializeMatch(match as MatchRow, zoneMap, gateMap));
+      return NextResponse.json({ status: 'ok', data: payload });
+    });
+  } catch (error) {
+    if (error instanceof AdminServiceClientUnavailableError) {
+      return respondWithSupabaseNotConfigured();
     }
-
-    const { data: gateRows } = await client
-      .from('match_gates')
-      .select('id, match_id, name, location, max_throughput')
-      .in('match_id', ids);
-    for (const gate of (gateRows ?? []) as MatchGateRow[]) {
-      gateMap[gate.match_id] = gateMap[gate.match_id] ?? [];
-      gateMap[gate.match_id].push({
-        id: gate.id,
-        name: gate.name,
-        location: gate.location,
-        maxThroughput: gate.max_throughput,
-        matchId: gate.match_id,
-      });
-    }
+    console.error('admin.match-ops.matches.fetch_failed', error);
+    return NextResponse.json({ message: 'Failed to load matches' }, { status: 500 });
   }
-
-  const payload = (matches ?? []).map((match) => serializeMatch(match as MatchRow, zoneMap, gateMap));
-  return NextResponse.json({ status: 'ok', data: payload });
 };
 
 export const POST = async (request: Request) => {
   const result = await requireAdmin(request, { permission: 'match.manage' });
   if ('response' in result) return result.response;
 
-  const client = getServiceClient();
   let body: Record<string, unknown>;
   try {
     body = (await request.json()) as Record<string, unknown>;
@@ -147,20 +156,30 @@ export const POST = async (request: Request) => {
     seats_blue: typeof body.seatsBlue === 'number' ? body.seatsBlue : 0,
   } satisfies TablesInsert<'matches'>;
 
-  const { data, error } = await client.from('matches').insert(insertPayload).select().single();
-  if (error || !data) {
-    return NextResponse.json({ message: error?.message ?? 'Failed to create match' }, { status: 500 });
+  try {
+    return await withAdminServiceClient(async (client) => {
+      const { data, error } = await client.from('matches').insert(insertPayload).select().single();
+      if (error || !data) {
+        return NextResponse.json({ message: error?.message ?? 'Failed to create match' }, { status: 500 });
+      }
+
+      await writeAuditLog({
+        adminId: result.context.user.id,
+        action: 'match.create',
+        entityType: 'match',
+        entityId: data.id,
+        after: data,
+        request,
+      });
+
+      const responsePayload = serializeMatch(data, {}, {});
+      return NextResponse.json({ status: 'ok', data: responsePayload }, { status: 201 });
+    });
+  } catch (error) {
+    if (error instanceof AdminServiceClientUnavailableError) {
+      return respondWithSupabaseNotConfigured();
+    }
+    console.error('admin.match-ops.matches.create_failed', error);
+    return NextResponse.json({ message: 'Failed to create match' }, { status: 500 });
   }
-
-  await writeAuditLog({
-    adminId: result.context.user.id,
-    action: 'match.create',
-    entityType: 'match',
-    entityId: data.id,
-    after: data,
-    request,
-  });
-
-  const responsePayload = serializeMatch(data, {}, {});
-  return NextResponse.json({ status: 'ok', data: responsePayload }, { status: 201 });
 };

@@ -1,21 +1,17 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const SUPABASE_URL = Deno.env.get("SITE_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL");
-const SERVICE =
-  Deno.env.get("SITE_SUPABASE_SECRET_KEY") ??
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ??
-  Deno.env.get("SUPABASE_SECRET_KEY");
+import { getServiceRoleClient } from "../_shared/client.ts";
+import { json, requireMethod } from "../_shared/http.ts";
 
-if (!SUPABASE_URL || !SERVICE) {
-  throw new Error("Supabase URL or secret key is missing");
-}
+const db = getServiceRoleClient();
 
-const db = createClient(SUPABASE_URL, SERVICE);
+serve(async (req) => {
+  const methodError = requireMethod(req, "POST");
+  if (methodError) {
+    return methodError;
+  }
 
-serve(async (_req) => {
-  console.log('[edge:issue-policy] start', { at: new Date().toISOString() });
-  // 1) Pull a small batch of paid quotes
+  console.log("[edge:issue-policy] start", { at: new Date().toISOString() });
   const { data: quotes, error } = await db
     .from("insurance_quotes")
     .select("*")
@@ -23,7 +19,7 @@ serve(async (_req) => {
     .limit(20);
 
   if (error) {
-    return new Response(JSON.stringify({ ok: false, error: error.message }), { status: 500 });
+    return json({ ok: false, error: error.message }, { status: 500 });
   }
 
   let inspected = 0;
@@ -31,15 +27,12 @@ serve(async (_req) => {
   let perkTickets = 0;
   const errors: Array<{ quote_id: string; step: string; message: string }> = [];
 
-  // Helpers
   const nowIso = () => new Date().toISOString();
-  const plusDaysIso = (days: number) =>
-    new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+  const plusDaysIso = (days: number) => new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 
   async function findNearestUpcomingMatch() {
     const now = nowIso();
 
-    // Try matches.date first
     const { data: byDate, error: dateErr } = await db
       .from("matches")
       .select("*")
@@ -49,7 +42,6 @@ serve(async (_req) => {
 
     if (!dateErr && byDate && byDate.length) return byDate[0];
 
-    // Fallback: matches.kickoff
     const { data: byKick, error: kickErr } = await db
       .from("matches")
       .select("*")
@@ -62,7 +54,6 @@ serve(async (_req) => {
   }
 
   async function hasExistingPerk(userId: string) {
-    // Check BOTH schemas for prior perk
     const { data: t1 } = await db
       .from("tickets")
       .select("id")
@@ -82,7 +73,6 @@ serve(async (_req) => {
   }
 
   async function grantPerkTicketNew(userId: string, matchId: string, policyId: string) {
-    // Create a zero-total paid order with sms_ref marker
     const { data: order, error: orderErr } = await db
       .from("ticket_orders")
       .insert({
@@ -97,8 +87,7 @@ serve(async (_req) => {
 
     if (orderErr || !order?.id) return false;
 
-    // Create one Blue pass; store a token hash (raw token or UUID)
-    const rawToken = crypto.randomUUID(); // Deno's global crypto
+    const rawToken = crypto.randomUUID();
     const { error: passErr } = await db
       .from("ticket_passes")
       .insert({
@@ -112,7 +101,6 @@ serve(async (_req) => {
 
     if (passErr) return false;
 
-    // Log event (best-effort)
     await db
       .from("rewards_events")
       .insert({
@@ -130,7 +118,6 @@ serve(async (_req) => {
   for (const q of quotes ?? []) {
     inspected++;
     try {
-      // Idempotency: if a policy already exists for this quote, ensure quote is issued and continue
       const { data: existingPol, error: exErr } = await db
         .from("policies")
         .select("id")
@@ -143,7 +130,6 @@ serve(async (_req) => {
       }
 
       if (!existingPol?.id) {
-        // Issue new policy
         const { data: pol, error: polErr } = await db
           .from("policies")
           .insert({
@@ -160,7 +146,6 @@ serve(async (_req) => {
           continue;
         }
 
-        // Update quote -> issued + perk flag
         const perkFlag = (q.premium ?? 0) >= 25_000;
         const { error: updErr } = await db
           .from("insurance_quotes")
@@ -173,7 +158,6 @@ serve(async (_req) => {
 
         issued++;
 
-        // Perk ticket grant (new policy path)
         if (perkFlag && q.user_id) {
           if (!(await hasExistingPerk(q.user_id))) {
             const match = await findNearestUpcomingMatch();
@@ -183,7 +167,6 @@ serve(async (_req) => {
           }
         }
       } else {
-        // Policy exists: make sure quote is marked issued and perk flag consistent
         const perkFlag = (q.premium ?? 0) >= 25_000;
         await db.from("insurance_quotes").update({ status: "issued", ticket_perk: perkFlag }).eq("id", q.id);
       }
@@ -197,15 +180,15 @@ serve(async (_req) => {
     }
   }
 
-  console.log('[edge:issue-policy] complete', { inspected, issued, perkTickets, errors: errors.length });
-  return new Response(
-    JSON.stringify({
+  console.log("[edge:issue-policy] complete", { inspected, issued, perkTickets, errors: errors.length });
+  return json(
+    {
       ok: true,
       inspected,
       issued,
       perkTickets,
       errors: errors.length ? errors : undefined,
-    }),
-    { status: 200, headers: { "content-type": "application/json" } },
+    },
+    { status: 200 },
   );
 });

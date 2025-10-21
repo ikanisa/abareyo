@@ -13,3 +13,6 @@ export const respond = <T>(data: T, init?: number) =>
 
 export const respondWithError = (code: string, message: string, status = 400, details?: Record<string, unknown>) =>
   NextResponse.json<AdminApiError>({ error: { code, message, details } }, { status });
+
+export const respondWithSupabaseNotConfigured = () =>
+  respondWithError('supabase_not_configured', 'Supabase service role credentials are missing', 500);
