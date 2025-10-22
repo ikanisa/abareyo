@@ -34,8 +34,6 @@ ONBOARDING_ALLOW_MOCK,frontend,server,optional,,Server toggle for onboarding moc
 NEXT_PUBLIC_OPENAI_BASE_URL,frontend,client,optional,"https://api.openai.com/v1",Overrides OpenAI base URL.
 OPENAI_API_KEY,shared,server,yes,,Used by API routes and backend for AI responses.
 AGENT_ID,frontend,server,optional,"gikundiro-onboarding",Onboarding agent identifier.
-NEXT_PUBLIC_VERCEL_URL,frontend,client,optional,,Automatically set by Vercel for preview metadata.
-VERCEL_URL,frontend,server,conditional,,Used to build canonical URLs during SSR when NEXT_PUBLIC_SITE_URL missing.
 PORT,frontend,server,optional,"3000",Fallback for local dev port.
 NEXT_PHASE,frontend,server,optional,,Injected by Next.js build process.
 NEXT_RUNTIME,frontend,server,optional,,Injected by Next.js runtime.

@@ -1,9 +1,11 @@
-# Vercel Deployment Checklist
+# Vercel Deployment Checklist (Retired)
 
-- [ ] Framework preset: Next.js 14 (App Router).
-- [x] Build command: `npm run build` (socket env guard satisfied via `npm run vercel:env:sync`).【F:src/config/client.ts†L23-L78】【F:scripts/vercel-generate-secrets.sh†L1-L163】
-- [ ] Output directory: default `.next/` (no custom export).
-- [ ] Node version: 20.x (update project settings; confirm runtime logs).
-- [x] Environment variables: provisioned via `npm run vercel:env:sync` (pushes backend, Supabase, telemetry, socket defaults to Vercel).【F:scripts/vercel-generate-secrets.sh†L1-L163】
-- [ ] Remove capacitor `next export` workflow for Vercel builds (use separate job for native bundles).【F:package.json†L7-L23】
-- [ ] Configure `NEXT_TELEMETRY_DISABLED=1` in CI as needed.
+The project no longer targets Vercel. Historical requirements are preserved below for reference but should not be used for new deployments. Supabase-managed hosting and the GitHub Actions preview workflow now cover build parity.
+
+- Framework preset: Next.js 14 (App Router).
+- Build command: `npm run build` (legacy entry). Secrets are now managed manually via `docs/supabase/vault-secret-map.md`.
+- Output directory: default `.next/`.
+- Node version: 20.x.
+- Legacy `npm run vercel:env:sync` script has been removed; follow the vault map for secret propagation.
+- Capacitor export workflow should remain separate from web deployments.
+- `NEXT_TELEMETRY_DISABLED=1` may still be set in CI as needed.

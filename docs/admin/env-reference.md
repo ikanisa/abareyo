@@ -1,7 +1,7 @@
 # Admin Environment Reference
 
 This document complements the root `.env.example`. Use it as a deployment
-checklist when wiring up Vercel, Supabase Vault, or local `.env.*.local`
+checklist when wiring up Supabase Vault or local `.env.*.local`
 overrides. Variables marked **_secret_** must never be committed to git.
 
 ## 1. Core Application
@@ -30,7 +30,7 @@ Configure *both* client and service credentials:
 | `SUPABASE_ACCESS_TOKEN` | CLI _secret_ | Required for `supabase db push` / migrations. |
 | `SUPABASE_DB_PASSWORD` | CLI _secret_ | Database password for local `psql` access. |
 
-> **Tip:** set `NEXT_PUBLIC_*` keys in Vercel and duplicate the service-role key
+> **Tip:** set `NEXT_PUBLIC_*` keys in your hosting platform and duplicate the service-role key
 in Supabase Vault for edge functions.
 
 ## 3. Sessions & Authentication
@@ -90,7 +90,7 @@ in Supabase Vault for edge functions.
 | `NEXT_PUBLIC_FEATURE_FLAGS` | Frontend | JSON string consumed by the client bootstrap. |
 | `FEATURE_FLAGS` | Backend | Legacy fallback for seed scripts. |
 | `E2E_API_MOCKS` | Tests | Set to `1` when running Playwright with mocked APIs. |
-| `CI` | CI | Auto-set in GitHub Actions/Vercel; included here for transparency. |
+| `CI` | CI | Auto-set in GitHub Actions; included here for transparency. |
 
 ## 9. Local Development Quickstart
 

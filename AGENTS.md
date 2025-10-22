@@ -8,7 +8,7 @@
 
 ## Build, Test, and Development Commands
 - `npm run dev` (or `make dev`) launches the frontend with Hot Module Reloading.
-- `npm run build` runs `next build` and is the Vercel parity check; ensure it stays green before pushing.
+- `npm run build` runs `next build` and mirrors the production bundle; ensure it stays green before pushing.
 - `npm run start` serves the production bundle locally.
 - `npm run lint`, `npm run type-check`, and `npm run test` (Vitest + type check) are required pre-merge quality gates; use `npm run test:e2e` for Playwright suites.
 - For backend migrations use `make backend-migrate`; seed data locally with `make backend-seed`.
@@ -24,6 +24,6 @@
 - Failing tests block CI; include regression coverage whenever fixing bugs or expanding navigation/locale behavior.
 
 ## Commit & Pull Request Guidelines
-- Commit messages are imperative and scoped (e.g., `Fix home route manifest path for Vercel`, `feat: finalize p3 resiliency and ops docs`). Stick to one functional change per commit.
+- Commit messages are imperative and scoped (e.g., `Fix home route manifest path`, `feat: finalize p3 resiliency and ops docs`). Stick to one functional change per commit.
 - PRs must include: concise summary, linked issue or plan entry, test evidence (`npm run build`, relevant suites), and screenshots for UI-facing changes (especially navigation and admin surfaces).
-- Flag configuration updates (env keys like `NEXT_PUBLIC_BACKEND_URL`) and coordinate with Vercel environment owners before merging.
+- Flag configuration updates (env keys like `NEXT_PUBLIC_BACKEND_URL`) and coordinate with operations owners before merging.

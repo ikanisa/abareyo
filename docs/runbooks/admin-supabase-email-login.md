@@ -8,17 +8,17 @@ The login page instantiates a Supabase browser client and forwards the resulting
 
 | Variable | Surface | Purpose |
 | --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Frontend (Vercel) | Supabase project URL used by the login form client.【F:app/admin/(auth)/login/page.tsx†L14-L37】 |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Frontend (Vercel) | Publishable key used to call `supabase.auth.signInWithPassword` (legacy `NEXT_PUBLIC_SUPABASE_ANON_KEY` still supported).【F:app/admin/(auth)/login/page.tsx†L14-L46】 |
-| `NEXT_PUBLIC_BACKEND_URL` | Frontend (Vercel) | Override for the API base URL; defaults to `/api` when unset.【F:app/admin/(auth)/login/page.tsx†L16-L71】 |
+| `NEXT_PUBLIC_SUPABASE_URL` | Frontend | Supabase project URL used by the login form client.【F:app/admin/(auth)/login/page.tsx†L14-L37】 |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Frontend | Publishable key used to call `supabase.auth.signInWithPassword` (legacy `NEXT_PUBLIC_SUPABASE_ANON_KEY` still supported).【F:app/admin/(auth)/login/page.tsx†L14-L46】 |
+| `NEXT_PUBLIC_BACKEND_URL` | Frontend | Override for the API base URL; defaults to `/api` when unset.【F:app/admin/(auth)/login/page.tsx†L16-L71】 |
 | `SUPABASE_URL` | Backend (NestJS) | Supabase project URL used by the service-role client that verifies the token and reads admin users.【F:backend/src/modules/admin/auth/supabase-admin-auth.service.ts†L10-L47】 |
 | `SUPABASE_SECRET_KEY` | Backend (NestJS) | Secret key required for `supabase.auth.getUser` and querying `admin_users` (legacy `SUPABASE_SERVICE_ROLE_KEY` still supported).【F:backend/src/modules/admin/auth/supabase-admin-auth.service.ts†L10-L47】 |
 | `ADMIN_SESSION_SECRET`, `FAN_SESSION_SECRET`, etc. | Backend (NestJS) | Secrets for signing session cookies. See [production-env.md](../production-env.md) for the complete list.【F:docs/production-env.md†L6-L33】 |
 | `ADMIN_DEFAULT_EMAIL`, `ADMIN_DEFAULT_PASSWORD`, `ADMIN_DEFAULT_NAME` | Backend (NestJS) & Frontend | Fallback credentials used to auto-bootstrap an admin account and service the Supabase login form (`bosco@ikanisa.com` / `MoMo!!0099`).【F:backend/src/modules/admin/auth/admin-auth.service.ts†L62-L119】 |
 
-### Vercel configuration
+### Frontend configuration
 
-1. Open *Project Settings → Environment Variables*.
+1. In your hosting provider, open the environment variable settings for the frontend project.
 2. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` with values from **Project Settings → API** in the Supabase dashboard.
 3. Add `NEXT_PUBLIC_BACKEND_URL` pointing to the deployed backend (for example `https://api.gikundiro.com`).
 4. Redeploy the Next.js app so the new variables are available to the login page.
@@ -67,7 +67,7 @@ To adopt a passwordless flow, replace the password submission with `supabase.aut
 
 | Symptom | Likely cause | Resolution |
 | --- | --- | --- |
-| "Supabase configuration is missing." | Frontend is missing one or both Supabase env vars. | Verify the Vercel variables for `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` are populated and redeploy.【F:app/admin/(auth)/login/page.tsx†L34-L39】 |
+| "Supabase configuration is missing." | Frontend is missing one or both Supabase env vars. | Verify the hosting environment variables for `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` are populated and redeploy.【F:app/admin/(auth)/login/page.tsx†L34-L39】 |
 | "Supabase did not return an access token." | Supabase rejected the credentials or the email is unconfirmed. | Confirm the email/password and check the user status in Supabase Auth.【F:app/admin/(auth)/login/page.tsx†L48-L61】 |
 | `Admin user not found` / `Admin user is disabled` | Backend could not find an active `admin_users` row. | Insert or activate the admin in Supabase using the steps above.【F:backend/src/modules/admin/auth/supabase-admin-auth.service.ts†L49-L123】 |
 | `Invalid Supabase access token` | Backend cannot validate the token (secret key missing or revoked). | Rotate `SUPABASE_SECRET_KEY` (or legacy `SUPABASE_SERVICE_ROLE_KEY`) and redeploy the backend.【F:backend/src/modules/admin/auth/supabase-admin-auth.service.ts†L24-L75】 |

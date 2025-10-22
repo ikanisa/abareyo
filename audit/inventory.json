@@ -13,7 +13,7 @@
     "preferred": "20",
     "rootEngine": ">=20.0.0 <21",
     "backendEngine": null,
-    "notes": "Align Vercel and CI on Node 20.x"
+    "notes": "Align CI environments on Node 20.x"
   },
   "apps": [
     {
@@ -29,8 +29,7 @@
       "port": 3000,
       "dependencies": [
         "@sentry/nextjs",
-        "@supabase/supabase-js",
-        "next-axiom"
+        "@supabase/supabase-js"
       ]
     },
     {

@@ -31,8 +31,7 @@
     "test:e2e:headed": "playwright test --headed",
     "setup:hooks": "git config core.hooksPath .githooks",
     "seed": "tsx scripts/seed.ts",
-    "ci:guard-payments": "tsx scripts/ci/assert-ussd-only.ts",
-    "vercel:env:sync": "bash scripts/vercel-generate-secrets.sh"
+    "ci:guard-payments": "tsx scripts/ci/assert-ussd-only.ts"
   },
   "dependencies": {
     "@capacitor/app": "^5.0.8",
@@ -84,7 +83,6 @@
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
     "next": "^14.2.33",
-    "next-axiom": "^1.9.2",
     "next-themes": "^0.3.0",
     "qrcode.react": "^3.1.0",
     "react": "^18.3.1",
