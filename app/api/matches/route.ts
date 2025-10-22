@@ -10,8 +10,6 @@ import {
   type Match,
 } from "@/app/_data/matches";
 
-export const runtime = "edge";
-
 type SupabaseMatchRow = {
   opponent?: string | null;
   home?: string | null;
@@ -34,7 +32,7 @@ async function fetchMatchesFromSupabase() {
 
   if (!url || !key) return null;
 
-  // Importing here keeps edge bundle smaller when not used.
+  // Importing here keeps the server bundle smaller when Supabase is not enabled.
   const { createClient } = await import("@supabase/supabase-js");
   const supabase = createClient(url, key, { auth: { persistSession: false } });
 

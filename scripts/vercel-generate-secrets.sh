@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Generate and add required Vercel env vars for this project.
+# Legacy helper retained for historical context: generates Vercel env vars
+# for this project. The primary deployment pipeline now uses hosting
+# platform runbooks instead. Only run this when backfilling the archived
+# Vercel setup.
 # - Requires: vercel CLI installed and logged in (vercel login)
 
 require_cmd() {
