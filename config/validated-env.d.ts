@@ -1,5 +1,7 @@
 export declare const serverEnv: {
   NODE_ENV: 'development' | 'test' | 'production';
+  APP_ENV: 'development' | 'preview' | 'production';
+  APP_BASE_URL?: string;
   NEXT_PUBLIC_SITE_URL?: string;
   NEXT_PUBLIC_BACKEND_URL: string;
   NEXT_PUBLIC_ENVIRONMENT_LABEL: string;
@@ -16,7 +18,7 @@ export declare const serverEnv: {
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE?: string;
   NEXT_PUBLIC_ADMIN_API_TOKEN?: string;
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK?: string;
-  VERCEL_URL?: string;
+  NEXT_PUBLIC_APP_ENV: 'development' | 'preview' | 'production';
   PORT?: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
   SITE_SUPABASE_URL: string;
@@ -39,8 +41,6 @@ export declare const serverEnv: {
   SENTRY_TRACES_SAMPLE_RATE?: string;
   SENTRY_REPLAYS_SESSION_SAMPLE_RATE?: string;
   SENTRY_REPLAYS_ERROR_SAMPLE_RATE?: string;
-  NEXT_PUBLIC_VERCEL_URL?: string;
-  VERCEL_AUTOMATION_BYPASS_SECRET?: string;
 };
 
 export declare const clientEnv: {
@@ -60,5 +60,5 @@ export declare const clientEnv: {
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE?: string;
   NEXT_PUBLIC_ADMIN_API_TOKEN?: string;
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK?: string;
-  NEXT_PUBLIC_VERCEL_URL?: string;
+  NEXT_PUBLIC_APP_ENV: 'development' | 'preview' | 'production';
 };
