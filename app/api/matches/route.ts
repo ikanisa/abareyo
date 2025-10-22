@@ -9,6 +9,7 @@ import {
   matchFeedUpdatedAt,
   type Match,
 } from "@/app/_data/matches";
+import { tryGetSupabaseServerAnonClient } from '@/lib/db';
 
 export const runtime = "edge";
 
@@ -20,23 +21,9 @@ type SupabaseMatchRow = {
 };
 
 async function fetchMatchesFromSupabase() {
-  const url = process.env.SITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  const key =
-    process.env.SITE_SUPABASE_PUBLISHABLE_KEY ??
-    process.env.SITE_SUPABASE_ANON_KEY ??
-    process.env.SITE_SUPABASE_SECRET_KEY ??
-    process.env.SUPABASE_PUBLISHABLE_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
-    process.env.SUPABASE_ANON_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-    process.env.SUPABASE_SECRET_KEY ??
-    process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabase = tryGetSupabaseServerAnonClient();
 
-  if (!url || !key) return null;
-
-  // Importing here keeps edge bundle smaller when not used.
-  const { createClient } = await import("@supabase/supabase-js");
-  const supabase = createClient(url, key, { auth: { persistSession: false } });
+  if (!supabase) return null;
 
   const { data, error } = await supabase
     .from("matches")

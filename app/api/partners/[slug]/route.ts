@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 
-import { getSupabasePublishableKey, getSupabaseUrl } from '@/integrations/supabase/env';
+import { tryGetSupabaseServerAnonClient } from '@/lib/db';
 
-const supabaseUrl = getSupabaseUrl();
-const supabaseAnonKey = getSupabasePublishableKey();
 const fallbackPartner = {
   id: 'demo-partner',
   name: 'Visit Rwanda',
@@ -15,8 +12,6 @@ const fallbackPartner = {
   active: true,
 };
 
-const anon = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
-
 export async function GET(
   _request: Request,
   { params }: { params: { slug: string } },
@@ -25,6 +20,8 @@ export async function GET(
   if (!slug) {
     return NextResponse.json({ error: 'missing_slug' }, { status: 400 });
   }
+
+  const anon = tryGetSupabaseServerAnonClient();
 
   if (!anon) {
     if (slug === fallbackPartner.slug || slug === fallbackPartner.id) {

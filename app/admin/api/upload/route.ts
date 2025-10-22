@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { AdminAuthError, requireAdminSession } from '@/app/admin/api/_lib/session';
-import { getSupabaseAdmin } from '@/app/admin/api/_lib/supabase';
+import { requireSupabaseStorageBucket, SupabaseStorageUnavailableError } from '@/lib/storage';
 
 const MEDIA_BUCKET = 'media';
 
@@ -12,7 +12,6 @@ export async function POST(request: NextRequest) {
 
   try {
     await requireAdminSession();
-    const supabase = getSupabaseAdmin();
 
     payload = (await request.json().catch(() => null)) as UploadPayload | null;
     if (!payload?.fileName || !payload.dataUrl) {
@@ -29,19 +28,26 @@ export async function POST(request: NextRequest) {
     const safeName = payload.fileName.replace(/[^a-zA-Z0-9_.-]/g, '-');
     const objectPath = `${randomUUID()}-${Date.now()}-${safeName}`;
 
-    const { error } = await supabase.storage
-      .from(MEDIA_BUCKET)
-      .upload(objectPath, bytes, { contentType: contentType || 'application/octet-stream', upsert: true });
+    const bucket = requireSupabaseStorageBucket(MEDIA_BUCKET);
+
+    const { error } = await bucket.upload(objectPath, bytes, {
+      contentType: contentType || 'application/octet-stream',
+      upsert: true,
+    });
 
     if (error) {
       throw error;
     }
 
-    const { data: publicUrl } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(objectPath);
+    const { data: publicUrl } = bucket.getPublicUrl(objectPath);
     return NextResponse.json({ url: publicUrl.publicUrl });
   } catch (error) {
     if (error instanceof AdminAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+
+    if (error instanceof SupabaseStorageUnavailableError) {
+      return NextResponse.json({ error: 'storage_unconfigured' }, { status: 503 });
     }
 
     console.error('Failed to upload media asset', error, payload?.fileName);
