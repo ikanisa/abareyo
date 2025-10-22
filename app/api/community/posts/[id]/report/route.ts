@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { createServiceSupabaseClient } from '@/integrations/supabase/server';
-
-const server = createServiceSupabaseClient();
+import { tryGetServiceSupabaseClient } from '@/app/api/_lib/supabase';
 
 export async function POST(
   _request: Request,
@@ -14,11 +12,12 @@ export async function POST(
     return NextResponse.json({ error: 'missing_post_id' }, { status: 400 });
   }
 
-  if (!server) {
+  const supabase = tryGetServiceSupabaseClient();
+  if (!supabase) {
     return NextResponse.json({ ok: true }, { status: 201 });
   }
 
-  const { error } = await server
+  const { error } = await supabase
     .from('community_reports' as never)
     .insert({ post_id: id, reason: 'user_flagged' } as never);
 

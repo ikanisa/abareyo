@@ -43,6 +43,12 @@
       "@/config/*": [
         "./src/config/*"
       ],
+      "@rayon/contracts": [
+        "./packages/contracts/src/index.ts"
+      ],
+      "@rayon/contracts/*": [
+        "./packages/contracts/src/*.ts"
+      ],
       "@/*": [
         "./src/*",
         "*"

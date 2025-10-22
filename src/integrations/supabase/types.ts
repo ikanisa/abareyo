@@ -3520,6 +3520,14 @@ export type Database = {
         Args: { p_points_delta: number; p_user_id: string }
         Returns: undefined
       }
+      retro_issue_points: {
+        Args: { target_user: string; points: number; reason: string; meta?: Json }
+        Returns: Json
+      }
+      retro_issue_ticket_perk: {
+        Args: { target_user: string; match: string; note: string }
+        Returns: Json
+      }
       rewards_points_for: {
         Args: { amount: number; kind: string }
         Returns: number

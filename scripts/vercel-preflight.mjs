@@ -64,6 +64,13 @@ try {
 }
 
 try {
+  run('node scripts/check-backend-endpoint.mjs');
+} catch (error) {
+  console.error('[PREP] Backend endpoint verification failed');
+  process.exit(1);
+}
+
+try {
   run('npx vercel pull --yes --environment=preview');
 } catch (error) {
   console.error('[PREP] vercel pull failed');

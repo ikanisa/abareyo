@@ -24,3 +24,12 @@ if (missingOptional.length) {
   console.warn('Optional envs not set (ok if not using object storage):', missingOptional.join(', '));
 }
 
+const recommended = ['OPENAI_API_KEY'];
+const missingRecommended = recommended.filter((k) => !process.env[k] || String(process.env[k]).trim().length === 0);
+if (missingRecommended.length) {
+  console.warn(
+    'OpenAI integrations will be disabled until you configure:',
+    missingRecommended.join(', '),
+  );
+}
+

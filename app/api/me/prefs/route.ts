@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
 
-import { createServiceSupabaseClient } from '@/integrations/supabase/server';
+import { tryGetServiceSupabaseClient } from '@/app/api/_lib/supabase';
 
 const DEFAULT_PREFS = {
   language: 'rw',
   notifications: { goals: true, kickoff: true, final: true, club: true },
 };
 
-const server = createServiceSupabaseClient();
 const USER_PREFS_TABLE = 'user_prefs';
 
 const memoryPrefs = new Map<string, typeof DEFAULT_PREFS>();
@@ -16,11 +15,12 @@ export async function GET() {
   // MVP fetch default user (replace with session)
   const user_id = '00000000-0000-0000-0000-000000000001';
 
-  if (!server) {
+  const supabase = tryGetServiceSupabaseClient();
+  if (!supabase) {
     return NextResponse.json({ prefs: memoryPrefs.get(user_id) ?? DEFAULT_PREFS });
   }
 
-  const { data, error } = await server
+  const { data, error } = await supabase
     .from(USER_PREFS_TABLE as never)
     .select('*')
     .eq('user_id', user_id)
@@ -42,12 +42,13 @@ export async function POST(req: Request) {
     notifications: body.notifications || DEFAULT_PREFS.notifications,
   };
 
-  if (!server) {
+  const supabase = tryGetServiceSupabaseClient();
+  if (!supabase) {
     memoryPrefs.set(user_id, { language: upsert.language, notifications: upsert.notifications });
     return NextResponse.json({ ok: true });
   }
 
-  const { error } = await server
+  const { error } = await supabase
     .from(USER_PREFS_TABLE as never)
     .upsert(upsert as never);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

@@ -2,9 +2,10 @@ import { randomUUID } from 'node:crypto';
 
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import OpenAI from 'openai';
+import type OpenAI from 'openai';
 
 import type { AgentGeneratedMessage, AgentTurn, StoredMessage } from './types.js';
+import { OpenAiRequestError, OpenAiService } from '../openai/openai.service.js';
 
 type OpenAIResponse = Awaited<ReturnType<OpenAI['responses']['create']>>;
 
@@ -40,21 +41,16 @@ type ResponseMessageBlock = {
 @Injectable()
 export class OnboardingAgentService {
   private readonly logger = new Logger(OnboardingAgentService.name);
-  private readonly client: OpenAI | null;
   private readonly model: string;
   private readonly systemPrompt: string;
 
-  constructor(private readonly configService: ConfigService) {
-    const apiKey = this.configService.get<string>('openai.apiKey');
-    const baseUrl = this.configService.get<string>('openai.baseUrl') ?? undefined;
-
-    if (!apiKey) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly openAiService: OpenAiService,
+  ) {
+    if (!this.openAiService.isEnabled) {
       this.logger.warn('OPENAI_API_KEY missing; onboarding agent responses will fall back to static copy.');
-      this.client = null;
-    } else {
-      this.client = new OpenAI({ apiKey, baseURL: baseUrl });
     }
-
     this.model = this.configService.get<string>('openai.onboardingModel') ?? 'gpt-4.1-mini';
     this.systemPrompt = [
       'You are GIKUNDIRO, the friendly onboarding assistant for Rayon Sports fans.',
@@ -70,11 +66,11 @@ export class OnboardingAgentService {
   }
 
   get isEnabled() {
-    return this.client !== null;
+    return this.openAiService.isEnabled;
   }
 
   async generateTurn(sessionContext: { status: string }, history: StoredMessage[]): Promise<AgentTurn> {
-    if (!this.client) {
+    if (!this.openAiService.isEnabled) {
       const copy: AgentGeneratedMessage = {
         role: 'assistant',
         type: 'text',
@@ -96,13 +92,27 @@ export class OnboardingAgentService {
       ...history.map<InputMessage>((message) => this.toInputMessage(message)),
     ];
 
-    const response = await this.client.responses.create({
-      model: this.model,
-      input,
-      tools: [this.collectContactTool()],
-    });
+    try {
+      const response = await this.openAiService.responsesCreate<OpenAIResponse>({
+        model: this.model,
+        input,
+        tools: [this.collectContactTool()],
+      });
 
-    return this.parseResponse(response);
+      return this.parseResponse(response);
+    } catch (error) {
+      if (error instanceof OpenAiRequestError) {
+        this.logger.error('OpenAI onboarding turn failed', error);
+        const copy: AgentGeneratedMessage = {
+          role: 'assistant',
+          type: 'text',
+          text: this.fallbackCopy(sessionContext.status),
+        };
+        return { messages: [copy] };
+      }
+
+      throw error;
+    }
   }
 
   private fallbackCopy(status: string) {

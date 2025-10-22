@@ -1,9 +1,8 @@
-export function track(name: string, props?: Record<string, unknown>) {
-  try {
-    window.dispatchEvent(new CustomEvent('analytics', { detail: { name, props } }));
-  } catch (error) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn('Analytics dispatch failed', error);
-    }
-  }
-}
+export {
+  ANALYTICS_EVENT,
+  dispatchAnalyticsEvent,
+  subscribeToAnalytics,
+  track,
+} from "@/lib/track";
+
+export type { AnalyticsEventDetail, AnalyticsHandler } from "@/lib/track";

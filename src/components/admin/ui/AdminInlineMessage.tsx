@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 export type AdminInlineMessageProps = {
-  tone?: 'info' | 'success' | 'warning' | 'critical';
+  tone?: 'info' | 'success' | 'warning' | 'critical' | 'neutral';
   title?: string;
   description?: string;
   actions?: ReactNode;
@@ -17,6 +17,7 @@ const TONE_STYLES: Record<NonNullable<AdminInlineMessageProps['tone']>, string> 
   success: 'border-emerald-400/40 bg-emerald-900/50 text-emerald-50',
   warning: 'border-amber-400/50 bg-amber-900/50 text-amber-50',
   critical: 'border-rose-500/50 bg-rose-950/60 text-rose-50',
+  neutral: 'border-slate-600/40 bg-slate-900/60 text-slate-100',
 };
 
 export const AdminInlineMessage = ({

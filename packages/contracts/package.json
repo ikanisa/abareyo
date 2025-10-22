@@ -4,8 +4,18 @@
   "private": true,
   "type": "module",
   "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
   "exports": {
-    ".": "./src/index.ts",
-    "./onboarding": "./src/onboarding.ts"
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./onboarding": {
+      "types": "./src/onboarding.ts",
+      "default": "./src/onboarding.ts"
+    }
   }
 }

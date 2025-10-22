@@ -54,7 +54,8 @@
       "name": "@rayon/contracts",
       "path": "packages/contracts",
       "type": "shared TypeScript contracts",
-      "entry": "src/index.ts"
+      "entry": "src/index.ts",
+      "buildCommand": "npm run build:contracts"
     }
   ]
 }
