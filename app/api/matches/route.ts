@@ -10,7 +10,7 @@ import {
   type Match,
 } from "@/app/_data/matches";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 type SupabaseMatchRow = {
   opponent?: string | null;

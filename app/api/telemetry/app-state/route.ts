@@ -12,5 +12,5 @@ const handler = withAxiom((req: AxiomRequest) =>
 export const POST = handler;
 export const OPTIONS = () => corsResponse(204);
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
