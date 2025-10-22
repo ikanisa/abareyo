@@ -44,7 +44,6 @@ const MyTicketsClientPage = ({ tickets, error }: MyTicketsClientPageProps) => {
           id="wallet-panel"
           className="space-y-4"
           role="tabpanel"
-          tabIndex={0}
           aria-labelledby="my-tickets-tab wallet-heading"
         >
           <header className="space-y-1">
