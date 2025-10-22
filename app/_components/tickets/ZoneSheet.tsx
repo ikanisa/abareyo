@@ -36,16 +36,19 @@ const ZoneSheet = ({ fixture, isOpen, onClose, onZoneSelect }: ZoneSheetProps) =
   }
 
   return createPortal(
-    <div
-      aria-modal="true"
-      role="dialog"
-      aria-label={`Select a zone for ${fixture.title}`}
-      className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 backdrop-blur-sm animate-ticket-overlay"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-40 flex items-end justify-center">
+      <button
+        type="button"
+        aria-label={`Close zone selection for ${fixture.title}`}
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-ticket-overlay"
+        tabIndex={-1}
+        onClick={onClose}
+      />
       <section
-        className="relative flex w-full max-w-xl flex-col gap-5 rounded-t-3xl bg-[#020817] p-6 text-white shadow-2xl animate-ticket-sheet"
-        onClick={(event) => event.stopPropagation()}
+        className="relative z-10 flex w-full max-w-xl flex-col gap-5 rounded-t-3xl bg-[#020817] p-6 text-white shadow-2xl animate-ticket-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Select a zone for ${fixture.title}`}
       >
         <header className="space-y-2">
           <div className="h-1 w-16 self-center rounded-full bg-white/25" aria-hidden />
