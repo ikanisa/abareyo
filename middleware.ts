@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { applySecurityHeaders as withSecurityHeaders } from './config/security-headers.mjs';
+import { getAllowedHosts } from '@/lib/server/origins';
 
 const LOCALES = ['en', 'fr', 'rw'] as const;
 const LOCALE_RE = new RegExp(`^/(?:${LOCALES.join('|')})(?=/|$)`);
@@ -9,25 +10,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 const normaliseHost = (host: string | null) => host?.toLowerCase() ?? null;
 
-const getConfiguredHosts = () => {
-  const value = process.env.NEXT_PUBLIC_SITE_URL;
-  if (!value) {
-    return [] as string[];
-  }
-
-  return value
-    .split(',')
-    .map((entry) => entry.trim())
-    .map((entry) => {
-      try {
-        return new URL(entry).host;
-      } catch (error) {
-        return entry;
-      }
-    })
-    .map((entry) => normaliseHost(entry))
-    .filter((entry): entry is string => Boolean(entry));
-};
+const getConfiguredHosts = () => getAllowedHosts();
 
 const isTrustedLocaleRedirect = (req: NextRequest, locale: string | null) => {
   if (!locale || !LOCALE_SET.has(locale as (typeof LOCALES)[number])) {

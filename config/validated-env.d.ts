@@ -16,6 +16,7 @@ export declare const serverEnv: {
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE?: string;
   NEXT_PUBLIC_ADMIN_API_TOKEN?: string;
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK?: string;
+  CORS_ALLOWED_ORIGINS?: string;
   VERCEL_URL?: string;
   PORT?: string;
   SUPABASE_SERVICE_ROLE_KEY: string;

@@ -9,6 +9,7 @@ import {
   matchFeedUpdatedAt,
   type Match,
 } from "@/app/_data/matches";
+import { getSupabasePublishableKey, getSupabaseUrl } from "@/integrations/supabase/env";
 
 export const runtime = "edge";
 
@@ -20,19 +21,15 @@ type SupabaseMatchRow = {
 };
 
 async function fetchMatchesFromSupabase() {
-  const url = process.env.SITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  const key =
-    process.env.SITE_SUPABASE_PUBLISHABLE_KEY ??
-    process.env.SITE_SUPABASE_ANON_KEY ??
-    process.env.SITE_SUPABASE_SECRET_KEY ??
-    process.env.SUPABASE_PUBLISHABLE_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
-    process.env.SUPABASE_ANON_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-    process.env.SUPABASE_SECRET_KEY ??
-    process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = getSupabaseUrl();
+  const key = getSupabasePublishableKey();
 
-  if (!url || !key) return null;
+  if (!url || !key) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("Supabase publishable credentials missing; falling back to fixture matches.");
+    }
+    return null;
+  }
 
   // Importing here keeps edge bundle smaller when not used.
   const { createClient } = await import("@supabase/supabase-js");
