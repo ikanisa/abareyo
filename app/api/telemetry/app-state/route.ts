@@ -17,5 +17,5 @@ export const OPTIONS = (req: NextRequest) =>
     headers: buildTelemetryCorsHeaders(req.headers.get("origin")),
   });
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

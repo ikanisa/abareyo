@@ -11,7 +11,7 @@ import {
 } from "@/app/_data/matches";
 import { getSupabasePublishableKey, getSupabaseUrl } from "@/integrations/supabase/env";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 type SupabaseMatchRow = {
   opponent?: string | null;
