@@ -2,10 +2,12 @@
 
 import {
   type FormEvent,
-  type KeyboardEvent,
+  type FocusEvent,
   type PropsWithChildren,
+  useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import Image from "next/image";
@@ -117,16 +119,21 @@ const ClipsCarousel = ({ clips, onOpenComments }: { clips: Clip[]; onOpenComment
   const prefersReducedMotion = useReducedMotion();
   const [activeIndex, setActiveIndex] = useState(0);
   const activeClip = clips[activeIndex];
+  const carouselRef = useRef<HTMLElement>(null);
+  const [keyboardActive, setKeyboardActive] = useState(false);
 
-  const goToIndex = (nextIndex: number) => {
-    setActiveIndex((current) => {
-      const bounded = Math.max(0, Math.min(clips.length - 1, nextIndex));
-      if (bounded === current) {
-        return current;
-      }
-      return bounded;
-    });
-  };
+  const goToIndex = useCallback(
+    (nextIndex: number) => {
+      setActiveIndex((current) => {
+        const bounded = Math.max(0, Math.min(clips.length - 1, nextIndex));
+        if (bounded === current) {
+          return current;
+        }
+        return bounded;
+      });
+    },
+    [clips.length]
+  );
 
   const handleDragEnd = (_: unknown, info: { offset: { y: number } }) => {
     if (info.offset.y < -80) {
@@ -137,25 +144,50 @@ const ClipsCarousel = ({ clips, onOpenComments }: { clips: Clip[]; onOpenComment
     }
   };
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if (event.key === "ArrowUp" || event.key === "PageUp") {
-      event.preventDefault();
-      goToIndex(activeIndex - 1);
+  useEffect(() => {
+    if (!keyboardActive) {
+      return;
     }
-    if (event.key === "ArrowDown" || event.key === "PageDown") {
-      event.preventDefault();
-      goToIndex(activeIndex + 1);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!carouselRef.current) {
+        return;
+      }
+      const target = event.target as Node | null;
+      if (target && !carouselRef.current.contains(target)) {
+        return;
+      }
+      if (event.key === "ArrowUp" || event.key === "PageUp") {
+        event.preventDefault();
+        goToIndex(activeIndex - 1);
+      }
+      if (event.key === "ArrowDown" || event.key === "PageDown") {
+        event.preventDefault();
+        goToIndex(activeIndex + 1);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeIndex, goToIndex, keyboardActive]);
+
+  const enableKeyboard = () => setKeyboardActive(true);
+  const disableKeyboardIfUnfocused = (event: FocusEvent<HTMLElement>) => {
+    const element = carouselRef.current;
+    const nextFocusTarget = event?.relatedTarget as Node | null;
+    if (element && element.contains(nextFocusTarget ?? document.activeElement)) {
+      return;
     }
+    setKeyboardActive(false);
   };
 
   return (
     <section
+      ref={carouselRef}
       className="space-y-4"
       aria-labelledby="clips-heading"
       aria-describedby="clips-instructions"
       role="region"
-      tabIndex={0}
-      onKeyDown={handleKeyDown}
+      onFocusCapture={enableKeyboard}
+      onBlurCapture={disableKeyboardIfUnfocused}
     >
       <div className="flex items-center justify-between text-white">
         <h3 id="clips-heading" className="section-title">
