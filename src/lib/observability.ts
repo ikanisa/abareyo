@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
-import { clientEnv, serverEnv } from "@/config/env";
+import { clientEnv } from "@/config/env";
 
 type TelemetryEvent = {
   type: string;
@@ -7,7 +7,15 @@ type TelemetryEvent = {
   [key: string]: unknown;
 };
 
-const SENTRY_ENABLED = Boolean(clientEnv.NEXT_PUBLIC_SENTRY_DSN || serverEnv.SENTRY_DSN);
+const resolveSentryDsn = () => {
+  if (typeof window === "undefined") {
+    return process.env.SENTRY_DSN;
+  }
+
+  return clientEnv.NEXT_PUBLIC_SENTRY_DSN;
+};
+
+const isSentryEnabled = () => Boolean(resolveSentryDsn());
 const DEFAULT_TELEMETRY_ENDPOINT = clientEnv.NEXT_PUBLIC_TELEMETRY_URL || "/api/telemetry/app-state";
 
 const isBrowser = typeof window !== "undefined";
@@ -18,7 +26,7 @@ const createPayload = (event: TelemetryEvent) => {
 };
 
 export const captureException = (error: unknown, context?: Record<string, unknown>) => {
-  if (!SENTRY_ENABLED) {
+  if (!isSentryEnabled()) {
     return;
   }
 
