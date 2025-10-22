@@ -31,7 +31,7 @@ This document captures the remaining production-readiness work for the Supabase 
   - Slack / Teams webhook URLs for alerts
   - `OPENAI_API_KEY`, `SMS_WEBHOOK_TOKEN`, etc. (migrate existing plain secrets)
 - Use the `SITE_SUPABASE_URL` / `SITE_SUPABASE_PUBLISHABLE_KEY` / `SITE_SUPABASE_SECRET_KEY` aliases when storing Supabase credentials in Vault or via the CLI (`SUPABASE_*` names are reserved).
-- Mirror the same secrets in Vercel / Kubernetes manifests and document rotation cadence.
+- Mirror the same secrets in Kubernetes manifests (former Vercel stores have been removed) and document rotation cadence.
 - Configure alerts for secrets expiring or being rotated.
 
 ## 4. Authentication Hardening

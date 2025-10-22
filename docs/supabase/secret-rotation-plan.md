@@ -5,14 +5,14 @@ Purpose: outline how we move production secrets out of the repository and prepar
 ## Inventory
 
 - `.env` → Local dev: contains publishable Supabase key and placeholders for sensitive tokens.
-- `.env.production` → Template only (no secrets); real values live in Vercel/Supabase Vault.
-- `.vercel/.env.development.local` → Dev preview tokens (onboarding agent).
+- `.env.production` → Template only (no secrets); real values live in Supabase Vault and the hosting environment.
+- `.vercel/.env.development.local` → Legacy dev preview tokens (onboarding agent) from the retired Vercel workflow.
 - `backend/.env.example` → Sample backend secrets (MoMo pay codes etc.).
 
 ## Rotation & Migration Steps
 
 1. **Create secure storage**
-   - Vercel Project → Environment Variables (Production, Preview, Development).
+   - Frontend hosting project → Environment Variables (Production, Preview, Development).
    - Supabase Vault → store server-side secrets for Edge Functions (`supabase secrets set`).
    - (Optional) 1Password/HashiCorp Vault entry for long-term backup.
    - ✅ `.env.production` stripped of real secrets; use `.env.production.example` for local scaffolding.
@@ -20,12 +20,12 @@ Purpose: outline how we move production secrets out of the repository and prepar
 
 2. **Generate new Supabase keys**
    - Project Settings → API → Generate new publishable + service-role keys.
-   - Update `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` in Vercel & Supabase Vault.
+   - Update `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` in the hosting environment & Supabase Vault.
    - Redeploy frontend/backend; confirm clients use the new keys.
 
 3. **Rotate JWT signing keys**
    - Authentication → Settings → JWT → generate new secret.
-   - Update `JWT_SECRET` in all runtimes (Vercel, Edge Functions, backend).
+   - Update `JWT_SECRET` in all runtimes (frontend hosting, Edge Functions, backend).
    - Invalidate refresh tokens to force re-auth.
 
 4. **Third-party services**
@@ -46,7 +46,7 @@ Purpose: outline how we move production secrets out of the repository and prepar
 ## Verification Checklist
 
 - [ ] Supabase CLI `supabase secrets list` shows new keys only.
-- [ ] Vercel env dashboard matches latest secret values.
+- [ ] Hosting environment dashboard matches latest secret values.
 - [ ] Edge Functions redeployed with `supabase functions deploy --no-verify-jwt`.
 - [ ] Application smoke tests pass with rotated credentials.
 - [ ] Old secrets revoked/deleted at provider level.

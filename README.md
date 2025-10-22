@@ -97,7 +97,7 @@ If you plan to surface media (shop products, fundraising covers), configure S3-c
   - `make e2e` runs Playwright smokes with mocked API (guarded by `E2E_API_MOCKS=1`).
 
 - CI/CD
-  - CI runs lint/unit/build. Preview deploys rely on Vercel + Supabase. Edge Functions ship via `.github/workflows/supabase-functions-deploy.yml`.
+  - CI runs lint/unit/build. Preview deploys now ship via the Supabase pipeline; the retired Vercel automation has been removed. Edge Functions ship via `.github/workflows/supabase-functions-deploy.yml`.
   - Optional `HEALTH_URL` secret enables post-deploy health check loop.
 
 - Observability & Security
