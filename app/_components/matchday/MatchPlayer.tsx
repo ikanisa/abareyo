@@ -615,7 +615,6 @@ const MatchPlayer = ({
           ref={audioRef}
           preload="none"
           className="hidden"
-          aria-hidden="true"
           onEnded={() => setIsPlaying(false)}
         />
       </div>

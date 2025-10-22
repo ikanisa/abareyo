@@ -2,10 +2,11 @@
 
 import {
   type FormEvent,
-  type KeyboardEvent,
   type PropsWithChildren,
+  useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import Image from "next/image";
@@ -116,17 +117,49 @@ const WidgetRow = ({ children }: PropsWithChildren) => (
 const ClipsCarousel = ({ clips, onOpenComments }: { clips: Clip[]; onOpenComments: (clip: Clip) => void }) => {
   const prefersReducedMotion = useReducedMotion();
   const [activeIndex, setActiveIndex] = useState(0);
+  const carouselRef = useRef<HTMLElement | null>(null);
   const activeClip = clips[activeIndex];
 
-  const goToIndex = (nextIndex: number) => {
-    setActiveIndex((current) => {
-      const bounded = Math.max(0, Math.min(clips.length - 1, nextIndex));
-      if (bounded === current) {
-        return current;
+  const goToIndex = useCallback(
+    (nextIndex: number) => {
+      setActiveIndex((current) => {
+        const bounded = Math.max(0, Math.min(clips.length - 1, nextIndex));
+        if (bounded === current) {
+          return current;
+        }
+        return bounded;
+      });
+    },
+    [clips.length]
+  );
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const container = carouselRef.current;
+      if (!container) {
+        return;
       }
-      return bounded;
-    });
-  };
+      const activeElement = document.activeElement;
+      const containsFocus =
+        activeElement instanceof HTMLElement && container.contains(activeElement);
+      if (!containsFocus) {
+        return;
+      }
+      if (event.key === "ArrowUp" || event.key === "PageUp") {
+        event.preventDefault();
+        goToIndex(activeIndex - 1);
+      }
+      if (event.key === "ArrowDown" || event.key === "PageDown") {
+        event.preventDefault();
+        goToIndex(activeIndex + 1);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [activeIndex, goToIndex]);
 
   const handleDragEnd = (_: unknown, info: { offset: { y: number } }) => {
     if (info.offset.y < -80) {
@@ -137,25 +170,13 @@ const ClipsCarousel = ({ clips, onOpenComments }: { clips: Clip[]; onOpenComment
     }
   };
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if (event.key === "ArrowUp" || event.key === "PageUp") {
-      event.preventDefault();
-      goToIndex(activeIndex - 1);
-    }
-    if (event.key === "ArrowDown" || event.key === "PageDown") {
-      event.preventDefault();
-      goToIndex(activeIndex + 1);
-    }
-  };
-
   return (
     <section
+      ref={carouselRef}
       className="space-y-4"
       aria-labelledby="clips-heading"
       aria-describedby="clips-instructions"
       role="region"
-      tabIndex={0}
-      onKeyDown={handleKeyDown}
     >
       <div className="flex items-center justify-between text-white">
         <h3 id="clips-heading" className="section-title">
@@ -496,22 +517,29 @@ const CommunityClient = () => {
       <AnimatePresence>
         {openThread ? (
           <motion.div
-            className="fixed inset-0 z-50 flex items-end bg-black/70 md:items-center"
+            className="fixed inset-0 z-50 flex items-end md:items-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={handleCloseThread}
-            role="dialog"
-            aria-modal="true"
-            aria-label={openThread.type === "clip" ? "Clip comments drawer" : "Post comments drawer"}
           >
+            <button
+              type="button"
+              aria-label={
+                openThread.type === "clip" ? "Close clip comments drawer" : "Close post comments drawer"
+              }
+              className="absolute inset-0 h-full w-full bg-black/70"
+              tabIndex={-1}
+              onClick={handleCloseThread}
+            />
             <motion.div
-              className="glass w-full rounded-t-3xl border border-white/30 bg-slate-950/80 p-6 text-white shadow-2xl md:mx-auto md:max-w-lg md:rounded-3xl"
+              role="dialog"
+              aria-modal="true"
+              aria-label={openThread.type === "clip" ? "Clip comments drawer" : "Post comments drawer"}
+              className="glass relative z-10 w-full rounded-t-3xl border border-white/30 bg-slate-950/80 p-6 text-white shadow-2xl md:mx-auto md:max-w-lg md:rounded-3xl"
               initial={{ y: 140 }}
               animate={{ y: 0 }}
               exit={{ y: 140 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              onClick={(event) => event.stopPropagation()}
             >
               <div className="flex items-center justify-between">
                 <div>
