@@ -6,7 +6,7 @@ This monorepo powers the Rayon Sports fan experience across web, mobile, and mat
 - **Frontend**: Next.js 14 (App Router), Tailwind CSS, shadcn/ui, TanStack Query, next-themes, Framer Motion.
 - **Backend**: Supabase Postgres (SQL migrations + seeds), Supabase Edge Functions, and Next.js API routes backed by `@supabase/supabase-js`.
 - **Realtime automation**: `/functions/v1/sms-webhook` reconciles MoMo/Airtel SMS receipts while `/functions/v1/issue-policy` turns paid insurance quotes into policies.
-- **Tooling**: Dockerfiles for web, GitHub Actions CI (`npm run lint`, `npm run type-check`, `npm run build`), Supabase CLI helpers.
+- **Tooling**: Dockerfiles for web, GitHub Actions CI (`pnpm lint`, `pnpm typecheck`, `pnpm build`), Supabase CLI helpers.
 
 ## Required Environment Variables
 
@@ -28,9 +28,9 @@ NEXT_PUBLIC_ENVIRONMENT_LABEL=local
 > Supabase reserves the `SUPABASE_*` prefix for its own managed secrets when using the CLI/Vault. When setting project secrets via `supabase secrets set`, use the `SITE_SUPABASE_URL`, `SITE_SUPABASE_PUBLISHABLE_KEY`, and `SITE_SUPABASE_SECRET_KEY` aliases (they are automatically picked up by the codebase).
 
 ## Local Setup
-1. Install dependencies:
+1. Install dependencies (pnpm is bundled with Node via Corepack on macOS/Linux):
    ```bash
-   npm install
+   pnpm install
    ```
 2. Ensure the Supabase CLI is installed (<https://supabase.com/docs/guides/cli>). Log in once so migrations can run.
 3. Start Supabase locally (or point the env vars to a remote project):
@@ -51,7 +51,7 @@ NEXT_PUBLIC_ENVIRONMENT_LABEL=local
    These functions can also be deployed via `supabase functions deploy <name>`.
 6. Run the Next.js dev server:
    ```bash
-   npm run dev
+   pnpm dev
    ```
    Visit <http://localhost:3000> to explore the mobile-first PWA.
 
@@ -66,8 +66,8 @@ If you plan to surface media (shop products, fundraising covers), configure S3-c
 - Once onboarding is completed, the app automatically unlocks the regular `/` home experience.
 
 ## Useful Scripts
-- `npm run lint` / `npm run type-check` / `npm run build` – CI parity checks.
-- `npm run cap:sync`, `npm run cap:android`, `npm run cap:ios` – entry points for Capacitor shells (install `@capacitor/cli` and related platform toolchains locally when you run them).
+- `pnpm lint` / `pnpm typecheck` / `pnpm build` – CI parity checks.
+- `pnpm cap:sync`, `pnpm cap:android`, `pnpm cap:ios` – entry points for Capacitor shells (install `@capacitor/cli` and related platform toolchains locally when you run them).
 - Use `npx cordova-res` and `npx @bubblewrap/cli` on demand for mobile asset generation and TWA packaging; they are no longer pinned in `devDependencies` to avoid shipping known vulnerabilities.
 - `docker compose up web` – build and run the production web image locally.
 - `node tools/gsm-emulator/send-sms.js "…"` – simulate inbound MoMo/Airtel confirmation messages during flows.
@@ -94,11 +94,13 @@ If you plan to surface media (shop products, fundraising covers), configure S3-c
   - Ensure Supabase service role keys are stored as repo/infra secrets, never shipped to the browser.
 
 - E2E Smokes
-  - `make e2e` runs Playwright smokes with mocked API (guarded by `E2E_API_MOCKS=1`).
+- `make e2e` runs Playwright smokes with mocked API (guarded by `E2E_API_MOCKS=1`).
 
 - CI/CD
-  - CI runs lint/unit/build. Preview deploys rely on Vercel + Supabase. Edge Functions ship via `.github/workflows/supabase-functions-deploy.yml`.
-  - Optional `HEALTH_URL` secret enables post-deploy health check loop.
+  - Node CI runs `pnpm install`, `pnpm typecheck`, `pnpm lint`, and `pnpm build` for every push/PR; preview automation uploads build artifacts without Vercel.
+  - Edge Functions continue to deploy via `.github/workflows/supabase-functions-deploy.yml`. Optional `HEALTH_URL` secrets power downstream health checks.
+
+See [`docs/local-hosting.md`](docs/local-hosting.md) for a macOS-focused local hosting guide, `.env.local` conventions, and notes on self-hosted cron alternatives now that Vercel automation has been removed.
 
 - Observability & Security
   - Prometheus rules: `docs/observability/prometheus-rules.yml`; Grafana dashboard: `docs/grafana/backend-overview.json`.
