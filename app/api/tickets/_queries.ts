@@ -1,8 +1,4 @@
-import { createServiceSupabaseClient } from "@/integrations/supabase/server";
-
-const createServiceClient = () => {
-  return createServiceSupabaseClient();
-};
+import { withServiceSupabaseClient } from "@/app/api/_lib/supabase";
 
 export type TicketRecordWithRelations = {
   id: string;
@@ -23,42 +19,45 @@ type ListTicketsParams = {
 };
 
 export async function listTicketsForUser({ userId, phone }: ListTicketsParams) {
-  const db = createServiceClient();
+  return withServiceSupabaseClient(
+    async (db) => {
+      let resolvedUserId = userId?.trim() || null;
+      if (!resolvedUserId && phone) {
+        const sanitizedPhone = phone.replace(/\s+/g, "");
+        if (!sanitizedPhone) {
+          return [] as TicketRecordWithRelations[];
+        }
+        const { data: existingUser, error: userError } = await db
+          .from("users")
+          .select("id")
+          .eq("phone", sanitizedPhone)
+          .maybeSingle();
+        if (userError) {
+          throw userError;
+        }
+        resolvedUserId = existingUser?.id ?? null;
+      }
 
-  if (!db) {
-    console.warn("Supabase credentials missing; returning empty ticket history.");
-    return [] as TicketRecordWithRelations[];
-  }
+      if (!resolvedUserId) {
+        return [] as TicketRecordWithRelations[];
+      }
 
-  let resolvedUserId = userId?.trim() || null;
-  if (!resolvedUserId && phone) {
-    const sanitizedPhone = phone.replace(/\s+/g, "");
-    if (!sanitizedPhone) {
-      return [] as TicketRecordWithRelations[];
-    }
-    const { data: existingUser, error: userError } = await db
-      .from("users")
-      .select("id")
-      .eq("phone", sanitizedPhone)
-      .maybeSingle();
-    if (userError) {
-      throw userError;
-    }
-    resolvedUserId = existingUser?.id ?? null;
-  }
-
-  if (!resolvedUserId) {
-    return [] as TicketRecordWithRelations[];
-  }
-
-  const { data, error } = await db
-    .from("tickets")
-    .select("*, match:matches(*), user:users(id, name, phone)")
-    .eq("user_id", resolvedUserId)
-    .order("created_at", { ascending: false });
-  if (error) {
-    console.warn("listTicketsForUser lookup failed", error);
-    return [] as TicketRecordWithRelations[];
-  }
-  return (data ?? []) as TicketRecordWithRelations[];
+      const { data, error } = await db
+        .from("tickets")
+        .select("*, match:matches(*), user:users(id, name, phone)")
+        .eq("user_id", resolvedUserId)
+        .order("created_at", { ascending: false });
+      if (error) {
+        console.warn("listTicketsForUser lookup failed", error);
+        return [] as TicketRecordWithRelations[];
+      }
+      return (data ?? []) as TicketRecordWithRelations[];
+    },
+    {
+      fallback: async () => {
+        console.warn("Supabase credentials missing; returning empty ticket history.");
+        return [] as TicketRecordWithRelations[];
+      },
+    },
+  );
 }

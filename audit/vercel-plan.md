@@ -21,19 +21,24 @@
 - **Node.js Version**: 20.x
 - **Install Command**: `npm ci`
 - **Build Command**: `npm run build`
+- **Pre-build**: `npm run build:packages` (emits shared contract declarations consumed by app + backend)
+- **Secret Sync**: `npm run vercel:env:sync` (interactive script that pushes Supabase, onboarding, OpenAI, and Sentry env vars to preview/prod/dev)
 - **Output Directory**: `.next`
 - **Ignored Build Step**: rely on default; CI/Preflight ensures env completeness
 - **Environment Variables**:
-  - `NEXT_PUBLIC_SUPABASE_URL`
-  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-  - `SUPABASE_SERVICE_ROLE_KEY`
-  - `NEXT_PUBLIC_BACKEND_URL`
-  - `NEXT_PUBLIC_SITE_URL`
-  - `NEXT_PUBLIC_ENVIRONMENT_LABEL`
-  - `NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN`
-  - `ONBOARDING_API_TOKEN`
-  - `OPENAI_API_KEY`
-  - Optional: `NEXT_PUBLIC_SENTRY_DSN` or `SENTRY_DSN`, `NEXT_PUBLIC_TELEMETRY_URL`, `VERCEL_AUTOMATION_BYPASS_SECRET`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SITE_SUPABASE_URL`
+- `SITE_SUPABASE_SECRET_KEY`
+- `NEXT_PUBLIC_BACKEND_URL`
+- `NEXT_PUBLIC_SITE_URL`
+- `NEXT_PUBLIC_ENVIRONMENT_LABEL`
+- `NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN`
+- `ONBOARDING_API_TOKEN`
+- `OPENAI_API_KEY`
+- `NEXT_PUBLIC_OPENAI_BASE_URL` / `OPENAI_BASE_URL` (when overriding default host)
+- Optional: `NEXT_PUBLIC_SENTRY_DSN` or `SENTRY_DSN`, `NEXT_PUBLIC_TELEMETRY_URL`, `NEXT_PUBLIC_SOCKET_PATH`, `VERCEL_AUTOMATION_BYPASS_SECRET`
 
 ## Routing / Edge Notes
 - `vercel.json` retains existing rewrites/redirects and now declares build metadata.
@@ -45,6 +50,6 @@
 - `.next/cache` automatically managed by Vercel.
 
 ## Follow-up Actions
-- Set preview/prod env vars in Vercel dashboard (and store secrets in 1Password/Secret Manager).
+- Run `npm run vercel:env:sync` from a workstation with Vercel CLI access to seed preview/prod/dev secrets (record values in 1Password/Secret Manager).
 - Map custom domains via Vercel once production build verified.
-- Ensure backend deployment exposes HTTPS endpoint matching `NEXT_PUBLIC_BACKEND_URL`.
+- Monitor backend health with `npm run check:backend` (used by preflight) after infrastructure changes.

@@ -92,9 +92,9 @@
       "file": "app/api/[...path]/route.ts"
     },
     {
-      "type": "page",
+      "type": "api",
       "path": "/api/chat",
-      "file": "pages/api/chat.ts"
+      "file": "app/api/chat/route.ts"
     },
     {
       "type": "api",
@@ -107,14 +107,14 @@
       "file": "app/api/health/route.ts"
     },
     {
-      "type": "page",
+      "type": "api",
       "path": "/api/onboarding/message",
-      "file": "pages/api/onboarding/message.ts"
+      "file": "app/api/onboarding/message/route.ts"
     },
     {
-      "type": "page",
+      "type": "api",
       "path": "/api/onboarding/sessions",
-      "file": "pages/api/onboarding/sessions.ts"
+      "file": "app/api/onboarding/sessions/route.ts"
     },
     {
       "type": "page",

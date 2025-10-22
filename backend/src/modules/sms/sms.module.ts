@@ -6,9 +6,10 @@ import { SmsController } from './sms.controller.js';
 import { SmsParserService } from './sms.parser.js';
 import { SmsQueueService } from './sms.queue.js';
 import { SmsService } from './sms.service.js';
+import { OpenAiModule } from '../openai/openai.module.js';
 
 @Module({
-  imports: [PaymentsModule, RealtimeModule],
+  imports: [PaymentsModule, RealtimeModule, OpenAiModule],
   controllers: [SmsController],
   providers: [SmsService, SmsQueueService, SmsParserService],
   exports: [SmsService],

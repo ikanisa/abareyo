@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
-import { createServiceSupabaseClient } from '@/integrations/supabase/server';
+import { tryGetServiceSupabaseClient } from '@/app/api/_lib/supabase';
 
 type CommunityPostRecord = {
   id: string;
@@ -11,7 +11,6 @@ type CommunityPostRecord = {
   created_at: string;
 };
 
-const server = createServiceSupabaseClient();
 const COMMUNITY_POSTS_TABLE = 'community_posts';
 
 const DEMO_USER_ID = '00000000-0000-0000-0000-000000000001';
@@ -28,11 +27,12 @@ const memoryPosts: CommunityPostRecord[] = [
 ];
 
 export async function GET() {
-  if (!server) {
+  const supabase = tryGetServiceSupabaseClient();
+  if (!supabase) {
     return NextResponse.json({ posts: memoryPosts });
   }
 
-  const { data, error } = await server
+  const { data, error } = await supabase
     .from(COMMUNITY_POSTS_TABLE as never)
     .select('id,user_id,text,media_url,status,created_at')
     .eq('status', 'visible')
@@ -68,12 +68,13 @@ export async function POST(request: Request) {
     created_at: new Date().toISOString(),
   };
 
-  if (!server) {
+  const supabase = tryGetServiceSupabaseClient();
+  if (!supabase) {
     memoryPosts.unshift(post);
     return NextResponse.json({ post }, { status: 201 });
   }
 
-  const { data, error } = await server
+  const { data, error } = await supabase
     .from(COMMUNITY_POSTS_TABLE as never)
     .insert({ user_id: DEMO_USER_ID, text, media_url: mediaUrl ?? undefined } as never)
     .select('id,user_id,text,media_url,status,created_at')

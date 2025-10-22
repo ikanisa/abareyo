@@ -52,6 +52,13 @@ spec:
                 secretKeyRef:
                   name: backend-secrets
                   key: FAN_SESSION_SECRET
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: OPENAI_API_KEY
+            - name: OPENAI_BASE_URL
+              value: https://api.openai.com/v1
           livenessProbe:
             httpGet:
               path: /api/health

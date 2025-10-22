@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import OpenAI from 'openai';
+import type OpenAI from 'openai';
 
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { OpenAiRequestError, OpenAiService } from '../openai/openai.service.js';
 
 export interface ParsedSmsResult {
   amount: number;
@@ -21,21 +21,20 @@ type SmsInput = {
   toMsisdn: string | null;
 };
 
+type OpenAiParseResponse = Awaited<ReturnType<OpenAI['responses']['parse']>>;
+
 @Injectable()
 export class SmsParserService {
   private readonly logger = new Logger(SmsParserService.name);
-  private readonly client: OpenAI | null;
   private readonly model = 'gpt-4o-mini';
 
-  constructor(private readonly configService: ConfigService, private readonly prisma: PrismaService) {
-    const apiKey = this.configService.get<string>('openai.apiKey');
-    this.client = apiKey
-      ? new OpenAI({ apiKey, baseURL: this.configService.get<string>('openai.baseUrl') })
-      : null;
-  }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly openAiService: OpenAiService,
+  ) {}
 
   async parseWithAi(sms: SmsInput, options?: { promptBody?: string; promptId?: string }): Promise<ParsedSmsResult | null> {
-    if (!this.client) {
+    if (!this.openAiService.isEnabled) {
       this.logger.warn('OpenAI API key missing; falling back to heuristic parser');
       return null;
     }
@@ -44,7 +43,7 @@ export class SmsParserService {
       const prompt = await this.resolvePrompt(options);
       const input = prompt ? `SYSTEM:\n${prompt}\n\nUSER:\n${sms.text}` : sms.text;
 
-      const response = await this.client.responses.parse({
+      const response = await this.openAiService.responsesParse<OpenAiParseResponse>({
         model: this.model,
         input,
         schema: {
@@ -92,6 +91,11 @@ export class SmsParserService {
         parserVersion,
       };
     } catch (error) {
+      if (error instanceof OpenAiRequestError) {
+        this.logger.error('OpenAI parser failed', error);
+        return null;
+      }
+
       this.logger.error('OpenAI parser failed', error as Error);
       return null;
     }

@@ -81,10 +81,15 @@ export async function POST(request: NextRequest) {
 
       if (error) throw error;
 
+      const orderId =
+        typeof data === 'object' && data !== null && 'order_id' in data
+          ? (data as Record<string, unknown>).order_id
+          : undefined;
+
       await recordAudit(supabase, {
         action: 'rewards.ticket_perk',
         entityType: 'reward_perk',
-        entityId: String(data?.order_id ?? ''),
+        entityId: String(orderId ?? ''),
         before: null,
         after: data,
         userId: session.user.id,
