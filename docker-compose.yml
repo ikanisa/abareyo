@@ -1,25 +1,77 @@
-version: "3.8"
+version: "3.9"
+
 services:
-  web:
-    build: .
-    ports:
-      - "3000:3000"
+  admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_ENV: "${APP_ENV:-local}"
+        NODE_ENV: "${NODE_ENV:-production}"
+        PORT: "${PORT:-3000}"
+        NEXT_PHASE: "${NEXT_PHASE:-phase-production-build}"
+        NEXT_RUNTIME: "${NEXT_RUNTIME:-nodejs}"
+        NEXT_PUBLIC_SITE_URL: "${NEXT_PUBLIC_SITE_URL:-https://admin.sacco-plus.com}"
+        NEXT_PUBLIC_BACKEND_URL: "${NEXT_PUBLIC_BACKEND_URL:-https://api.sacco-plus.com}"
+        NEXT_PUBLIC_ENVIRONMENT_LABEL: "${NEXT_PUBLIC_ENVIRONMENT_LABEL:-production}"
+        NEXT_PUBLIC_FEATURE_FLAGS: "${NEXT_PUBLIC_FEATURE_FLAGS:-{}}"
+        NEXT_PUBLIC_SOCKET_TRANSPORT: "${NEXT_PUBLIC_SOCKET_TRANSPORT:-polling}"
+        NEXT_PUBLIC_SOCKET_PATH: "${NEXT_PUBLIC_SOCKET_PATH:-/ws}"
+        NEXT_PUBLIC_TELEMETRY_URL: "${NEXT_PUBLIC_TELEMETRY_URL:-/api/telemetry/app-state}"
+        NEXT_PUBLIC_ADMIN_SESSION_COOKIE: "${NEXT_PUBLIC_ADMIN_SESSION_COOKIE:-admin_session}"
+        NEXT_PUBLIC_ADMIN_API_TOKEN: "${NEXT_PUBLIC_ADMIN_API_TOKEN:-}"
+        NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK: "${NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK:-0}"
+        NEXT_PUBLIC_SUPABASE_URL: "${NEXT_PUBLIC_SUPABASE_URL:-https://YOUR_PROJECT.supabase.co}"
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: "${NEXT_PUBLIC_SUPABASE_ANON_KEY:-changeme}"
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:-changeme}"
+        NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN: "${NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN:-changeme}"
+        NEXT_PUBLIC_SENTRY_DSN: "${NEXT_PUBLIC_SENTRY_DSN:-}"
+        NEXT_PUBLIC_OPENAI_BASE_URL: "${NEXT_PUBLIC_OPENAI_BASE_URL:-}"
+        SITE_SUPABASE_URL: "${SITE_SUPABASE_URL:-https://YOUR_PROJECT.supabase.co}"
+        SITE_SUPABASE_SECRET_KEY: "${SITE_SUPABASE_SECRET_KEY:-changeme}"
+        SITE_SUPABASE_PUBLISHABLE_KEY: "${SITE_SUPABASE_PUBLISHABLE_KEY:-changeme}"
+        SUPABASE_SERVICE_ROLE_KEY: "${SUPABASE_SERVICE_ROLE_KEY:-changeme}"
+        SUPABASE_SERVICE_KEY: "${SUPABASE_SERVICE_KEY:-}"
+        SUPABASE_URL: "${SUPABASE_URL:-}"
+        SUPABASE_SECRET_KEY: "${SUPABASE_SECRET_KEY:-}"
+        SUPABASE_PUBLISHABLE_KEY: "${SUPABASE_PUBLISHABLE_KEY:-}"
+        SUPABASE_ANON_KEY: "${SUPABASE_ANON_KEY:-}"
+        ONBOARDING_API_TOKEN: "${ONBOARDING_API_TOKEN:-changeme}"
+        ONBOARDING_ALLOW_MOCK: "${ONBOARDING_ALLOW_MOCK:-0}"
+        OPENAI_API_KEY: "${OPENAI_API_KEY:-changeme}"
+        AGENT_ID: "${AGENT_ID:-}"
+        SENTRY_DSN: "${SENTRY_DSN:-https://examplePublicKey@o0.ingest.sentry.io/0}"
+        SENTRY_TRACES_SAMPLE_RATE: "${SENTRY_TRACES_SAMPLE_RATE:-}"
+        SENTRY_REPLAYS_SESSION_SAMPLE_RATE: "${SENTRY_REPLAYS_SESSION_SAMPLE_RATE:-}"
+        SENTRY_REPLAYS_ERROR_SAMPLE_RATE: "${SENTRY_REPLAYS_ERROR_SAMPLE_RATE:-}"
+        CI: "${CI:-}"
+        E2E_API_MOCKS: "${E2E_API_MOCKS:-}"
+    container_name: admin-app
+    restart: unless-stopped
     env_file:
       - .env
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000"]
+      interval: 15s
+      timeout: 3s
+      retries: 20
+    networks: [web]
+
+  caddy:
+    image: caddy:2
+    container_name: admin-caddy
+    restart: unless-stopped
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+    # Local reverse proxy only; Cloudflare Tunnel will provide public HTTPS
+    ports:
+      - "8080:8080"
     depends_on:
-      - db
-      - redis
-  db:
-    image: postgres:15
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: rayon
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
-  redis:
-    image: redis:7
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
+      - admin
+    networks: [web]
+
+networks:
+  web:
+    driver: bridge
