@@ -3,6 +3,7 @@
 import {
   type FocusEvent,
   type FormEvent,
+  type FocusEvent,
   type PropsWithChildren,
   useCallback,
   useEffect,
@@ -121,6 +122,8 @@ const ClipsCarousel = ({ clips, onOpenComments }: { clips: Clip[]; onOpenComment
   const [isFocusWithin, setIsFocusWithin] = useState(false);
   const containerRef = useRef<HTMLElement | null>(null);
   const activeClip = clips[activeIndex];
+  const carouselRef = useRef<HTMLElement>(null);
+  const [keyboardActive, setKeyboardActive] = useState(false);
 
   const goToIndex = useCallback(
     (nextIndex: number) => {
@@ -132,7 +135,7 @@ const ClipsCarousel = ({ clips, onOpenComments }: { clips: Clip[]; onOpenComment
         return bounded;
       });
     },
-    [clips.length],
+    [clips.length]
   );
 
   const handleDragEnd = (_: unknown, info: { offset: { y: number } }) => {
@@ -145,11 +148,17 @@ const ClipsCarousel = ({ clips, onOpenComments }: { clips: Clip[]; onOpenComment
   };
 
   useEffect(() => {
-    if (!isFocusWithin) {
+    if (!keyboardActive) {
       return;
     }
-
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (!carouselRef.current) {
+        return;
+      }
+      const target = event.target as Node | null;
+      if (target && !carouselRef.current.contains(target)) {
+        return;
+      }
       if (event.key === "ArrowUp" || event.key === "PageUp") {
         event.preventDefault();
         goToIndex(activeIndex - 1);
@@ -159,39 +168,29 @@ const ClipsCarousel = ({ clips, onOpenComments }: { clips: Clip[]; onOpenComment
         goToIndex(activeIndex + 1);
       }
     };
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeIndex, goToIndex, isFocusWithin]);
+  }, [activeIndex, goToIndex, keyboardActive]);
 
-  const handleRegionFocus = () => {
-    setIsFocusWithin(true);
-  };
-
-  const handleRegionBlur = (event: FocusEvent<HTMLElement>) => {
-    const nextTarget = event.relatedTarget;
-    if (!containerRef.current) {
-      setIsFocusWithin(false);
+  const enableKeyboard = () => setKeyboardActive(true);
+  const disableKeyboardIfUnfocused = (event: FocusEvent<HTMLElement>) => {
+    const element = carouselRef.current;
+    const nextFocusTarget = event?.relatedTarget as Node | null;
+    if (element && element.contains(nextFocusTarget ?? document.activeElement)) {
       return;
     }
-    if (!nextTarget) {
-      setIsFocusWithin(false);
-      return;
-    }
-    if (!containerRef.current.contains(nextTarget as Node)) {
-      setIsFocusWithin(false);
-    }
+    setKeyboardActive(false);
   };
 
   return (
     <section
-      ref={containerRef}
+      ref={carouselRef}
       className="space-y-4"
       aria-labelledby="clips-heading"
       aria-describedby="clips-instructions"
       role="region"
-      onFocusCapture={handleRegionFocus}
-      onBlurCapture={handleRegionBlur}
+      onFocusCapture={enableKeyboard}
+      onBlurCapture={disableKeyboardIfUnfocused}
     >
       <div className="flex items-center justify-between text-white">
         <h3 id="clips-heading" className="section-title">
