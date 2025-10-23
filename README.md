@@ -89,7 +89,7 @@ If you plan to surface media (shop products, fundraising covers), configure S3-c
 - `pnpm start` – Serve the production bundle (`next start`).
 - `pnpm lint` / `pnpm type-check` / `pnpm test` – Static analysis and unit coverage gates.
 - `pnpm cap:sync`, `pnpm cap:android`, `pnpm cap:ios` – Capacitor workflows (requires native toolchains).
-- `pnpm supabase:functions` (see `package.json`) – Convenience wrappers for function deploys.
+- Use the Supabase CLI directly for Edge Functions, e.g. `supabase functions deploy <name>`.
 
 ## Hosting Strategy
 
