@@ -1,11 +1,13 @@
 "use client";
 
 import {
+  type FocusEvent,
   type FormEvent,
-  type KeyboardEvent,
   type PropsWithChildren,
+  useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import Image from "next/image";
@@ -116,17 +118,22 @@ const WidgetRow = ({ children }: PropsWithChildren) => (
 const ClipsCarousel = ({ clips, onOpenComments }: { clips: Clip[]; onOpenComments: (clip: Clip) => void }) => {
   const prefersReducedMotion = useReducedMotion();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isFocusWithin, setIsFocusWithin] = useState(false);
+  const containerRef = useRef<HTMLElement | null>(null);
   const activeClip = clips[activeIndex];
 
-  const goToIndex = (nextIndex: number) => {
-    setActiveIndex((current) => {
-      const bounded = Math.max(0, Math.min(clips.length - 1, nextIndex));
-      if (bounded === current) {
-        return current;
-      }
-      return bounded;
-    });
-  };
+  const goToIndex = useCallback(
+    (nextIndex: number) => {
+      setActiveIndex((current) => {
+        const bounded = Math.max(0, Math.min(clips.length - 1, nextIndex));
+        if (bounded === current) {
+          return current;
+        }
+        return bounded;
+      });
+    },
+    [clips.length],
+  );
 
   const handleDragEnd = (_: unknown, info: { offset: { y: number } }) => {
     if (info.offset.y < -80) {
@@ -137,25 +144,54 @@ const ClipsCarousel = ({ clips, onOpenComments }: { clips: Clip[]; onOpenComment
     }
   };
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if (event.key === "ArrowUp" || event.key === "PageUp") {
-      event.preventDefault();
-      goToIndex(activeIndex - 1);
+  useEffect(() => {
+    if (!isFocusWithin) {
+      return;
     }
-    if (event.key === "ArrowDown" || event.key === "PageDown") {
-      event.preventDefault();
-      goToIndex(activeIndex + 1);
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "ArrowUp" || event.key === "PageUp") {
+        event.preventDefault();
+        goToIndex(activeIndex - 1);
+      }
+      if (event.key === "ArrowDown" || event.key === "PageDown") {
+        event.preventDefault();
+        goToIndex(activeIndex + 1);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeIndex, goToIndex, isFocusWithin]);
+
+  const handleRegionFocus = () => {
+    setIsFocusWithin(true);
+  };
+
+  const handleRegionBlur = (event: FocusEvent<HTMLElement>) => {
+    const nextTarget = event.relatedTarget;
+    if (!containerRef.current) {
+      setIsFocusWithin(false);
+      return;
+    }
+    if (!nextTarget) {
+      setIsFocusWithin(false);
+      return;
+    }
+    if (!containerRef.current.contains(nextTarget as Node)) {
+      setIsFocusWithin(false);
     }
   };
 
   return (
     <section
+      ref={containerRef}
       className="space-y-4"
       aria-labelledby="clips-heading"
       aria-describedby="clips-instructions"
       role="region"
-      tabIndex={0}
-      onKeyDown={handleKeyDown}
+      onFocusCapture={handleRegionFocus}
+      onBlurCapture={handleRegionBlur}
     >
       <div className="flex items-center justify-between text-white">
         <h3 id="clips-heading" className="section-title">

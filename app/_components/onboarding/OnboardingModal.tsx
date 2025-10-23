@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { getSupabase } from '@/app/_lib/supabase';
+import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 
 /**
  * A modern onboarding modal for collecting WhatsApp and MoMo numbers.
@@ -71,7 +71,7 @@ export function OnboardingModal({ open, onClose }: { open: boolean; onClose: () 
     const code = personalCode || ensurePersonalCode(storage);
 
     try {
-      const supabase = getSupabase && getSupabase();
+      const supabase = getSupabaseBrowserClient();
       if (supabase && code) {
         await supabase.from("profiles").upsert({
           id: code,

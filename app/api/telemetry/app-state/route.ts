@@ -1,7 +1,8 @@
 import { withAxiom, type AxiomRequest } from "next-axiom";
+import { NextRequest, NextResponse } from "next/server";
 
 import {
-  corsResponse,
+  buildTelemetryCorsHeaders,
   processTelemetryRequest,
 } from "@/lib/telemetry/app-state-handler";
 

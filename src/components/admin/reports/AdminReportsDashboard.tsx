@@ -40,6 +40,9 @@ export const AdminReportsDashboard = ({ initialSchedules }: AdminReportsDashboar
       if (payload) {
         body.payload = JSON.parse(payload);
       }
+      // TODO: Wire this admin workflow into whichever scheduling runner we adopt
+      // (manual scripts, launchd agent, or node-cron worker) so saved schedules
+      // actually trigger downstream report generation.
       const response = await fetch('/admin/api/reports/schedules', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
