@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { NextResponse } from 'next/server';
 
 // Match centre data is sourced from local fixtures defined in `/app/_data/matches`.
 // We optionally override `matches` with rows from Supabase if configured.
@@ -9,8 +10,7 @@ import {
   matchFeedUpdatedAt,
   type Match,
 } from "@/app/_data/matches";
-
-export const runtime = "edge";
+import { tryGetSupabaseServerAnonClient } from '@/lib/db';
 
 type SupabaseMatchRow = {
   opponent?: string | null;
@@ -20,21 +20,11 @@ type SupabaseMatchRow = {
 };
 
 async function fetchMatchesFromSupabase() {
-  const url = process.env.SITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  const key =
-    process.env.SITE_SUPABASE_PUBLISHABLE_KEY ??
-    process.env.SITE_SUPABASE_ANON_KEY ??
-    process.env.SITE_SUPABASE_SECRET_KEY ??
-    process.env.SUPABASE_PUBLISHABLE_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
-    process.env.SUPABASE_ANON_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-    process.env.SUPABASE_SECRET_KEY ??
-    process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabase = tryGetSupabaseServerAnonClient();
 
-  if (!url || !key) return null;
+  if (!supabase) return null;
 
-  // Importing here keeps edge bundle smaller when not used.
+  // Importing here keeps the server bundle smaller when Supabase is not enabled.
   const { createClient } = await import("@supabase/supabase-js");
   const supabase = createClient(url, key, { auth: { persistSession: false } });
 
@@ -45,7 +35,7 @@ async function fetchMatchesFromSupabase() {
 
   if (error) {
     // Swallow error and allow fallback to fixtures
-    console.error("Supabase matches fetch failed:", error.message);
+    console.error('Supabase matches fetch failed:', error.message);
     return null;
   }
   return data ?? null;
@@ -64,10 +54,10 @@ export async function GET() {
   const dbMatches = await fetchMatchesFromSupabase();
   const matches = (dbMatches ?? fixtureMatches).map((match) => {
     const row = match as SupabaseMatchRow | Match;
-    if ("opponent" in row && typeof row.opponent === "string" && row.opponent) return row;
-    const home = typeof row.home === "string" ? row.home : undefined;
-    const away = typeof row.away === "string" ? row.away : undefined;
-    const isRayonHome = home?.toLowerCase().includes("rayon");
+    if ('opponent' in row && typeof row.opponent === 'string' && row.opponent) return row;
+    const home = typeof row.home === 'string' ? row.home : undefined;
+    const away = typeof row.away === 'string' ? row.away : undefined;
+    const isRayonHome = home?.toLowerCase().includes('rayon');
     const opponent = isRayonHome ? away : home;
     return {
       opponent,

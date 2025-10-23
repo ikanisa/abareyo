@@ -21,7 +21,7 @@ Owner: Platform Engineering
   - `NEXT_PUBLIC_BACKEND_URL` bridging to the legacy REST bridge.
 - Supabase CLI operations require `SUPABASE_DB_PASSWORD` / `PGPASSWORD` (currently stored in the secure shell session as `MoMo!!0099`), plus logged-in profile tokens under `supabase/.config`.
 - Deployment targets:
-  - **Vercel** project `ikanisa/abareyo` confirmed via latest production deployment (`dpl_qfRuqKPFRXfgjiJzpycYVnS6wcqb`).
+  - **Hosting platform** replacing the legacy Vercel project `ikanisa/abareyo` (retired after January 2026).
   - **Supabase** project `paysnhuxngsvzdpwlosv` verified through `supabase db push --include-all` and `supabase functions deploy`.
 
 > **Action:** Document these env keys in the admin runbook before Phase 1 so onboarding and rotation are streamlined.
@@ -35,7 +35,7 @@ npm run lint
 npm run type-check
 npm run test
 npm run build
-vercel --prod --yes
+# Legacy: vercel --prod --yes
 supabase db push --include-all
 supabase functions deploy award_points --project-ref paysnhuxngsvzdpwlosv
 ```

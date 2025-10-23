@@ -1,7 +1,7 @@
 # Admin Environment Reference
 
 This document complements the root `.env.example`. Use it as a deployment
-checklist when wiring up Vercel, Supabase Vault, or local `.env.*.local`
+checklist when wiring up the hosting platform, Supabase Vault, or local `.env.*.local`
 overrides. Variables marked **_secret_** must never be committed to git.
 
 ## 1. Core Application
@@ -30,7 +30,7 @@ Configure *both* client and service credentials:
 | `SUPABASE_ACCESS_TOKEN` | CLI _secret_ | Required for `supabase db push` / migrations. |
 | `SUPABASE_DB_PASSWORD` | CLI _secret_ | Database password for local `psql` access. |
 
-> **Tip:** set `NEXT_PUBLIC_*` keys in Vercel and duplicate the service-role key
+> **Tip:** set `NEXT_PUBLIC_*` keys in the hosting platform and duplicate the service-role key
 in Supabase Vault for edge functions.
 
 ## 3. Sessions & Authentication
@@ -90,14 +90,16 @@ in Supabase Vault for edge functions.
 | `NEXT_PUBLIC_FEATURE_FLAGS` | Frontend | JSON string consumed by the client bootstrap. |
 | `FEATURE_FLAGS` | Backend | Legacy fallback for seed scripts. |
 | `E2E_API_MOCKS` | Tests | Set to `1` when running Playwright with mocked APIs. |
-| `CI` | CI | Auto-set in GitHub Actions/Vercel; included here for transparency. |
+| `CI` | CI | Auto-set in GitHub Actions/hosting platform; included here for transparency. |
 
 ## 9. Local Development Quickstart
 
 Create `.env.local` (Next.js) and `backend/.env.local` (NestJS) with the values
-you need. Example minimal front-end setup:
+you need. Example minimal front-end setup (store this file locally only):
 
 ```
+APP_ENV=local
+APP_BASE_URL=http://localhost:3000
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_ENVIRONMENT_LABEL=dev
 NEXT_PUBLIC_BACKEND_URL=http://localhost:5000/api
@@ -105,9 +107,9 @@ NEXT_PUBLIC_SUPABASE_URL=https://<project>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
 SITE_SUPABASE_URL=https://<project>.supabase.co
 SITE_SUPABASE_SECRET_KEY=<service-role-key>
-ONBOARDING_API_TOKEN=local-onboarding-token
+ONBOARDING_API_TOKEN=local-onboarding-token # Server-only secret
 NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN=local-onboarding-token
-OPENAI_API_KEY=sk-local-key
+OPENAI_API_KEY=sk-local-key # Server-only secret
 ```
 
 Example backend overrides in `backend/.env.local`:

@@ -35,11 +35,11 @@ This ensures the offline banner and onboarding modal interactions continue funct
 
 1. **User reports blank home screen**
    - Ask for the Lighthouse trace or screenshot. If skeletons are stuck, confirm API availability and check for `503` responses on `/api/home`.
-   - Review Vercel Edge logs for middleware rejects and ensure CSP policies are not blocking assets.
+   - Review hosting platform edge/runtime logs for middleware rejects and ensure CSP policies are not blocking assets.
    - Toggle the `MAINTENANCE_MODE` feature flag in the admin dashboard if the outage persists for more than 10 minutes.
 2. **Offline banner remains visible**
    - Confirm the fan is not on a captive portal. Ask them to open <https://captive.apple.com>.
-   - Check for JavaScript errors in Sentry mentioning `navigator.onLine`. If present, redeploy after clearing caches via Vercel.
+   - Check for JavaScript errors in Sentry mentioning `navigator.onLine`. If present, redeploy after clearing caches via the hosting platform.
 3. **Empty state fallback triggered unexpectedly**
    - Inspect the corresponding config in `app/_config/home.ts` and ensure CMS sync jobs populated the feed.
    - If data is intentionally empty (e.g., between seasons), update copy in `EmptyState` component to provide guidance.
@@ -69,6 +69,6 @@ Document results in `reports/operations-log.md` with timestamp, operator, and ac
 ## Rollback Procedure (Frontend)
 
 1. Trigger `npm run build` locally to confirm the last stable commit still builds.
-2. Revert the offending deployment in Vercel dashboard (select previous deployment from history).
+2. Revert the offending deployment in the hosting platform dashboard (select previous deployment from history).
 3. Run `npm run smoke:telemetry` and `npm run test:unit` to revalidate.
 4. Post-mortem within 24 hours documenting cause, mitigation, and prevention in `docs/runbooks/post-incident/<date>.md`.

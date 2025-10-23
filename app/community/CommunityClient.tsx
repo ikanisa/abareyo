@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type FocusEvent,
   type FormEvent,
   type FocusEvent,
   type PropsWithChildren,
@@ -118,6 +119,8 @@ const WidgetRow = ({ children }: PropsWithChildren) => (
 const ClipsCarousel = ({ clips, onOpenComments }: { clips: Clip[]; onOpenComments: (clip: Clip) => void }) => {
   const prefersReducedMotion = useReducedMotion();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isFocusWithin, setIsFocusWithin] = useState(false);
+  const containerRef = useRef<HTMLElement | null>(null);
   const activeClip = clips[activeIndex];
   const carouselRef = useRef<HTMLElement>(null);
   const [keyboardActive, setKeyboardActive] = useState(false);
