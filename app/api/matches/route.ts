@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { NextResponse } from 'next/server';
 
 // Match centre data is sourced from local fixtures defined in `/app/_data/matches`.
 // We optionally override `matches` with rows from Supabase if configured.
@@ -8,10 +9,12 @@ import {
   matches as fixtureMatches,
   matchFeedUpdatedAt,
   type Match,
-} from "@/app/_data/matches";
-import { getSupabasePublishableKey, getSupabaseUrl } from "@/integrations/supabase/env";
+} from '@/app/_data/matches';
+import { getSupabasePublishableKey, getSupabaseUrl } from '@/integrations/supabase/env';
+import { createServiceSupabaseClient } from '@/integrations/supabase/server';
+import type { Database } from '@/integrations/supabase/types';
 
-export const runtime = "nodejs";
+export const runtime = 'edge';
 
 type SupabaseMatchRow = {
   opponent?: string | null;
@@ -20,29 +23,35 @@ type SupabaseMatchRow = {
   [key: string]: unknown;
 };
 
-async function fetchMatchesFromSupabase() {
-  const url = getSupabaseUrl();
-  const key = getSupabasePublishableKey();
+type MatchesClient = SupabaseClient<Database>;
 
-  if (!url || !key) {
-    if (process.env.NODE_ENV !== "production") {
-      console.warn("Supabase publishable credentials missing; falling back to fixture matches.");
-    }
+const resolveMatchesClient = async (): Promise<MatchesClient | null> => {
+  const serviceClient = createServiceSupabaseClient();
+  if (serviceClient) {
+    return serviceClient;
+  }
+
+  const supabaseUrl = getSupabaseUrl();
+  const supabaseAnonKey = getSupabasePublishableKey();
+  if (!supabaseUrl || !supabaseAnonKey) {
     return null;
   }
 
-  // Importing here keeps edge bundle smaller when not used.
-  const { createClient } = await import("@supabase/supabase-js");
-  const supabase = createClient(url, key, { auth: { persistSession: false } });
+  const { createClient } = await import('@supabase/supabase-js');
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false } });
+};
 
-  const { data, error } = await supabase
-    .from("matches")
-    .select("*")
-    .order("date");
+async function fetchMatchesFromSupabase() {
+  const client = await resolveMatchesClient();
+  if (!client) {
+    return null;
+  }
+
+  const { data, error } = await client.from('matches').select('*').order('date');
 
   if (error) {
     // Swallow error and allow fallback to fixtures
-    console.error("Supabase matches fetch failed:", error.message);
+    console.error('Supabase matches fetch failed:', error.message);
     return null;
   }
   return data ?? null;
@@ -61,10 +70,10 @@ export async function GET() {
   const dbMatches = await fetchMatchesFromSupabase();
   const matches = (dbMatches ?? fixtureMatches).map((match) => {
     const row = match as SupabaseMatchRow | Match;
-    if ("opponent" in row && typeof row.opponent === "string" && row.opponent) return row;
-    const home = typeof row.home === "string" ? row.home : undefined;
-    const away = typeof row.away === "string" ? row.away : undefined;
-    const isRayonHome = home?.toLowerCase().includes("rayon");
+    if ('opponent' in row && typeof row.opponent === 'string' && row.opponent) return row;
+    const home = typeof row.home === 'string' ? row.home : undefined;
+    const away = typeof row.away === 'string' ? row.away : undefined;
+    const isRayonHome = home?.toLowerCase().includes('rayon');
     const opponent = isRayonHome ? away : home;
     return {
       opponent,

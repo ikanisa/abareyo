@@ -1,9 +1,10 @@
 import { cookies } from 'next/headers';
 
 import { AdminContentDashboard } from '@/components/admin/content/AdminContentDashboard';
+import { serverEnv } from '@/config/env';
 
 const resolveBaseUrl = () => {
-  const envUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_VERCEL_URL;
+  const envUrl = serverEnv.NEXT_PUBLIC_SITE_URL ?? serverEnv.APP_BASE_URL;
   if (!envUrl) return '';
   const hasProtocol = envUrl.startsWith('http://') || envUrl.startsWith('https://');
   return hasProtocol ? envUrl.replace(/\/$/, '') : `https://${envUrl.replace(/\/$/, '')}`;

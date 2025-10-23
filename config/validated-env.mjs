@@ -22,6 +22,8 @@ const isValidBackendUrl = (value) => {
 
 const baseSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  APP_ENV: z.enum(['development', 'preview', 'production']).default('development'),
+  APP_BASE_URL: z.string().url().optional(),
   NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
   NEXT_PUBLIC_BACKEND_URL: z
     .string()
@@ -44,8 +46,7 @@ const baseSchema = z.object({
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE: z.string().optional(),
   NEXT_PUBLIC_ADMIN_API_TOKEN: z.string().optional(),
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK: z.string().optional(),
-  CORS_ALLOWED_ORIGINS: z.string().optional(),
-  VERCEL_URL: z.string().optional(),
+  NEXT_PUBLIC_APP_ENV: z.enum(['development', 'preview', 'production']).optional(),
   PORT: z.string().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   SITE_SUPABASE_URL: z.string().url(),
@@ -68,8 +69,6 @@ const baseSchema = z.object({
   SENTRY_TRACES_SAMPLE_RATE: z.string().optional(),
   SENTRY_REPLAYS_SESSION_SAMPLE_RATE: z.string().optional(),
   SENTRY_REPLAYS_ERROR_SAMPLE_RATE: z.string().optional(),
-  NEXT_PUBLIC_VERCEL_URL: z.string().optional(),
-  VERCEL_AUTOMATION_BYPASS_SECRET: z.string().optional(),
 });
 
 const parsed = baseSchema.parse(process.env);
@@ -109,6 +108,8 @@ if (missingCritical.length > 0) {
 
 const serverEnv = {
   NODE_ENV: parsed.NODE_ENV,
+  APP_ENV: parsed.APP_ENV,
+  APP_BASE_URL: parsed.APP_BASE_URL,
   NEXT_PUBLIC_SITE_URL: parsed.NEXT_PUBLIC_SITE_URL,
   NEXT_PUBLIC_BACKEND_URL: parsed.NEXT_PUBLIC_BACKEND_URL,
   NEXT_PUBLIC_ENVIRONMENT_LABEL: parsed.NEXT_PUBLIC_ENVIRONMENT_LABEL,
@@ -125,8 +126,7 @@ const serverEnv = {
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE: parsed.NEXT_PUBLIC_ADMIN_SESSION_COOKIE,
   NEXT_PUBLIC_ADMIN_API_TOKEN: parsed.NEXT_PUBLIC_ADMIN_API_TOKEN,
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK: parsed.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK,
-  CORS_ALLOWED_ORIGINS: parsed.CORS_ALLOWED_ORIGINS,
-  VERCEL_URL: parsed.VERCEL_URL,
+  NEXT_PUBLIC_APP_ENV: parsed.NEXT_PUBLIC_APP_ENV ?? parsed.APP_ENV,
   PORT: parsed.PORT,
   SUPABASE_SERVICE_ROLE_KEY: parsed.SUPABASE_SERVICE_ROLE_KEY,
   SITE_SUPABASE_URL: parsed.SITE_SUPABASE_URL,
@@ -149,12 +149,16 @@ const serverEnv = {
   SENTRY_TRACES_SAMPLE_RATE: parsed.SENTRY_TRACES_SAMPLE_RATE,
   SENTRY_REPLAYS_SESSION_SAMPLE_RATE: parsed.SENTRY_REPLAYS_SESSION_SAMPLE_RATE,
   SENTRY_REPLAYS_ERROR_SAMPLE_RATE: parsed.SENTRY_REPLAYS_ERROR_SAMPLE_RATE,
-  NEXT_PUBLIC_VERCEL_URL: parsed.NEXT_PUBLIC_VERCEL_URL,
-  VERCEL_AUTOMATION_BYPASS_SECRET: parsed.VERCEL_AUTOMATION_BYPASS_SECRET,
 };
 
+const fallbackPort = parsed.PORT ?? '3000';
+const fallbackSiteUrl =
+  parsed.NEXT_PUBLIC_SITE_URL ??
+  parsed.APP_BASE_URL ??
+  `http://localhost:${fallbackPort}`;
+
 const clientEnv = {
-  NEXT_PUBLIC_SITE_URL: parsed.NEXT_PUBLIC_SITE_URL ?? parsed.VERCEL_URL ?? '',
+  NEXT_PUBLIC_SITE_URL: fallbackSiteUrl,
   NEXT_PUBLIC_BACKEND_URL: parsed.NEXT_PUBLIC_BACKEND_URL,
   NEXT_PUBLIC_ENVIRONMENT_LABEL: parsed.NEXT_PUBLIC_ENVIRONMENT_LABEL,
   NEXT_PUBLIC_SUPABASE_URL: parsed.NEXT_PUBLIC_SUPABASE_URL,
@@ -170,7 +174,7 @@ const clientEnv = {
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE: parsed.NEXT_PUBLIC_ADMIN_SESSION_COOKIE,
   NEXT_PUBLIC_ADMIN_API_TOKEN: parsed.NEXT_PUBLIC_ADMIN_API_TOKEN,
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK: parsed.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK,
-  NEXT_PUBLIC_VERCEL_URL: parsed.NEXT_PUBLIC_VERCEL_URL,
+  NEXT_PUBLIC_APP_ENV: parsed.NEXT_PUBLIC_APP_ENV ?? parsed.APP_ENV,
 };
 
 export { clientEnv, serverEnv };
