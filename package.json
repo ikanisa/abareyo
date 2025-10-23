@@ -21,8 +21,9 @@
     "start": "next start",
     "check:backend": "node scripts/check-backend-endpoint.mjs",
     "health": "node -e \"fetch('http://localhost:3000/api/health').then(r=>r.text()).then(console.log).catch(console.error)\"",
-    "type-check": "tsc --noEmit",
-    "test": "npm run type-check && npm run test:unit",
+    "typecheck": "tsc --noEmit",
+    "type-check": "npm run typecheck",
+    "test": "npm run typecheck && npm run test:unit",
     "test:unit": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
@@ -31,8 +32,7 @@
     "test:e2e:headed": "playwright test --headed",
     "setup:hooks": "git config core.hooksPath .githooks",
     "seed": "tsx scripts/seed.ts",
-    "ci:guard-payments": "tsx scripts/ci/assert-ussd-only.ts",
-    "vercel:env:sync": "bash scripts/vercel-generate-secrets.sh"
+    "ci:guard-payments": "tsx scripts/ci/assert-ussd-only.ts"
   },
   "dependencies": {
     "@capacitor/app": "^5.0.8",

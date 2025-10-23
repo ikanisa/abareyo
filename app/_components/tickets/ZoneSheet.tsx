@@ -41,11 +41,15 @@ const ZoneSheet = ({ fixture, isOpen, onClose, onZoneSelect }: ZoneSheetProps) =
       role="dialog"
       aria-label={`Select a zone for ${fixture.title}`}
       className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 backdrop-blur-sm animate-ticket-overlay"
-      onClick={onClose}
+      onPointerDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
     >
       <section
         className="relative flex w-full max-w-xl flex-col gap-5 rounded-t-3xl bg-[#020817] p-6 text-white shadow-2xl animate-ticket-sheet"
-        onClick={(event) => event.stopPropagation()}
+        onPointerDown={(event) => event.stopPropagation()}
       >
         <header className="space-y-2">
           <div className="h-1 w-16 self-center rounded-full bg-white/25" aria-hidden />

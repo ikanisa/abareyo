@@ -11,6 +11,7 @@ const nextConfig = {
   // Ensure local package '@rayon/contracts' is transpiled in Next.js build
   transpilePackages: ['@rayon/contracts'],
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',

@@ -95,9 +95,11 @@ in Supabase Vault for edge functions.
 ## 9. Local Development Quickstart
 
 Create `.env.local` (Next.js) and `backend/.env.local` (NestJS) with the values
-you need. Example minimal front-end setup:
+you need. Example minimal front-end setup (store this file locally only):
 
 ```
+APP_ENV=local
+APP_BASE_URL=http://localhost:3000
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_ENVIRONMENT_LABEL=dev
 NEXT_PUBLIC_BACKEND_URL=http://localhost:5000/api
@@ -105,9 +107,9 @@ NEXT_PUBLIC_SUPABASE_URL=https://<project>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
 SITE_SUPABASE_URL=https://<project>.supabase.co
 SITE_SUPABASE_SECRET_KEY=<service-role-key>
-ONBOARDING_API_TOKEN=local-onboarding-token
+ONBOARDING_API_TOKEN=local-onboarding-token # Server-only secret
 NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN=local-onboarding-token
-OPENAI_API_KEY=sk-local-key
+OPENAI_API_KEY=sk-local-key # Server-only secret
 ```
 
 Example backend overrides in `backend/.env.local`:

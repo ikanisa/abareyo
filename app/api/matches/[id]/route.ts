@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { matches as fixtureMatches } from "@/app/_data/matches";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 function normaliseId(id: string) {
   return id.toLowerCase();
