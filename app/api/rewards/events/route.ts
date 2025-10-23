@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { matches as fixtureMatches } from "@/app/_data/matches";
 
-export const runtime = "nodejs";
-
 export async function GET() {
   const nextFixture =
     fixtureMatches.find((match) => match.status === "upcoming") ?? fixtureMatches[0];

@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { matches as fixtureMatches } from "@/app/_data/matches";
 
-export const runtime = "nodejs";
-
 type Pass = {
   id: string;
   order_id?: string | null;

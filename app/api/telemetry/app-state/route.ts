@@ -11,11 +11,5 @@ const handler = withAxiom((req: AxiomRequest) =>
 );
 
 export const POST = handler;
-export const OPTIONS = (req: NextRequest) =>
-  new NextResponse(null, {
-    status: 204,
-    headers: buildTelemetryCorsHeaders(req.headers.get("origin")),
-  });
-
-export const runtime = "nodejs";
+export const OPTIONS = () => corsResponse(204);
 export const dynamic = "force-dynamic";

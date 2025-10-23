@@ -12,8 +12,6 @@ import {
 } from "@/app/_data/matches";
 import { tryGetSupabaseServerAnonClient } from '@/lib/db';
 
-export const runtime = 'edge';
-
 type SupabaseMatchRow = {
   opponent?: string | null;
   home?: string | null;
@@ -26,7 +24,14 @@ async function fetchMatchesFromSupabase() {
 
   if (!supabase) return null;
 
-  const { data, error } = await client.from('matches').select('*').order('date');
+  // Importing here keeps the server bundle smaller when Supabase is not enabled.
+  const { createClient } = await import("@supabase/supabase-js");
+  const supabase = createClient(url, key, { auth: { persistSession: false } });
+
+  const { data, error } = await supabase
+    .from("matches")
+    .select("*")
+    .order("date");
 
   if (error) {
     // Swallow error and allow fallback to fixtures
