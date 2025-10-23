@@ -1,7 +1,6 @@
 const DEFAULT_CONNECT_SOURCES = new Set([
   "'self'",
   'https://*.ingest.sentry.io',
-  'https://api.axiom.co',
 ]);
 
 const normaliseOrigin = (value) => {

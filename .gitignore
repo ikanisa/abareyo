@@ -30,6 +30,6 @@ supabase/supabase/.temp/
 *.njsproj
 *.sln
 *.sw?
-.vercel
 test-results
 playwright-report
+tsconfig.tsbuildinfo

@@ -1,13 +1,32 @@
-import * as Sentry from "@sentry/nextjs";
+import { recordClientException } from "@/lib/observability";
 
 const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN || "";
-const enabled = Boolean(dsn);
 
-Sentry.init({
-  dsn: dsn || undefined,
-  enabled,
-  environment: process.env.NEXT_PUBLIC_ENVIRONMENT_LABEL ?? process.env.NODE_ENV ?? "development",
-  tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? "0.1"),
-  replaysSessionSampleRate: Number(process.env.SENTRY_REPLAYS_SESSION_SAMPLE_RATE ?? "0.05"),
-  replaysOnErrorSampleRate: Number(process.env.SENTRY_REPLAYS_ERROR_SAMPLE_RATE ?? "1.0"),
-});
+if (dsn) {
+  console.warn(
+    "[observability] Sentry DSN variables detected but the Sentry SDK is disabled. Client errors will be forwarded to the telemetry endpoint instead.",
+  );
+}
+
+if (typeof window !== "undefined") {
+  const registerGlobalHandlers = () => {
+    const globalWindow = window as unknown as { __OBSERVABILITY_HANDLERS__?: boolean };
+
+    if (globalWindow.__OBSERVABILITY_HANDLERS__) {
+      return;
+    }
+
+    globalWindow.__OBSERVABILITY_HANDLERS__ = true;
+
+    window.addEventListener("error", async (event) => {
+      await recordClientException(event.error ?? event.message);
+    });
+
+    window.addEventListener("unhandledrejection", async (event) => {
+      const reason = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
+      await recordClientException(reason);
+    });
+  };
+
+  registerGlobalHandlers();
+}

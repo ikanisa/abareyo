@@ -1,4 +1,3 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
 // Match centre data is sourced from local fixtures defined in `/app/_data/matches`.
@@ -23,10 +22,6 @@ async function fetchMatchesFromSupabase() {
   const supabase = tryGetSupabaseServerAnonClient();
 
   if (!supabase) return null;
-
-  // Importing here keeps the server bundle smaller when Supabase is not enabled.
-  const { createClient } = await import("@supabase/supabase-js");
-  const supabase = createClient(url, key, { auth: { persistSession: false } });
 
   const { data, error } = await supabase
     .from("matches")

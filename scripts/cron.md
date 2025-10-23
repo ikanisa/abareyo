@@ -1,6 +1,6 @@
 # Scheduling playbook
 
-The project no longer relies on Vercel cron definitions. Report schedules
+The project no longer relies on proprietary platform cron definitions. Report schedules
 created through the admin UI are persisted in Supabase but still require an
 execution runner to deliver reports on a cadence.
 
@@ -20,7 +20,7 @@ execution runner to deliver reports on a cadence.
 - Deploy a lightweight worker (e.g. `node cron-worker.js`) using `node-cron` or
   a similar scheduler to poll Supabase and enqueue work.
 - Host alongside the primary Next.js app (or on a separate process) so it can
-  scale independently and avoid tying execution to Vercel's scheduled functions.
+  scale independently and avoid tying execution to third-party scheduled functions.
 
 Until one of these options is wired up, report schedules remain informational
 only. Follow the TODOs in the admin dashboard and API route when implementing a

@@ -6,7 +6,7 @@ This monorepo powers the Rayon Sports fan experience across web, mobile, and mat
 - **Frontend**: Next.js 14 (App Router), Tailwind CSS, shadcn/ui, TanStack Query, next-themes, Framer Motion.
 - **Backend**: Supabase Postgres (SQL migrations + seeds), Supabase Edge Functions, and Next.js API routes backed by `@supabase/supabase-js`.
 - **Realtime automation**: `/functions/v1/sms-webhook` reconciles MoMo/Airtel SMS receipts while `/functions/v1/issue-policy` turns paid insurance quotes into policies.
-- **Tooling**: Dockerfiles for web, GitHub Actions CI (`npm run lint`, `npm run type-check`, `npm run build`), Supabase CLI helpers.
+- **Tooling**: Dockerfiles for web, GitHub Actions CI (`pnpm lint`, `pnpm typecheck`, `pnpm build`), Supabase CLI helpers.
 
 ## MacBook Setup
 
@@ -18,7 +18,7 @@ Local contributors primarily develop on Apple Silicon MacBooks. The following st
    corepack enable
    corepack prepare pnpm@9.12.2 --activate
    ```
-   We ship an `npm@11` lockfile for compatibility with CI, but `pnpm` is the preferred local package manager because it matches the workspace layout and keeps the dependency graph deterministic.
+   We ship a `pnpm@9` lockfile that aligns with CI and keeps the dependency graph deterministic.
 2. Install Node.js 20 via `nvm`, `fnm`, or `asdf` (our `.nvmrc` pins `20.12.x`). Rosetta is not required.
 3. Authenticate the Supabase CLI once (`supabase login`) so migrations and function deploys can execute without prompts.
 
@@ -50,7 +50,7 @@ NEXT_PUBLIC_ENVIRONMENT_LABEL=local
    ```bash
    pnpm install
    ```
-   `pnpm` reads the existing npm lockfile via Corepack, so there is no need to regenerate dependency metadata.
+   `pnpm` installs dependencies deterministically via the workspace lockfile; no additional metadata needs to be generated.
 2. Ensure the Supabase CLI is installed (<https://supabase.com/docs/guides/cli>). Log in once so migrations can run.
 3. Start Supabase locally (or point the env vars to a remote project):
    ```bash
@@ -93,13 +93,18 @@ If you plan to surface media (shop products, fundraising covers), configure S3-c
 
 ## Hosting Strategy
 
-We intentionally removed the default Vercel deployment path. The platform now targets containerised or Supabase-hosted environments for the following reasons:
+We intentionally removed the default managed-host deployment path. The platform now targets containerised or Supabase-hosted environments for the following reasons:
 
-- **Deterministic runtime** – Self-hosting via Docker or Supabase Edge Functions keeps the Node.js version and native dependencies aligned with our CI images, eliminating Vercel-specific quirks around OpenSSL and experimental flags.
+- **Deterministic runtime** – Self-hosting via Docker or Supabase Edge Functions keeps the Node.js version and native dependencies aligned with our CI images, eliminating proprietary platform quirks around OpenSSL and experimental flags.
 - **Network affinity** – Running the web app closer to Supabase Postgres (or within the same VPC) lowers latency for realtime updates and reduces cross-region egress charges.
-- **Compliance** – Match-day integrations (MoMo SMS, SACCO accounting) require IP allowlists that are impractical to enforce on ephemeral Vercel preview hosts.
+- **Compliance** – Match-day integrations (MoMo SMS, SACCO accounting) require IP allowlists that are impractical to enforce on ephemeral preview hosts.
 
 Upcoming production hardening includes a reverse proxy in front of the Next.js runtime. We are evaluating Caddy (for automatic TLS and HTTP/3) and Cloudflare Tunnel (for zero-trust ingress) to expose the app without punching additional firewall holes. Implementation details will land in the runbooks once the chosen proxy is rolled out.
+
+### What we removed (managed host)
+- Platform-specific CLI scripts (`scripts/env-sync-template.sh`, `scripts/local-preflight.mjs`) now target generic Node.js environments.
+- GitHub Actions no longer install proprietary CLIs — the preview workflow simply builds and archives artifacts.
+- Documentation now points at Docker/Supabase hosting; legacy references to the previous managed platform have been retired.
 
 ### Chat-Based Onboarding
 - Visit `/onboarding` to launch the anonymous, ChatGPT-style onboarding assistant.
@@ -139,7 +144,7 @@ Upcoming production hardening includes a reverse proxy in front of the Next.js r
   - `make e2e` runs Playwright smokes with mocked API (guarded by `E2E_API_MOCKS=1`).
 
 - CI/CD
-  - CI runs lint/unit/build. Preview deploys now rely on the internal GitHub Actions workflow paired with Supabase (the legacy Vercel flow has been retired). Edge Functions ship via `.github/workflows/supabase-functions-deploy.yml`.
+  - CI runs lint/unit/build. Preview deploys now rely on the internal GitHub Actions workflow paired with Supabase (the legacy managed-host flow has been retired). Edge Functions ship via `.github/workflows/supabase-functions-deploy.yml`.
   - Optional `HEALTH_URL` secret enables post-deploy health check loop.
 
 - Observability & Security

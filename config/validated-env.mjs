@@ -96,9 +96,6 @@ if (parsed.NODE_ENV === 'production') {
   if (!parsed.NEXT_PUBLIC_SITE_URL) {
     missingCritical.push('NEXT_PUBLIC_SITE_URL (required in production)');
   }
-  if (!parsed.NEXT_PUBLIC_SENTRY_DSN && !parsed.SENTRY_DSN) {
-    missingCritical.push('SENTRY_DSN or NEXT_PUBLIC_SENTRY_DSN (one must be set in production)');
-  }
 }
 
 if (missingCritical.length > 0) {
