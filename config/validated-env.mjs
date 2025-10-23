@@ -167,6 +167,12 @@ const serverEnv = {
   SENTRY_REPLAYS_ERROR_SAMPLE_RATE: parsed.SENTRY_REPLAYS_ERROR_SAMPLE_RATE,
 };
 
+const fallbackPort = parsed.PORT ?? '3000';
+const fallbackSiteUrl =
+  parsed.NEXT_PUBLIC_SITE_URL ??
+  parsed.APP_BASE_URL ??
+  `http://localhost:${fallbackPort}`;
+
 const clientEnv = {
   NEXT_PUBLIC_SITE_URL: resolvedPublicSiteUrl,
   NEXT_PUBLIC_BACKEND_URL: parsed.NEXT_PUBLIC_BACKEND_URL,

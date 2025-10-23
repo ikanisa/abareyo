@@ -1,7 +1,8 @@
 import { withAxiom, type AxiomRequest } from "next-axiom";
+import { NextRequest, NextResponse } from "next/server";
 
 import {
-  corsResponse,
+  buildTelemetryCorsHeaders,
   processTelemetryRequest,
 } from "@/lib/telemetry/app-state-handler";
 
@@ -10,7 +11,11 @@ const handler = withAxiom((req: AxiomRequest) =>
 );
 
 export const POST = handler;
-export const OPTIONS = () => corsResponse(204);
+export const OPTIONS = (req: NextRequest) =>
+  new NextResponse(null, {
+    status: 204,
+    headers: buildTelemetryCorsHeaders(req.headers.get("origin")),
+  });
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
