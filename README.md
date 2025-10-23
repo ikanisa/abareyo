@@ -8,9 +8,25 @@ This monorepo powers the Rayon Sports fan experience across web, mobile, and mat
 - **Realtime automation**: `/functions/v1/sms-webhook` reconciles MoMo/Airtel SMS receipts while `/functions/v1/issue-policy` turns paid insurance quotes into policies.
 - **Tooling**: Dockerfiles for web, GitHub Actions CI (`npm run lint`, `npm run type-check`, `npm run build`), Supabase CLI helpers.
 
-## Required Environment Variables
+## MacBook Setup
 
-Create a root `.env` file with the following values. Keys prefixed with `NEXT_PUBLIC_` are exposed to the browser and should point at the deployed backend/API origin.
+Local contributors primarily develop on Apple Silicon MacBooks. The following steps align with our supported toolchain:
+
+1. Install [Homebrew](https://brew.sh/) and bootstrap the required binaries:
+   ```bash
+   brew install corepack supabase/tap/supabase
+   corepack enable
+   corepack prepare pnpm@9.12.2 --activate
+   ```
+   We ship an `npm@11` lockfile for compatibility with CI, but `pnpm` is the preferred local package manager because it matches the workspace layout and keeps the dependency graph deterministic.
+2. Install Node.js 20 via `nvm`, `fnm`, or `asdf` (our `.nvmrc` pins `20.12.x`). Rosetta is not required.
+3. Authenticate the Supabase CLI once (`supabase login`) so migrations and function deploys can execute without prompts.
+
+Developers who rely on corporate VPNs should export `SUPABASE_DOCKER_IMAGE_REGISTRY=supabase` before running CLI commands to avoid registry resolution issues.
+
+## Supabase Configuration
+
+Supabase drives authentication, storage, and realtime updates. Create a root `.env` (or `.env.local` for machine-specific overrides) with the following values. Keys prefixed with `NEXT_PUBLIC_` are exposed to the browser and should point at the deployed backend/API origin.
 
 ```
 SUPABASE_URL=
@@ -25,13 +41,16 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:3000
 NEXT_PUBLIC_ENVIRONMENT_LABEL=local
 ```
 
+`.env.local` is gitignored and takes precedence when you need to experiment with staging Supabase references, alternate webhook tokens, or forthcoming Cloudflare Tunnel hostnames.
+
 > Supabase reserves the `SUPABASE_*` prefix for its own managed secrets when using the CLI/Vault. When setting project secrets via `supabase secrets set`, use the `SITE_SUPABASE_URL`, `SITE_SUPABASE_PUBLISHABLE_KEY`, and `SITE_SUPABASE_SECRET_KEY` aliases (they are automatically picked up by the codebase).
 
 ## Local Setup
-1. Install dependencies:
+1. Install dependencies with `pnpm`:
    ```bash
-   npm install
+   pnpm install
    ```
+   `pnpm` reads the existing npm lockfile via Corepack, so there is no need to regenerate dependency metadata.
 2. Ensure the Supabase CLI is installed (<https://supabase.com/docs/guides/cli>). Log in once so migrations can run.
 3. Start Supabase locally (or point the env vars to a remote project):
    ```bash
@@ -51,13 +70,36 @@ NEXT_PUBLIC_ENVIRONMENT_LABEL=local
    These functions can also be deployed via `supabase functions deploy <name>`.
 6. Run the Next.js dev server:
    ```bash
-   npm run dev
+   pnpm dev
    ```
-   Visit <http://localhost:3000> to explore the mobile-first PWA.
+Visit <http://localhost:3000> to explore the mobile-first PWA.
+
+👉 Check out [`docs/local-hosting.md`](docs/local-hosting.md) for a consolidated Mac-first runbook covering `.env.local` usage, build/start commands, and reverse proxy considerations.
 
 Realtime payment confirmations are delivered through the SMS webhook. Use `node tools/gsm-emulator/send-sms.js "Paid RWF 25000 Ref XYZ"` or call the deployed `/functions/v1/sms-webhook` endpoint with an authorised payload to mark tickets, orders, quotes, and SACCO deposits as paid.
 
 If you plan to surface media (shop products, fundraising covers), configure S3-compatible storage in the Supabase project storage bucket or an external CDN and update product image URLs accordingly.
+
+## Run Commands
+
+`package.json` exposes the same script names across npm and pnpm. We standardise on the following pnpm invocations during local development and CI smoke tests:
+
+- `pnpm dev` – Next.js dev server with HMR.
+- `pnpm build` – Production build (runs `next build`).
+- `pnpm start` – Serve the production bundle (`next start`).
+- `pnpm lint` / `pnpm type-check` / `pnpm test` – Static analysis and unit coverage gates.
+- `pnpm cap:sync`, `pnpm cap:android`, `pnpm cap:ios` – Capacitor workflows (requires native toolchains).
+- `pnpm supabase:functions` (see `package.json`) – Convenience wrappers for function deploys.
+
+## Hosting Strategy
+
+We intentionally removed the default Vercel deployment path. The platform now targets containerised or Supabase-hosted environments for the following reasons:
+
+- **Deterministic runtime** – Self-hosting via Docker or Supabase Edge Functions keeps the Node.js version and native dependencies aligned with our CI images, eliminating Vercel-specific quirks around OpenSSL and experimental flags.
+- **Network affinity** – Running the web app closer to Supabase Postgres (or within the same VPC) lowers latency for realtime updates and reduces cross-region egress charges.
+- **Compliance** – Match-day integrations (MoMo SMS, SACCO accounting) require IP allowlists that are impractical to enforce on ephemeral Vercel preview hosts.
+
+Upcoming production hardening includes a reverse proxy in front of the Next.js runtime. We are evaluating Caddy (for automatic TLS and HTTP/3) and Cloudflare Tunnel (for zero-trust ingress) to expose the app without punching additional firewall holes. Implementation details will land in the runbooks once the chosen proxy is rolled out.
 
 ### Chat-Based Onboarding
 - Visit `/onboarding` to launch the anonymous, ChatGPT-style onboarding assistant.
@@ -66,8 +108,8 @@ If you plan to surface media (shop products, fundraising covers), configure S3-c
 - Once onboarding is completed, the app automatically unlocks the regular `/` home experience.
 
 ## Useful Scripts
-- `npm run lint` / `npm run type-check` / `npm run build` – CI parity checks.
-- `npm run cap:sync`, `npm run cap:android`, `npm run cap:ios` – entry points for Capacitor shells (install `@capacitor/cli` and related platform toolchains locally when you run them).
+- `pnpm lint` / `pnpm type-check` / `pnpm build` – CI parity checks.
+- `pnpm cap:sync`, `pnpm cap:android`, `pnpm cap:ios` – entry points for Capacitor shells (install `@capacitor/cli` and related platform toolchains locally when you run them).
 - Use `npx cordova-res` and `npx @bubblewrap/cli` on demand for mobile asset generation and TWA packaging; they are no longer pinned in `devDependencies` to avoid shipping known vulnerabilities.
 - `docker compose up web` – build and run the production web image locally.
 - `node tools/gsm-emulator/send-sms.js "…"` – simulate inbound MoMo/Airtel confirmation messages during flows.
@@ -97,7 +139,7 @@ If you plan to surface media (shop products, fundraising covers), configure S3-c
   - `make e2e` runs Playwright smokes with mocked API (guarded by `E2E_API_MOCKS=1`).
 
 - CI/CD
-  - CI runs lint/unit/build. Preview deploys rely on Vercel + Supabase. Edge Functions ship via `.github/workflows/supabase-functions-deploy.yml`.
+  - CI runs lint/unit/build. Container images are published via GitHub Actions and deployed alongside Supabase Edge Functions.
   - Optional `HEALTH_URL` secret enables post-deploy health check loop.
 
 - Observability & Security

@@ -64,6 +64,8 @@ export async function POST(request: NextRequest) {
 
       if (error) throw error;
 
+      // TODO: Trigger the chosen scheduler backend once cron infrastructure is
+      // implemented so new Supabase rows lead to actual job executions.
       await recordAudit(supabase, {
         action: 'reports.schedule.create',
         entityType: 'report_schedule',
