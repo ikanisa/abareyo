@@ -20,9 +20,11 @@ const isValidBackendUrl = (value) => {
   }
 };
 
-const baseSchema = z.object({
+const normalizeUrl = (value) => value.replace(/\/$/, '');
+
+const envSchema = z.object({
+  APP_ENV: z.enum(['local', 'development', 'staging', 'production', 'test']).default('local'),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  APP_ENV: z.enum(['development', 'preview', 'production']).default('development'),
   APP_BASE_URL: z.string().url().optional(),
   NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
   NEXT_PUBLIC_BACKEND_URL: z
@@ -46,7 +48,6 @@ const baseSchema = z.object({
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE: z.string().optional(),
   NEXT_PUBLIC_ADMIN_API_TOKEN: z.string().optional(),
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK: z.string().optional(),
-  NEXT_PUBLIC_APP_ENV: z.enum(['development', 'preview', 'production']).optional(),
   PORT: z.string().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   SITE_SUPABASE_URL: z.string().url(),
@@ -71,7 +72,7 @@ const baseSchema = z.object({
   SENTRY_REPLAYS_ERROR_SAMPLE_RATE: z.string().optional(),
 });
 
-const parsed = baseSchema.parse(process.env);
+const parsed = envSchema.parse(process.env);
 
 const missingCritical = [];
 for (const key of [
@@ -106,10 +107,26 @@ if (missingCritical.length > 0) {
   );
 }
 
+const defaultPort = parsed.PORT ?? '3000';
+
+const resolvedAppBaseUrl = (() => {
+  if (parsed.APP_BASE_URL) {
+    return normalizeUrl(parsed.APP_BASE_URL.trim());
+  }
+  if (parsed.NEXT_PUBLIC_SITE_URL) {
+    return normalizeUrl(parsed.NEXT_PUBLIC_SITE_URL.trim());
+  }
+  return normalizeUrl(`http://localhost:${defaultPort}`);
+})();
+
+const resolvedPublicSiteUrl = parsed.NEXT_PUBLIC_SITE_URL
+  ? normalizeUrl(parsed.NEXT_PUBLIC_SITE_URL.trim())
+  : resolvedAppBaseUrl;
+
 const serverEnv = {
-  NODE_ENV: parsed.NODE_ENV,
   APP_ENV: parsed.APP_ENV,
-  APP_BASE_URL: parsed.APP_BASE_URL,
+  NODE_ENV: parsed.NODE_ENV,
+  APP_BASE_URL: resolvedAppBaseUrl,
   NEXT_PUBLIC_SITE_URL: parsed.NEXT_PUBLIC_SITE_URL,
   NEXT_PUBLIC_BACKEND_URL: parsed.NEXT_PUBLIC_BACKEND_URL,
   NEXT_PUBLIC_ENVIRONMENT_LABEL: parsed.NEXT_PUBLIC_ENVIRONMENT_LABEL,
@@ -126,7 +143,6 @@ const serverEnv = {
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE: parsed.NEXT_PUBLIC_ADMIN_SESSION_COOKIE,
   NEXT_PUBLIC_ADMIN_API_TOKEN: parsed.NEXT_PUBLIC_ADMIN_API_TOKEN,
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK: parsed.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK,
-  NEXT_PUBLIC_APP_ENV: parsed.NEXT_PUBLIC_APP_ENV ?? parsed.APP_ENV,
   PORT: parsed.PORT,
   SUPABASE_SERVICE_ROLE_KEY: parsed.SUPABASE_SERVICE_ROLE_KEY,
   SITE_SUPABASE_URL: parsed.SITE_SUPABASE_URL,
@@ -158,7 +174,7 @@ const fallbackSiteUrl =
   `http://localhost:${fallbackPort}`;
 
 const clientEnv = {
-  NEXT_PUBLIC_SITE_URL: fallbackSiteUrl,
+  NEXT_PUBLIC_SITE_URL: resolvedPublicSiteUrl,
   NEXT_PUBLIC_BACKEND_URL: parsed.NEXT_PUBLIC_BACKEND_URL,
   NEXT_PUBLIC_ENVIRONMENT_LABEL: parsed.NEXT_PUBLIC_ENVIRONMENT_LABEL,
   NEXT_PUBLIC_SUPABASE_URL: parsed.NEXT_PUBLIC_SUPABASE_URL,
@@ -174,7 +190,13 @@ const clientEnv = {
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE: parsed.NEXT_PUBLIC_ADMIN_SESSION_COOKIE,
   NEXT_PUBLIC_ADMIN_API_TOKEN: parsed.NEXT_PUBLIC_ADMIN_API_TOKEN,
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK: parsed.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK,
-  NEXT_PUBLIC_APP_ENV: parsed.NEXT_PUBLIC_APP_ENV ?? parsed.APP_ENV,
 };
 
-export { clientEnv, serverEnv };
+const runtimeConfig = Object.freeze({
+  appEnv: parsed.APP_ENV,
+  port: defaultPort,
+  server: serverEnv,
+  client: clientEnv,
+});
+
+export { clientEnv, envSchema, runtimeConfig, serverEnv };
