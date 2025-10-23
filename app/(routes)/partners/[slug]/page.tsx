@@ -1,16 +1,12 @@
 import { notFound } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
 
-import { getSupabasePublishableKey, getSupabaseUrl } from '@/integrations/supabase/env';
+import { tryGetSupabaseServerAnonClient } from '@/lib/db';
 
 import PageShell from '@/app/_components/shell/PageShell';
 
 import PartnerFrame from './_components/PartnerFrame';
 
 export const dynamic = 'force-dynamic';
-
-const supabaseUrl = getSupabaseUrl();
-const supabaseAnonKey = getSupabasePublishableKey();
 
 const fallbackPartner = {
   id: 'demo-partner',
@@ -21,10 +17,10 @@ const fallbackPartner = {
   slug: 'visit-rwanda',
 };
 
-const anon = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
-
 export default async function PartnerWebview({ params }: { params: { slug: string } }) {
   const slug = params.slug;
+
+  const anon = tryGetSupabaseServerAnonClient();
 
   if (!anon) {
     if (slug === fallbackPartner.slug || slug === fallbackPartner.id) {
@@ -41,7 +37,9 @@ export default async function PartnerWebview({ params }: { params: { slug: strin
     notFound();
   }
 
-  const { data: bySlug, error: slugError } = await anon!
+  const client = anon;
+
+  const { data: bySlug, error: slugError } = await client
     .from('partners')
     .select('id,name,category,url,logo_url,slug')
     .eq('active', true)
@@ -55,7 +53,7 @@ export default async function PartnerWebview({ params }: { params: { slug: strin
   let partner = bySlug;
 
   if (!partner) {
-    const { data: byId, error: idError } = await anon!
+    const { data: byId, error: idError } = await client
       .from('partners')
       .select('id,name,category,url,logo_url,slug')
       .eq('active', true)

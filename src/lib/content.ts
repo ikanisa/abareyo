@@ -1,6 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-
-import { getSupabasePublishableKey, getSupabaseUrl } from '@/integrations/supabase/env';
+import { tryGetSupabaseServerAnonClient } from '@/lib/db';
 
 export type ContentItem = {
   id: string;
@@ -14,9 +12,6 @@ export type ContentItem = {
   published_at: string | null;
   created_at?: string | null;
 };
-
-const supabaseUrl = getSupabaseUrl();
-const supabaseAnonKey = getSupabasePublishableKey();
 
 const VALID_KINDS = new Set<ContentItem['kind']>(['article', 'video']);
 
@@ -53,13 +48,7 @@ function sanitizeTerm(term: string) {
   return term.replace(/[%_]/g, '');
 }
 
-function getClient() {
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return null;
-  }
-
-  return createClient(supabaseUrl, supabaseAnonKey);
-}
+const getClient = () => tryGetSupabaseServerAnonClient();
 
 export async function listContent({
   kind,

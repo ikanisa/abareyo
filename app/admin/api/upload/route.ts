@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { AdminAuthError, requireAdminSession } from '@/app/admin/api/_lib/session';
-import { getSupabaseAdmin } from '@/app/admin/api/_lib/supabase';
-import {
-  InvalidDataUrlError,
-  MEDIA_BUCKET,
-  StorageClientUnavailableError,
-  StorageUploadError,
-  uploadDataUrlObject,
-} from '@/lib/storage';
+import { requireSupabaseStorageBucket, SupabaseStorageUnavailableError } from '@/lib/storage';
+
+const MEDIA_BUCKET = 'media';
 
 export async function POST(request: NextRequest) {
   type UploadPayload = { fileName?: string; dataUrl?: string };
@@ -16,7 +11,6 @@ export async function POST(request: NextRequest) {
 
   try {
     await requireAdminSession();
-    const supabase = getSupabaseAdmin();
 
     payload = (await request.json().catch(() => null)) as UploadPayload | null;
     if (!payload?.fileName || !payload.dataUrl) {
@@ -34,17 +28,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
 
-    if (error instanceof InvalidDataUrlError) {
-      return NextResponse.json({ error: 'invalid_data_url' }, { status: 400 });
-    }
+    const bucket = requireSupabaseStorageBucket(MEDIA_BUCKET);
+
+    const { error } = await bucket.upload(objectPath, bytes, {
+      contentType: contentType || 'application/octet-stream',
+      upsert: true,
+    });
 
     if (error instanceof StorageClientUnavailableError) {
       return NextResponse.json({ error: 'supabase_not_configured' }, { status: 503 });
     }
 
-    if (error instanceof StorageUploadError) {
-      console.error('Failed to upload media asset', error, payload?.fileName);
-      return NextResponse.json({ error: 'upload_failed' }, { status: 500 });
+    const { data: publicUrl } = bucket.getPublicUrl(objectPath);
+    return NextResponse.json({ url: publicUrl.publicUrl });
+  } catch (error) {
+    if (error instanceof AdminAuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+
+    if (error instanceof SupabaseStorageUnavailableError) {
+      return NextResponse.json({ error: 'storage_unconfigured' }, { status: 503 });
     }
 
     console.error('Failed to upload media asset', error, payload?.fileName);

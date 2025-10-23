@@ -9,10 +9,8 @@ import {
   matches as fixtureMatches,
   matchFeedUpdatedAt,
   type Match,
-} from '@/app/_data/matches';
-import { getSupabasePublishableKey, getSupabaseUrl } from '@/integrations/supabase/env';
-import { createServiceSupabaseClient } from '@/integrations/supabase/server';
-import type { Database } from '@/integrations/supabase/types';
+} from "@/app/_data/matches";
+import { tryGetSupabaseServerAnonClient } from '@/lib/db';
 
 export const runtime = 'edge';
 
@@ -23,29 +21,10 @@ type SupabaseMatchRow = {
   [key: string]: unknown;
 };
 
-type MatchesClient = SupabaseClient<Database>;
-
-const resolveMatchesClient = async (): Promise<MatchesClient | null> => {
-  const serviceClient = createServiceSupabaseClient();
-  if (serviceClient) {
-    return serviceClient;
-  }
-
-  const supabaseUrl = getSupabaseUrl();
-  const supabaseAnonKey = getSupabasePublishableKey();
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return null;
-  }
-
-  const { createClient } = await import('@supabase/supabase-js');
-  return createClient<Database>(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false } });
-};
-
 async function fetchMatchesFromSupabase() {
-  const client = await resolveMatchesClient();
-  if (!client) {
-    return null;
-  }
+  const supabase = tryGetSupabaseServerAnonClient();
+
+  if (!supabase) return null;
 
   const { data, error } = await client.from('matches').select('*').order('date');
 
