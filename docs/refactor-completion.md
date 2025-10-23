@@ -19,11 +19,11 @@ This document catalogs the concrete changes that satisfy the four refactor track
 ## 3. Shared packages and tooling
 - **Contracts package exposing onboarding unions and build script:** `packages/contracts/package.json`, `packages/contracts/src/onboarding.ts`, `packages/contracts/tsconfig.json`
 - **Workspace TypeScript alignment:** `tsconfig.json`, `package.json`
-- **Operational inventory & archived Vercel plan documenting prerequisites:** `audit/inventory.json`, `audit/vercel-plan.md`
+- **Operational inventory & archived hosting plan documenting prerequisites:** `audit/inventory.json`, `audit/hosting-plan.md`
 
 ## 4. Deployment readiness follow-ups
-- **Backend endpoint verification script & preflight command:** `scripts/check-backend-endpoint.mjs`, `scripts/vercel-preflight.mjs`, `package.json`
-- **Expanded (legacy) Vercel secret generator covering Supabase, onboarding, telemetry, sockets, Sentry:** `scripts/vercel-generate-secrets.sh`
-- **Environment template & readiness report updates:** `.env.production.example`, `DEPLOYMENT_READINESS_REPORT.md`, `reports/VERCEL_CHECKLIST.md`
+- **Backend endpoint verification script & preflight command:** `scripts/check-backend-endpoint.mjs`, `scripts/local-preflight.mjs`, `package.json`
+- **Secret generator template covering Supabase, onboarding, telemetry, sockets, Sentry:** `scripts/env-sync-template.sh`
+- **Environment template & readiness report updates:** `.env.production.example`, `DEPLOYMENT_READINESS_REPORT.md`, `reports/hosting-checklist.md`
 
 All changes above have accompanying unit tests (`tests/unit/**`) and lint/typecheck coverage captured in the latest CI run instructions.

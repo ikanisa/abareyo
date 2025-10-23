@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextRequest } from "next/server";
 import { describe, expect, it, vi } from "vitest";
 
@@ -26,7 +27,10 @@ describe("requireAuthUser", () => {
     const getUser = vi.fn();
     const supabase = { auth: { getUser } };
 
-    const result = await requireAuthUser(createRequest(), supabase as any);
+    const result = await requireAuthUser(
+      createRequest(),
+      supabase as unknown as SupabaseClient,
+    );
     expect(result.response?.status).toBe(401);
     expect(getUser).not.toHaveBeenCalled();
   });
@@ -39,7 +43,7 @@ describe("requireAuthUser", () => {
     const supabase = { auth: { getUser } };
 
     const request = createRequest({ headers: { Authorization: "Bearer test-token" } });
-    const result = await requireAuthUser(request, supabase as any);
+    const result = await requireAuthUser(request, supabase as unknown as SupabaseClient);
 
     expect(result.user?.id).toBe("123");
     expect(getUser).toHaveBeenCalledWith("test-token");
@@ -55,7 +59,7 @@ describe("requireAuthUser", () => {
     const payload = encodeURIComponent(JSON.stringify({ currentSession: { access_token: "cookie-token" } }));
     const request = createRequest({ headers: { cookie: `supabase-auth-token=${payload}` } });
 
-    const result = await requireAuthUser(request, supabase as any);
+    const result = await requireAuthUser(request, supabase as unknown as SupabaseClient);
     expect(result.user?.id).toBe("user-cookie-token");
     expect(getUser).toHaveBeenCalledWith("cookie-token");
   });

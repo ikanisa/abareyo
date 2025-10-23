@@ -20,8 +20,8 @@ NEXT_PUBLIC_FEATURE_FLAGS,frontend,client,optional,"{}",JSON string of feature f
 NEXT_PUBLIC_SOCKET_TRANSPORT,frontend,client,optional,"polling",Controls socket.io transport preference.
 NEXT_PUBLIC_SOCKET_PATH,frontend,client,optional,,Overrides socket.io namespace path when provided.
 NEXT_PUBLIC_TELEMETRY_URL,frontend,client,optional,"/api/telemetry/app-state",Custom telemetry endpoint.
-NEXT_PUBLIC_SENTRY_DSN,frontend,client,conditional,,Client SDK DSN; otherwise use server DSN fallback.
-SENTRY_DSN,shared,server,conditional,,Server DSN required if client DSN missing.
+NEXT_PUBLIC_SENTRY_DSN,frontend,client,optional,,Legacy Sentry DSN; logs a warning when present.
+SENTRY_DSN,shared,server,optional,,Legacy Sentry DSN consumed by observability shim.
 SENTRY_TRACES_SAMPLE_RATE,shared,server,optional,"0.1",Override Sentry trace sampling.
 SENTRY_REPLAYS_SESSION_SAMPLE_RATE,frontend,client,optional,"0.05",Sentry session replay sampling.
 SENTRY_REPLAYS_ERROR_SAMPLE_RATE,frontend,client,optional,"1.0",Sentry error replay sampling.

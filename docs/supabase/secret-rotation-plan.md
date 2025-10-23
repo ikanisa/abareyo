@@ -6,7 +6,7 @@ Purpose: outline how we move production secrets out of the repository and prepar
 
 - `.env` → Local dev: contains publishable Supabase key and placeholders for sensitive tokens.
 - `.env.production` → Template only (no secrets); real values live in the hosting platform and Supabase Vault.
-- Preview secret store → Dev preview tokens (legacy `.vercel/.env.development.local` removed).
+- Preview secret store → Dev preview tokens (legacy managed-host env files removed).
 - `backend/.env.example` → Sample backend secrets (MoMo pay codes etc.).
 
 ## Rotation & Migration Steps

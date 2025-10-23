@@ -37,29 +37,43 @@ try {
   process.exit(1);
 }
 
+const pnpmLock = path.join(rootDir, 'pnpm-lock.yaml');
+if (!fs.existsSync(pnpmLock)) {
+  console.error('[ENV] pnpm-lock.yaml not found; install cannot proceed');
+  process.exit(1);
+}
+
 try {
   run('corepack enable');
 } catch (error) {
   console.warn('[ENV] corepack enable failed (continuing)');
 }
 
-const lockfilePath = path.join(rootDir, 'package-lock.json');
-if (!fs.existsSync(lockfilePath)) {
-  console.error('[ENV] package-lock.json not found; install cannot proceed');
+try {
+  run('pnpm install --frozen-lockfile');
+} catch (error) {
+  console.error('[PREP] pnpm install failed');
   process.exit(1);
 }
 
 try {
-  run('npm ci');
+  run('pnpm typecheck');
 } catch (error) {
-  console.error('[PREP] npm ci failed');
+  console.error('[PREP] pnpm typecheck failed');
   process.exit(1);
 }
 
 try {
-  run('node scripts/check-frontend-env.mjs');
+  run('pnpm lint');
 } catch (error) {
-  console.error('[PREP] Environment validation failed');
+  console.error('[PREP] pnpm lint failed');
+  process.exit(1);
+}
+
+try {
+  run('pnpm build');
+} catch (error) {
+  console.error('[PREP] pnpm build failed');
   process.exit(1);
 }
 
@@ -67,20 +81,6 @@ try {
   run('node scripts/check-backend-endpoint.mjs');
 } catch (error) {
   console.error('[PREP] Backend endpoint verification failed');
-  process.exit(1);
-}
-
-try {
-  run('npx vercel pull --yes --environment=preview');
-} catch (error) {
-  console.error('[PREP] vercel pull failed');
-  process.exit(1);
-}
-
-try {
-  run('npx vercel build');
-} catch (error) {
-  console.error('[PREP] vercel build failed');
   process.exit(1);
 }
 

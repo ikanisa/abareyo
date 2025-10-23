@@ -1,4 +1,5 @@
-import * as Sentry from '@sentry/nextjs';
-
 export { register } from './instrumentation';
-export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+
+export const onRouterTransitionStart = () => {
+  // Router transition metrics previously forwarded to Sentry. No-op placeholder retained for Next.js instrumentation.
+};

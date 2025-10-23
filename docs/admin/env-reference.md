@@ -60,8 +60,8 @@ in Supabase Vault for edge functions.
 
 | Variable | Scope | Notes |
 | --- | --- | --- |
-| `SENTRY_DSN` | Backend | Required for server-side error capture. |
-| `NEXT_PUBLIC_SENTRY_DSN` | Frontend | Mirrors DSN for client reporting. |
+| `SENTRY_DSN` | Backend | Optional. Enables legacy Sentry forwarding via observability shim. |
+| `NEXT_PUBLIC_SENTRY_DSN` | Frontend | Optional. When set, client-side errors log a warning about the missing SDK. |
 | `SENTRY_TRACES_SAMPLE_RATE` | Both | Fraction between 0 and 1. |
 | `SENTRY_REPLAYS_SESSION_SAMPLE_RATE` | Frontend | Controls Replay sampling. |
 | `SENTRY_REPLAYS_ERROR_SAMPLE_RATE` | Frontend | Replay sampling for error sessions. |
