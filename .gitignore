@@ -33,3 +33,8 @@ supabase/supabase/.temp/
 .vercel
 test-results
 playwright-report
+
+# Cloudflare/Caddy local runtime
+.logs/
+infra/cloudflared/config.yml
+infra/cloudflared/credentials/
