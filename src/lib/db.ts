@@ -1,3 +1,5 @@
+'use server';
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
