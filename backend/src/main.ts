@@ -8,11 +8,13 @@ import {
 import fastifyCookie from '@fastify/cookie';
 import fastifyHelmet, { type FastifyHelmetOptions } from '@fastify/helmet';
 import fastifyCors, { type FastifyCorsOptions } from '@fastify/cors';
-import pino from 'pino';
+import pino, { type TransportTargetOptions } from 'pino';
 import pinoHttp from 'pino-http';
 
 import { AppModule } from './app.module.js';
 import { MetricsService } from './modules/metrics/metrics.service.js';
+import { initSentry } from './observability/sentry.js';
+import { SentryInterceptor } from './observability/sentry.interceptor.js';
 
 const normaliseOrigin = (value: string) => value.replace(/\/+$/u, '');
 const addSocketOrigins = (target: Set<string>, origin: string) => {
@@ -48,25 +50,79 @@ const extractMetricsToken = (request: any): string | undefined => {
   return undefined;
 };
 
+const buildLokiTarget = (environment: string, level: string): TransportTargetOptions | null => {
+  const host = process.env.LOKI_URL ?? process.env.LOKI_HOST ?? '';
+  if (!host) {
+    return null;
+  }
+
+  const basicAuth =
+    process.env.LOKI_BASIC_AUTH ??
+    (process.env.LOKI_USERNAME && process.env.LOKI_PASSWORD
+      ? `${process.env.LOKI_USERNAME}:${process.env.LOKI_PASSWORD}`
+      : undefined);
+  const headers = process.env.LOKI_TENANT_ID
+    ? {
+        'X-Scope-OrgID': process.env.LOKI_TENANT_ID,
+      }
+    : undefined;
+  const batchInterval = Number(process.env.LOKI_BATCH_INTERVAL ?? '5');
+
+  return {
+    target: 'pino-loki',
+    level,
+    options: {
+      host,
+      batching: true,
+      interval: Number.isFinite(batchInterval) ? Math.max(1, batchInterval) : 5,
+      labels: {
+        service: 'rayon-backend',
+        env: environment,
+      },
+      basicAuth,
+      headers,
+    },
+  } satisfies TransportTargetOptions;
+};
+
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const configService = new ConfigService();
   const logLevel = configService.get<string>('app.logLevel', 'info');
+  const env = configService.get<string>('app.env', 'development');
 
-  const baseLogger = pino({
-    level: logLevel,
-    transport:
-      process.env.NODE_ENV === 'development'
-        ? {
-            target: 'pino-pretty',
-            options: {
-              colorize: true,
-              translateTime: 'SYS:standard',
-              singleLine: true,
-            },
-          }
-        : undefined,
-  });
+  const targets: TransportTargetOptions[] = [];
+  if (process.env.NODE_ENV === 'development') {
+    targets.push({
+      target: 'pino-pretty',
+      level: logLevel,
+      options: {
+        colorize: true,
+        translateTime: 'SYS:standard',
+        singleLine: true,
+      },
+    });
+  }
+
+  const lokiTarget = buildLokiTarget(env, logLevel);
+  if (lokiTarget) {
+    targets.push(lokiTarget);
+  }
+
+  let baseLogger = pino({ level: logLevel });
+  if (targets.length > 0) {
+    if (process.env.NODE_ENV !== 'development') {
+      targets.unshift({
+        target: 'pino/file',
+        level: logLevel,
+        options: { destination: 1 },
+      });
+    }
+    const transport = pino.transport({ targets });
+    baseLogger = pino({ level: logLevel }, transport);
+  }
+
+  const sentryEnabled = initSentry(configService);
 
   const fastifyAdapter = new FastifyAdapter({
     logger: false,
@@ -117,7 +173,6 @@ async function bootstrap() {
   });
 
   const config = app.get(ConfigService);
-  const env = config.get<string>('app.env', 'development');
   const port = config.get<number>('app.port', 5000);
   const host = config.get<string>('app.host', '0.0.0.0');
 
@@ -220,6 +275,10 @@ async function bootstrap() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
+
+  if (sentryEnabled) {
+    app.useGlobalInterceptors(new SentryInterceptor());
+  }
 
   app.setGlobalPrefix('api');
 

@@ -102,7 +102,9 @@
     "undici": "^5.29.0",
     "vaul": "^0.9.9",
     "workbox-sw": "^7.3.0",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "pino": "^9.5.0",
+    "pino-loki": "^2.4.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",
