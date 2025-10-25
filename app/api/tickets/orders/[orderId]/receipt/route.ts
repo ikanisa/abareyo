@@ -3,6 +3,22 @@ import { NextRequest } from 'next/server';
 import { errorResponse, successResponse } from '@/app/_lib/responses';
 import { getSupabase } from '@/app/_lib/supabase';
 
+type TicketOrderItemRow = {
+  id: string;
+  zone: string;
+  quantity: number;
+  price: number;
+};
+
+type TicketPassRow = {
+  id: string;
+  zone: string;
+  gate: string | null;
+  state: string;
+  updated_at: string;
+  qr_token: string | null;
+};
+
 export async function GET(req: NextRequest, { params }: { params: { orderId?: string } }) {
   const userId = req.nextUrl.searchParams.get('userId');
   const orderId = params.orderId;
@@ -73,21 +89,41 @@ export async function GET(req: NextRequest, { params }: { params: { orderId?: st
           competition: order.match.comp,
         }
       : null,
-    items: (order.ticket_order_items ?? []).map((item) => ({
-      id: item.id,
-      zone: item.zone,
-      quantity: item.quantity,
-      price: item.price,
-    })),
+    items: (Array.isArray(order.ticket_order_items) ? order.ticket_order_items : [])
+      .filter((item: unknown): item is TicketOrderItemRow =>
+        item !== null &&
+        typeof item === 'object' &&
+        'id' in item &&
+        'zone' in item &&
+        'quantity' in item &&
+        'price' in item,
+      )
+      .map((item: TicketOrderItemRow) => ({
+        id: item.id,
+        zone: item.zone,
+        quantity: item.quantity,
+        price: item.price,
+      })),
     payments,
-    passes: (order.passes ?? []).map((pass) => ({
-      id: pass.id,
-      zone: pass.zone,
-      gate: pass.gate,
-      state: pass.state,
-      updatedAt: pass.updated_at,
-      qrToken: pass.qr_token,
-    })),
+    passes: (Array.isArray(order.passes) ? order.passes : [])
+      .filter((pass: unknown): pass is TicketPassRow =>
+        pass !== null &&
+        typeof pass === 'object' &&
+        'id' in pass &&
+        'zone' in pass &&
+        'gate' in pass &&
+        'state' in pass &&
+        'updated_at' in pass &&
+        'qr_token' in pass,
+      )
+      .map((pass: TicketPassRow) => ({
+        id: pass.id,
+        zone: pass.zone,
+        gate: pass.gate,
+        state: pass.state,
+        updatedAt: pass.updated_at,
+        qrToken: pass.qr_token,
+      })),
   };
 
   return successResponse(response);

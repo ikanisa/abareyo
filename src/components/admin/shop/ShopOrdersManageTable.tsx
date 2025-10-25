@@ -219,7 +219,7 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
           <div className="flex items-center gap-2">
             <Input
               placeholder="Tracking #"
-              value={trackingDrafts[row.original.id] ?? row.original['trackingNumber'] ?? ''}
+              value={trackingDrafts[row.original.id] ?? row.original.trackingNumber ?? ''}
               onChange={(e) => setTrackingDrafts((m) => ({ ...m, [row.original.id]: e.target.value }))}
               className="h-8 w-40 bg-white/5"
             />
