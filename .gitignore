@@ -14,7 +14,9 @@ dist-ssr
 *.local
 backups/
 .env.production
+.env.production.local
 .env
+.env.local
 
 # Supabase local temp files
 supabase/.temp/

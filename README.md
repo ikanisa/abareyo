@@ -26,7 +26,7 @@ Developers who rely on corporate VPNs should export `SUPABASE_DOCKER_IMAGE_REGIS
 
 ## Supabase Configuration
 
-Supabase drives authentication, storage, and realtime updates. Create a root `.env` (or `.env.local` for machine-specific overrides) with the following values. Keys prefixed with `NEXT_PUBLIC_` are exposed to the browser and should point at the deployed backend/API origin.
+Supabase drives authentication, storage, and realtime updates. Copy `.env.example` to `.env.local` (machine-specific overrides only) and populate the following values. Keys prefixed with `NEXT_PUBLIC_` are exposed to the browser and should point at the deployed backend/API origin. For production builds, use `.env.production.local` based on `.env.production.example` and source values from your secret manager.
 
 ```
 SUPABASE_URL=
