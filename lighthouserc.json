@@ -1,0 +1,21 @@
+{
+  "ci": {
+    "collect": {
+      "startServerCommand": "npm run start -- --port=4310",
+      "url": [
+        "http://localhost:4310"
+      ],
+      "numberOfRuns": 1,
+      "settings": {
+        "onlyCategories": ["pwa"]
+      }
+    },
+    "assert": {
+      "assertions": {
+        "categories:pwa": ["warn", { "minScore": 0.9 }],
+        "service-worker": "error",
+        "installable-manifest": "error"
+      }
+    }
+  }
+}
