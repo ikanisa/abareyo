@@ -1,6 +1,0 @@
-*** Begin Patch
-*** Update File: app/page.tsx
-@@
- // Mark this file as a Client Component so that browser-only APIs such as localStorage are available during hydration.
- // Without this directive, Next.js will try to prerender this page on the server where `localStorage` is undefined.
- 'use client';

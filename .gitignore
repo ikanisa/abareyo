@@ -30,7 +30,7 @@ supabase/supabase/.temp/
 *.njsproj
 *.sln
 *.sw?
-.vercel
+*.tsbuildinfo
 test-results
 playwright-report
 
