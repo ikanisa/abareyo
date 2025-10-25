@@ -127,7 +127,7 @@ const AdminTicketsView = () => {
                 config={{
                   revenue: {
                     label: "Revenue",
-                    theme: { light: "hsl(var(--primary))", dark: "hsl(var(--primary))" },
+                    color: "hsl(var(--primary))",
                   },
                 }}
                 className="w-full"
@@ -137,7 +137,13 @@ const AdminTicketsView = () => {
                   <XAxis dataKey="date" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" />
                   <YAxis tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `${Math.round(value / 1000)}k`} />
                   <ChartTooltip cursor={false} content={<ChartTooltipContent formatter={(value) => currencyFormatter.format(Number(value))} />} />
-                  <Area type="monotone" dataKey="revenue" stroke="var(--color-revenue)" fill="var(--color-revenue)" fillOpacity={0.2} />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="hsl(var(--primary))"
+                    fill="hsl(var(--primary))"
+                    fillOpacity={0.2}
+                  />
                 </AreaChart>
               </ChartContainer>
             ) : (
