@@ -99,7 +99,7 @@ We intentionally removed the default Vercel deployment path. The platform now ta
 - **Network affinity** – Running the web app closer to Supabase Postgres (or within the same VPC) lowers latency for realtime updates and reduces cross-region egress charges.
 - **Compliance** – Match-day integrations (MoMo SMS, SACCO accounting) require IP allowlists that are impractical to enforce on ephemeral Vercel preview hosts.
 
-Upcoming production hardening includes a reverse proxy in front of the Next.js runtime. We are evaluating Caddy (for automatic TLS and HTTP/3) and Cloudflare Tunnel (for zero-trust ingress) to expose the app without punching additional firewall holes. Implementation details will land in the runbooks once the chosen proxy is rolled out.
+Upcoming production hardening includes a reverse proxy in front of the Next.js runtime. Cloudflare Tunnel was selected for production to pair Cloudflare-managed TLS with zero-trust Access policies while keeping the cluster private. Refer to [`docs/runbooks/ingress-cloudflare-tunnel.md`](docs/runbooks/ingress-cloudflare-tunnel.md) for deployment steps and zero-trust guidance.
 
 ### Chat-Based Onboarding
 - Visit `/onboarding` to launch the anonymous, ChatGPT-style onboarding assistant.
