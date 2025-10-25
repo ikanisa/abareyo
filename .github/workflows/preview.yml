@@ -55,9 +55,9 @@ jobs:
             echo "::error::Lint issues detected"; exit 1
           fi
 
-      - name: Build (Next.js)
-        run: npm run build
-        # ⚠️ This uses Next.js defaults (.next/). No 'out/' or 'dist/' assumptions.
+      - name: Preflight (env + backend + build)
+        run: node scripts/preflight.mjs
+        # ⚠️ This uses Next.js defaults (.next/) via `npm run build`.
         # ⚠️ Does NOT parse/copy favicon binaries — avoids your previous CI failure.
 
       - name: Upload Build Artifact (optional)

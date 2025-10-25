@@ -40,8 +40,8 @@ jobs:
       - name: Test
         run: pnpm test
 
-      - name: Build
-        run: pnpm build
+      - name: Preflight (env + backend + build)
+        run: node scripts/preflight.mjs
 
       - name: Install backend deps
         working-directory: backend
