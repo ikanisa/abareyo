@@ -32,7 +32,8 @@
     "test:e2e:headed": "playwright test --headed",
     "setup:hooks": "git config core.hooksPath .githooks",
     "seed": "tsx scripts/seed.ts",
-    "ci:guard-payments": "tsx scripts/ci/assert-ussd-only.ts"
+    "ci:guard-payments": "tsx scripts/ci/assert-ussd-only.ts",
+    "ci:check-env": "node scripts/check-frontend-env.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^5.0.8",
