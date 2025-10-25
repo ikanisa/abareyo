@@ -56,7 +56,7 @@ describe('live match provider', () => {
     });
 
     const rpc = vi.fn().mockReturnValue({ maybeSingle });
-    const client = { rpc } as any;
+    const client = { rpc };
 
     withClientMocked.mockImplementation(async (handler) => handler(client));
 
@@ -83,7 +83,7 @@ describe('live match provider', () => {
   it('propagates RPC failures as provider errors', async () => {
     const maybeSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'rpc failed' } });
     const rpc = vi.fn().mockReturnValue({ maybeSingle });
-    const client = { rpc } as any;
+    const client = { rpc };
 
     withClientMocked.mockImplementation(async (handler) => handler(client));
 

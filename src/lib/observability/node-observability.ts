@@ -62,16 +62,16 @@ const patchConsole = (logger: Logger) => {
   const methods: (keyof Console)[] = ["log", "info", "warn", "error", "debug"];
 
   methods.forEach((method) => {
-    const original = console[method] as (...args: unknown[]) => unknown;
+    const original = console[method];
 
     console[method] = ((...args: unknown[]) => {
-      const level = mapLevel(method);
+      const logFn = mapLevel(method);
       if (args.length === 1) {
-        logger[level](args[0]);
+        logger[logFn](args[0]);
       } else {
-        logger[level](args);
+        logger[logFn](args);
       }
-      return original.apply(console, args);
+      return original?.apply(console, args);
     }) as Console[typeof method];
   });
 
