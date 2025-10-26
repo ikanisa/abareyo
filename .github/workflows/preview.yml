@@ -34,25 +34,30 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9.12.2
+          cache: 'npm'
 
       - name: Install
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Typecheck
-        run: pnpm typecheck
+        run: |
+          if npm run -s type-check; then
+            echo "Typecheck OK"
+          else
+            echo "::error::Type errors detected"; exit 1
+          fi
 
       - name: Lint
-        run: pnpm lint
+        run: |
+          if npm run -s lint; then
+            echo "Lint OK"
+          else
+            echo "::error::Lint issues detected"; exit 1
+          fi
 
-      - name: Build (Next.js)
-        run: pnpm build
-        # ⚠️ This uses Next.js defaults (.next/). No 'out/' or 'dist/' assumptions.
+      - name: Preflight (env + backend + build)
+        run: node scripts/preflight.mjs
+        # ⚠️ This uses Next.js defaults (.next/) via `npm run build`.
         # ⚠️ Does NOT parse/copy favicon binaries — avoids your previous CI failure.
 
       - name: Upload Build Artifact (optional)
@@ -62,4 +67,3 @@ jobs:
           name: next-build
           path: .next
 
-  # ---------- Optional container publish step lives in infra repo ----------

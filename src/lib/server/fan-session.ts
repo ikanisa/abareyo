@@ -24,7 +24,7 @@ export const fetchFanSessionServer = async (): Promise<FanSessionServer | null> 
     return null;
   }
 
-  // If the backend URL is relative (e.g. "/api" on a managed host without a proxy),
+  // If the backend URL is relative (for example "/api" when running without a proxy),
   // skip the server-side call and treat as no session to avoid 404/500.
   if (BASE_URL.startsWith('/')) {
     return null;

@@ -1,39 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { withAxiom, type AxiomRequest } from "next-axiom";
 
-import {
-  buildTelemetryCorsHeaders,
-  processTelemetryRequest,
-  type TelemetryLogger,
-} from "@/lib/telemetry/app-state-handler";
+import { processTelemetryRequest } from "@/lib/telemetry/app-state-handler";
 
-const createLogger = (req: NextRequest): TelemetryLogger => ({
-  with(context) {
-    const baseContext = {
-      ip: req.ip ?? req.headers.get("x-forwarded-for") ?? "unknown",
-      userAgent: req.headers.get("user-agent") ?? "unknown",
-      ...context,
-    };
+const handler = withAxiom((req: AxiomRequest) =>
+  processTelemetryRequest(req, { logger: req.log, ip: req.ip, headers: req.headers }),
+);
 
-    return {
-      info(message: string) {
-        console.info(`[telemetry] ${message}`, baseContext);
-      },
-    };
-  },
-});
-
-const buildOptionsResponse = (req: NextRequest) =>
-  new NextResponse(null, {
-    status: 204,
-    headers: buildTelemetryCorsHeaders(req.headers.get("origin")),
-  });
-
-export const POST = (req: NextRequest) =>
-  processTelemetryRequest(req, {
-    logger: createLogger(req),
-    ip: req.ip,
-    headers: req.headers,
-  });
-
-export const OPTIONS = (req: NextRequest) => buildOptionsResponse(req);
+export const POST = handler;
+export const OPTIONS = handler;
 export const dynamic = "force-dynamic";

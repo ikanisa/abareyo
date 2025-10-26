@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
 // Match centre data is sourced from local fixtures defined in `/app/_data/matches`.
 // We optionally override `matches` with rows from Supabase if configured.
@@ -9,7 +9,9 @@ import {
   matchFeedUpdatedAt,
   type Match,
 } from "@/app/_data/matches";
-import { tryGetSupabaseServerAnonClient } from '@/lib/db';
+import { tryGetSupabaseServerAnonClient } from "@/lib/db";
+
+export const runtime = "edge";
 
 type SupabaseMatchRow = {
   opponent?: string | null;
@@ -20,17 +22,13 @@ type SupabaseMatchRow = {
 
 async function fetchMatchesFromSupabase() {
   const supabase = tryGetSupabaseServerAnonClient();
-
   if (!supabase) return null;
 
-  const { data, error } = await supabase
-    .from("matches")
-    .select("*")
-    .order("date");
+  const { data, error } = await supabase.from("matches").select("*").order("date");
 
   if (error) {
     // Swallow error and allow fallback to fixtures
-    console.error('Supabase matches fetch failed:', error.message);
+    console.error("Supabase matches fetch failed:", error.message);
     return null;
   }
   return data ?? null;

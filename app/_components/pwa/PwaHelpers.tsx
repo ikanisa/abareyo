@@ -10,6 +10,12 @@ type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
 };
 
+declare global {
+  interface WindowEventMap {
+    beforeinstallprompt: BeforeInstallPromptEvent;
+  }
+}
+
 const hasWindow = () => typeof window !== "undefined";
 
 export function InstallPrompt() {

@@ -1,3 +1,5 @@
+import { withSentryConfig } from '@sentry/nextjs';
+
 import './config/validated-env.mjs';
 import { buildSecurityHeaders } from './config/security-headers.mjs';
 
@@ -31,4 +33,14 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+const sentryOptions = {
+  silent: true,
+};
+
+const sentryWebpackPluginOptions = {
+  hideSourcemaps: true,
+};
+
+const configWithSentry = withSentryConfig(nextConfig, sentryOptions, sentryWebpackPluginOptions);
+
+export default configWithSentry;

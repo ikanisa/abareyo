@@ -16,7 +16,7 @@ This runbook outlines the checks the Rayon Sports digital team should perform ev
 4. **Content freshness**
    - Ensure the home feed has at least one current story, live ticker item, and fixture. If not, coordinate with media team or rely on new empty/offline states shipped in P3.
 5. **PWA readiness**
-   - Run `npm run lint:pwa` to validate manifest/service worker checks before matchday deployment.
+   - Run `npm run lint:pwa` to build the app and execute Lighthouse PWA assertions, blocking on the `service-worker` and `installable-manifest` checks before matchday deployment.
 6. **Offline cache health**
    - Load <http://localhost:3000> once while online, then toggle Chrome DevTools to **Offline** and refresh. Verify the home feed and missions show the offline banner and cached content rather than blank tiles.
    - Inspect `localStorage.getItem("home-surface-cache-v1")` to confirm the cache timestamp updated within the last 24 hours.
@@ -55,6 +55,18 @@ npx axe http://localhost:3000 --tags wcag2a,wcag2aa
 ```
 
 Document results in `reports/operations-log.md` with timestamp, operator, and actions taken.
+
+## Admin SMS Parser Test Endpoint
+
+- The admin parser test route is disabled by default. To enable in staging, set:
+  - `ADMIN_SMS_PARSER_TEST_ENABLED=1`
+  - Optional rate config: `ADMIN_SMS_PARSER_TEST_RATE_LIMIT` (default 10),
+    `ADMIN_SMS_PARSER_TEST_WINDOW_MS` (default 60000).
+- The endpoint requires `OPENAI_API_KEY` on the Next.js server to call the
+  Responses API. In Kubernetes, this is injected via `backend-secrets` and
+  exposed to the frontend deployment (`k8s/frontend-deployment.yaml`).
+- When enabled, the route responds with `X-RateLimit-*` headers and `429` on
+  excessive calls; consider temporarily raising limits during load testing.
 
 ## Offline Cache Validation (Detailed)
 

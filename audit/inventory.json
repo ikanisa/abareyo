@@ -7,13 +7,13 @@
       "package-lock.json",
       "backend/package-lock.json"
     ],
-    "notes": "corepack-enabled workspace; backend workspace manages its own dependencies"
+    "notes": "corepack-enabled workspace; bun.lockb present but superseded by npm lockfiles"
   },
   "node": {
     "preferred": "20",
     "rootEngine": ">=20.0.0 <21",
     "backendEngine": null,
-    "notes": "Align all runtimes and CI on Node 20.x"
+    "notes": "Align hosting environments and CI on Node 20.x"
   },
   "apps": [
     {
@@ -28,7 +28,9 @@
       ],
       "port": 3000,
       "dependencies": [
-        "@supabase/supabase-js"
+        "@sentry/nextjs",
+        "@supabase/supabase-js",
+        "next-axiom"
       ]
     },
     {

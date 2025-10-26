@@ -14,7 +14,9 @@ dist-ssr
 *.local
 backups/
 .env.production
+.env.production.local
 .env
+.env.local
 
 # Supabase local temp files
 supabase/.temp/
@@ -30,6 +32,11 @@ supabase/supabase/.temp/
 *.njsproj
 *.sln
 *.sw?
+*.tsbuildinfo
 test-results
 playwright-report
-tsconfig.tsbuildinfo
+
+# Cloudflare/Caddy local runtime
+.logs/
+infra/cloudflared/config.yml
+infra/cloudflared/credentials/

@@ -237,7 +237,7 @@ function PostCard({
           <MessageCircle className="w-5 h-5" />
           <span>Comment</span>
         </button>
-        <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors ml-auto">
+        <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors ml-auto" aria-label="Share">
           <Share2 className="w-5 h-5" />
         </button>
       </div>
@@ -624,8 +624,9 @@ export default function Community() {
         <p className="muted text-xs">{heroSubtitleRw}</p>
       </section>
 
-      <section id="community-leaderboard" className="space-y-3">
+      <section id="community-leaderboard" className="space-y-3" role="region" aria-labelledby="leaderboard-heading">
         <SectionHeader
+          id="leaderboard-heading"
           title="Leaderboard"
           action={
             <div className="flex gap-2">
@@ -696,8 +697,9 @@ export default function Community() {
         ) : null}
       </section>
 
-      <section id="community-missions" className="space-y-3">
+      <section id="community-missions" className="space-y-3" role="region" aria-labelledby="missions-heading">
         <SectionHeader
+          id="missions-heading"
           title="Fan missions"
           action={
             <Button

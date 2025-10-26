@@ -1,28 +1,45 @@
+import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { AdminAuthError, requireAdminSession } from '@/app/admin/api/_lib/session';
-import {
-  requireSupabaseStorageBucket,
-  SupabaseStorageUnavailableError,
-} from '@/lib/storage';
+import { requireSupabaseStorageBucket, SupabaseStorageUnavailableError } from '@/lib/storage';
 
 const MEDIA_BUCKET = 'media';
+const DATA_URL_REGEX = /^data:(?<mime>[\w/+.-]+);base64,(?<data>[a-zA-Z0-9+/=]+)$/;
 
-const decodeDataUrl = (value: string) => {
-  const match = /^data:(?<mime>[^;]+);base64,(?<data>.+)$/u.exec(value.trim());
-  if (!match?.groups) {
-    throw new Error('invalid_data_url');
+class InvalidDataUrlError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'InvalidDataUrlError';
+  }
+}
+
+const parseDataUrl = (value: string) => {
+  const match = DATA_URL_REGEX.exec(value.trim());
+  if (!match?.groups?.data) {
+    throw new InvalidDataUrlError('Malformed data URL');
   }
 
   const contentType = match.groups.mime || 'application/octet-stream';
   const bytes = Buffer.from(match.groups.data, 'base64');
-  return { contentType, bytes };
+  if (!bytes.length) {
+    throw new InvalidDataUrlError('Empty data payload');
+  }
+
+  return { bytes, contentType };
 };
 
+const sanitizeFileName = (fileName: string) =>
+  fileName
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '') || 'asset';
+
 const buildObjectPath = (fileName: string) => {
-  const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '-');
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  return `admin/${timestamp}-${safeName}`;
+  const safeName = sanitizeFileName(fileName);
+  return `admin/${randomUUID()}-${safeName}`;
 };
 
 export async function POST(request: NextRequest) {
@@ -37,33 +54,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
     }
 
-    const { contentType, bytes } = decodeDataUrl(payload.dataUrl);
-    const objectPath = buildObjectPath(payload.fileName);
     const bucket = requireSupabaseStorageBucket(MEDIA_BUCKET);
+    const { bytes, contentType } = parseDataUrl(payload.dataUrl);
+    const objectPath = buildObjectPath(payload.fileName);
 
-    const { error } = await bucket.upload(objectPath, bytes, {
+    const { error: uploadError } = await bucket.upload(objectPath, bytes, {
       contentType,
       upsert: true,
     });
 
-    if (error) {
-      console.error('Supabase upload failed', error, payload.fileName);
+    if (uploadError) {
+      console.error('Supabase storage upload failed', uploadError, payload.fileName);
       return NextResponse.json({ error: 'upload_failed' }, { status: 500 });
     }
 
-    const { data: publicUrl } = bucket.getPublicUrl(objectPath);
-    return NextResponse.json({ url: publicUrl.publicUrl });
+    const { data } = bucket.getPublicUrl(objectPath);
+    if (!data?.publicUrl) {
+      console.error('Supabase storage public URL unavailable', objectPath);
+      return NextResponse.json({ error: 'upload_failed' }, { status: 500 });
+    }
+
+    return NextResponse.json({ url: data.publicUrl });
   } catch (error) {
     if (error instanceof AdminAuthError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
 
-    if (error instanceof SupabaseStorageUnavailableError) {
-      return NextResponse.json({ error: 'storage_unconfigured' }, { status: 503 });
+    if (error instanceof InvalidDataUrlError) {
+      return NextResponse.json({ error: 'invalid_data_url' }, { status: 400 });
     }
 
-    if (error instanceof Error && error.message === 'invalid_data_url') {
-      return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
+    if (error instanceof SupabaseStorageUnavailableError) {
+      return NextResponse.json({ error: 'storage_unconfigured' }, { status: 503 });
     }
 
     console.error('Failed to upload media asset', error, payload?.fileName);

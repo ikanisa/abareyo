@@ -6,7 +6,7 @@ This monorepo powers the Rayon Sports fan experience across web, mobile, and mat
 - **Frontend**: Next.js 14 (App Router), Tailwind CSS, shadcn/ui, TanStack Query, next-themes, Framer Motion.
 - **Backend**: Supabase Postgres (SQL migrations + seeds), Supabase Edge Functions, and Next.js API routes backed by `@supabase/supabase-js`.
 - **Realtime automation**: `/functions/v1/sms-webhook` reconciles MoMo/Airtel SMS receipts while `/functions/v1/issue-policy` turns paid insurance quotes into policies.
-- **Tooling**: Dockerfiles for web, GitHub Actions CI (`pnpm lint`, `pnpm typecheck`, `pnpm build`), Supabase CLI helpers.
+- **Tooling**: Dockerfiles for web, GitHub Actions CI (`npm run lint`, `npm run type-check`, `npm run build`), Supabase CLI helpers.
 
 ## MacBook Setup
 
@@ -18,7 +18,7 @@ Local contributors primarily develop on Apple Silicon MacBooks. The following st
    corepack enable
    corepack prepare pnpm@9.12.2 --activate
    ```
-   We ship a `pnpm@9` lockfile that aligns with CI and keeps the dependency graph deterministic.
+   We ship an `npm@11` lockfile for compatibility with CI, but `pnpm` is the preferred local package manager because it matches the workspace layout and keeps the dependency graph deterministic.
 2. Install Node.js 20 via `nvm`, `fnm`, or `asdf` (our `.nvmrc` pins `20.12.x`). Rosetta is not required.
 3. Authenticate the Supabase CLI once (`supabase login`) so migrations and function deploys can execute without prompts.
 
@@ -26,7 +26,7 @@ Developers who rely on corporate VPNs should export `SUPABASE_DOCKER_IMAGE_REGIS
 
 ## Supabase Configuration
 
-Supabase drives authentication, storage, and realtime updates. Create a root `.env` (or `.env.local` for machine-specific overrides) with the following values. Keys prefixed with `NEXT_PUBLIC_` are exposed to the browser and should point at the deployed backend/API origin.
+Supabase drives authentication, storage, and realtime updates. Copy `.env.example` to `.env.local` (machine-specific overrides only) and populate the following values. Keys prefixed with `NEXT_PUBLIC_` are exposed to the browser and should point at the deployed backend/API origin. For production builds, use `.env.production.local` based on `.env.production.example` and source values from your secret manager.
 
 ```
 SUPABASE_URL=
@@ -50,7 +50,7 @@ NEXT_PUBLIC_ENVIRONMENT_LABEL=local
    ```bash
    pnpm install
    ```
-   `pnpm` installs dependencies deterministically via the workspace lockfile; no additional metadata needs to be generated.
+   `pnpm` reads the existing npm lockfile via Corepack, so there is no need to regenerate dependency metadata.
 2. Ensure the Supabase CLI is installed (<https://supabase.com/docs/guides/cli>). Log in once so migrations can run.
 3. Start Supabase locally (or point the env vars to a remote project):
    ```bash
@@ -90,21 +90,17 @@ If you plan to surface media (shop products, fundraising covers), configure S3-c
 - `pnpm lint` / `pnpm type-check` / `pnpm test` – Static analysis and unit coverage gates.
 - `pnpm cap:sync`, `pnpm cap:android`, `pnpm cap:ios` – Capacitor workflows (requires native toolchains).
 - `pnpm supabase:functions` (see `package.json`) – Convenience wrappers for function deploys.
+- `node scripts/preflight.mjs` – Combined env + backend availability check followed by `npm run build`.
 
 ## Hosting Strategy
 
 We intentionally removed the default managed-host deployment path. The platform now targets containerised or Supabase-hosted environments for the following reasons:
 
-- **Deterministic runtime** – Self-hosting via Docker or Supabase Edge Functions keeps the Node.js version and native dependencies aligned with our CI images, eliminating proprietary platform quirks around OpenSSL and experimental flags.
+- **Deterministic runtime** – Self-hosting via Docker or Supabase Edge Functions keeps the Node.js version and native dependencies aligned with our CI images, eliminating provider-specific quirks around OpenSSL and experimental flags.
 - **Network affinity** – Running the web app closer to Supabase Postgres (or within the same VPC) lowers latency for realtime updates and reduces cross-region egress charges.
 - **Compliance** – Match-day integrations (MoMo SMS, SACCO accounting) require IP allowlists that are impractical to enforce on ephemeral preview hosts.
 
-Upcoming production hardening includes a reverse proxy in front of the Next.js runtime. We are evaluating Caddy (for automatic TLS and HTTP/3) and Cloudflare Tunnel (for zero-trust ingress) to expose the app without punching additional firewall holes. Implementation details will land in the runbooks once the chosen proxy is rolled out.
-
-### What we removed (managed host)
-- Platform-specific CLI scripts (`scripts/env-sync-template.sh`, `scripts/local-preflight.mjs`) now target generic Node.js environments.
-- GitHub Actions no longer install proprietary CLIs — the preview workflow simply builds and archives artifacts.
-- Documentation now points at Docker/Supabase hosting; legacy references to the previous managed platform have been retired.
+Upcoming production hardening includes a reverse proxy in front of the Next.js runtime. Cloudflare Tunnel was selected for production to pair Cloudflare-managed TLS with zero-trust Access policies while keeping the cluster private. Refer to [`docs/runbooks/ingress-cloudflare-tunnel.md`](docs/runbooks/ingress-cloudflare-tunnel.md) for deployment steps and zero-trust guidance.
 
 ### Chat-Based Onboarding
 - Visit `/onboarding` to launch the anonymous, ChatGPT-style onboarding assistant.
@@ -139,6 +135,7 @@ Upcoming production hardening includes a reverse proxy in front of the Next.js r
 - Envs & Secrets
   - Confirm required envs in `docs/production-env.md`. Validate with `make env-check`.
   - Ensure Supabase service role keys are stored as repo/infra secrets, never shipped to the browser.
+  - Admin SMS parser test endpoint (staging only): set `OPENAI_API_KEY` and `ADMIN_SMS_PARSER_TEST_ENABLED=1`. Optional rate config: `ADMIN_SMS_PARSER_TEST_RATE_LIMIT` (default 10), `ADMIN_SMS_PARSER_TEST_WINDOW_MS` (default 60000).
 
 - E2E Smokes
   - `make e2e` runs Playwright smokes with mocked API (guarded by `E2E_API_MOCKS=1`).

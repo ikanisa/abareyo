@@ -6,7 +6,7 @@ Purpose: outline how we move production secrets out of the repository and prepar
 
 - `.env` → Local dev: contains publishable Supabase key and placeholders for sensitive tokens.
 - `.env.production` → Template only (no secrets); real values live in the hosting platform and Supabase Vault.
-- Preview secret store → Dev preview tokens (legacy managed-host env files removed).
+- Preview secret store → Dev preview tokens (legacy preview-specific env files removed).
 - `backend/.env.example` → Sample backend secrets (MoMo pay codes etc.).
 
 ## Rotation & Migration Steps
@@ -15,7 +15,7 @@ Purpose: outline how we move production secrets out of the repository and prepar
    - Hosting platform → Environment Variables (Production, Preview, Development).
    - Supabase Vault → store server-side secrets for Edge Functions (`supabase secrets set`).
    - (Optional) 1Password/HashiCorp Vault entry for long-term backup.
-   - ✅ `.env.production` stripped of real secrets; use `.env.production.example` for local scaffolding.
+   - ✅ `.env.production.example` + `.env.local.example` now act as templates; copy to `.env.production.local` / `.env.local` when needed.
    - Reference [`docs/supabase/vault-secret-map.md`](vault-secret-map.md) for the latest secret-to-store mapping.
 
 2. **Generate new Supabase keys**
