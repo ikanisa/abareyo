@@ -51,7 +51,7 @@ jobs:
   page:
     name: Page on failure
     needs: probe
-    if: needs.probe.outputs.failures != '0'
+    if: ${{ always() && (needs.probe.outputs.failures || '0') != '0' }}
     runs-on: ubuntu-latest
     steps:
       - name: Trigger PagerDuty incident
