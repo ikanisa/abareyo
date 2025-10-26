@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { captureException } from "@/lib/observability";
+import { buildCorsHeaders } from "@/lib/server/origins";
 
 export type TelemetryPayload = {
   type?: string;
@@ -20,16 +21,12 @@ export type TelemetryContext = {
   headers: Headers;
 };
 
-export const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST,OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-} as const;
-
-export const corsResponse = (status: number) => new NextResponse(null, { status, headers: corsHeaders });
-
-export const errorResponse = (status: number, error: string) =>
-  NextResponse.json({ error }, { status, headers: corsHeaders });
+export const buildTelemetryCorsHeaders = (origin: string | null) =>
+  buildCorsHeaders({
+    requestOrigin: origin,
+    allowedMethods: "POST,OPTIONS",
+    allowedHeaders: "Content-Type",
+  });
 
 const resolveType = (value: TelemetryPayload["type"]) => {
   if (typeof value !== "string") {
@@ -44,24 +41,27 @@ export const processTelemetryRequest = async (
   req: Request,
   { logger, ip, headers }: TelemetryContext,
 ) => {
+  const origin = headers.get("origin");
+  const corsHeaders = buildTelemetryCorsHeaders(origin);
+
   if (req.method === "OPTIONS") {
-    return corsResponse(204);
+    return new NextResponse(null, { status: 204, headers: corsHeaders });
   }
 
   if (req.method !== "POST") {
-    return errorResponse(405, "method_not_allowed");
+    return NextResponse.json({ error: "method_not_allowed" }, { status: 405, headers: corsHeaders });
   }
 
   let payload: TelemetryPayload;
   try {
     payload = (await req.json()) as TelemetryPayload;
   } catch (error) {
-    return errorResponse(400, "invalid_json");
+    return NextResponse.json({ error: "invalid_json" }, { status: 400, headers: corsHeaders });
   }
 
   const type = resolveType(payload.type);
   if (!type) {
-    return errorResponse(400, "invalid_payload");
+    return NextResponse.json({ error: "invalid_payload" }, { status: 400, headers: corsHeaders });
   }
 
   const event = {

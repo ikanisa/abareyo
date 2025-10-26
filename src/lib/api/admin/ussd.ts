@@ -9,27 +9,10 @@ export type UssdTemplate = {
   updatedAt: string;
 };
 
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api';
+import { httpClient } from '@/services/http-client';
 
-const request = async <T>(path: string, init?: RequestInit) => {
-  const response = await fetch(`${BASE_URL.replace(/\/$/, '')}${path}`, {
-    credentials: 'include',
-    ...init,
-    headers: {
-      'content-type': 'application/json',
-      ...(init?.headers ?? {}),
-    },
-  });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `Request failed (${response.status})`);
-  }
-
-  return (await response.json()) as T;
-};
-
-export const fetchUssdTemplates = () => request<{ data: UssdTemplate[] }>(`/admin/ussd/templates`).then((res) => res.data);
+export const fetchUssdTemplates = () =>
+  httpClient.data<UssdTemplate[]>(`/admin/ussd/templates`, { admin: true });
 
 export const createUssdTemplate = (payload: {
   name: string;
@@ -38,10 +21,11 @@ export const createUssdTemplate = (payload: {
   variables?: Record<string, unknown>;
   isActive?: boolean;
 }) =>
-  request<{ data: UssdTemplate }>(`/admin/ussd/templates`, {
+  httpClient.data<UssdTemplate>(`/admin/ussd/templates`, {
+    admin: true,
     method: 'POST',
     body: JSON.stringify(payload),
-  }).then((res) => res.data);
+  });
 
 export const updateUssdTemplate = (
   templateId: string,
@@ -53,17 +37,20 @@ export const updateUssdTemplate = (
     isActive?: boolean;
   }>,
 ) =>
-  request<{ data: UssdTemplate }>(`/admin/ussd/templates/${templateId}`, {
+  httpClient.data<UssdTemplate>(`/admin/ussd/templates/${templateId}`, {
+    admin: true,
     method: 'PUT',
     body: JSON.stringify(payload),
-  }).then((res) => res.data);
+  });
 
 export const deleteUssdTemplate = (templateId: string) =>
-  request<{ status: string }>(`/admin/ussd/templates/${templateId}`, {
+  httpClient.request<{ status: string }>(`/admin/ussd/templates/${templateId}`, {
+    admin: true,
     method: 'DELETE',
   });
 
 export const activateUssdTemplate = (templateId: string) =>
-  request<{ data: UssdTemplate }>(`/admin/ussd/templates/${templateId}/activate`, {
+  httpClient.data<UssdTemplate>(`/admin/ussd/templates/${templateId}/activate`, {
+    admin: true,
     method: 'POST',
-  }).then((res) => res.data);
+  });

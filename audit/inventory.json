@@ -13,7 +13,7 @@
     "preferred": "20",
     "rootEngine": ">=20.0.0 <21",
     "backendEngine": null,
-    "notes": "Align Vercel and CI on Node 20.x"
+    "notes": "Align hosting environments and CI on Node 20.x"
   },
   "apps": [
     {

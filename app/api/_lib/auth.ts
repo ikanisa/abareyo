@@ -1,12 +1,10 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
 
-import type { Database } from '@/integrations/supabase/types';
-
 import { errorResponse } from './responses';
 import { getSupabase } from './supabase';
 
-type ServiceClient = SupabaseClient<Database>;
+type ServiceClient = SupabaseClient;
 
 type RequireAuthSuccess = { user: User; response?: undefined };
 type RequireAuthFailure = { user?: undefined; response: ReturnType<typeof errorResponse> };

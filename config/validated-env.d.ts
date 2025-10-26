@@ -1,5 +1,11 @@
-export declare const serverEnv: {
+import type { z } from 'zod';
+
+export type AppEnv = 'local' | 'development' | 'staging' | 'production' | 'test';
+
+export type RuntimeEnv = {
+  APP_ENV: AppEnv;
   NODE_ENV: 'development' | 'test' | 'production';
+  APP_BASE_URL?: string;
   NEXT_PUBLIC_SITE_URL?: string;
   NEXT_PUBLIC_BACKEND_URL: string;
   NEXT_PUBLIC_ENVIRONMENT_LABEL: string;
@@ -16,7 +22,6 @@ export declare const serverEnv: {
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE?: string;
   NEXT_PUBLIC_ADMIN_API_TOKEN?: string;
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK?: string;
-  VERCEL_URL?: string;
   PORT?: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
   SITE_SUPABASE_URL: string;
@@ -39,11 +44,53 @@ export declare const serverEnv: {
   SENTRY_TRACES_SAMPLE_RATE?: string;
   SENTRY_REPLAYS_SESSION_SAMPLE_RATE?: string;
   SENTRY_REPLAYS_ERROR_SAMPLE_RATE?: string;
-  NEXT_PUBLIC_VERCEL_URL?: string;
-  VERCEL_AUTOMATION_BYPASS_SECRET?: string;
 };
 
-export declare const clientEnv: {
+export interface ServerEnv {
+  APP_ENV: AppEnv;
+  NODE_ENV: 'development' | 'test' | 'production';
+  APP_BASE_URL: string;
+  NEXT_PUBLIC_SITE_URL?: string;
+  NEXT_PUBLIC_BACKEND_URL: string;
+  NEXT_PUBLIC_ENVIRONMENT_LABEL: string;
+  NEXT_PUBLIC_SUPABASE_URL: string;
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?: string;
+  NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN: string;
+  NEXT_PUBLIC_FEATURE_FLAGS: string;
+  NEXT_PUBLIC_SOCKET_TRANSPORT?: string;
+  NEXT_PUBLIC_SOCKET_PATH?: string;
+  NEXT_PUBLIC_TELEMETRY_URL?: string;
+  NEXT_PUBLIC_SENTRY_DSN?: string;
+  NEXT_PUBLIC_OPENAI_BASE_URL?: string;
+  NEXT_PUBLIC_ADMIN_SESSION_COOKIE?: string;
+  NEXT_PUBLIC_ADMIN_API_TOKEN?: string;
+  NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK?: string;
+  PORT?: string;
+  SUPABASE_SERVICE_ROLE_KEY: string;
+  SITE_SUPABASE_URL: string;
+  SITE_SUPABASE_SECRET_KEY: string;
+  SUPABASE_SERVICE_KEY?: string;
+  SUPABASE_URL?: string;
+  SUPABASE_SECRET_KEY?: string;
+  SITE_SUPABASE_PUBLISHABLE_KEY?: string;
+  SUPABASE_PUBLISHABLE_KEY?: string;
+  SUPABASE_ANON_KEY?: string;
+  ONBOARDING_API_TOKEN: string;
+  ONBOARDING_ALLOW_MOCK?: string;
+  OPENAI_API_KEY: string;
+  AGENT_ID?: string;
+  NEXT_PHASE?: string;
+  NEXT_RUNTIME?: string;
+  CI?: string;
+  E2E_API_MOCKS?: string;
+  SENTRY_DSN?: string;
+  SENTRY_TRACES_SAMPLE_RATE?: string;
+  SENTRY_REPLAYS_SESSION_SAMPLE_RATE?: string;
+  SENTRY_REPLAYS_ERROR_SAMPLE_RATE?: string;
+}
+
+export interface ClientEnv {
   NEXT_PUBLIC_SITE_URL: string;
   NEXT_PUBLIC_BACKEND_URL: string;
   NEXT_PUBLIC_ENVIRONMENT_LABEL: string;
@@ -60,5 +107,19 @@ export declare const clientEnv: {
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE?: string;
   NEXT_PUBLIC_ADMIN_API_TOKEN?: string;
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK?: string;
-  NEXT_PUBLIC_VERCEL_URL?: string;
-};
+}
+
+export interface RuntimeConfig {
+  appEnv: AppEnv;
+  port: string;
+  server: ServerEnv;
+  client: ClientEnv;
+}
+
+export declare const envSchema: z.ZodType<RuntimeEnv>;
+
+export declare const serverEnv: ServerEnv;
+
+export declare const clientEnv: ClientEnv;
+
+export declare const runtimeConfig: Readonly<RuntimeConfig>;

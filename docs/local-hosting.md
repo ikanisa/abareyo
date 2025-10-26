@@ -1,82 +1,69 @@
-# Local Hosting Playbook (macOS)
+# Local Hosting Runbook
 
-This guide summarises how to run the Rayon Sports platform entirely on a macOS workstation without depending on Vercel-hosted automations.
+This guide documents how to run the Rayon Sports PWA on a MacBook using the pnpm-based toolchain and Supabase-backed services.
 
-## 1. Base Tooling
+## Prerequisites
+- Apple Silicon MacBook with macOS 13+
+- [Homebrew](https://brew.sh/) with `corepack` and the Supabase CLI installed:
+  ```bash
+  brew install corepack supabase/tap/supabase
+  corepack enable
+  corepack prepare pnpm@9.12.2 --activate
+  ```
+- Node.js 20.x (install via `nvm`, `asdf`, or `fnm`; `.nvmrc` pins the desired version).
+- Supabase CLI authenticated (`supabase login`).
 
-1. Install Xcode Command Line Tools (required for native modules):
-   ```bash
-   xcode-select --install
-   ```
-2. Install Homebrew if it is not already present (`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`).
-3. Install Node.js 20 via Corepack or Volta:
-   ```bash
-   brew install volta
-   volta install node@20
-   ```
-   Corepack ships with Node ≥16; enable pnpm to match CI:
-   ```bash
-   corepack enable
-   corepack prepare pnpm@10.5.2 --activate
-   ```
-4. Optional: install the Supabase CLI for local database + edge function workflows:
-   ```bash
-   brew install supabase/tap/supabase
-   supabase --version
-   ```
+## Environment Files
+Create a project-wide `.env` that mirrors the keys listed in the README. For machine-specific overrides, create `.env.local` in the repo root (it is gitignored) and populate values such as:
 
-## 2. Dependency Installation
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_PUBLISHABLE_KEY=public-anon-key
+SUPABASE_SECRET_KEY=service-role-key
+SUPABASE_PROJECT_REF=your-project-ref
+SMS_WEBHOOK_TOKEN=dev-token
+NEXT_PUBLIC_BACKEND_URL=http://localhost:3000
+NEXT_PUBLIC_ENVIRONMENT_LABEL=local
+```
 
-The repository now uses pnpm everywhere (CI, scripts, docs). After cloning:
+`.env.local` overrides `.env` when both exist—use it for staging credentials, experimental webhook tokens, or local Cloudflare Tunnel hostnames.
+
+## Install & Build
+Install dependencies and compile the production bundle with pnpm:
 
 ```bash
 pnpm install
+pnpm build
 ```
 
-pnpm writes a deterministic `pnpm-lock.yaml`; the GitHub Actions jobs run `pnpm install --frozen-lockfile` to guarantee parity with local builds.
+The build step runs `next build` and validates that generated assets are ready for hosting.
 
-## 3. Environment Files
-
-Next.js loads secrets from `.env.local` before falling back to `.env`. Keep machine-specific values (tokens, test credentials) in `.env.local` so they are ignored by git. Recommended pattern:
+## Start the App
+Launch the production server on port 3000:
 
 ```bash
-cp .env.example .env.local
-# edit values for your workstation
+pnpm start
 ```
 
-Key points:
+For iterative development use `pnpm dev`, which enables Hot Module Reloading and Supabase realtime previews.
 
-- **Frontend** envs (`NEXT_PUBLIC_*`) are safe to check into `.env.local`; they are baked into the bundle during `pnpm build`.
-- Backend/Supabase secrets should remain in `.env` or a secure secret manager if you share the project. Never commit service-role keys.
-- When running Supabase locally, copy the generated credentials from `supabase start` into `.env.local` so the Next.js app and edge functions stay in sync.
+## Supabase & Data
+1. Start the Supabase stack locally (or target a remote project):
+   ```bash
+   supabase start
+   ```
+2. Apply migrations and seed baseline data:
+   ```bash
+   supabase migration up
+   supabase db seed
+   ```
+3. Serve any required Edge Functions for payment automation:
+   ```bash
+   supabase functions serve sms-webhook --env-file .env.local
+   supabase functions serve issue-policy --env-file .env.local
+   ```
 
-## 4. Supabase and Local Services
+`pnpm lint`, `pnpm type-check`, and `pnpm test` mirror CI signals—run them before publishing containers or Supabase function updates.
 
-- Start Supabase locally with `supabase start`; it spins up Postgres, auth, storage, and real-time services.
-- Apply schema and seed data using the CLI:
-  ```bash
-  supabase migration up
-  supabase db seed
-  ```
-- Edge functions can run locally with hot reload:
-  ```bash
-  supabase functions serve sms-webhook --env-file .env.local
-  supabase functions serve issue-policy --env-file .env.local
-  ```
-- The Next.js dev server reads Supabase URLs/keys from `.env.local` when you launch `pnpm dev`.
-
-## 5. Running the App
-
-1. Start Supabase (local or remote) and ensure `.env.local` is populated.
-2. Run `pnpm dev` for HMR or `pnpm build && pnpm start` to emulate production.
-3. Visit <http://localhost:3000> for the fan experience or <http://localhost:3000/admin> for operator tools.
-
-## 6. Why We Removed Vercel
-
-Vercel-specific commands (`vercel pull`, cron jobs, preview deploys) added complexity and duplicated the same checks already running in CI. We now rely on pnpm-powered GitHub Actions (`.github/workflows/node-ci.yml` and `.github/workflows/preview.yml`) and provide local-first workflows for:
-
-- Secret management via `.env.local` + Supabase CLI rather than `vercel env`.
-- Scheduled work via Supabase (pg_cron, edge functions) or GitHub Actions schedules (see [`scripts/cron.md`](../scripts/cron.md)).
-- Preview testing by running `pnpm build` locally or consuming the uploaded build artifact from the preview workflow.
-
-The removal keeps local hosting self-contained and avoids hidden dependencies on the Vercel platform.
+## Reverse Proxy Roadmap
+The app currently binds directly to port 3000. Upcoming infrastructure work will introduce a reverse proxy layer (evaluating [Caddy](https://caddyserver.com/) and [Cloudflare Tunnel](https://www.cloudflare.com/products/tunnel/)) to manage TLS, HTTP/3, and zero-trust ingress. No proxy configuration is required yet, but reserve ports 443/8443 locally to avoid conflicts when the integration ships.

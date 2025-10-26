@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-  corsHeaders,
+  buildTelemetryCorsHeaders,
   processTelemetryRequest,
 } from "@/lib/telemetry/app-state-handler";
 
@@ -33,7 +33,8 @@ beforeEach(() => {
     const response = await processTelemetryRequest(buildRequest({ method: "OPTIONS" }), buildContext());
 
     expect(response.status).toBe(204);
-    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(corsHeaders["Access-Control-Allow-Origin"]);
+    const expectedOrigin = buildTelemetryCorsHeaders(null)["Access-Control-Allow-Origin"];
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(expectedOrigin);
     expect(loggerWith).not.toHaveBeenCalled();
   });
 

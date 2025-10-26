@@ -8,7 +8,7 @@
 ## Logging & tracing
 - Supabase Edge Functions logs are only accessible via the Supabase dashboard/API; no centralized shipping configured yet.
 - Backend currently relies on Fastify logging; no automatic export to Datadog/Grafana Loki.
-- TODO: choose log sink (Datadog, Grafana Loki, or Supabase Log Drains) and configure shipping from Vercel/Nest.
+- TODO: choose log sink (Datadog, Grafana Loki, or Supabase Log Drains) and configure shipping from the hosting platform/Nest.
 
 ## Sentry / error tracking
 - `docs/production-env.md` lists `SENTRY_DSN` but no concrete configuration exists; backend/frontend do not initialize Sentry clients.

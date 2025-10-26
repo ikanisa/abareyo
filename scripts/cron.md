@@ -1,22 +1,58 @@
-# Cron & Scheduling Notes
+# Scheduling playbook
 
-The project previously relied on Vercel for scheduled tasks, but no Vercel cron jobs were defined in `vercel.json` or GitHub workflows. To keep scheduled automation platform-agnostic, use one of the following approaches:
+Report automation is now backed by Supabase. Report schedules created through
+the admin UI are stored in the `report_schedules` table and consumed by the
+`scripts/reports/report-schedule-worker.ts` runner, which:
 
-## 1. Supabase pg_cron
+- polls for rows whose `next_run_at` is due,
+- generates the requested CSV export from Supabase data,
+- uploads the file to the `report-exports` storage bucket, and
+- updates delivery metadata (`last_delivery_status`, `delivery_metadata`) for
+  operators to inspect in the admin console.
 
-Supabase Pro plans expose `pg_cron`, which can run SQL or call HTTP endpoints on a schedule. Recommended for database maintenance, digests, and periodic clean-up jobs referenced in the Supabase runbooks under `docs/supabase/`.
+## Running the worker locally
 
-## 2. Supabase Edge Functions Scheduler
+```bash
+REPORT_WORKER_INTERVAL_MS=60000 \
+REPORTS_STORAGE_BUCKET=report-exports \
+SUPABASE_URL=... \
+SUPABASE_SERVICE_ROLE_KEY=... \
+npm run reports:worker
+```
 
-If you upgrade Supabase, the Scheduler UI can invoke edge functions (e.g., `sms-webhook`, `issue-policy`) on cron expressions. Configure schedules via the Supabase dashboard or CLI and store secrets with `supabase secrets set`.
+Environment variables:
 
-## 3. GitHub Actions
+- `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` (or the `SITE_` variants) – service
+  role credentials with access to `report_schedules`, `fund_donations`, and
+  storage buckets.
+- `REPORT_WORKER_INTERVAL_MS` – poll cadence in milliseconds (defaults to
+  60&nbsp;s).
+- `REPORTS_STORAGE_BUCKET` – storage bucket used for CSV artifacts (defaults to
+  `report-exports`).
+- `REPORT_SIGNED_URL_TTL` – optional signed URL lifetime in seconds (defaults to
+  24 hours).
 
-For jobs that only need repo access (report generation, cache pruning), create a workflow with `on:
-  schedule:`. Reuse the pnpm setup blocks from `.github/workflows/node-ci.yml` to share dependencies and run scripts like `pnpm build` or custom `tsx` commands.
+The worker logs each delivery attempt (`report.schedule.delivered` or
+`report.schedule.failed`). Failed runs retain the error in
+`report_schedules.last_delivery_error` so operations can investigate.
 
-## 4. Self-Hosted Alternatives
+## Manual execution
 
-Teams operating outside Supabase Pro can run cron containers (e.g., Kubernetes CronJobs defined under `k8s/`) or systemd timers on edge nodes. Point them at the same API routes or supabase functions previously targeted by Vercel.
+- To backfill or validate a single schedule, set its `dispatch` flag via the
+  admin UI when saving (this enqueues an immediate run) or update
+  `next_run_at` manually in Supabase and let the worker pick it up.
+- You can also invoke the worker once with `REPORT_WORKER_INTERVAL_MS=0` to run
+  due jobs and exit.
 
-Document new schedules in this file or the relevant runbook (`docs/runbooks/operations.md`) to keep operational visibility now that Vercel automation has been removed.
+## Production deployment
+
+- Host the worker as a separate Node.js process (Fly.io, Railway, Render, or a
+  lightweight container) so it is not tied to Vercel cron limits.
+- Provide the same environment variables listed above plus networking access to
+  Supabase.
+- Monitor logs for `report.worker.poll_failed` to catch Supabase outages or
+  misconfigured credentials.
+
+> Tip: When targeting webhooks as the report destination, ensure the receiving
+> endpoint returns a `2xx` status. The worker records non-success responses as
+> failures and will include the message in `last_delivery_error`.
