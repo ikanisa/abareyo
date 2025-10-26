@@ -1,3 +1,5 @@
+import { httpClient } from '@/services/http-client';
+
 // Type definitions inlined from contracts
 export enum PaymentStatusContract {
   Pending = 'pending',
@@ -51,41 +53,6 @@ export type SmsManualAttachRequestContract = {
   paymentId: string;
 };
 
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? '/api';
-const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_API_TOKEN ?? '';
-
-const normalisedBaseUrl = BASE_URL.replace(/\/$/, '');
-
-const buildAdminUrl = (path: string) =>
-  `${normalisedBaseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
-
-const withAdminHeaders = (init?: RequestInit): RequestInit => {
-  const headers = new Headers(init?.headers);
-  if (ADMIN_TOKEN) {
-    headers.set('x-admin-token', ADMIN_TOKEN);
-  }
-
-  return {
-    ...init,
-    headers,
-  };
-};
-
-const adminFetch = async (path: string, init?: RequestInit) => {
-  const response = await fetch(buildAdminUrl(path), withAdminHeaders(init));
-
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
-
-  return response;
-};
-
-const extractData = async <T>(response: Response) => {
-  const { data } = (await response.json()) as { data: T };
-  return data;
-};
-
 export interface SmsRecord {
   id: string;
   text: string;
@@ -104,13 +71,13 @@ export interface SmsRecord {
 }
 
 export async function fetchInboundSms() {
-  const response = await adminFetch('/sms/inbound');
-  return extractData<SmsRecord[]>(response);
+  return httpClient.data<SmsRecord[]>('/sms/inbound', { admin: true });
 }
 
 export async function fetchManualReviewSms() {
-  const response = await adminFetch('/sms/manual-review');
-  const data = await extractData<SmsManualReviewItemContract[]>(response);
+  const data = await httpClient.data<SmsManualReviewItemContract[]>('/sms/manual-review', {
+    admin: true,
+  });
   return data.map((sms) => ({
     ...sms,
     parsed: sms.parsed
@@ -123,8 +90,9 @@ export async function fetchManualReviewSms() {
 }
 
 export async function fetchManualReviewPayments() {
-  const response = await adminFetch('/payments/manual-review');
-  const data = await extractData<ManualReviewPaymentContract[]>(response);
+  const data = await httpClient.data<ManualReviewPaymentContract[]>('/payments/manual-review', {
+    admin: true,
+  });
   return data.map((payment) => ({
     ...payment,
     smsParsed: payment.smsParsed
@@ -137,13 +105,9 @@ export async function fetchManualReviewPayments() {
 }
 
 export async function attachSmsToPayment(payload: SmsManualAttachRequestContract) {
-  const response = await adminFetch('/sms/manual-review/attach', {
+  return httpClient.request('/sms/manual-review/attach', {
+    admin: true,
     method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-    },
     body: JSON.stringify(payload),
   });
-
-  return response.json();
 }

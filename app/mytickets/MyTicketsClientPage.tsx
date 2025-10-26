@@ -40,7 +40,7 @@ const MyTicketsClientPage = ({ tickets, error }: MyTicketsClientPageProps) => {
     <main className="min-h-screen bg-rs-gradient pb-24">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8">
         <TicketHero activeTab="my-tickets" onTabChange={handleTabChange} tabs={tabs} />
-        <section
+        <div
           id="wallet-panel"
           className="space-y-4"
           role="tabpanel"
@@ -71,7 +71,7 @@ const MyTicketsClientPage = ({ tickets, error }: MyTicketsClientPageProps) => {
               {error}
             </p>
           ) : null}
-        </section>
+        </div>
       </div>
     </main>
   );

@@ -14,17 +14,17 @@ type UpsertPayload = {
 const mocks = vi.hoisted(() => {
   const upsert = vi.fn();
   const from = vi.fn().mockReturnValue({ upsert });
-  const getSupabase = vi.fn(() => ({ from }));
-  return { upsert, from, getSupabase };
+  const getSupabaseBrowserClient = vi.fn(() => ({ from }));
+  return { upsert, from, getSupabaseBrowserClient };
 });
 
-vi.mock("@/app/_lib/supabase", () => ({ getSupabase: mocks.getSupabase }));
+vi.mock("@/lib/supabase/client", () => ({ getSupabaseBrowserClient: mocks.getSupabaseBrowserClient }));
 
 describe("OnboardingModal", () => {
   beforeEach(() => {
     mocks.upsert.mockReset();
     mocks.from.mockClear();
-    mocks.getSupabase.mockClear();
+    mocks.getSupabaseBrowserClient.mockClear();
     localStorage.clear();
   });
 
@@ -40,7 +40,7 @@ describe("OnboardingModal", () => {
 
     await waitFor(() => expect(onClose).toHaveBeenCalled());
 
-    expect(mocks.getSupabase).toHaveBeenCalled();
+    expect(mocks.getSupabaseBrowserClient).toHaveBeenCalled();
     const payload = mocks.upsert.mock.calls[0]?.[0] as UpsertPayload | undefined;
     expect(payload?.id).toMatch(/^\d{6}$/);
     expect(payload?.whatsapp).toBe("+250788888888");

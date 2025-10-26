@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type FocusEvent,
   type FormEvent,
   type PropsWithChildren,
   useCallback,

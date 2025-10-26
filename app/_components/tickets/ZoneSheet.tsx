@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import clsx from "clsx";
 
@@ -16,6 +16,7 @@ type ZoneSheetProps = {
 
 const ZoneSheet = ({ fixture, isOpen, onClose, onZoneSelect }: ZoneSheetProps) => {
   const [activeZoneId, setActiveZoneId] = useState<string | null>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -27,8 +28,17 @@ const ZoneSheet = ({ fixture, isOpen, onClose, onZoneSelect }: ZoneSheetProps) =
         onClose();
       }
     };
+    const handlePointerDown = (event: PointerEvent) => {
+      if (sheetRef.current && !sheetRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
     window.addEventListener("keydown", handleKeydown);
-    return () => window.removeEventListener("keydown", handleKeydown);
+    window.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeydown);
+      window.removeEventListener("pointerdown", handlePointerDown);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen || !fixture) {

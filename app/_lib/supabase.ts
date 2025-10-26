@@ -1,18 +1,13 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
-import {
-  getSupabasePublishableKey,
-  getSupabaseSecretKey,
-  getSupabaseUrl,
-} from "@/integrations/supabase/env";
+import { tryGetSupabaseServiceRoleClient } from "@/lib/db";
 
 let singleton: SupabaseClient | null = null;
 
 export function getSupabase(): SupabaseClient | null {
   if (singleton) return singleton;
-  const url = getSupabaseUrl();
-  const key = getSupabasePublishableKey() ?? getSupabaseSecretKey();
-  if (!url || !key) return null;
-  singleton = createClient(url, key, { auth: { persistSession: false } });
+  const client = tryGetSupabaseServiceRoleClient();
+  if (!client) return null;
+  singleton = client;
   return singleton;
 }

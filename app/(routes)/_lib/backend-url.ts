@@ -3,10 +3,8 @@ import { serverEnv } from "@/config/env";
 const FALLBACK_PORT = serverEnv.PORT ?? "3000";
 
 const resolveFallbackOrigin = () => {
-  const vercelUrl = serverEnv.VERCEL_URL?.trim();
-  if (vercelUrl) {
-    const normalized = vercelUrl.startsWith("http") ? vercelUrl : `https://${vercelUrl}`;
-    return normalized.replace(/\/$/, "");
+  if (serverEnv.APP_BASE_URL) {
+    return serverEnv.APP_BASE_URL;
   }
   return `http://localhost:${FALLBACK_PORT}`;
 };
