@@ -13,6 +13,5 @@ declare module 'next-axiom' {
     ip?: string | null;
   };
 
-  export function withAxiom<T extends (req: AxiomRequest, ...args: any[]) => any>(handler: T): T;
+  export function withAxiom<T extends (req: AxiomRequest, ...args: unknown[]) => unknown>(handler: T): T;
 }
-
