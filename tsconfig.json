@@ -71,11 +71,11 @@
     "tests/**/*.ts",
     "tests/**/*.tsx",
     "**/*.cjs",
-    "**/*.mjs",
-    ".next/types/**/*.ts"
+    "**/*.mjs"
   ],
   "exclude": [
     "node_modules",
-    "backend"
+    "backend",
+    ".next"
   ]
 }
