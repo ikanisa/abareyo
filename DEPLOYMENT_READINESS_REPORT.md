@@ -5,11 +5,11 @@ _Last updated: 2025-10-22 10:50:38Z_
 ## Executive Summary
 | Surface | Status | Notes |
 | --- | --- | --- |
-| Web (Next.js) | 🟢 Green | Env validation + CI parity in place. Populate deployment platform secrets via the internal runbooks (Vercel flow retired). |
-| Backend (NestJS) | 🟢 Green | External service verified via `scripts/check-backend-endpoint.mjs`; follow the platform secret rotation guide instead of the legacy Vercel sync script. |
+| Web (Next.js) | 🟢 Green | Env validation + CI parity in place. Populate deployment platform secrets via the internal runbooks. |
+| Backend (NestJS) | 🟢 Green | External service verified via `scripts/check-backend-endpoint.mjs`; follow the platform secret rotation guide rather than the retired syncing scripts. |
 
 ## Key Outcomes
-- Inventory, archived Vercel plan, and env matrix generated under `audit/`.
+- Inventory and env matrix generated under `audit/`.
 - Runtime env schema enforces required variables at build and run time.
 - Preview build workflow handled in GitHub Actions (`.github/workflows/preview.yml`).
 - Local preflight script consolidated under `scripts/preflight.mjs` to run env checks, backend verification, and the production build in one entry point.
@@ -26,10 +26,9 @@ _Last updated: 2025-10-22 10:50:38Z_
 - Backend: `NEXT_PUBLIC_BACKEND_URL` (absolute HTTPS endpoint) and `CORS_ORIGIN` allowlist.
 - Onboarding/AI: `NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN`, `ONBOARDING_API_TOKEN`, `OPENAI_API_KEY`, and `NEXT_PUBLIC_OPENAI_BASE_URL`/`OPENAI_BASE_URL` when overriding the API host.
 - Production-only: Provide at least one of `NEXT_PUBLIC_SENTRY_DSN` or `SENTRY_DSN`, `NEXT_PUBLIC_SITE_URL`, and telemetry/socket overrides when applicable.
-- Follow the deployment runbook to push these values to staging/production environments (legacy `npm run vercel:env:sync` is archived).
+- Follow the deployment runbook to push these values to staging/production environments (no automated env sync remains in this repo).
 
 ## Deployment Platform Configuration
-- `vercel.json` previously declared `framework`, `installCommand`, `buildCommand`, and `outputDirectory`; it has been removed from source control.
 - `next.config.mjs` sets `output: 'standalone'` and imports `config/validated-env.mjs` to fail fast on missing env.
 - `scripts/check-backend-endpoint.mjs` validates the configured backend URL before builds/pulls.
 - Remote images allowed via `images.remotePatterns` to avoid runtime blocking.
@@ -51,7 +50,7 @@ _Last updated: 2025-10-22 10:50:38Z_
 - Consider automating backend env validation within its own CI job (outside scope of this audit).
 
 ## References
-- Audit artifacts: `audit/inventory.json`, `audit/vercel-plan.md` (archived), `audit/env-matrix.csv`
+- Audit artifacts: `audit/inventory.json`, `audit/env-matrix.csv`
 - Example env files: `.env.example`, `backend/.env.example`
 - Validation module: `config/validated-env.mjs`
 - CI workflow: `.github/workflows/preview.yml`

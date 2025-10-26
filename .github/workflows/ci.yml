@@ -63,13 +63,25 @@ jobs:
       # E2E smoke tests with mocked API (guarded by E2E_API_MOCKS)
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps
-      - name: Run admin smoke tests
+      - name: Run admin smoke tests (admin + SMS)
         env:
           E2E_API_MOCKS: '1'
           NEXT_PUBLIC_BACKEND_URL: 'http://localhost:3000/api/e2e'
-        run: pnpm exec playwright test tests/e2e/admin-smokes.spec.ts
+          NEXT_PUBLIC_SUPABASE_URL: 'http://localhost:54321'
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: 'test'
+          SUPABASE_SERVICE_ROLE_KEY: 'test'
+          PORT: '3000'
+        run: pnpm exec playwright test tests/e2e/admin-smokes.spec.ts tests/e2e/admin/admin-sms*.spec.ts
       - name: Run accessibility smoke tests
         env:
           E2E_API_MOCKS: '1'
           NEXT_PUBLIC_BACKEND_URL: 'http://localhost:3000/api/e2e'
         run: pnpm test:e2e:a11y
+      - name: Upload Playwright artifacts on failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            playwright-report
+            test-results

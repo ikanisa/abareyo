@@ -26,7 +26,7 @@ Developers who rely on corporate VPNs should export `SUPABASE_DOCKER_IMAGE_REGIS
 
 ## Supabase Configuration
 
-Supabase drives authentication, storage, and realtime updates. Create a root `.env` (or `.env.local` for machine-specific overrides) with the following values. Keys prefixed with `NEXT_PUBLIC_` are exposed to the browser and should point at the deployed backend/API origin.
+Supabase drives authentication, storage, and realtime updates. Copy `.env.example` to `.env.local` (machine-specific overrides only) and populate the following values. Keys prefixed with `NEXT_PUBLIC_` are exposed to the browser and should point at the deployed backend/API origin. For production builds, use `.env.production.local` based on `.env.production.example` and source values from your secret manager.
 
 ```
 SUPABASE_URL=
@@ -94,13 +94,13 @@ If you plan to surface media (shop products, fundraising covers), configure S3-c
 
 ## Hosting Strategy
 
-We intentionally removed the default Vercel deployment path. The platform now targets containerised or Supabase-hosted environments for the following reasons:
+We intentionally removed the default managed-host deployment path. The platform now targets containerised or Supabase-hosted environments for the following reasons:
 
-- **Deterministic runtime** – Self-hosting via Docker or Supabase Edge Functions keeps the Node.js version and native dependencies aligned with our CI images, eliminating Vercel-specific quirks around OpenSSL and experimental flags.
+- **Deterministic runtime** – Self-hosting via Docker or Supabase Edge Functions keeps the Node.js version and native dependencies aligned with our CI images, eliminating provider-specific quirks around OpenSSL and experimental flags.
 - **Network affinity** – Running the web app closer to Supabase Postgres (or within the same VPC) lowers latency for realtime updates and reduces cross-region egress charges.
-- **Compliance** – Match-day integrations (MoMo SMS, SACCO accounting) require IP allowlists that are impractical to enforce on ephemeral Vercel preview hosts.
+- **Compliance** – Match-day integrations (MoMo SMS, SACCO accounting) require IP allowlists that are impractical to enforce on ephemeral preview hosts.
 
-Upcoming production hardening includes a reverse proxy in front of the Next.js runtime. We are evaluating Caddy (for automatic TLS and HTTP/3) and Cloudflare Tunnel (for zero-trust ingress) to expose the app without punching additional firewall holes. Implementation details will land in the runbooks once the chosen proxy is rolled out.
+Upcoming production hardening includes a reverse proxy in front of the Next.js runtime. Cloudflare Tunnel was selected for production to pair Cloudflare-managed TLS with zero-trust Access policies while keeping the cluster private. Refer to [`docs/runbooks/ingress-cloudflare-tunnel.md`](docs/runbooks/ingress-cloudflare-tunnel.md) for deployment steps and zero-trust guidance.
 
 ### Chat-Based Onboarding
 - Visit `/onboarding` to launch the anonymous, ChatGPT-style onboarding assistant.
@@ -140,7 +140,7 @@ Upcoming production hardening includes a reverse proxy in front of the Next.js r
   - `make e2e` runs Playwright smokes with mocked API (guarded by `E2E_API_MOCKS=1`).
 
 - CI/CD
-  - CI runs lint/unit/build. Preview deploys now rely on the internal GitHub Actions workflow paired with Supabase (the legacy Vercel flow has been retired). Edge Functions ship via `.github/workflows/supabase-functions-deploy.yml`.
+  - CI runs lint/unit/build. Preview deploys now rely on the internal GitHub Actions workflow paired with Supabase (the legacy managed-host flow has been retired). Edge Functions ship via `.github/workflows/supabase-functions-deploy.yml`.
   - Optional `HEALTH_URL` secret enables post-deploy health check loop.
 
 - Observability & Security
