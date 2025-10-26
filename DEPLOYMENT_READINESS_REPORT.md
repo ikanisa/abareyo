@@ -12,7 +12,8 @@ _Last updated: 2025-10-22 10:50:38Z_
 - Inventory and env matrix generated under `audit/`.
 - Runtime env schema enforces required variables at build and run time.
 - Preview build workflow handled in GitHub Actions (`.github/workflows/preview.yml`).
-- Documented platform-agnostic secret rotation replaces the former deployment-specific sync flow.
+- Local preflight script consolidated under `scripts/preflight.mjs` to run env checks, backend verification, and the production build in one entry point.
+- Documented platform-agnostic secret rotation replaces the former `npm run vercel:env:sync` flow.
 - Root/node engines aligned on Node 20 via `.nvmrc` + package metadata.
 
 ## Environment Variables
@@ -33,15 +34,16 @@ _Last updated: 2025-10-22 10:50:38Z_
 - Remote images allowed via `images.remotePatterns` to avoid runtime blocking.
 
 ## CI / Automation
-- GitHub Action `Preview Build` runs on pull requests targeting `main` and performs:
-  1. `npm ci`
-  2. `node scripts/check-frontend-env.mjs`
-  3. `npm run build`
-  4. Archives `.next` build artifacts for review
+  - GitHub Action `Preview Build` runs on pull requests targeting `main` and performs:
+    1. `npm ci`
+    2. `npm run -s type-check`
+    3. `npm run -s lint`
+    4. `node scripts/preflight.mjs`
+    5. Archives `.next` build artifacts for review
 - Ensure repository secrets for the hosting platform (for example, container registry tokens or SSH deploy keys) are configured before merging.
 
 ## Local Developer Workflow
-- Run a local preflight (`npm run build` + `scripts/check-backend-endpoint.mjs`) to verify env, backend availability, and parity prior to opening PRs. A future improvement is to ship a platform-neutral helper script.
+- Run `node scripts/preflight.mjs` to verify env, backend availability, and build parity prior to opening PRs.
 - `.nvmrc` enforces Node 20 for both root and backend workspaces.
 
 ## Follow-up / Open Risks
@@ -52,5 +54,5 @@ _Last updated: 2025-10-22 10:50:38Z_
 - Example env files: `.env.example`, `backend/.env.example`
 - Validation module: `config/validated-env.mjs`
 - CI workflow: `.github/workflows/preview.yml`
-- Preflight script: _TODO: add a platform-neutral runner alongside `scripts/check-backend-endpoint.mjs`_
+- Preflight script: `scripts/preflight.mjs`
 - Backend availability check: `scripts/check-backend-endpoint.mjs`
