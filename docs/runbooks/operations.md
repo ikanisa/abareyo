@@ -56,6 +56,18 @@ npx axe http://localhost:3000 --tags wcag2a,wcag2aa
 
 Document results in `reports/operations-log.md` with timestamp, operator, and actions taken.
 
+## Admin SMS Parser Test Endpoint
+
+- The admin parser test route is disabled by default. To enable in staging, set:
+  - `ADMIN_SMS_PARSER_TEST_ENABLED=1`
+  - Optional rate config: `ADMIN_SMS_PARSER_TEST_RATE_LIMIT` (default 10),
+    `ADMIN_SMS_PARSER_TEST_WINDOW_MS` (default 60000).
+- The endpoint requires `OPENAI_API_KEY` on the Next.js server to call the
+  Responses API. In Kubernetes, this is injected via `backend-secrets` and
+  exposed to the frontend deployment (`k8s/frontend-deployment.yaml`).
+- When enabled, the route responds with `X-RateLimit-*` headers and `429` on
+  excessive calls; consider temporarily raising limits during load testing.
+
 ## Offline Cache Validation (Detailed)
 
 1. Visit the fan home experience while connected to the network and wait for the hero, feed, and missions to render.
