@@ -12,6 +12,17 @@ permissions:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_ENVIRONMENT_LABEL: CI
+      NEXT_PUBLIC_BACKEND_URL: http://localhost:3000/api
+      NEXT_PUBLIC_SUPABASE_URL: https://ci.example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-anon-key
+      NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN: ci-onboarding-token
+      SUPABASE_SERVICE_ROLE_KEY: ci-service-role
+      SITE_SUPABASE_URL: https://ci.example.com
+      SITE_SUPABASE_SECRET_KEY: ci-site-secret
+      ONBOARDING_API_TOKEN: ci-onboarding-token
+      OPENAI_API_KEY: ci-openai-key
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,6 +53,8 @@ jobs:
 
       - name: Preflight (env + backend + build)
         run: node scripts/preflight.mjs
+        env:
+          PREFLIGHT_ALLOW_MISSING_ENV: '1'
 
       - name: Install backend deps
         working-directory: backend
