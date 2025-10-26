@@ -5,17 +5,15 @@ metadata:
   namespace: rayon
   annotations:
     kubernetes.io/ingress.class: nginx
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
-  tls:
-    - hosts:
-        - __INGRESS_HOST__
-      secretName: __TLS_SECRET__
   rules:
-    - host: __INGRESS_HOST__
+    - host: __PUBLIC_HOSTNAME__
       http:
         paths:
-          - path: /api
+          - path: /api(/|$)(.*)
             pathType: Prefix
             backend:
               service:
@@ -29,4 +27,3 @@ spec:
                 name: frontend
                 port:
                   number: 80
-

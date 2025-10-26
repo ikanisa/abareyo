@@ -54,10 +54,12 @@ export const Providers = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    registerServiceWorker();
+    if (hasPwaOptIn()) {
+      void registerServiceWorker();
+    }
 
     const onOptIn = () => {
-      registerServiceWorker();
+      void registerServiceWorker();
     };
 
     window.addEventListener(PWA_OPT_IN_EVENT, onOptIn);
@@ -124,4 +126,3 @@ export const Providers = ({ children }: { children: ReactNode }) => {
 };
 
 const isNotificationSupported = () => hasWindow() && 'Notification' in window;
-
