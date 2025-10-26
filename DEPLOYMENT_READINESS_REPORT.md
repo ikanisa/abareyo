@@ -56,3 +56,4 @@ _Last updated: 2025-10-22 10:50:38Z_
 - CI workflow: `.github/workflows/preview.yml`
 - Preflight script: `scripts/preflight.mjs`
 - Backend availability check: `scripts/check-backend-endpoint.mjs`
+- Operational playbooks: `docs/runbooks/incident-response.md`, `docs/runbooks/disaster-recovery.md`, `docs/runbooks/on-call-enablement-checklist.md`
