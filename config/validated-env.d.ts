@@ -34,7 +34,10 @@ export type RuntimeEnv = {
   SUPABASE_ANON_KEY?: string;
   ONBOARDING_API_TOKEN: string;
   ONBOARDING_ALLOW_MOCK?: string;
-  OPENAI_API_KEY: string;
+  OPENAI_API_KEY?: string;
+  ADMIN_SMS_PARSER_TEST_ENABLED?: string;
+  ADMIN_SMS_PARSER_TEST_RATE_LIMIT?: string;
+  ADMIN_SMS_PARSER_TEST_WINDOW_MS?: string;
   AGENT_ID?: string;
   NEXT_PHASE?: string;
   NEXT_RUNTIME?: string;
@@ -78,7 +81,10 @@ export interface ServerEnv {
   SUPABASE_ANON_KEY?: string;
   ONBOARDING_API_TOKEN: string;
   ONBOARDING_ALLOW_MOCK?: string;
-  OPENAI_API_KEY: string;
+  OPENAI_API_KEY?: string;
+  ADMIN_SMS_PARSER_TEST_ENABLED?: string;
+  ADMIN_SMS_PARSER_TEST_RATE_LIMIT?: string;
+  ADMIN_SMS_PARSER_TEST_WINDOW_MS?: string;
   AGENT_ID?: string;
   NEXT_PHASE?: string;
   NEXT_RUNTIME?: string;
