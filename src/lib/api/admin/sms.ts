@@ -1,64 +1,22 @@
-export type InboundSmsRecord = {
-  id: string;
-  text: string;
-  fromMsisdn: string;
-  toMsisdn?: string | null;
-  receivedAt: string;
-  ingestStatus: 'received' | 'parsed' | 'error' | 'manual_review';
-  parsed?: {
-    id: string;
-    amount: number;
-    currency: string;
-    ref: string;
-    confidence: number;
-    matchedEntity?: string | null;
-  } | null;
-};
-
-export type ManualReviewSmsRecord = InboundSmsRecord & {
-  parsed?: (InboundSmsRecord['parsed'] & { confidence: number }) | null;
-};
-
-export type ManualReviewPayment = {
-  id: string;
-  amount: number;
-  currency: string;
-  status: string;
-  kind: string;
-  createdAt: string;
-  metadata?: Record<string, unknown> | null;
-  order?: { id: string; status: string } | null;
-  membership?: { id: string; plan?: { name: string } | null } | null;
-  donation?: { id: string; project?: { title: string } | null } | null;
-  smsParsed?: {
-    id: string;
-    amount: number;
-    currency: string;
-    ref: string;
-    confidence: number;
-  } | null;
-};
-
-export type SmsParserPrompt = {
-  id: string;
-  label: string;
-  body: string;
-  version: number;
-  isActive: boolean;
-  createdAt: string;
-};
-
-export type SmsParserResult = {
-  amount: number;
-  currency: string;
-  payerMask?: string;
-  ref: string;
-  timestamp?: string;
-  confidence: number;
-  parserVersion: string;
-};
+import type {
+  InboundSmsRecord,
+  ManualReviewPayment,
+  ManualReviewSmsRecord,
+  SmsParserPrompt,
+  SmsParserResult,
+  SmsQueueOverview,
+} from '@/types/admin-sms';
 
 import { httpClient } from '@/services/http-client';
+
+export type {
+  InboundSmsRecord,
+  ManualReviewPayment,
+  ManualReviewSmsRecord,
+  SmsParserPrompt,
+  SmsParserResult,
+  SmsQueueOverview,
+} from '@/types/admin-sms';
 
 export const fetchInboundSms = (limit?: number) =>
   httpClient.data<InboundSmsRecord[]>(`/admin/sms/inbound`, {
@@ -84,21 +42,6 @@ export const attachSmsToPayment = (payload: { smsId: string; paymentId: string }
     method: 'POST',
     body: JSON.stringify(payload),
   });
-
-export type SmsQueueOverview = {
-  waiting: number;
-  delayed: number;
-  active: number;
-  pending: Array<{
-    jobId: string;
-    smsId: string;
-    attemptsMade: number;
-    maxAttempts: number;
-    state: string;
-    enqueuedAt: string;
-    lastFailedReason?: string | null;
-  }>;
-};
 
 export const fetchSmsQueueOverview = () =>
   httpClient.data<SmsQueueOverview>(`/admin/sms/queue`, { admin: true });
