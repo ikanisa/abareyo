@@ -135,6 +135,7 @@ Upcoming production hardening includes a reverse proxy in front of the Next.js r
 - Envs & Secrets
   - Confirm required envs in `docs/production-env.md`. Validate with `make env-check`.
   - Ensure Supabase service role keys are stored as repo/infra secrets, never shipped to the browser.
+  - Admin SMS parser test endpoint (staging only): set `OPENAI_API_KEY` and `ADMIN_SMS_PARSER_TEST_ENABLED=1`. Optional rate config: `ADMIN_SMS_PARSER_TEST_RATE_LIMIT` (default 10), `ADMIN_SMS_PARSER_TEST_WINDOW_MS` (default 60000).
 
 - E2E Smokes
   - `make e2e` runs Playwright smokes with mocked API (guarded by `E2E_API_MOCKS=1`).
