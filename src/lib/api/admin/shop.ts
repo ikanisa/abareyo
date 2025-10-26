@@ -1,4 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api';
+import { httpClient } from '@/services/http-client';
 
 export type ShopOrderItem = {
   id: string;
@@ -52,76 +52,56 @@ export type AdminShopSummary = {
   range: { from: string | null; to: string | null };
 };
 
-const request = async <T>(path: string, init?: RequestInit) => {
-  const response = await fetch(`${BASE_URL.replace(/\/$/, '')}${path}`, {
-    credentials: 'include',
-    ...init,
-    headers: {
-      'content-type': 'application/json',
-      ...(init?.headers ?? {}),
-    },
-  });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `Request failed (${response.status})`);
-  }
-
-  return (await response.json()) as T;
-};
-
 export const fetchAdminShopOrders = async (params: {
   page?: number;
   pageSize?: number;
   status?: string;
   search?: string;
 } = {}) => {
-  const url = new URL(`${BASE_URL.replace(/\/$/, '')}/admin/shop/orders`);
-  if (params.page) url.searchParams.set('page', params.page.toString());
-  if (params.pageSize) url.searchParams.set('pageSize', params.pageSize.toString());
-  if (params.status) url.searchParams.set('status', params.status);
-  if (params.search) url.searchParams.set('search', params.search);
-  return request<PaginatedResponse<AdminShopOrder>>(url.pathname + url.search);
+  return httpClient.request<PaginatedResponse<AdminShopOrder>>('/admin/shop/orders', {
+    admin: true,
+    searchParams: params,
+  });
 };
 
 export const updateAdminShopStatus = async (
   orderId: string,
   payload: { status: string; note?: string },
 ) => {
-  const response = await request<{ status: string; data: AdminShopOrder }>(`/admin/shop/orders/${orderId}/status`, {
+  return httpClient.data<AdminShopOrder>(`/admin/shop/orders/${orderId}/status`, {
+    admin: true,
     method: 'POST',
     body: JSON.stringify(payload),
   });
-  return response.data;
 };
 
 export const addAdminShopFulfillmentNote = async (orderId: string, note: string) => {
-  const response = await request<{ status: string; data: AdminShopOrder }>(`/admin/shop/orders/${orderId}/note`, {
+  return httpClient.data<AdminShopOrder>(`/admin/shop/orders/${orderId}/note`, {
+    admin: true,
     method: 'POST',
     body: JSON.stringify({ note }),
   });
-  return response.data;
 };
 
 export const updateAdminShopTracking = async (orderId: string, trackingNumber?: string) => {
-  const response = await request<{ status: string; data: AdminShopOrder }>(`/admin/shop/orders/${orderId}/tracking`, {
+  return httpClient.data<AdminShopOrder>(`/admin/shop/orders/${orderId}/tracking`, {
+    admin: true,
     method: 'POST',
     body: JSON.stringify({ trackingNumber }),
   });
-  return response.data;
 };
 
 export const fetchAdminShopSummary = async (params: { from?: string; to?: string } = {}) => {
-  const url = new URL(`${BASE_URL.replace(/\/$/, '')}/admin/shop/summary`);
-  if (params.from) url.searchParams.set('from', params.from);
-  if (params.to) url.searchParams.set('to', params.to);
-  return request<{ data: AdminShopSummary }>(url.pathname + url.search).then((res) => res.data);
+  return httpClient.data<AdminShopSummary>('/admin/shop/summary', {
+    admin: true,
+    searchParams: params,
+  });
 };
 
 export const batchUpdateAdminShopStatus = async (payload: { orderIds: string[]; status: string; note?: string }) => {
-  const response = await request<{ status: string; data: AdminShopOrder[] }>(`/admin/shop/orders/status/batch`, {
+  return httpClient.data<AdminShopOrder[]>(`/admin/shop/orders/status/batch`, {
+    admin: true,
     method: 'POST',
     body: JSON.stringify(payload),
   });
-  return response.data;
 };

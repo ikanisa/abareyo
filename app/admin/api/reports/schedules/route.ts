@@ -6,12 +6,14 @@ import { respond, respondWithError, respondWithSupabaseNotConfigured } from '@/a
 import { AdminAuthError, requireAdminSession } from '@/app/admin/api/_lib/session';
 import { AdminServiceClientUnavailableError, withAdminServiceClient } from '@/services/admin/service-client';
 import type { Json } from '@/integrations/supabase/types';
+import { computeInitialRun, InvalidCronExpressionError } from '@/lib/reports/scheduler';
 
 type SchedulePayload = {
   name: string;
   cron: string;
   destination: string;
   payload?: Json;
+  dispatch?: boolean;
 };
 
 export async function GET() {
@@ -20,7 +22,9 @@ export async function GET() {
     return await withAdminServiceClient(async (supabase) => {
       const { data, error } = await supabase
         .from('report_schedules')
-        .select('id, name, cron, destination, payload, created_at, created_by')
+        .select(
+          'id, name, cron, destination, payload, created_at, created_by, next_run_at, last_run_at, last_delivered_at, last_delivery_status, last_delivery_error, delivery_metadata',
+        )
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -49,6 +53,16 @@ export async function POST(request: NextRequest) {
       return respondWithError('schedule_payload_invalid', 'Name, cron, and destination are required', 400);
     }
 
+    let nextRunAt: Date;
+    try {
+      nextRunAt = computeInitialRun(payload.cron, Boolean(payload.dispatch));
+    } catch (error) {
+      if (error instanceof InvalidCronExpressionError) {
+        return respondWithError('schedule_cron_invalid', error.message, 400);
+      }
+      throw error;
+    }
+
     return await withAdminServiceClient(async (supabase) => {
       const { data, error } = await supabase
         .from('report_schedules')
@@ -58,14 +72,16 @@ export async function POST(request: NextRequest) {
           destination: payload.destination,
           payload: payload.payload ?? {},
           created_by: session.user.id,
+          next_run_at: nextRunAt.toISOString(),
+          last_delivery_status: payload.dispatch ? 'queued' : 'scheduled',
         })
-        .select('id, name, cron, destination, payload, created_at')
+        .select(
+          'id, name, cron, destination, payload, created_at, next_run_at, last_run_at, last_delivered_at, last_delivery_status, last_delivery_error, delivery_metadata',
+        )
         .single();
 
       if (error) throw error;
 
-      // TODO: Trigger the chosen scheduler backend once cron infrastructure is
-      // implemented so new Supabase rows lead to actual job executions.
       await recordAudit(supabase, {
         action: 'reports.schedule.create',
         entityType: 'report_schedule',

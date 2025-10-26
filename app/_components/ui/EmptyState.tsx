@@ -13,7 +13,7 @@ interface EmptyStateProps {
 }
 
 const EmptyState = ({ title, description, icon, action }: EmptyStateProps) => (
-  <div className="card break-words whitespace-normal break-words whitespace-normal border border-dashed border-white/20 bg-white/5 text-left text-white/80">
+  <div className="card break-words whitespace-normal border border-dashed border-white/20 bg-white/5 text-left text-white/80" role="status" aria-live="polite">
     <div className="flex items-start gap-3">
       {icon ? <span aria-hidden="true" className="text-xl">{icon}</span> : null}
       <div className="space-y-1">
@@ -21,7 +21,7 @@ const EmptyState = ({ title, description, icon, action }: EmptyStateProps) => (
         <p className="text-sm text-white/70">{description}</p>
         {action ? (
           action.href ? (
-            <Link className="text-sm font-semibold text-white/80 underline" href={action.href}>
+            <Link className="text-sm font-semibold text-white/80 underline" href={action.href} aria-label={action.label}>
               {action.label}
             </Link>
           ) : action.onClick ? (
@@ -29,6 +29,7 @@ const EmptyState = ({ title, description, icon, action }: EmptyStateProps) => (
               type="button"
               className="text-sm font-semibold text-white/80 underline"
               onClick={action.onClick}
+              aria-label={action.label}
             >
               {action.label}
             </button>

@@ -1,0 +1,17 @@
+# Production Cloudflare tunnel configuration for the Rayon Sports stack.
+# Replace placeholders before deploying via CI/CD.
+tunnel: __CLOUDFLARE_TUNNEL_NAME__
+credentials-file: /etc/cloudflared/credentials/credentials.json
+originRequest:
+  httpHostHeader: __PUBLIC_HOSTNAME__
+  connectTimeout: 15s
+  http2Origin: true
+ingress:
+  - hostname: __PUBLIC_HOSTNAME__
+    path: /api/*
+    service: http://backend.rayon.svc.cluster.local:5000
+  - hostname: __PUBLIC_HOSTNAME__
+    service: http://frontend.rayon.svc.cluster.local:80
+  - service: http_status:404
+warp-routing:
+  enabled: true
