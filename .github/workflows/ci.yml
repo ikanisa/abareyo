@@ -33,8 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           npm ci || {
-            echo "npm ci failed; attempting npm install for diagnostics"
-            npm install
+            echo "npm ci failed; fix the lockfile before rerunning CI"
             exit 1
           }
 
