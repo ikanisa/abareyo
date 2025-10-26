@@ -66,6 +66,11 @@ const parseResponse = async <T>(
     return text as unknown as T;
   }
 
+  const hasJson = typeof response.json === 'function';
+  if (!hasJson) {
+    return undefined as unknown as T;
+  }
+
   const payload = (await response.json()) as unknown;
   if (!parseData) {
     return payload as T;

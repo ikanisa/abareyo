@@ -1,9 +1,10 @@
-import pino, { type Logger, type TransportTargetOptions } from "pino";
+import pino, { type Logger, type LogFn, type TransportTargetOptions } from "pino";
 
 import { resolveSentryConfiguration } from "./sentry-config";
 
 let lokiLogger: Logger | undefined;
 let consolePatched = false;
+const originalConsoleMethods: Partial<Record<keyof Console, ((...args: unknown[]) => unknown) | undefined>> = {};
 
 const buildLokiTarget = (service: string, environment: string, level: string): TransportTargetOptions | null => {
   const host = process.env.LOKI_URL ?? process.env.LOKI_HOST ?? "";
@@ -59,20 +60,28 @@ const patchConsole = (logger: Logger) => {
   };
 
 
+  const emitLog = (method: keyof Logger, payload: unknown) => {
+    const fn = logger[method] as unknown as LogFn | undefined;
+    fn?.call(logger, payload);
+  };
+
   const methods: (keyof Console)[] = ["log", "info", "warn", "error", "debug"];
 
   methods.forEach((method) => {
-    const original = console[method];
-
-    console[method] = ((...args: unknown[]) => {
+    const original = console[method] as unknown as ((...args: unknown[]) => unknown) | undefined;
+    if (!originalConsoleMethods[method]) {
+      originalConsoleMethods[method] = original;
+    }
+    const consoleRef = console as unknown as Record<string, (...args: unknown[]) => unknown>;
+    consoleRef[method as string] = (...args: unknown[]) => {
       const logFn = mapLevel(method);
       if (args.length === 1) {
-        logger[logFn](args[0]);
+        emitLog(logFn, args[0]);
       } else {
-        logger[logFn](args);
+        emitLog(logFn, args);
       }
       return original?.apply(console, args);
-    }) as Console[typeof method];
+    };
   });
 
   consolePatched = true;
@@ -103,14 +112,26 @@ export const setupNodeObservability = (service = "nextjs-frontend") => {
     transportTargets.push(lokiTarget);
   }
 
-  if (transportTargets.length === 1 && !lokiTarget) {
-    return;
-  }
-
   const transport = pino.transport({
     targets: transportTargets,
   });
 
   lokiLogger = pino({ level }, transport);
   patchConsole(lokiLogger);
+};
+
+export const resetNodeObservability = () => {
+  lokiLogger = undefined;
+  if (!consolePatched) {
+    return;
+  }
+  const consoleRef = console as unknown as Record<string, (...args: unknown[]) => unknown>;
+  (["log", "info", "warn", "error", "debug"] as (keyof Console)[]).forEach((method) => {
+    const original = originalConsoleMethods[method];
+    if (original) {
+      consoleRef[method as string] = original;
+      originalConsoleMethods[method] = undefined;
+    }
+  });
+  consolePatched = false;
 };
