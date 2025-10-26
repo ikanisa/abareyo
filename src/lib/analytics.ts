@@ -1,11 +1,49 @@
-import type { AnalyticsEventDetail, AnalyticsHandler } from "@/lib/track";
+import { useMemo, type PropsWithChildren, type ReactNode } from "react";
+import {
+  ANALYTICS_EVENT,
+  dispatchAnalyticsEvent,
+  subscribeToAnalytics,
+  track as trackEvent,
+  type AnalyticsEventDetail,
+  type AnalyticsHandler,
+} from "@/lib/track";
 
-export const ANALYTICS_EVENT = "analytics";
+export type AnalyticsProps = Record<string, unknown>;
+export type AnalyticsProviderProps = PropsWithChildren<Record<string, unknown>>;
 
-export const dispatchAnalyticsEvent = (_detail: AnalyticsEventDetail): boolean => false;
+export type AnalyticsBridge = {
+  track: typeof trackEvent;
+  flush: () => Promise<void>;
+  identify: (...args: unknown[]) => void;
+  pageview: (...args: unknown[]) => void;
+};
 
-export const subscribeToAnalytics = (_handler: AnalyticsHandler): (() => void) => () => {};
+const noop: (...args: unknown[]) => void = () => {};
+const asyncNoop = async (): Promise<void> => {};
 
-export const track = (_name: string, _props?: Record<string, unknown>) => {};
+export function Analytics(_props: AnalyticsProps = {}): null {
+  return null;
+}
 
+export function AnalyticsProvider({ children }: AnalyticsProviderProps): ReactNode {
+  return children ?? null;
+}
+
+export function useAnalytics(): AnalyticsBridge {
+  return useMemo(
+    () => ({
+      track: trackEvent,
+      flush: asyncNoop,
+      identify: noop,
+      pageview: noop,
+    }),
+    [],
+  );
+}
+
+export function useTrack(): typeof trackEvent {
+  return useMemo(() => trackEvent, []);
+}
+
+export { ANALYTICS_EVENT, dispatchAnalyticsEvent, subscribeToAnalytics, trackEvent as track };
 export type { AnalyticsEventDetail, AnalyticsHandler };

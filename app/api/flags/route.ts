@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 
-import { getSupabasePublishableKey, getSupabaseUrl } from '@/integrations/supabase/env';
+import { tryGetSupabaseServerAnonClient } from '@/lib/db';
 
 const DEFAULT_FLAGS = {
   'features.personalization': true,
@@ -16,15 +15,13 @@ const DEFAULT_FLAGS = {
 };
 
 export async function GET() {
-  const supabaseUrl = getSupabaseUrl();
-  const supabaseAnonKey = getSupabasePublishableKey();
+  const client = tryGetSupabaseServerAnonClient();
 
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (!client) {
     return NextResponse.json({ flags: DEFAULT_FLAGS });
   }
 
   try {
-    const client = createClient(supabaseUrl, supabaseAnonKey);
     const { data, error } = await client.from('feature_flags').select('key, enabled');
 
     if (error) {

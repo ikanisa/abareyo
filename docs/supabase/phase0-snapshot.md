@@ -69,12 +69,12 @@ _(Full output retained in project notes; final row confirms the pending `partner
 | Source | Notable values | Required follow-up |
 | --- | --- | --- |
 | `.env` | Publishable Supabase key placeholder + updated project ID (`paysnhuxngsvzdpwlosv`). | Fill in a fresh publishable key from Supabase dashboard when ready; keep secrets out of git. See `docs/supabase/vault-secret-map.md` for live storage locations. |
-| `.env.production` | Now ships as template only; real secrets must be pulled from secure stores. | Ensure hosting environment + Vault copies stay authoritative; remove any stray plaintext files after rotation. |
-| `.vercel/.env.development.local` | Local OIDC/development tokens. | Legacy file from the retired Vercel workflow; replace with `.env.local` overrides when needed and remove any stale tokens. |
+| `.env.production` | Now ships as template only; real secrets must be pulled from secure stores. | Ensure the deployment platform + Vault copies stay authoritative; remove any stray plaintext files after rotation. |
+| Preview secret store | Houses local OIDC/development tokens (legacy preview-specific env files were removed). | Confirm they stay scoped to preview; document rotation cadence. |
 | `backend/.env.example` | MoMo pay codes & backend defaults. | Expand to include Twilio/Stripe/Slack placeholders so Vault list is complete. |
 
 Additional gaps identified during review:
-- No committed values for `SUPABASE_SERVICE_ROLE_KEY`, Twilio, Stripe, Slack, CSP, or metrics bearer token in the repo. Ensure Vault plus the current hosting environment hold the definitive copies.
+- No committed values for `SUPABASE_SERVICE_ROLE_KEY`, Twilio, Stripe, Slack, CSP, or metrics bearer token in the repo. Ensure Vault + the hosting platform hold the definitive copies.
 - Generate fresh Supabase publishable/service-role keys as part of Phase 1, then delete the old values from `.env`/`.env.production`.
 - Capture a single source of truth for environment variables (Prod/Preview/Dev) in `docs/` once rotation completes.
 
@@ -93,9 +93,9 @@ Additional gaps identified during review:
 2. (Done Oct 18 2025) ERD exported (CLI substitute via eralchemy2) to `docs/supabase/erd-20251018.svg`.
 3. (Done Oct 18 2025) Canonical tables set to snake_case. `supabase/migrations/20251112_cleanup_camelcase.sql` + `20251112120000_drop_membership_camel.sql` remove camelCase duplicates; see `docs/supabase/canonical-table-plan.md`.
 4. (Done Oct 18 2025) Prisma schema re-introspected from production (`npx prisma db pull`) so backend models follow the Supabase-owned snake_case tables.
-5. Move secrets out of `.env.production`, rotate Supabase keys, and update Vault entries per `docs/supabase/secret-rotation-plan.md`.
+5. Move secrets out of `.env.production`, rotate Supabase keys, and update Vault entries per `docs/supabase/secret-rotation-plan.md` (all remaining copies in managed hosts should be rotated as well).
 6. Upgrade Supabase tier (Free → Pro) ahead of Phase 1 so cron/pooling/PITR are available; coordinate billing approval.
-7. Pull a fresh publishable key from Supabase and populate `.env`/the hosting environment once the rotation window is approved.
+7. Pull a fresh publishable key from Supabase and populate `.env`/the hosting platform once the rotation window is approved.
 8. Complete Supabase migration reconciliation: `20251112_cleanup_camelcase`, `20251112120000_drop_membership_camel`, and `20251113100000_phase1_rls_policies` are applied locally/remotely (remote entries repaired via `supabase migration repair` due to pooler limits). Re-run `supabase migration list` after every deploy to keep parity.
 
 Phase 0 is considered complete once the pending migration is deployed, the ERD is captured, secrets are staged for rotation, and the team agrees on the canonical schema plan.

@@ -20,8 +20,12 @@ const isValidBackendUrl = (value) => {
   }
 };
 
-const baseSchema = z.object({
+const normalizeUrl = (value) => value.replace(/\/$/, '');
+
+const envSchema = z.object({
+  APP_ENV: z.enum(['local', 'development', 'staging', 'production', 'test']).default('local'),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  APP_BASE_URL: z.string().url().optional(),
   NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
   NEXT_PUBLIC_BACKEND_URL: z
     .string()
@@ -68,7 +72,7 @@ const baseSchema = z.object({
   SENTRY_REPLAYS_ERROR_SAMPLE_RATE: z.string().optional(),
 });
 
-const parsed = baseSchema.parse(process.env);
+const parsed = envSchema.parse(process.env);
 
 const missingCritical = [];
 for (const key of [
@@ -103,8 +107,26 @@ if (missingCritical.length > 0) {
   );
 }
 
+const defaultPort = parsed.PORT ?? '3000';
+
+const resolvedAppBaseUrl = (() => {
+  if (parsed.APP_BASE_URL) {
+    return normalizeUrl(parsed.APP_BASE_URL.trim());
+  }
+  if (parsed.NEXT_PUBLIC_SITE_URL) {
+    return normalizeUrl(parsed.NEXT_PUBLIC_SITE_URL.trim());
+  }
+  return normalizeUrl(`http://localhost:${defaultPort}`);
+})();
+
+const resolvedPublicSiteUrl = parsed.NEXT_PUBLIC_SITE_URL
+  ? normalizeUrl(parsed.NEXT_PUBLIC_SITE_URL.trim())
+  : resolvedAppBaseUrl;
+
 const serverEnv = {
+  APP_ENV: parsed.APP_ENV,
   NODE_ENV: parsed.NODE_ENV,
+  APP_BASE_URL: resolvedAppBaseUrl,
   NEXT_PUBLIC_SITE_URL: parsed.NEXT_PUBLIC_SITE_URL,
   NEXT_PUBLIC_BACKEND_URL: parsed.NEXT_PUBLIC_BACKEND_URL,
   NEXT_PUBLIC_ENVIRONMENT_LABEL: parsed.NEXT_PUBLIC_ENVIRONMENT_LABEL,
@@ -145,8 +167,14 @@ const serverEnv = {
   SENTRY_REPLAYS_ERROR_SAMPLE_RATE: parsed.SENTRY_REPLAYS_ERROR_SAMPLE_RATE,
 };
 
+const fallbackPort = parsed.PORT ?? '3000';
+const fallbackSiteUrl =
+  parsed.NEXT_PUBLIC_SITE_URL ??
+  parsed.APP_BASE_URL ??
+  `http://localhost:${fallbackPort}`;
+
 const clientEnv = {
-  NEXT_PUBLIC_SITE_URL: parsed.NEXT_PUBLIC_SITE_URL ?? '',
+  NEXT_PUBLIC_SITE_URL: resolvedPublicSiteUrl,
   NEXT_PUBLIC_BACKEND_URL: parsed.NEXT_PUBLIC_BACKEND_URL,
   NEXT_PUBLIC_ENVIRONMENT_LABEL: parsed.NEXT_PUBLIC_ENVIRONMENT_LABEL,
   NEXT_PUBLIC_SUPABASE_URL: parsed.NEXT_PUBLIC_SUPABASE_URL,
@@ -164,4 +192,11 @@ const clientEnv = {
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK: parsed.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK,
 };
 
-export { clientEnv, serverEnv };
+const runtimeConfig = Object.freeze({
+  appEnv: parsed.APP_ENV,
+  port: defaultPort,
+  server: serverEnv,
+  client: clientEnv,
+});
+
+export { clientEnv, envSchema, runtimeConfig, serverEnv };

@@ -1,12 +1,11 @@
 import { cookies } from 'next/headers';
 
 import { AdminReportsDashboard } from '@/components/admin/reports/AdminReportsDashboard';
-import { getSiteUrl } from '@/lib/runtime-config';
+import { serverEnv } from '@/config/env';
 
 const fetchJson = async (path: string) => {
   const cookieHeader = cookies().toString();
-  const base = getSiteUrl();
-  const url = `${base}${path}`;
+  const url = new URL(path, `${serverEnv.APP_BASE_URL}/`).toString();
   const response = await fetch(url, { cache: 'no-store', headers: { cookie: cookieHeader } });
   if (!response.ok) {
     throw new Error(`Failed to load ${path}`);

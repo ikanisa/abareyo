@@ -45,7 +45,7 @@ const originalFetch = global.fetch;
 
 describe('admin API helpers', () => {
   beforeEach(() => {
-    vi.stubEnv('NEXT_PUBLIC_BACKEND_URL', '');
+    vi.stubEnv('NEXT_PUBLIC_BACKEND_URL', '/api');
     vi.stubEnv('NEXT_PUBLIC_ADMIN_API_TOKEN', 'admin-token');
     global.fetch = vi.fn();
   });

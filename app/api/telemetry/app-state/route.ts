@@ -1,30 +1,11 @@
-import {
-  corsResponse,
-  processTelemetryRequest,
-} from "@/lib/telemetry/app-state-handler";
+import { withAxiom, type AxiomRequest } from "next-axiom";
 
-const createLogger = () => ({
-  with: (context: Record<string, unknown>) => ({
-    info: (message: string) => {
-      if (process.env.NODE_ENV !== "test") {
-        console.info(`[telemetry] ${message}`, context);
-      }
-    },
-  }),
-});
+import { processTelemetryRequest } from "@/lib/telemetry/app-state-handler";
 
-export const POST = async (req: Request) => {
-  const headers = req.headers;
-  const forwarded = headers.get("x-forwarded-for");
-  const ip = forwarded?.split(",")[0]?.trim() ?? null;
+const handler = withAxiom((req: AxiomRequest) =>
+  processTelemetryRequest(req, { logger: req.log, ip: req.ip, headers: req.headers }),
+);
 
-  return processTelemetryRequest(req, {
-    logger: createLogger(),
-    ip,
-    headers,
-  });
-};
-export const OPTIONS = () => corsResponse(204);
-
-export const runtime = "edge";
+export const POST = handler;
+export const OPTIONS = handler;
 export const dynamic = "force-dynamic";

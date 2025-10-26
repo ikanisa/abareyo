@@ -7,6 +7,8 @@ on:
 
 jobs:
   deploy:
+    # Skip this workflow when Supabase secrets are not configured
+    if: ${{ secrets.SUPABASE_PROJECT_REF != '' && secrets.SUPABASE_ACCESS_TOKEN != '' }}
     runs-on: ubuntu-latest
     env:
       SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}

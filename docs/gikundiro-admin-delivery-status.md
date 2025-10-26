@@ -29,7 +29,7 @@
 
 5. **Testing & deployment readiness**
    - There is no verified CI workflow covering the admin features, and the existing tests do not target the new modules or Supabase functions.
-  - Environment variable wiring (service role keys, webhook tokens) was previously tied to Vercel and is now documented in Supabase-first runbooks to avoid deployment failures.
+   - Environment variable wiring (service role keys, webhook tokens) is not documented for the hosting platform, risking deployment failures.
 
 ## Phased Implementation Plan
 ### Phase 1 — Database & Supabase Foundations (1 sprint)
@@ -54,10 +54,10 @@
 
 ### Phase 5 — QA, CI/CD, and Launch Readiness (1 sprint)
 - Expand automated tests (unit, integration, Playwright) to cover authentication, RBAC gatekeeping, SMS reconciliation, and ticket issuance flows.
-- Document environment variables and deployment steps for Supabase and the hosting environment, including rotation procedures for webhook tokens and service keys.
+- Document environment variables and deployment steps for the hosting platform and Supabase, including rotation procedures for webhook tokens and service keys.
 - Run end-to-end rehearsals (seed scripts, supabase migrations, smoke tests) and capture release notes for the go-live cutover.
 
 ## Immediate Next Steps
 1. Align the Supabase schema and migrate legacy data to prevent further divergence.
 2. Stand up the core admin API surface with RBAC and audit logging so existing React views can function.
-3. Establish CI gates (`npm run build`, lint, type-check, targeted Playwright suite) to maintain stability ahead of production deployments.
+3. Establish CI gates (`npm run build`, lint, type-check, targeted Playwright suite) to maintain stability ahead of deployments on the hosting platform.

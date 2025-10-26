@@ -5,6 +5,11 @@ import type { ReactNode } from 'react';
 import { AdminShell } from '@/components/admin/AdminShell';
 import { AdminSessionProvider } from '@/providers/admin-session-provider';
 import { fetchAdminFeatureFlagsSnapshot } from '@/services/admin/feature-flags';
+import { listAllPermissions, type AdminPermission } from '@/config/admin-rbac';
+import {
+  reportAdminAvailabilityException,
+  reportAdminAvailabilityIssue,
+} from '@/lib/observability/admin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -33,6 +38,9 @@ type AdminMeResponse = {
 
 const FALLBACK_BACKEND = 'http://localhost:5000/api';
 const REQUEST_TIMEOUT_MS = 4000;
+const KNOWN_ADMIN_PERMISSIONS = new Set<string>(listAllPermissions());
+const isKnownAdminPermission = (permission: string): permission is AdminPermission =>
+  KNOWN_ADMIN_PERMISSIONS.has(permission);
 
 type AdminContextResult =
   | { status: 'ok'; value: { user: AdminUserResponse; permissions: string[] } }
@@ -41,6 +49,7 @@ type AdminContextResult =
 
 async function fetchAdminContext(cookieHeader: string): Promise<AdminContextResult> {
   if (!BACKEND_BASE) {
+    reportAdminAvailabilityIssue('admin_backend_url_missing');
     return {
       status: 'unavailable',
       message: 'NEXT_PUBLIC_BACKEND_URL is not configured. Configure it to enable the admin dashboard.',
@@ -61,6 +70,10 @@ async function fetchAdminContext(cookieHeader: string): Promise<AdminContextResu
     }
 
     if (!response.ok) {
+      reportAdminAvailabilityIssue('admin_session_endpoint_failure', {
+        backendBase: BACKEND_BASE,
+        status: response.status,
+      });
       return {
         status: 'unavailable',
         message: `Admin session endpoint responded with ${response.status}.`,
@@ -73,15 +86,25 @@ async function fetchAdminContext(cookieHeader: string): Promise<AdminContextResu
       return { status: 'unauthorised' };
     }
 
+    const rawPermissions = payload.data?.permissions ?? [];
+    const normalizedPermissions = rawPermissions.filter(isKnownAdminPermission);
+
+    if (rawPermissions.length !== normalizedPermissions.length) {
+      const unknown = rawPermissions.filter((permission) => !KNOWN_ADMIN_PERMISSIONS.has(permission));
+      console.warn('admin-dashboard: unknown permissions filtered', { unknown });
+      reportAdminAvailabilityIssue('admin_unknown_permissions_filtered', { unknown });
+    }
+
     return {
       status: 'ok',
       value: {
         user,
-        permissions: payload.data?.permissions ?? [],
+        permissions: normalizedPermissions,
       },
     };
   } catch (error) {
     console.error('Failed to fetch admin session context', error);
+    reportAdminAvailabilityException(error, { backendBase: BACKEND_BASE });
     return {
       status: 'unavailable',
       message: 'Unable to reach admin session endpoint. Confirm backend is running and accessible.',
@@ -96,6 +119,13 @@ const AdminOfflineNotice = ({ message }: { message: string }) => (
       <p className="text-sm text-slate-400">{message}</p>
       <p className="text-xs text-slate-500">
         Set NEXT_PUBLIC_BACKEND_URL and ensure the admin API is reachable, then retry.
+      </p>
+      <p className="text-xs text-slate-500">
+        Need help?{' '}
+        <a className="text-primary underline" href="mailto:ops@gikundiro.com">
+          Contact the ops team
+        </a>{' '}
+        or check the internal status page.
       </p>
     </div>
   </div>
@@ -123,6 +153,9 @@ const AdminDashboardLayout = async ({ children }: { children: ReactNode }) => {
   }
 
   if (context.status === 'unavailable') {
+    reportAdminAvailabilityIssue('admin_dashboard_unavailable_state', {
+      message: context.message,
+    });
     return <AdminOfflineNotice message={context.message} />;
   }
 

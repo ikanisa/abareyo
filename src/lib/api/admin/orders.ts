@@ -1,4 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api';
+import { httpClient } from '@/services/http-client';
 
 export type PaginatedResponse<T> = {
   data: T[];
@@ -41,40 +41,20 @@ export async function fetchAdminTicketOrders(params: {
   status?: string;
   search?: string;
 }) {
-  const url = new URL(`${BASE_URL.replace(/\/$/, '')}/admin/ticket-orders`);
-  if (params.page) url.searchParams.set('page', params.page.toString());
-  if (params.pageSize) url.searchParams.set('pageSize', params.pageSize.toString());
-  if (params.status) url.searchParams.set('status', params.status);
-  if (params.search) url.searchParams.set('search', params.search);
-
-  const response = await fetch(url.toString(), {
-    credentials: 'include',
-    cache: 'no-store',
+  return httpClient.request<PaginatedResponse<AdminTicketOrder>>('/admin/ticket-orders', {
+    admin: true,
+    searchParams: params,
   });
-
-  if (!response.ok) {
-    throw new Error('Failed to load ticket orders');
-  }
-
-  return (await response.json()) as PaginatedResponse<AdminTicketOrder>;
 }
 
 export async function refundTicketOrder(orderId: string) {
-  const response = await fetch(
-    `${BASE_URL.replace(/\/$/, '')}/admin/ticket-orders/${orderId}/refund`,
+  return httpClient.request<{ status?: string; data?: AdminTicketOrder; message?: string }>(
+    `/admin/ticket-orders/${orderId}/refund`,
     {
+      admin: true,
       method: 'POST',
-      credentials: 'include',
     },
   );
-
-  const payload = (await response.json().catch(() => null)) as { status?: string; data?: AdminTicketOrder; message?: string } | null;
-
-  if (!response.ok || !payload) {
-    throw new Error(payload?.message ?? 'Failed to refund order');
-  }
-
-  return payload;
 }
 
 export type AdminShopOrder = {
@@ -106,22 +86,10 @@ export async function fetchAdminShopOrders(params: {
   status?: string;
   search?: string;
 }) {
-  const url = new URL(`${BASE_URL.replace(/\/$/, '')}/admin/shop-orders`);
-  if (params.page) url.searchParams.set('page', params.page.toString());
-  if (params.pageSize) url.searchParams.set('pageSize', params.pageSize.toString());
-  if (params.status) url.searchParams.set('status', params.status);
-  if (params.search) url.searchParams.set('search', params.search);
-
-  const response = await fetch(url.toString(), {
-    credentials: 'include',
-    cache: 'no-store',
+  return httpClient.request<PaginatedResponse<AdminShopOrder>>('/admin/shop-orders', {
+    admin: true,
+    searchParams: params,
   });
-
-  if (!response.ok) {
-    throw new Error('Failed to load shop orders');
-  }
-
-  return (await response.json()) as PaginatedResponse<AdminShopOrder>;
 }
 
 export type AdminDonation = {
@@ -140,19 +108,8 @@ export type AdminDonation = {
 };
 
 export async function fetchAdminDonations(params: { page?: number; pageSize?: number; projectId?: string }) {
-  const url = new URL(`${BASE_URL.replace(/\/$/, '')}/admin/donations`);
-  if (params.page) url.searchParams.set('page', params.page.toString());
-  if (params.pageSize) url.searchParams.set('pageSize', params.pageSize.toString());
-  if (params.projectId) url.searchParams.set('projectId', params.projectId);
-
-  const response = await fetch(url.toString(), {
-    credentials: 'include',
-    cache: 'no-store',
+  return httpClient.request<PaginatedResponse<AdminDonation>>('/admin/donations', {
+    admin: true,
+    searchParams: params,
   });
-
-  if (!response.ok) {
-    throw new Error('Failed to load donations');
-  }
-
-  return (await response.json()) as PaginatedResponse<AdminDonation>;
 }

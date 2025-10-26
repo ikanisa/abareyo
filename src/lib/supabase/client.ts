@@ -2,12 +2,11 @@
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
 
-let fallbackSingleton: SupabaseClient<Database> | null = null;
+let fallbackSingleton: SupabaseClient | null = null;
 
-export const getSupabaseBrowserClient = (): SupabaseClient<Database> | null => {
-  const existing = getSupabaseClient();
+export const getSupabaseBrowserClient = (): SupabaseClient | null => {
+  const existing = getSupabaseClient() as SupabaseClient | null;
   if (existing) {
     return existing;
   }
@@ -42,7 +41,7 @@ export const getSupabaseBrowserClient = (): SupabaseClient<Database> | null => {
   }
 
   const storage = typeof window !== "undefined" ? window.localStorage : undefined;
-  fallbackSingleton = createClient<Database>(fallbackUrl, fallbackAnonKey, {
+  fallbackSingleton = createClient(fallbackUrl, fallbackAnonKey, {
     auth: {
       storage,
       persistSession: true,

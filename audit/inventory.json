@@ -13,7 +13,7 @@
     "preferred": "20",
     "rootEngine": ">=20.0.0 <21",
     "backendEngine": null,
-    "notes": "Align CI environments on Node 20.x"
+    "notes": "Align hosting environments and CI on Node 20.x"
   },
   "apps": [
     {
@@ -29,7 +29,8 @@
       "port": 3000,
       "dependencies": [
         "@sentry/nextjs",
-        "@supabase/supabase-js"
+        "@supabase/supabase-js",
+        "next-axiom"
       ]
     },
     {

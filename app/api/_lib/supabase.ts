@@ -1,7 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { createServiceSupabaseClient } from '@/integrations/supabase/server';
-import type { Database } from '@/integrations/supabase/types';
+import {
+  SupabaseClientUnavailableError,
+  getSupabaseServiceRoleClient,
+  resetSupabaseClients,
+  tryGetSupabaseServiceRoleClient,
+} from '@/lib/db';
 
 export class ServiceSupabaseClientUnavailableError extends Error {
   constructor(message = 'Supabase service client is not configured') {
@@ -10,31 +14,24 @@ export class ServiceSupabaseClientUnavailableError extends Error {
   }
 }
 
-let cachedClient: SupabaseClient<Database> | null = null;
-
-const createClient = (): SupabaseClient<Database> => {
-  if (cachedClient) {
-    return cachedClient;
-  }
-
-  const client = createServiceSupabaseClient();
-  if (!client) {
-    throw new ServiceSupabaseClientUnavailableError();
-  }
-
-  cachedClient = client;
-  return cachedClient;
-};
-
 export const resetServiceSupabaseClient = () => {
-  cachedClient = null;
+  resetSupabaseClients();
 };
 
-export const getServiceSupabaseClient = (): SupabaseClient<Database> => createClient();
-
-export const tryGetServiceSupabaseClient = (): SupabaseClient<Database> | null => {
+export const getServiceSupabaseClient = (): SupabaseClient => {
   try {
-    return getServiceSupabaseClient();
+    return getSupabaseServiceRoleClient();
+  } catch (error) {
+    if (error instanceof SupabaseClientUnavailableError) {
+      throw new ServiceSupabaseClientUnavailableError();
+    }
+    throw error;
+  }
+};
+
+export const tryGetServiceSupabaseClient = (): SupabaseClient | null => {
+  try {
+    return tryGetSupabaseServiceRoleClient();
   } catch (error) {
     if (error instanceof ServiceSupabaseClientUnavailableError) {
       return null;
@@ -48,7 +45,7 @@ type WithClientOptions<T> = {
 };
 
 export const withServiceSupabaseClient = async <T>(
-  handler: (client: SupabaseClient<Database>) => Promise<T>,
+  handler: (client: SupabaseClient) => Promise<T>,
   options?: WithClientOptions<T>,
 ): Promise<T> => {
   const client = tryGetServiceSupabaseClient();

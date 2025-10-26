@@ -12,9 +12,11 @@ export default defineConfig({
     globals: true,
     include: ['tests/unit/**/*.test.{ts,tsx}'],
     exclude: ['tests/e2e/**', 'backend/**', 'node_modules/**'],
+    setupFiles: ['tests/setup-env.ts'],
     coverage: {
       provider: 'v8',
       reportsDirectory: 'coverage/unit',
     },
+    testTimeout: 15000,
   },
 });

@@ -869,7 +869,13 @@ export type Database = {
           cron: string
           destination: string
           id: string
+          delivery_metadata: Json | null
+          last_delivered_at: string | null
+          last_delivery_error: string | null
+          last_delivery_status: string | null
+          last_run_at: string | null
           name: string
+          next_run_at: string | null
           payload: Json | null
         }
         Insert: {
@@ -878,7 +884,13 @@ export type Database = {
           cron: string
           destination: string
           id?: string
+          delivery_metadata?: Json | null
+          last_delivered_at?: string | null
+          last_delivery_error?: string | null
+          last_delivery_status?: string | null
+          last_run_at?: string | null
           name: string
+          next_run_at?: string | null
           payload?: Json | null
         }
         Update: {
@@ -887,7 +899,13 @@ export type Database = {
           cron?: string
           destination?: string
           id?: string
+          delivery_metadata?: Json | null
+          last_delivered_at?: string | null
+          last_delivery_error?: string | null
+          last_delivery_status?: string | null
+          last_run_at?: string | null
           name?: string
+          next_run_at?: string | null
           payload?: Json | null
         }
         Relationships: [

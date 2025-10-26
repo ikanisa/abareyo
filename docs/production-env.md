@@ -36,6 +36,13 @@ Required runtime env vars
   - SITE_SUPABASE_SECRET_KEY (service/secret key used by edge functions)
   - Any additional provider secrets (`SMS_WEBHOOK_TOKEN`, `OPENAI_API_KEY`, etc.)
 
+Live scores provider
+
+- `/api/live/match/[id]` queries the Supabase RPC `live_match_snapshot` via the service-role client.
+  - Ensure `SITE_SUPABASE_URL` and `SITE_SUPABASE_SECRET_KEY` are set in the runtime (or their `SUPABASE_*` aliases for local dev).
+  - Add `{"live.scores": true}` (or enable the key in the feature flag dashboard) within `NEXT_PUBLIC_FEATURE_FLAGS` so the route hits the provider instead of the static fallback.
+  - Deploy the `live_match_snapshot` RPC/view and keep it aligned with the expected payload shape (`timeline[]`, `stats`, `score`, `status`, `updated_at`). Missing data gracefully returns the fallback response.
+
 Seed and migrations
 
 - Run `npm --prefix backend ci`

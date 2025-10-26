@@ -2,7 +2,6 @@ import { cache } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { createServiceSupabaseClient } from '@/integrations/supabase/server';
-import type { Database } from '@/integrations/supabase/types';
 
 export class AdminServiceClientUnavailableError extends Error {
   constructor(message = 'Supabase service role client is not configured') {
@@ -11,7 +10,7 @@ export class AdminServiceClientUnavailableError extends Error {
   }
 }
 
-const createClient = (): SupabaseClient<Database> => {
+const createClient = (): SupabaseClient => {
   const client = createServiceSupabaseClient();
   if (!client) {
     throw new AdminServiceClientUnavailableError();
@@ -21,9 +20,9 @@ const createClient = (): SupabaseClient<Database> => {
 
 const getClient = cache(createClient);
 
-export const getAdminServiceClient = (): SupabaseClient<Database> => getClient();
+export const getAdminServiceClient = (): SupabaseClient => getClient();
 
-export const tryGetAdminServiceClient = (): SupabaseClient<Database> | null => {
+export const tryGetAdminServiceClient = (): SupabaseClient | null => {
   try {
     return getAdminServiceClient();
   } catch (error) {
@@ -39,7 +38,7 @@ type WithClientOptions<T> = {
 };
 
 export const withAdminServiceClient = async <T>(
-  handler: (client: SupabaseClient<Database>) => Promise<T>,
+  handler: (client: SupabaseClient) => Promise<T>,
   options?: WithClientOptions<T>,
 ): Promise<T> => {
   const client = tryGetAdminServiceClient();
