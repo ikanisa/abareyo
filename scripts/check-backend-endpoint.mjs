@@ -27,6 +27,16 @@ try {
 
 const rawUrl = clientEnv.NEXT_PUBLIC_BACKEND_URL?.trim();
 
+if (allowMissingEnv) {
+  console.warn(
+    '[backend] PREFLIGHT_ALLOW_MISSING_ENV enabled; skipping backend endpoint verification.',
+  );
+  if (rawUrl) {
+    console.warn(`[backend] Using configured NEXT_PUBLIC_BACKEND_URL: ${rawUrl}`);
+  }
+  process.exit(0);
+}
+
 if (!rawUrl) {
   console.warn('[backend] NEXT_PUBLIC_BACKEND_URL is not set; skipping endpoint verification.');
   process.exit(0);
