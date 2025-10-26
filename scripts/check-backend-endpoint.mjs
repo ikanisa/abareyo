@@ -1,7 +1,29 @@
 #!/usr/bin/env node
 import process from 'node:process';
 
-const { clientEnv } = await import('../config/validated-env.mjs');
+const allowMissingEnv = ['1', 'true', 'yes'].includes(
+  (process.env.PREFLIGHT_ALLOW_MISSING_ENV ?? '').toLowerCase(),
+);
+
+let clientEnv;
+try {
+  ({ clientEnv } = await import('../config/validated-env.mjs'));
+} catch (error) {
+  if (allowMissingEnv) {
+    console.warn('[backend] Skipping backend endpoint verification.');
+    console.warn(
+      error instanceof Error ? error.message : `Unexpected error: ${String(error)}`,
+    );
+    console.warn(
+      'Set PREFLIGHT_ALLOW_MISSING_ENV=0 (default) to restore strict validation.',
+    );
+    process.exit(0);
+  }
+
+  console.error('[backend] Unable to resolve validated environment.');
+  console.error(error instanceof Error ? error.message : error);
+  process.exit(1);
+}
 
 const rawUrl = clientEnv.NEXT_PUBLIC_BACKEND_URL?.trim();
 
