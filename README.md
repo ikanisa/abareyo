@@ -90,6 +90,7 @@ If you plan to surface media (shop products, fundraising covers), configure S3-c
 - `pnpm lint` / `pnpm type-check` / `pnpm test` – Static analysis and unit coverage gates.
 - `pnpm cap:sync`, `pnpm cap:android`, `pnpm cap:ios` – Capacitor workflows (requires native toolchains).
 - `pnpm supabase:functions` (see `package.json`) – Convenience wrappers for function deploys.
+- `node scripts/preflight.mjs` – Combined env + backend availability check followed by `npm run build`.
 
 ## Hosting Strategy
 
