@@ -12,7 +12,7 @@ export class InvalidCronExpressionError extends Error {
 
 const parseCron = (cron: string, currentDate: Date) => {
   try {
-    return CronExpressionParser.parse(cron, {
+    return CronExpressionParser.parseExpression(cron, {
       currentDate,
       tz: 'UTC',
     });
