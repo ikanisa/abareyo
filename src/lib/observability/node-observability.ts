@@ -62,7 +62,8 @@ const patchConsole = (logger: Logger) => {
 
   const emitLog = (method: keyof Logger, payload: unknown) => {
     const fn = logger[method] as unknown as LogFn | undefined;
-    fn?.call(logger, payload);
+    // Accept any payload shape; pino LogFn overloads include string/object.
+    fn?.call(logger as unknown as Record<string, unknown>, payload as unknown as string);
   };
 
   const methods: (keyof Console)[] = ["log", "info", "warn", "error", "debug"];
