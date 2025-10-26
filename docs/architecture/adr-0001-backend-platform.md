@@ -19,7 +19,7 @@ Two options were under consideration:
 Adopt **NestJS 11 with the Fastify adapter** as the backend framework.
 
 Key supporting elements:
-- Structured modules allow mirroring the Lovable IA (tickets, payments, sms, community, etc.).
+- Structured modules allow mirroring the existing information architecture (tickets, payments, sms, community, etc.).
 - Built-in configuration management maps well to the required env var contract.
 - Guards/interceptors ease future auth upgrades (external OTP hand-off now, richer auth later).
 - Nest’s GraphQL option remains available if needed; initial release will use REST + WebSockets.

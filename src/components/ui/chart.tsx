@@ -3,14 +3,11 @@ import * as RechartsPrimitive from "recharts";
 
 import { cn } from "@/lib/utils";
 
-// Format: { THEME_NAME: CSS_SELECTOR }
-const THEMES = { light: "", dark: ".dark" } as const;
-
 export type ChartConfig = {
   [k in string]: {
     label?: React.ReactNode;
     icon?: React.ComponentType;
-  } & ({ color?: string; theme?: never } | { color?: never; theme: Record<keyof typeof THEMES, string> });
+  } & ({ color?: string; theme?: never } | { color?: never; theme: Record<"light" | "dark", string> });
 };
 
 type ChartContextProps = {
@@ -50,42 +47,12 @@ const ChartContainer = React.forwardRef<
         )}
         {...props}
       >
-        <ChartStyle id={chartId} config={config} />
         <RechartsPrimitive.ResponsiveContainer>{children}</RechartsPrimitive.ResponsiveContainer>
       </div>
     </ChartContext.Provider>
   );
 });
 ChartContainer.displayName = "Chart";
-
-const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
-  const colorConfig = Object.entries(config).filter(([_, config]) => config.theme || config.color);
-
-  if (!colorConfig.length) {
-    return null;
-  }
-
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
-  })
-  .join("\n")}
-}
-`,
-          )
-          .join("\n"),
-      }}
-    />
-  );
-};
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
@@ -181,19 +148,10 @@ const ChartTooltipContent = React.forwardRef<
                       <itemConfig.icon />
                     ) : (
                       !hideIndicator && (
-                        <div
-                          className={cn("shrink-0 rounded-[2px] border-[--color-border] bg-[--color-bg]", {
-                            "h-2.5 w-2.5": indicator === "dot",
-                            "w-1": indicator === "line",
-                            "w-0 border-[1.5px] border-dashed bg-transparent": indicator === "dashed",
-                            "my-0.5": nestLabel && indicator === "dashed",
-                          })}
-                          style={
-                            {
-                              "--color-bg": indicatorColor,
-                              "--color-border": indicatorColor,
-                            } as React.CSSProperties
-                          }
+                        <IndicatorSwatch
+                          indicator={indicator}
+                          color={indicatorColor}
+                          nestLabel={nestLabel}
                         />
                       )
                     )}
@@ -258,12 +216,7 @@ const ChartLegendContent = React.forwardRef<
             {itemConfig?.icon && !hideIcon ? (
               <itemConfig.icon />
             ) : (
-              <div
-                className="h-2 w-2 shrink-0 rounded-[2px]"
-                style={{
-                  backgroundColor: item.color,
-                }}
-              />
+              <LegendSwatch color={item.color} />
             )}
             {itemConfig?.label}
           </div>
@@ -300,4 +253,67 @@ function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key:
   return configLabelKey in config ? config[configLabelKey] : config[key as keyof typeof config];
 }
 
-export { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, ChartStyle };
+const IndicatorSwatch = ({
+  indicator,
+  color,
+  nestLabel,
+}: {
+  indicator: "line" | "dot" | "dashed";
+  color?: string | number;
+  nestLabel: boolean;
+}) => {
+  const resolvedColor = typeof color === "string" ? color : undefined;
+
+  if (indicator === "line") {
+    return (
+      <svg
+        aria-hidden="true"
+        className="shrink-0"
+        width="4"
+        height="12"
+        viewBox="0 0 4 12"
+        focusable="false"
+      >
+        <rect width="4" height="12" rx="1" fill={resolvedColor ?? "currentColor"} />
+      </svg>
+    );
+  }
+
+  if (indicator === "dashed") {
+    return (
+      <svg
+        aria-hidden="true"
+        className={cn("shrink-0", nestLabel && "mt-1")}
+        width="14"
+        height="12"
+        viewBox="0 0 14 12"
+        focusable="false"
+      >
+        <line
+          x1="1"
+          y1="6"
+          x2="13"
+          y2="6"
+          stroke={resolvedColor ?? "currentColor"}
+          strokeWidth="2"
+          strokeDasharray="3 2"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg aria-hidden="true" className="shrink-0" width="10" height="10" viewBox="0 0 10 10" focusable="false">
+      <rect width="10" height="10" rx="2" fill={resolvedColor ?? "currentColor"} />
+    </svg>
+  );
+};
+
+const LegendSwatch = ({ color }: { color?: string | number }) => (
+  <svg aria-hidden="true" className="h-2 w-2 shrink-0" width="8" height="8" viewBox="0 0 8 8" focusable="false">
+    <rect width="8" height="8" rx="2" fill={typeof color === "string" ? color : "currentColor"} />
+  </svg>
+);
+
+export { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent };
