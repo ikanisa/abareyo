@@ -1,0 +1,46 @@
+config:
+  target: "http://localhost:3100"
+  phases:
+    - duration: 20
+      arrivalRate: 5
+      name: warmup
+    - duration: 40
+      arrivalRate: 10
+      rampTo: 30
+      name: ramp_to_peak
+    - duration: 20
+      arrivalRate: 30
+      name: sustained_peak
+  defaults:
+    headers:
+      Cookie: "{{ $processEnvironment.ADMIN_SESSION_COOKIE | default '' }}"
+      Accept: application/json
+  ensure:
+    - "p99(latency) < 1000"
+    - "http.request_rate > 10"
+scenarios:
+  - name: live-scoreboard
+    weight: 5
+    flow:
+      - get:
+          url: "/api/live/scoreboard"
+  - name: live-match-detail
+    weight: 2
+    flow:
+      - get:
+          url: "/api/live/match/demo"
+  - name: admin-users-directory
+    weight: 1
+    flow:
+      - get:
+          url: "/admin/api/users/directory"
+  - name: admin-content-library
+    weight: 1
+    flow:
+      - get:
+          url: "/admin/api/content/library"
+  - name: admin-shop-products
+    weight: 1
+    flow:
+      - get:
+          url: "/admin/api/shop/products"
