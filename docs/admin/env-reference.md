@@ -82,6 +82,7 @@ in Supabase Vault for edge functions.
 | `MTN_MOMO_PAY_CODE`, `AIRTEL_MONEY_PAY_CODE` | Backend | MoMo pay codes displayed on receipts and reconciliation flows. |
 | `SMS_WEBHOOK_TOKEN` | Backend _secret_ | Shared secret for inbound SMS webhooks. |
 | `SMS_PARSE_CONFIDENCE_THRESHOLD` | Backend | Float value (default `0.65`) for classifier confidence. |
+| `OPENAI_API_KEY` | Frontend (server) _secret_ | Required by the Admin SMS parser test endpoint at `/api/admin/sms/parser/test`. |
 
 ## 8. Feature Flags & Misc
 
