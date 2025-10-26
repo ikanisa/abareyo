@@ -45,10 +45,17 @@ function normalizeCreatePayload(p: CreateOrderPayload | null) {
 
   // Normalize items into a common shape
   const items = itemsRaw.map((it) => {
-    if ("productId" in it || "product_id" in it) {
+    if ("productId" in it) {
       return {
         kind: "byId" as const,
-        productId: it.productId ?? it.product_id,
+        productId: it.productId,
+        qty: it.qty,
+      };
+    }
+    if ("product_id" in it) {
+      return {
+        kind: "byId" as const,
+        productId: it.product_id,
         qty: it.qty,
       };
     }

@@ -26,6 +26,7 @@ export type AdminShopOrder = {
   total: number;
   createdAt: string;
   updatedAt: string;
+  trackingNumber?: string | null;
   user?: { id: string; email?: string | null; phoneMask?: string | null } | null;
   items: ShopOrderItem[];
   payments: ShopOrderPayment[];

@@ -4,6 +4,13 @@ import { errorResponse, successResponse } from '@/app/_lib/responses';
 import { getSupabase } from '@/app/_lib/supabase';
 import { requireAuthUser } from '@/app/_lib/auth';
 
+type TicketOrderItemRow = {
+  id: string;
+  zone: string;
+  quantity: number;
+  price: number;
+};
+
 export async function GET(req: NextRequest) {
   const supabase = getSupabase();
   if (!supabase) {
@@ -80,12 +87,21 @@ export async function GET(req: NextRequest) {
           competition: order.match.comp,
         }
       : null,
-    items: (order.ticket_order_items ?? []).map((item) => ({
-      id: item.id,
-      zone: item.zone,
-      quantity: item.quantity,
-      price: item.price,
-    })),
+    items: (Array.isArray(order.ticket_order_items) ? order.ticket_order_items : [])
+      .filter((item: unknown): item is TicketOrderItemRow =>
+        item !== null &&
+        typeof item === 'object' &&
+        'id' in item &&
+        'zone' in item &&
+        'quantity' in item &&
+        'price' in item,
+      )
+      .map((item: TicketOrderItemRow) => ({
+        id: item.id,
+        zone: item.zone,
+        quantity: item.quantity,
+        price: item.price,
+      })),
     payments: (paymentsByRef[order.momo_ref ?? ''] ?? []).map((p) => ({
       id: p.id,
       status: p.status,
