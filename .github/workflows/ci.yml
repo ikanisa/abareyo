@@ -16,29 +16,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.5.2
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
+          cache: 'npm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Lint
-        run: pnpm lint
+        run: npm run lint
 
       - name: Type check
-        run: pnpm type-check
+        run: npm run type-check
 
       - name: Test
-        run: pnpm test
+        run: npm test
 
       - name: Preflight (env + backend + build)
         run: node scripts/preflight.mjs
@@ -62,7 +56,7 @@ jobs:
       # Uncomment to run Playwright e2e once e2e mocks or backend are available
       # E2E smoke tests with mocked API (guarded by E2E_API_MOCKS)
       - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps
+        run: npx playwright install --with-deps
       - name: Run admin smoke tests (admin + SMS)
         env:
           E2E_API_MOCKS: '1'
@@ -71,12 +65,12 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: 'test'
           SUPABASE_SERVICE_ROLE_KEY: 'test'
           PORT: '3000'
-        run: pnpm exec playwright test tests/e2e/admin-smokes.spec.ts tests/e2e/admin/admin-sms*.spec.ts
+        run: npx playwright test tests/e2e/admin-smokes.spec.ts tests/e2e/admin/admin-sms*.spec.ts
       - name: Run accessibility smoke tests
         env:
           E2E_API_MOCKS: '1'
           NEXT_PUBLIC_BACKEND_URL: 'http://localhost:3000/api/e2e'
-        run: pnpm test:e2e:a11y
+        run: npm run test:e2e:a11y
       - name: Upload Playwright artifacts on failure
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
