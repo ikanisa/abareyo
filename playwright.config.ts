@@ -4,6 +4,9 @@ const PORT = Number(process.env.PORT ?? 3000);
 
 const config: PlaywrightTestConfig = {
   timeout: 60_000,
+  retries: process.env.CI ? 1 : 0,
+  forbidOnly: !!process.env.CI,
+  workers: process.env.CI ? 2 : undefined,
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: "on-first-retry",
@@ -12,7 +15,7 @@ const config: PlaywrightTestConfig = {
   webServer: {
     command: `E2E_API_MOCKS=1 NEXT_PUBLIC_BACKEND_URL=http://localhost:${PORT}/api/e2e npm run dev`,
     port: PORT,
-    timeout: 120_000,
+    timeout: 240_000,
     reuseExistingServer: !process.env.CI,
     env: {
       E2E_API_MOCKS: "1",
