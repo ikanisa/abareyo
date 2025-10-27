@@ -6,14 +6,14 @@
 
 \echo 'Checking critical table row counts and recency metrics...'
 
--- Verify wallet transactions exist and updated recently
+-- Verify wallet transactions exist and were created recently
 SELECT
-  'wallet_transactions' AS table_name,
+  'transactions' AS table_name,
   COUNT(*) AS row_count,
-  MAX(updated_at) AS last_updated_at
-FROM wallet_transactions;
+  MAX(created_at) AS last_created_at
+FROM transactions;
 
--- Verify orders exist and status distribution
+-- Verify commerce orders exist and review status distribution
 SELECT
   status,
   COUNT(*) AS total
@@ -21,25 +21,30 @@ FROM orders
 GROUP BY status
 ORDER BY status;
 
--- Confirm missions table has active missions
+-- Confirm upcoming and completed matches are tracked
 SELECT
-  COUNT(*) FILTER (WHERE status = 'active') AS active_missions,
-  COUNT(*) FILTER (WHERE status = 'inactive') AS inactive_missions
-FROM missions;
+  status,
+  COUNT(*) AS total
+FROM matches
+GROUP BY status
+ORDER BY status;
 
--- Ensure user balances and wallet transactions remain consistent
+-- Ensure wallet balances are populated
 SELECT
-  SUM(balance) AS total_user_balance
-FROM user_wallets;
+  SUM(balance) AS total_wallet_balance
+FROM wallet;
 
+-- Summarize transaction amounts by kind for reconciliation
 SELECT
-  SUM(amount) AS total_transactions_amount
-FROM wallet_transactions
-WHERE status = 'completed';
+  COALESCE(kind, 'unknown') AS transaction_kind,
+  SUM(amount) AS total_amount
+FROM transactions
+GROUP BY transaction_kind
+ORDER BY transaction_kind;
 
--- Compare latest backup snapshot metadata if available
+-- Surface the most recent payment event if available
 SELECT
-  MAX(completed_at) AS last_backup_completed_at
-FROM backup_jobs;
+  MAX(created_at) AS last_payment_recorded_at
+FROM payments;
 
 \echo 'Integrity checks complete.'
