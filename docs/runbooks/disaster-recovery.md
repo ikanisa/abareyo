@@ -33,7 +33,7 @@ Use this runbook when a region-wide outage, data corruption event, or extended h
    - Promote the warm standby Vercel project (`rayon-failover`) via the Vercel dashboard or `vercel promote` CLI.
    - Update DNS `CNAME` for `app.rayonsports.com` to point to failover deployment if traffic steering is manual.
 2. **Restore backend APIs**
-   - Apply Kubernetes manifests from `k8s/` to the standby cluster: `kubectl apply -f k8s/overlays/failover`.
+   - Apply the checked-in Kubernetes manifests to the standby cluster: `kubectl apply -f k8s/`.
    - Scale deployments: `kubectl scale deploy backend-api --replicas=3`.
    - Update secrets from the vault to ensure Supabase + payment credentials exist in the failover namespace.
 3. **Recover database**
