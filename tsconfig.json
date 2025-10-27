@@ -6,9 +6,9 @@
       "DOM.Iterable",
       "ES2020"
     ],
-    "allowJs": true,
+    "allowJs": false,
     "skipLibCheck": true,
-    "strict": false,
+    "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
@@ -71,11 +71,11 @@
     "tests/**/*.ts",
     "tests/**/*.tsx",
     "**/*.cjs",
-    "**/*.mjs",
-    ".next/types/**/*.ts"
+    "**/*.mjs"
   ],
   "exclude": [
     "node_modules",
-    "backend"
+    "backend",
+    ".next"
   ]
 }

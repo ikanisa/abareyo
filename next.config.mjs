@@ -1,5 +1,4 @@
 import { withSentryConfig } from '@sentry/nextjs';
-import { withAxiom } from 'next-axiom';
 
 import './config/validated-env.mjs';
 import { buildSecurityHeaders } from './config/security-headers.mjs';
@@ -44,4 +43,4 @@ const sentryWebpackPluginOptions = {
 
 const configWithSentry = withSentryConfig(nextConfig, sentryOptions, sentryWebpackPluginOptions);
 
-export default withAxiom(configWithSentry);
+export default configWithSentry;

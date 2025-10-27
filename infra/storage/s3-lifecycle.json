@@ -1,0 +1,53 @@
+{
+  "Rules": [
+    {
+      "ID": "exports-temporary",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "exports/"
+      },
+      "Expiration": {
+        "Days": 30
+      },
+      "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 7
+      }
+    },
+    {
+      "ID": "sms-archives",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "archives/sms/"
+      },
+      "Expiration": {
+        "Days": 400
+      },
+      "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 30
+      }
+    },
+    {
+      "ID": "ticket-qr-rollover",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "tickets/"
+      },
+      "Expiration": {
+        "Days": 30
+      }
+    },
+    {
+      "ID": "avatars-rotation",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "avatars/"
+      },
+      "Expiration": {
+        "Days": 365
+      },
+      "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 90
+      }
+    }
+  ]
+}

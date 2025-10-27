@@ -1,6 +1,4 @@
-import { clientEnv } from "@/config/env";
-
-const BASE_URL = clientEnv.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api';
+import { httpClient } from '@/services/http-client';
 
 export interface ShopProduct {
   id: string;
@@ -35,28 +33,13 @@ export interface ShopCheckoutResponse {
   expiresAt: string;
 }
 
-async function apiGet<T>(path: string) {
-  const response = await fetch(`${BASE_URL.replace(/\/$/, '')}${path}`);
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
-  const { data } = (await response.json()) as { data: T };
-  return data;
-}
-
 export function fetchProducts() {
-  return apiGet<ShopProduct[]>(`/shop/products`);
+  return httpClient.data<ShopProduct[]>('/shop/products');
 }
 
 export async function checkoutShop(payload: ShopCheckoutPayload): Promise<ShopCheckoutResponse> {
-  const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/shop/checkout`, {
+  return httpClient.data<ShopCheckoutResponse>('/shop/checkout', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
-  const { data } = (await response.json()) as { data: ShopCheckoutResponse };
-  return data;
 }

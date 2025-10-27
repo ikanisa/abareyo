@@ -1,7 +1,43 @@
 #!/usr/bin/env node
 import process from 'node:process';
 
-const { clientEnv } = await import('../config/validated-env.mjs');
+const allowMissingEnv = ['1', 'true', 'yes'].includes(
+  (process.env.PREFLIGHT_ALLOW_MISSING_ENV ?? '').toLowerCase(),
+);
+
+let clientEnv;
+
+if (allowMissingEnv) {
+  try {
+    ({ clientEnv } = await import('../config/validated-env.mjs'));
+  } catch (error) {
+    console.warn('[backend] Skipping backend endpoint verification.');
+    console.warn(
+      error instanceof Error ? error.message : `Unexpected error: ${String(error)}`,
+    );
+    console.warn(
+      'Set PREFLIGHT_ALLOW_MISSING_ENV=0 (default) to restore strict validation.',
+    );
+    process.exit(0);
+  }
+
+  const rawUrl = clientEnv.NEXT_PUBLIC_BACKEND_URL?.trim();
+  console.warn(
+    '[backend] PREFLIGHT_ALLOW_MISSING_ENV enabled; skipping backend endpoint verification.',
+  );
+  if (rawUrl) {
+    console.warn(`[backend] Using configured NEXT_PUBLIC_BACKEND_URL: ${rawUrl}`);
+  }
+  process.exit(0);
+}
+
+try {
+  ({ clientEnv } = await import('../config/validated-env.mjs'));
+} catch (error) {
+  console.error('[backend] Unable to resolve validated environment.');
+  console.error(error instanceof Error ? error.message : error);
+  process.exit(1);
+}
 
 const rawUrl = clientEnv.NEXT_PUBLIC_BACKEND_URL?.trim();
 

@@ -1,7 +1,6 @@
 const DEFAULT_CONNECT_SOURCES = new Set([
   "'self'",
   'https://*.ingest.sentry.io',
-  'https://api.axiom.co',
 ]);
 
 const normaliseOrigin = (value) => {
@@ -36,9 +35,15 @@ export const buildConnectSources = (env = process.env) => {
 export const buildContentSecurityPolicy = (env = process.env) => {
   const connectSrc = buildConnectSources(env).join(' ');
 
+  const nodeEnv = (env.NODE_ENV ?? process.env.NODE_ENV)?.toLowerCase();
+  const scriptSources = ["'self'", "'unsafe-inline'"];
+  if (nodeEnv !== 'production') {
+    scriptSources.push("'unsafe-eval'");
+  }
+
   const directives = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    `script-src ${scriptSources.join(' ')}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self' data:",

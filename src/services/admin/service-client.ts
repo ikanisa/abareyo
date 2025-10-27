@@ -1,3 +1,4 @@
+"use server";
 import { cache } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 

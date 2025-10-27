@@ -7,14 +7,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 
+type ReportSchedule = {
+  id: string;
+  name: string;
+  cron: string;
+  destination: string;
+  payload?: Record<string, unknown> | null;
+  created_at: string;
+  next_run_at: string | null;
+  last_run_at: string | null;
+  last_delivered_at: string | null;
+  last_delivery_status: string | null;
+  last_delivery_error: string | null;
+  delivery_metadata: Record<string, unknown> | null;
+};
+
 export type AdminReportsDashboardProps = {
-  initialSchedules: Array<{
-    id: string;
-    name: string;
-    cron: string;
-    destination: string;
-    created_at: string;
-  }>;
+  initialSchedules: ReportSchedule[];
 };
 
 export const AdminReportsDashboard = ({ initialSchedules }: AdminReportsDashboardProps) => {
@@ -27,7 +36,7 @@ export const AdminReportsDashboard = ({ initialSchedules }: AdminReportsDashboar
 
   const refresh = async () => {
     const data = await fetch('/admin/api/reports/schedules').then((res) => res.json());
-    setSchedules(data.data?.schedules ?? data.schedules ?? []);
+    setSchedules((data.data?.schedules ?? data.schedules ?? []) as ReportSchedule[]);
   };
 
   const submit = async () => {
@@ -36,13 +45,11 @@ export const AdminReportsDashboard = ({ initialSchedules }: AdminReportsDashboar
         name,
         cron,
         destination,
+        dispatch: true,
       };
       if (payload) {
         body.payload = JSON.parse(payload);
       }
-      // TODO: Wire this admin workflow into whichever scheduling runner we adopt
-      // (manual scripts, launchd agent, or node-cron worker) so saved schedules
-      // actually trigger downstream report generation.
       const response = await fetch('/admin/api/reports/schedules', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -84,14 +91,48 @@ export const AdminReportsDashboard = ({ initialSchedules }: AdminReportsDashboar
         title="Active schedules"
         description="Configured report deliveries."
         items={schedules}
-        renderItem={(item) => (
-          <div className="rounded-xl border border-white/5 bg-slate-950/40 p-4 text-sm text-slate-200">
-            <p className="font-semibold text-slate-100">{item.name}</p>
-            <p className="text-xs text-slate-400">Cron: {item.cron}</p>
-            <p className="text-xs text-slate-500">Destination: {item.destination}</p>
-            <p className="text-[11px] text-slate-500">Created: {new Date(item.created_at).toLocaleString()}</p>
-          </div>
-        )}
+        renderItem={(item) => {
+          const metadata = (item.delivery_metadata ?? {}) as Record<string, unknown>;
+          const signedUrl = typeof metadata.signedUrl === 'string' ? (metadata.signedUrl as string) : null;
+          const rows = typeof metadata.rows === 'number' ? (metadata.rows as number) : null;
+          const destinationType =
+            typeof metadata.destinationType === 'string' ? (metadata.destinationType as string) : null;
+          return (
+            <div className="rounded-xl border border-white/5 bg-slate-950/40 p-4 text-sm text-slate-200">
+              <p className="font-semibold text-slate-100">{item.name}</p>
+              <p className="text-xs text-slate-400">Cron: {item.cron}</p>
+              <p className="text-xs text-slate-500">Destination: {item.destination}</p>
+              {destinationType && (
+                <p className="text-[11px] text-slate-500">Delivery type: {destinationType}</p>
+              )}
+              {rows !== null && (
+                <p className="text-[11px] text-slate-500">Last export rows: {rows}</p>
+              )}
+              {signedUrl && (
+                <p className="text-[11px]">
+                  <a className="text-sky-400 hover:underline" href={signedUrl} target="_blank" rel="noreferrer">
+                    Download latest CSV
+                  </a>
+                </p>
+              )}
+              {item.next_run_at && (
+                <p className="text-[11px] text-slate-500">Next run: {new Date(item.next_run_at).toLocaleString()}</p>
+              )}
+              {item.last_delivery_status && (
+                <p className="text-[11px] text-slate-500">Last status: {item.last_delivery_status}</p>
+              )}
+              {item.last_delivered_at && (
+                <p className="text-[11px] text-slate-500">
+                  Last delivered: {new Date(item.last_delivered_at).toLocaleString()}
+                </p>
+              )}
+              {item.last_delivery_error && (
+                <p className="text-[11px] text-rose-400">Last error: {item.last_delivery_error}</p>
+              )}
+              <p className="text-[11px] text-slate-500">Created: {new Date(item.created_at).toLocaleString()}</p>
+            </div>
+          );
+        }}
       />
     </div>
   );

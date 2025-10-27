@@ -118,11 +118,8 @@ const WidgetRow = ({ children }: PropsWithChildren) => (
 const ClipsCarousel = ({ clips, onOpenComments }: { clips: Clip[]; onOpenComments: (clip: Clip) => void }) => {
   const prefersReducedMotion = useReducedMotion();
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isFocusWithin, setIsFocusWithin] = useState(false);
-  const containerRef = useRef<HTMLElement | null>(null);
+  const carouselRef = useRef<HTMLElement | null>(null);
   const activeClip = clips[activeIndex];
-  const carouselRef = useRef<HTMLElement>(null);
-  const [keyboardActive, setKeyboardActive] = useState(false);
 
   const goToIndex = useCallback(
     (nextIndex: number) => {
@@ -137,25 +134,16 @@ const ClipsCarousel = ({ clips, onOpenComments }: { clips: Clip[]; onOpenComment
     [clips.length]
   );
 
-  const handleDragEnd = (_: unknown, info: { offset: { y: number } }) => {
-    if (info.offset.y < -80) {
-      goToIndex(activeIndex + 1);
-    }
-    if (info.offset.y > 80) {
-      goToIndex(activeIndex - 1);
-    }
-  };
-
   useEffect(() => {
-    if (!keyboardActive) {
-      return;
-    }
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!carouselRef.current) {
+      const container = carouselRef.current;
+      if (!container) {
         return;
       }
-      const target = event.target as Node | null;
-      if (target && !carouselRef.current.contains(target)) {
+      const activeElement = document.activeElement;
+      const containsFocus =
+        activeElement instanceof HTMLElement && container.contains(activeElement);
+      if (!containsFocus) {
         return;
       }
       if (event.key === "ArrowUp" || event.key === "PageUp") {
@@ -167,18 +155,20 @@ const ClipsCarousel = ({ clips, onOpenComments }: { clips: Clip[]; onOpenComment
         goToIndex(activeIndex + 1);
       }
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeIndex, goToIndex, keyboardActive]);
 
-  const enableKeyboard = () => setKeyboardActive(true);
-  const disableKeyboardIfUnfocused = (event: FocusEvent<HTMLElement>) => {
-    const element = carouselRef.current;
-    const nextFocusTarget = event?.relatedTarget as Node | null;
-    if (element && element.contains(nextFocusTarget ?? document.activeElement)) {
-      return;
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [activeIndex, goToIndex]);
+
+  const handleDragEnd = (_: unknown, info: { offset: { y: number } }) => {
+    if (info.offset.y < -80) {
+      goToIndex(activeIndex + 1);
     }
-    setKeyboardActive(false);
+    if (info.offset.y > 80) {
+      goToIndex(activeIndex - 1);
+    }
   };
 
   return (
@@ -188,8 +178,6 @@ const ClipsCarousel = ({ clips, onOpenComments }: { clips: Clip[]; onOpenComment
       aria-labelledby="clips-heading"
       aria-describedby="clips-instructions"
       role="region"
-      onFocusCapture={enableKeyboard}
-      onBlurCapture={disableKeyboardIfUnfocused}
     >
       <div className="flex items-center justify-between text-white">
         <h3 id="clips-heading" className="section-title">
@@ -530,22 +518,29 @@ const CommunityClient = () => {
       <AnimatePresence>
         {openThread ? (
           <motion.div
-            className="fixed inset-0 z-50 flex items-end bg-black/70 md:items-center"
+            className="fixed inset-0 z-50 flex items-end md:items-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={handleCloseThread}
-            role="dialog"
-            aria-modal="true"
-            aria-label={openThread.type === "clip" ? "Clip comments drawer" : "Post comments drawer"}
           >
+            <button
+              type="button"
+              aria-label={
+                openThread.type === "clip" ? "Close clip comments drawer" : "Close post comments drawer"
+              }
+              className="absolute inset-0 h-full w-full bg-black/70"
+              tabIndex={-1}
+              onClick={handleCloseThread}
+            />
             <motion.div
-              className="glass w-full rounded-t-3xl border border-white/30 bg-slate-950/80 p-6 text-white shadow-2xl md:mx-auto md:max-w-lg md:rounded-3xl"
+              role="dialog"
+              aria-modal="true"
+              aria-label={openThread.type === "clip" ? "Clip comments drawer" : "Post comments drawer"}
+              className="glass relative z-10 w-full rounded-t-3xl border border-white/30 bg-slate-950/80 p-6 text-white shadow-2xl md:mx-auto md:max-w-lg md:rounded-3xl"
               initial={{ y: 140 }}
               animate={{ y: 0 }}
               exit={{ y: 140 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              onClick={(event) => event.stopPropagation()}
             >
               <div className="flex items-center justify-between">
                 <div>

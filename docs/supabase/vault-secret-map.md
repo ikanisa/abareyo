@@ -1,8 +1,6 @@
 # Supabase & Platform Secret Map (Phase 1)
 
-Use this checklist when copying secrets from local `.env*` files into managed stores (hosting platform env — formerly Vercel, Supabase Vault, GitHub Actions). Keep values out of git — these entries describe where the live secret must live and who consumes it.
-
-> **Note:** Legacy mentions of "Vercel" in examples/commands highlight the previous hosting provider. Substitute your current hosting platform when provisioning secrets.
+Use this checklist when copying secrets from local `.env*` files into managed stores (hosting platform env, Supabase Vault, GitHub Actions). Keep values out of git — these entries describe where the live secret must live and who consumes it.
 
 | Secret | Primary store | Consumers | Notes |
 | --- | --- | --- | --- |
@@ -29,10 +27,10 @@ Use this checklist when copying secrets from local `.env*` files into managed st
 | `NEXT_PUBLIC_ADMIN_SESSION_COOKIE`, `ADMIN_SESSION_COOKIE` | Hosting platform | Cookie naming | Optional overrides; defaults fine. |
 
 ## Rotation Playbook (no key swap executed yet)
-1. Export current secrets from the hosting platform & Supabase (use platform CLI/API; legacy command `vercel env pull` shown for history) alongside `supabase secrets list`.
+1. Export current secrets from the hosting platform & Supabase (use the platform CLI/API) alongside `supabase secrets list`.
 2. Generate new values (Supabase dashboard for publishable/service keys; `openssl rand -hex 32` for session secrets).
 3. Update hosting platform Production → Preview → Development, then Supabase Vault, using the map above.
-4. Redeploy backend (platform deploy pipeline or CI; legacy `vercel deploy` noted for reference) so new env vars take effect.
+4. Redeploy backend (platform deploy pipeline or CI) so new env vars take effect.
 5. Validate:
    - Admin login (service client) succeeds.
    - Fan session flows use new cookie secret.
