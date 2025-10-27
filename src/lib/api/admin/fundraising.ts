@@ -1,4 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api';
+import { httpClient } from '@/services/http-client';
 
 export type AdminFundraisingProject = {
   id: string;
@@ -40,29 +40,11 @@ export type AdminFundraisingSummary = {
   range: { from: string | null; to: string | null };
 };
 
-const request = async <T>(path: string, init?: RequestInit) => {
-  const response = await fetch(`${BASE_URL.replace(/\/$/, '')}${path}`, {
-    credentials: 'include',
-    ...init,
-    headers: {
-      'content-type': 'application/json',
-      ...(init?.headers ?? {}),
-    },
-  });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `Request failed (${response.status})`);
-  }
-
-  return (await response.json()) as T;
-};
-
 export const fetchAdminFundraisingProjects = async (params: { status?: string; search?: string } = {}) => {
-  const url = new URL(`${BASE_URL.replace(/\/$/, '')}/admin/fundraising/projects`);
-  if (params.status) url.searchParams.set('status', params.status);
-  if (params.search) url.searchParams.set('search', params.search);
-  return request<PaginatedResponse<AdminFundraisingProject>>(url.pathname + url.search);
+  return httpClient.request<PaginatedResponse<AdminFundraisingProject>>('/admin/fundraising/projects', {
+    admin: true,
+    searchParams: params,
+  });
 };
 
 export const upsertAdminFundraisingProject = async (payload: {
@@ -74,11 +56,12 @@ export const upsertAdminFundraisingProject = async (payload: {
   status?: string;
   coverImage?: string;
 }) => {
-  const response = await request<{ data: AdminFundraisingProject }>('/admin/fundraising/projects', {
+  const response = await httpClient.data<AdminFundraisingProject>('/admin/fundraising/projects', {
+    admin: true,
     method: 'POST',
     body: JSON.stringify(payload),
   });
-  return response.data;
+  return response;
 };
 
 export const fetchAdminFundraisingDonations = async (params: {
@@ -88,34 +71,28 @@ export const fetchAdminFundraisingDonations = async (params: {
   projectId?: string;
   search?: string;
 } = {}) => {
-  const url = new URL(`${BASE_URL.replace(/\/$/, '')}/admin/fundraising/donations`);
-  if (params.page) url.searchParams.set('page', params.page.toString());
-  if (params.pageSize) url.searchParams.set('pageSize', params.pageSize.toString());
-  if (params.status) url.searchParams.set('status', params.status);
-  if (params.projectId) url.searchParams.set('projectId', params.projectId);
-  if (params.search) url.searchParams.set('search', params.search);
-  return request<PaginatedResponse<AdminFundraisingDonation>>(url.pathname + url.search);
+  return httpClient.request<PaginatedResponse<AdminFundraisingDonation>>('/admin/fundraising/donations', {
+    admin: true,
+    searchParams: params,
+  });
 };
 
 export const updateAdminFundraisingDonationStatus = async (
   donationId: string,
   payload: { status: string; note?: string },
 ) => {
-  const response = await request<{ status: string; data: AdminFundraisingDonation }>(
-    `/admin/fundraising/donations/${donationId}/status`,
-    {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    },
-  );
-  return response.data;
+  return httpClient.data<AdminFundraisingDonation>(`/admin/fundraising/donations/${donationId}/status`, {
+    admin: true,
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 };
 
 export const fetchAdminFundraisingSummary = async (params: { from?: string; to?: string } = {}) => {
-  const url = new URL(`${BASE_URL.replace(/\/$/, '')}/admin/fundraising/summary`);
-  if (params.from) url.searchParams.set('from', params.from);
-  if (params.to) url.searchParams.set('to', params.to);
-  return request<{ data: AdminFundraisingSummary }>(url.pathname + url.search).then((res) => res.data);
+  return httpClient.data<AdminFundraisingSummary>('/admin/fundraising/summary', {
+    admin: true,
+    searchParams: params,
+  });
 };
 
 export const exportAdminFundraisingDonations = async (params: {
@@ -125,22 +102,9 @@ export const exportAdminFundraisingDonations = async (params: {
   from?: string;
   to?: string;
 } = {}) => {
-  const url = new URL(`${BASE_URL.replace(/\/$/, '')}/admin/fundraising/donations/export`);
-  if (params.status) url.searchParams.set('status', params.status);
-  if (params.projectId) url.searchParams.set('projectId', params.projectId);
-  if (params.search) url.searchParams.set('search', params.search);
-  if (params.from) url.searchParams.set('from', params.from);
-  if (params.to) url.searchParams.set('to', params.to);
-
-  const response = await fetch(url.pathname + url.search, {
-    credentials: 'include',
-    headers: { 'content-type': 'application/json' },
+  return httpClient.request<string>('/admin/fundraising/donations/export', {
+    admin: true,
+    responseType: 'text',
+    searchParams: params,
   });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `Request failed (${response.status})`);
-  }
-
-  return response.text();
 };

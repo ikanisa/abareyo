@@ -1,6 +1,6 @@
 # Reverse Proxy & Secure Deployment Checklist
 
-This project expects to sit behind a TLS-terminating reverse proxy (Vercel Edge, Nginx, or Cloudflare). To keep Supabase service-role
+This project expects to sit behind a TLS-terminating reverse proxy (for example, Nginx or Cloudflare). To keep Supabase service-role
 credentials and session cookies scoped to the server runtime:
 
 - Forward `X-Forwarded-Proto`, `X-Forwarded-For`, and `X-Forwarded-Host` headers. The middleware enforces HTTPS when it detects

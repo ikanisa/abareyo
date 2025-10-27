@@ -1,0 +1,94 @@
+name: Security Scans
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: '0 3 * * *'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-vulnerability-scan:
+    name: Dependency scan (Snyk)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Ensure Snyk token is configured
+        run: |
+          if [[ -z "${SNYK_TOKEN}" ]]; then
+            echo "SNYK_TOKEN secret is required to execute dependency security scans." >&2
+            exit 1
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Run Snyk test
+        uses: snyk/actions/node@v3
+        with:
+          command: test
+          args: >-
+            --sarif-file-output=snyk.sarif
+            --severity-threshold=high
+            --file=package.json
+            --package-manager=npm
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Upload Snyk results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk.sarif
+
+  container-image-security-scan:
+    name: Container image scan (Trivy)
+    runs-on: ubuntu-latest
+    needs: dependency-vulnerability-scan
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build container image for scanning
+        run: docker build -t local/security-scan:latest -f Dockerfile .
+
+      - name: Run Trivy image scan
+        uses: aquasecurity/trivy-action@0.20.0
+        with:
+          image-ref: local/security-scan:latest
+          format: sarif
+          output: trivy-image.sarif
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '1'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-image.sarif

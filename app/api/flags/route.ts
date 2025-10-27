@@ -35,7 +35,7 @@ export async function GET() {
       return NextResponse.json({ flags: DEFAULT_FLAGS });
     }
 
-    const flags = { ...DEFAULT_FLAGS };
+    const flags: Record<string, boolean> = { ...DEFAULT_FLAGS };
 
     for (const row of data) {
       if (row?.key) {

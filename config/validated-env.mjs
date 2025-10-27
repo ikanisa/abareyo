@@ -60,7 +60,10 @@ const envSchema = z.object({
   SUPABASE_ANON_KEY: z.string().optional(),
   ONBOARDING_API_TOKEN: z.string().min(1),
   ONBOARDING_ALLOW_MOCK: z.string().optional(),
-  OPENAI_API_KEY: z.string().min(1),
+  OPENAI_API_KEY: z.string().optional(),
+  ADMIN_SMS_PARSER_TEST_ENABLED: z.string().optional(),
+  ADMIN_SMS_PARSER_TEST_RATE_LIMIT: z.string().optional(),
+  ADMIN_SMS_PARSER_TEST_WINDOW_MS: z.string().optional(),
   AGENT_ID: z.string().optional(),
   NEXT_PHASE: z.string().optional(),
   NEXT_RUNTIME: z.string().optional(),
@@ -85,7 +88,6 @@ for (const key of [
   'SITE_SUPABASE_URL',
   'SITE_SUPABASE_SECRET_KEY',
   'ONBOARDING_API_TOKEN',
-  'OPENAI_API_KEY',
 ]) {
   if (!parsed[key]) {
     missingCritical.push(key);
@@ -95,9 +97,6 @@ for (const key of [
 if (parsed.NODE_ENV === 'production') {
   if (!parsed.NEXT_PUBLIC_SITE_URL) {
     missingCritical.push('NEXT_PUBLIC_SITE_URL (required in production)');
-  }
-  if (!parsed.NEXT_PUBLIC_SENTRY_DSN && !parsed.SENTRY_DSN) {
-    missingCritical.push('SENTRY_DSN or NEXT_PUBLIC_SENTRY_DSN (one must be set in production)');
   }
 }
 

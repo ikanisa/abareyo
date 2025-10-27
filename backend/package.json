@@ -42,7 +42,10 @@
     "openai": "^4.52.0",
     "pino": "^9.5.0",
     "pino-http": "^11.0.0",
-    "prom-client": "^15.1.0"
+    "prom-client": "^15.1.0",
+    "@sentry/node": "^8.35.0",
+    "@sentry/profiling-node": "^8.35.0",
+    "pino-loki": "^2.4.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",

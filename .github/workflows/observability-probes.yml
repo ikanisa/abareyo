@@ -1,0 +1,91 @@
+name: Observability probes
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  probe:
+    name: Probe production surface
+    runs-on: ubuntu-latest
+    outputs:
+      failures: ${{ steps.run-probes.outputs.failures }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run probes
+        id: run-probes
+        shell: bash
+        env:
+          BASE_URL: ${{ secrets.PROBE_BASE_URL }}
+          METRICS_TOKEN: ${{ secrets.PROBE_METRICS_TOKEN }}
+        run: |
+          if [[ -z "${BASE_URL:-}" ]]; then
+            echo "::error title=Missing secret::PROBE_BASE_URL secret must be configured" >&2
+            exit 1
+          fi
+
+          set +e
+          bash scripts/ci/probe-endpoints.sh
+          status=$?
+          set -e
+
+          failures="${status}"
+          if [[ -f artifacts/failures.count ]]; then
+            failures=$(cat artifacts/failures.count)
+          fi
+
+          echo "failures=${failures}" >>"${GITHUB_OUTPUT}"
+
+          exit ${status}
+
+      - name: Upload probe artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: observability-probes
+          path: artifacts
+
+  page:
+    name: Page on failure
+    needs: probe
+    if: ${{ always() && (needs.probe.outputs.failures || '0') != '0' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger PagerDuty incident
+        shell: bash
+        env:
+          ROUTING_KEY: ${{ secrets.PAGERDUTY_ROUTING_KEY }}
+          FAILURE_COUNT: ${{ needs.probe.outputs.failures }}
+          BASE_URL: ${{ secrets.PROBE_BASE_URL }}
+        run: |
+          if [[ -z "${ROUTING_KEY:-}" ]]; then
+            echo "PagerDuty routing key not configured; skipping page." >&2
+            exit 0
+          fi
+
+          summary="Rayon observability probe failure (${FAILURE_COUNT} endpoint(s))"
+          details=$(cat <<JSON
+{
+  "routing_key": "${ROUTING_KEY}",
+  "event_action": "trigger",
+  "payload": {
+    "summary": "${summary}",
+    "source": "github-actions",
+    "severity": "critical",
+    "component": "observability-probes",
+    "custom_details": {
+      "failures": "${FAILURE_COUNT}",
+      "base_url": "${BASE_URL}"
+    }
+  }
+}
+JSON
+)
+
+          curl --silent --show-error --fail \
+            -X POST https://events.pagerduty.com/v2/enqueue \
+            -H 'Content-Type: application/json' \
+            -d "${details}"

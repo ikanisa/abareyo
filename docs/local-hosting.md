@@ -1,69 +1,77 @@
-# Local Hosting Runbook
+# Local Hosting Guide (Mac-first)
 
-This guide documents how to run the Rayon Sports PWA on a MacBook using the pnpm-based toolchain and Supabase-backed services.
+This guide walks through running the admin PWA locally on a MacBook. It is
+safe to adapt the same steps for Linux workstations and CI runners.
 
 ## Prerequisites
-- Apple Silicon MacBook with macOS 13+
-- [Homebrew](https://brew.sh/) with `corepack` and the Supabase CLI installed:
-  ```bash
-  brew install corepack supabase/tap/supabase
-  corepack enable
-  corepack prepare pnpm@9.12.2 --activate
-  ```
-- Node.js 20.x (install via `nvm`, `asdf`, or `fnm`; `.nvmrc` pins the desired version).
-- Supabase CLI authenticated (`supabase login`).
+- Node.js 20.x (`nvm install 20 && nvm use 20`)
+- Corepack (ships with Node 20)
+- pnpm 9 (`corepack prepare pnpm@9.12.2 --activate`)
+- Supabase CLI (`brew install supabase/tap/supabase`)
+- Docker Desktop (optional, for local Supabase containers)
 
 ## Environment Files
-Create a project-wide `.env` that mirrors the keys listed in the README. For machine-specific overrides, create `.env.local` in the repo root (it is gitignored) and populate values such as:
-
-```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_PUBLISHABLE_KEY=public-anon-key
-SUPABASE_SECRET_KEY=service-role-key
-SUPABASE_PROJECT_REF=your-project-ref
-SMS_WEBHOOK_TOKEN=dev-token
-NEXT_PUBLIC_BACKEND_URL=http://localhost:3000
-NEXT_PUBLIC_ENVIRONMENT_LABEL=local
-```
-
-`.env.local` overrides `.env` when both exist—use it for staging credentials, experimental webhook tokens, or local Cloudflare Tunnel hostnames.
+1. Copy `.env.example` to `.env.local`.
+2. Fill in:
+   ```bash
+   NEXT_PUBLIC_SUPABASE_URL="https://<project-ref>.supabase.co"
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="<public-anon-key>"
+   SUPABASE_SERVICE_ROLE_KEY="<service-role-key>"
+   SITE_SUPABASE_URL="https://<project-ref>.supabase.co"
+   SITE_SUPABASE_SECRET_KEY="<service-role-key>"
+   NEXT_PUBLIC_BACKEND_URL="http://localhost:3000/api"
+   NEXT_PUBLIC_ENVIRONMENT_LABEL="local"
+   PORT=3000
+   APP_ENV=local
+   ```
+3. Store server-only secrets (service role key, onboarding tokens, OpenAI
+   key) outside the browser bundle. Never commit `.env.local` to git.
+4. Use `scripts/env-sync-template.sh` when you need to emit a `.env.sync`
+   bundle for Docker/Kubernetes secrets.
 
 ## Install & Build
-Install dependencies and compile the production bundle with pnpm:
-
 ```bash
 pnpm install
+pnpm typecheck
+pnpm lint
 pnpm build
 ```
 
-The build step runs `next build` and validates that generated assets are ready for hosting.
-
 ## Start the App
-Launch the production server on port 3000:
-
 ```bash
-pnpm start
+PORT=3000 pnpm start
 ```
+Visit <http://localhost:3000> in your browser. The admin PWA loads without
+needing any proprietary hosting platform features. Leave the terminal open
+while testing.
 
-For iterative development use `pnpm dev`, which enables Hot Module Reloading and Supabase realtime previews.
+## Supabase Notes
+- `supabase start` launches a local stack. Use this when you need Postgres or
+  Storage offline.
+- `supabase db reset` reapplies migrations and seeds when schemas change.
+- Supabase Storage can replace third-party blob/KV systems. The helper in
+  `src/lib/storage.ts` (if present) should wrap uploads/downloads.
+- Keep service role keys on the server. Client code must only use the anon key
+  exposed via `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 
-## Supabase & Data
-1. Start the Supabase stack locally (or target a remote project):
-   ```bash
-   supabase start
-   ```
-2. Apply migrations and seed baseline data:
-   ```bash
-   supabase migration up
-   supabase db seed
-   ```
-3. Serve any required Edge Functions for payment automation:
-   ```bash
-   supabase functions serve sms-webhook --env-file .env.local
-   supabase functions serve issue-policy --env-file .env.local
-   ```
+## Reverse Proxy Prep
+- The app expects to sit behind a TLS proxy later (Caddy, Nginx, or
+  Cloudflare Tunnel).
+- Configure the proxy to forward `X-Forwarded-*` headers and preserve `Secure`
+  cookies.
+- Document any additional origins in `CORS_ORIGIN` and
+  `NEXT_PUBLIC_SITE_URL`.
 
-`pnpm lint`, `pnpm type-check`, and `pnpm test` mirror CI signals—run them before publishing containers or Supabase function updates.
+## Troubleshooting
+- Missing env vars: run `node config/validated-env.mjs` or
+  `node scripts/check-frontend-env.mjs`.
+- Backend offline: `node scripts/check-backend-endpoint.mjs` ensures the
+  configured API URL responds.
+- Build errors: rerun `pnpm build` and inspect `.next/trace` output for
+  failing modules.
 
-## Reverse Proxy Roadmap
-The app currently binds directly to port 3000. Upcoming infrastructure work will introduce a reverse proxy layer (evaluating [Caddy](https://caddyserver.com/) and [Cloudflare Tunnel](https://www.cloudflare.com/products/tunnel/)) to manage TLS, HTTP/3, and zero-trust ingress. No proxy configuration is required yet, but reserve ports 443/8443 locally to avoid conflicts when the integration ships.
+## Next Steps
+- Automate preflight checks with `scripts/local-preflight.mjs`.
+- Add your preferred reverse proxy to the docs once configured.
+- Track local-only overrides in `.env.local` and keep `.env.example` aligned
+  for teammates.
