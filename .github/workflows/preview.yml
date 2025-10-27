@@ -59,6 +59,58 @@ jobs:
         run: node scripts/preflight.mjs
         # ⚠️ This uses Next.js defaults (.next/) via `npm run build`.
         # ⚠️ Does NOT parse/copy favicon binaries — avoids your previous CI failure.
+        env:
+          PREFLIGHT_ALLOW_MISSING_ENV: '1'
+          NEXT_PUBLIC_ENVIRONMENT_LABEL: ${{
+            secrets.NEXT_PUBLIC_ENVIRONMENT_LABEL != '' &&
+            secrets.NEXT_PUBLIC_ENVIRONMENT_LABEL ||
+            'Preview'
+          }}
+          NEXT_PUBLIC_BACKEND_URL: ${{
+            secrets.NEXT_PUBLIC_BACKEND_URL != '' &&
+            secrets.NEXT_PUBLIC_BACKEND_URL ||
+            'http://localhost:3000/api'
+          }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{
+            secrets.NEXT_PUBLIC_SUPABASE_URL != '' &&
+            secrets.NEXT_PUBLIC_SUPABASE_URL ||
+            'https://preview.example.supabase.co'
+          }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{
+            secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY != '' &&
+            secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+            'preview-anon-key'
+          }}
+          NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN: ${{
+            secrets.NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN != '' &&
+            secrets.NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN ||
+            'preview-onboarding-token'
+          }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{
+            secrets.SUPABASE_SERVICE_ROLE_KEY != '' &&
+            secrets.SUPABASE_SERVICE_ROLE_KEY ||
+            'preview-service-role'
+          }}
+          SITE_SUPABASE_URL: ${{
+            secrets.SITE_SUPABASE_URL != '' &&
+            secrets.SITE_SUPABASE_URL ||
+            'https://preview-site.example.com'
+          }}
+          SITE_SUPABASE_SECRET_KEY: ${{
+            secrets.SITE_SUPABASE_SECRET_KEY != '' &&
+            secrets.SITE_SUPABASE_SECRET_KEY ||
+            'preview-site-secret'
+          }}
+          ONBOARDING_API_TOKEN: ${{
+            secrets.ONBOARDING_API_TOKEN != '' &&
+            secrets.ONBOARDING_API_TOKEN ||
+            'preview-onboarding-api-token'
+          }}
+          OPENAI_API_KEY: ${{
+            secrets.OPENAI_API_KEY != '' &&
+            secrets.OPENAI_API_KEY ||
+            'preview-openai-key'
+          }}
 
       - name: Upload Build Artifact (optional)
         if: ${{ always() }}
