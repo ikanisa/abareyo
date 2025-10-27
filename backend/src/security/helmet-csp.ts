@@ -23,5 +23,5 @@ export function registerCsp(instance: FastifyInstance, extraConnectSrc: string[]
     },
   };
 
-  return instance.register(fastifyHelmet, helmetOptions);
+  return instance.register(fastifyHelmet as any, helmetOptions);
 }
