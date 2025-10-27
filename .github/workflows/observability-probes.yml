@@ -51,14 +51,14 @@ jobs:
   page:
     name: Page on failure
     needs: probe
-    if: ${{ always() && (needs.probe.outputs.failures || '0') != '0' }}
+    if: ${{ always() && (needs.probe.result == 'failure' || (needs.probe.outputs.failures || '0') != '0') }}
     runs-on: ubuntu-latest
     steps:
       - name: Trigger PagerDuty incident
         shell: bash
         env:
           ROUTING_KEY: ${{ secrets.PAGERDUTY_ROUTING_KEY }}
-          FAILURE_COUNT: ${{ needs.probe.outputs.failures }}
+          FAILURE_COUNT: ${{ needs.probe.outputs.failures || '1' }}
           BASE_URL: ${{ secrets.PROBE_BASE_URL }}
         run: |
           if [[ -z "${ROUTING_KEY:-}" ]]; then
