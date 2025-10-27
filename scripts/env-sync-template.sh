@@ -5,6 +5,15 @@ set -euo pipefail
 # Prompts for required secrets and writes them to `.env.sync` so they can
 # be copied into your chosen secret manager (Docker, Kubernetes, fly.io,
 # Supabase, etc.).
+#
+# SECURITY NOTICE:
+# This script collects both client-safe and SERVER-ONLY secrets.
+# Variables prefixed with NEXT_PUBLIC_ are embedded in the browser bundle.
+# SERVER-ONLY secrets (SUPABASE_SERVICE_ROLE_KEY, SITE_SUPABASE_SECRET_KEY,
+# OPENAI_API_KEY, ADMIN_SESSION_SECRET, etc.) must NEVER be:
+#   - Prefixed with NEXT_PUBLIC_
+#   - Used in client-side code (app/, src/components/, public/)
+#   - Exposed to the browser in any way
 
 if command -v openssl >/dev/null 2>&1; then
   REQUIRE_OPENSSL=0
@@ -82,35 +91,44 @@ prompt_env "NEXT_PUBLIC_SUPABASE_URL" \
   "https://paysnhuxngsvzdpwlosv.supabase.co"
 
 prompt_env "NEXT_PUBLIC_SUPABASE_ANON_KEY" \
-  "Supabase anon/publishable key"
+  "Supabase anon/publishable key (client-safe)"
+
+echo ""
+echo "=== SERVER-ONLY SECRETS (NEVER use NEXT_PUBLIC_ prefix) ==="
+echo ""
 
 prompt_env "SUPABASE_SERVICE_ROLE_KEY" \
-  "Supabase service role key"
+  "Supabase service role key (SERVER-ONLY)"
 
 prompt_env "SITE_SUPABASE_URL" \
   "Server-side Supabase URL override" \
   "$NEXT_PUBLIC_SUPABASE_URL"
 
 prompt_env "SITE_SUPABASE_SECRET_KEY" \
-  "Server-side Supabase secret key" \
+  "Server-side Supabase secret key (SERVER-ONLY, defaults to service role key)" \
   "$SUPABASE_SERVICE_ROLE_KEY"
 
 prompt_env "NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN" \
-  "Onboarding public token"
+  "Onboarding public token (client-safe)"
 
 prompt_env "ONBOARDING_API_TOKEN" \
-  "Onboarding server token"
+  "Onboarding server token (SERVER-ONLY)"
 
 prompt_env "OPENAI_API_KEY" \
-  "OpenAI API key"
+  "OpenAI API key (SERVER-ONLY)"
 
 prompt_env "OPENAI_BASE_URL" \
-  "OpenAI base URL" \
+  "OpenAI base URL (SERVER-ONLY)" \
   "https://api.openai.com/v1"
 
 prompt_env "NEXT_PUBLIC_OPENAI_BASE_URL" \
-  "OpenAI base URL exposed to the client" \
+  "OpenAI base URL exposed to the client (client-safe, optional)" \
   "$OPENAI_BASE_URL"
+
+echo ""
+echo "WARNING: Do NOT expose server-only secrets by adding NEXT_PUBLIC_ prefix."
+echo "Always keep OPENAI_API_KEY, SUPABASE_SERVICE_ROLE_KEY, etc. as server-only."
+echo ""
 
 prompt_env "NEXT_PUBLIC_ADMIN_SESSION_COOKIE" \
   "Admin session cookie name" \
@@ -131,7 +149,7 @@ prompt_env "AUTOMATION_BYPASS_SECRET" \
   "Automation bypass secret (optional)"
 
 generate_secret_if_missing "FAN_SESSION_SECRET"
-generate_secret_if_missing "ADMIN_SESSION_SECRET"
+generate_secret_if_missing "ADMIN_SESSION_SECRET" # SERVER-ONLY: Session secret for admin authentication
 
 declare -a REQUIRED_VARS=(
   NEXT_PUBLIC_BACKEND_URL

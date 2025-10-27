@@ -1,5 +1,16 @@
 import { z } from 'zod';
 
+/**
+ * Validated environment configuration for Abareyo.
+ *
+ * CRITICAL SECURITY NOTES:
+ * - Variables prefixed with NEXT_PUBLIC_ are exposed to the browser client bundle.
+ * - Server-only secrets (SUPABASE_SERVICE_ROLE_KEY, SITE_SUPABASE_SECRET_KEY,
+ *   OPENAI_API_KEY, ADMIN_SESSION_SECRET, ONBOARDING_API_TOKEN, etc.)
+ *   MUST NEVER be prefixed with NEXT_PUBLIC_ or referenced in client code.
+ * - Always verify that server-only keys remain server-only in both config and usage.
+ */
+
 const isValidBackendUrl = (value) => {
   if (typeof value !== 'string') {
     return false;
@@ -23,9 +34,14 @@ const isValidBackendUrl = (value) => {
 const normalizeUrl = (value) => value.replace(/\/$/, '');
 
 const envSchema = z.object({
+  // === Runtime Environment ===
   APP_ENV: z.enum(['local', 'development', 'staging', 'production', 'test']).default('local'),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   APP_BASE_URL: z.string().url().optional(),
+  PORT: z.string().optional(),
+
+  // === Client-Safe Public Variables (NEXT_PUBLIC_*) ===
+  // These are embedded in the browser bundle and visible to all users
   NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
   NEXT_PUBLIC_BACKEND_URL: z
     .string()
@@ -48,22 +64,26 @@ const envSchema = z.object({
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE: z.string().optional(),
   NEXT_PUBLIC_ADMIN_API_TOKEN: z.string().optional(),
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK: z.string().optional(),
-  PORT: z.string().optional(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
-  SITE_SUPABASE_URL: z.string().url(),
-  SITE_SUPABASE_SECRET_KEY: z.string().min(1),
-  SUPABASE_SERVICE_KEY: z.string().optional(),
-  SUPABASE_URL: z.string().optional(),
-  SUPABASE_SECRET_KEY: z.string().optional(),
+
+  // === SERVER-ONLY SECRETS (NEVER use NEXT_PUBLIC_ prefix) ===
+  // These must ONLY be accessed in server-side code (API routes, server components, middleware)
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1), // SERVER-ONLY: Full admin access to Supabase
+  SITE_SUPABASE_URL: z.string().url(), // SERVER-ONLY: Server-side Supabase URL
+  SITE_SUPABASE_SECRET_KEY: z.string().min(1), // SERVER-ONLY: Server-side Supabase secret
+  SUPABASE_SERVICE_KEY: z.string().optional(), // SERVER-ONLY: Alternative service key
+  SUPABASE_URL: z.string().optional(), // SERVER-ONLY: Alternative URL
+  SUPABASE_SECRET_KEY: z.string().optional(), // SERVER-ONLY: Alternative secret
   SITE_SUPABASE_PUBLISHABLE_KEY: z.string().optional(),
   SUPABASE_PUBLISHABLE_KEY: z.string().optional(),
   SUPABASE_ANON_KEY: z.string().optional(),
-  ONBOARDING_API_TOKEN: z.string().min(1),
+  ONBOARDING_API_TOKEN: z.string().min(1), // SERVER-ONLY: Onboarding service auth token
   ONBOARDING_ALLOW_MOCK: z.string().optional(),
-  OPENAI_API_KEY: z.string().optional(),
+  OPENAI_API_KEY: z.string().optional(), // SERVER-ONLY: OpenAI API authentication key
   ADMIN_SMS_PARSER_TEST_ENABLED: z.string().optional(),
   ADMIN_SMS_PARSER_TEST_RATE_LIMIT: z.string().optional(),
   ADMIN_SMS_PARSER_TEST_WINDOW_MS: z.string().optional(),
+
+  // === Other Variables ===
   AGENT_ID: z.string().optional(),
   NEXT_PHASE: z.string().optional(),
   NEXT_RUNTIME: z.string().optional(),
