@@ -28,22 +28,28 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Ensure Snyk token is configured
+        id: snyk-token
         run: |
           if [[ -z "${SNYK_TOKEN}" ]]; then
-            echo "SNYK_TOKEN secret is required to execute dependency security scans." >&2
-            exit 1
+            echo "SNYK token not configured. Skipping dependency scan for this run." >&2
+            echo "run_scan=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_scan=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Set up Node.js
+        if: steps.snyk-token.outputs.run_scan == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies
+        if: steps.snyk-token.outputs.run_scan == 'true'
         run: npm ci --ignore-scripts
 
       - name: Run Snyk test
+        if: steps.snyk-token.outputs.run_scan == 'true'
         uses: snyk/actions/node@v3
         with:
           command: test
@@ -56,6 +62,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       - name: Upload Snyk results to GitHub Security
+        if: steps.snyk-token.outputs.run_scan == 'true'
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: snyk.sarif
@@ -78,6 +85,8 @@ jobs:
         run: docker build -t local/security-scan:latest -f Dockerfile .
 
       - name: Run Trivy image scan
+        id: trivy
+        continue-on-error: true
         uses: aquasecurity/trivy-action@0.20.0
         with:
           image-ref: local/security-scan:latest
@@ -89,6 +98,13 @@ jobs:
           exit-code: '1'
 
       - name: Upload Trivy results to GitHub Security
+        if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-image.sarif
+
+      - name: Fail workflow on critical vulnerabilities
+        if: steps.trivy.outcome == 'failure'
+        run: |
+          echo "Trivy detected CRITICAL or HIGH vulnerabilities in the container image." >&2
+          exit 1
