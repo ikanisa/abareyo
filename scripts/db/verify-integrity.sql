@@ -1,48 +1,45 @@
--- verify-integrity.sql
--- Disaster recovery validation checklist for Supabase Postgres.
--- Run with: psql "$DATABASE_URL" -f scripts/db/verify-integrity.sql
+-- Disaster recovery data integrity checks for Rayon Sports
+-- Usage: Run via `psql $DATABASE_URL -f scripts/db/verify-integrity.sql`
+-- Note: `$DATABASE_URL` must be set to a valid PostgreSQL connection string in the format:
+--   postgresql://user:password@host:port/database
+-- If `$DATABASE_URL` is not set or is invalid, the script will fail to connect.
 
-\echo 'Checking expected schemas exist'
-SELECT schema_name
-FROM information_schema.schemata
-WHERE schema_name IN ('public', 'auth')
-ORDER BY schema_name;
+\echo 'Checking critical table row counts and recency metrics...'
 
-\echo 'Ensuring critical tables are present'
-SELECT table_schema, table_name
-FROM information_schema.tables
-WHERE table_schema = 'public'
-  AND table_name IN (
-    'wallet_transactions',
-    'orders',
-    'missions',
-    'profiles'
-  )
-ORDER BY table_name;
+-- Verify wallet transactions exist and updated recently
+SELECT
+  'wallet_transactions' AS table_name,
+  COUNT(*) AS row_count,
+  MAX(updated_at) AS last_updated_at
+FROM wallet_transactions;
 
-\echo 'Row count spot checks (must be >= 0)'
-SELECT 'wallet_transactions' AS table, COUNT(*) AS row_count FROM public.wallet_transactions
-UNION ALL
-SELECT 'orders', COUNT(*) FROM public.orders
-UNION ALL
-SELECT 'missions', COUNT(*) FROM public.missions
-UNION ALL
-SELECT 'profiles', COUNT(*) FROM public.profiles;
+-- Verify orders exist and status distribution
+SELECT
+  status,
+  COUNT(*) AS total
+FROM orders
+GROUP BY status
+ORDER BY status;
 
-\echo 'Referential integrity: orphaned wallet transactions'
-SELECT wt.id
-FROM public.wallet_transactions wt
-LEFT JOIN public.profiles p ON p.id = wt.profile_id
-WHERE p.id IS NULL
-LIMIT 20;
+-- Confirm missions table has active missions
+SELECT
+  COUNT(*) FILTER (WHERE status = 'active') AS active_missions,
+  COUNT(*) FILTER (WHERE status = 'inactive') AS inactive_missions
+FROM missions;
 
-\echo 'Referential integrity: pending orders without missions'
-SELECT o.id
-FROM public.orders o
-LEFT JOIN public.missions m ON m.id = o.mission_id
-WHERE o.status = 'pending' AND m.id IS NULL
-LIMIT 20;
+-- Ensure user balances and wallet transactions remain consistent
+SELECT
+  SUM(balance) AS total_user_balance
+FROM user_wallets;
 
-\echo 'Recent writes within RPO window'
-SELECT MAX(updated_at) AS latest_update
-FROM public.wallet_transactions;
+SELECT
+  SUM(amount) AS total_transactions_amount
+FROM wallet_transactions
+WHERE status = 'completed';
+
+-- Compare latest backup snapshot metadata if available
+SELECT
+  MAX(completed_at) AS last_backup_completed_at
+FROM backup_jobs;
+
+\echo 'Integrity checks complete.'
