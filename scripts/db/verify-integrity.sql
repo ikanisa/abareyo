@@ -1,5 +1,8 @@
 -- Disaster recovery data integrity checks for Rayon Sports
--- Run via `psql $DATABASE_URL -f scripts/db/verify-integrity.sql`
+-- Usage: Run via `psql $DATABASE_URL -f scripts/db/verify-integrity.sql`
+-- Note: `$DATABASE_URL` must be set to a valid PostgreSQL connection string in the format:
+--   postgresql://user:password@host:port/database
+-- If `$DATABASE_URL` is not set or is invalid, the script will fail to connect.
 
 \echo 'Checking critical table row counts and recency metrics...'
 
