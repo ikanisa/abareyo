@@ -20,16 +20,57 @@ spec:
           ports:
             - containerPort: 3000
           env:
+            # Public client-side variables
+            - name: NEXT_PUBLIC_SITE_URL
+              value: https://your-domain.com
             - name: NEXT_PUBLIC_BACKEND_URL
               value: /api
-            - name: NODE_ENV
+            - name: NEXT_PUBLIC_ENVIRONMENT_LABEL
               value: production
-            # Server-side env for Admin SMS parser test endpoint
+            - name: NEXT_PUBLIC_SUPABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: frontend-secrets
+                  key: NEXT_PUBLIC_SUPABASE_URL
+            - name: NEXT_PUBLIC_SUPABASE_ANON_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: frontend-secrets
+                  key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+            - name: NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: frontend-secrets
+                  key: NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN
+            # Server-only secrets
+            - name: SUPABASE_SERVICE_ROLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: frontend-secrets
+                  key: SUPABASE_SERVICE_ROLE_KEY
+            - name: SITE_SUPABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: frontend-secrets
+                  key: SITE_SUPABASE_URL
+            - name: SITE_SUPABASE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: frontend-secrets
+                  key: SITE_SUPABASE_SECRET_KEY
+            - name: ONBOARDING_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: frontend-secrets
+                  key: ONBOARDING_API_TOKEN
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: backend-secrets
+                  name: frontend-secrets
                   key: OPENAI_API_KEY
+                  optional: true
+            - name: NODE_ENV
+              value: production
           livenessProbe:
             httpGet:
               path: /
@@ -42,6 +83,13 @@ spec:
               port: 3000
             initialDelaySeconds: 5
             periodSeconds: 10
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
 ---
 apiVersion: v1
 kind: Service
