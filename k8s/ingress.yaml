@@ -5,12 +5,19 @@ metadata:
   namespace: rayon
   annotations:
     kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
 spec:
+  tls:
+    - hosts:
+        - __INGRESS_HOST__
+      secretName: __TLS_SECRET__
   rules:
-    - host: __PUBLIC_HOSTNAME__
+    - host: __INGRESS_HOST__
       http:
         paths:
           - path: /api(/|$)(.*)

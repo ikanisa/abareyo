@@ -1,4 +1,4 @@
-import CronExpressionParser from 'cron-parser';
+import cronParser from 'cron-parser';
 
 export class InvalidCronExpressionError extends Error {
   constructor(cron: string, cause?: unknown) {
@@ -12,7 +12,7 @@ export class InvalidCronExpressionError extends Error {
 
 const parseCron = (cron: string, currentDate: Date) => {
   try {
-    return CronExpressionParser.parseExpression(cron, {
+    return cronParser.parse(cron, {
       currentDate,
       tz: 'UTC',
     });

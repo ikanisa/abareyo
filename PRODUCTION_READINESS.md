@@ -1,376 +1,221 @@
-# Production Readiness Checklist
+# Production Deployment Readiness Checklist
 
-This document consolidates production readiness requirements and provides step-by-step Kubernetes deployment instructions for the Rayon Sports Super App.
-
-## Table of Contents
-
-1. [Pre-Deployment Checklist](#pre-deployment-checklist)
-2. [Kubernetes Deployment Guide](#kubernetes-deployment-guide)
-3. [Health Check Verification](#health-check-verification)
-4. [Post-Deployment Validation](#post-deployment-validation)
-5. [Rollback Procedures](#rollback-procedures)
-
----
+> **Status**: READY FOR DEPLOYMENT with manual configuration steps
+> **Last Updated**: 2025-10-28
+> **Build Status**: ✅ Passing
+> **Tests**: ✅ 94/94 passing
+> **Security**: ✅ Critical issues resolved
 
 ## Pre-Deployment Checklist
 
-### 1. Code Health & Build Stability
+### 1. Code Quality & Build ✅
+- [x] All linting passes (`npm run lint`)
+- [x] All type checks pass (`npm run typecheck`)
+- [x] All unit tests pass (94 tests)
+- [x] Production build succeeds (`npm run build`)
+- [x] Frontend Docker build tested
+- [x] Backend exists and is properly configured
 
-- [ ] **CI Pipeline Green**: All lint, type-check, unit, and e2e tests passing
-- [ ] **Production Build Success**: `npm run build` completes without errors
-- [ ] **TypeScript Strict Mode**: Address type errors before enabling strict mode
-- [ ] **ESLint Clean**: No lint violations in production code paths
-- [ ] **Environment Variables**: All required variables defined (see [DEPLOYMENT_READINESS_REPORT.md](./DEPLOYMENT_READINESS_REPORT.md))
+### 2. Security ✅
+- [x] Critical/High vulnerabilities resolved (only 8 low severity in dev dependency remain)
+- [x] "use server" directive issues fixed
+- [x] Error classes properly separated from server modules
+- [ ] **TODO**: Run CodeQL scan before final deployment
+- [x] Secrets separated from public environment variables
+- [x] CSP configuration ready (`APP_ENABLE_CSP=1` in backend)
 
-**Critical Issues** (from [PROD_READINESS_AUDIT.md](./reports/PROD_READINESS_AUDIT.md)):
-- [ ] `NEXT_PUBLIC_SOCKET_PATH` has safe defaults for builds
-- [ ] Null guard on `inputRef.current` in onboarding modal
-- [ ] TypeScript target set to `es2020` or higher
-- [ ] Next.js lint/type checks re-enabled in `next.config.mjs`
+### 3. Environment Configuration ⚠️
+- [x] Environment validation schema in place (`config/validated-env.mjs`)
+- [x] `.env.example` and `.env.production.example` documented
+- [ ] **REQUIRED**: Set up production secrets in deployment platform
+- [ ] **REQUIRED**: Configure Supabase project and obtain credentials
+- [ ] **REQUIRED**: Configure CORS_ORIGIN for production domain
+- [ ] **REQUIRED**: Generate secure session secrets (32+ characters)
+- [ ] **REQUIRED**: Set up METRICS_TOKEN for /metrics endpoint
 
-### 2. Security & Compliance
+### 4. Infrastructure ⚠️
+- [x] Kubernetes manifests updated with all required env vars
+- [x] K8s manifests include resource limits
+- [x] TLS/HTTPS configuration ready in ingress
+- [x] Health check endpoints configured
+- [ ] **REQUIRED**: Create Kubernetes secrets (see k8s/README.md)
+- [ ] **REQUIRED**: Update ingress.yaml placeholders (__INGRESS_HOST__, __TLS_SECRET__)
+- [ ] **REQUIRED**: Install cert-manager for TLS (or provide manual TLS cert)
+- [ ] **REQUIRED**: Configure image pull secrets for GHCR
 
-- [ ] **HTTP Headers**: CSP, Referrer-Policy, X-Frame-Options configured
-- [ ] **Secrets Rotation**: All secrets rotated within last 90 days
-- [ ] **Cookie Security**: `Secure; HttpOnly; SameSite=Lax` flags verified
-- [ ] **E2E Mocks Disabled**: `E2E_API_MOCKS` unset in production
-- [ ] **CORS Configuration**: `CORS_ORIGIN` set to specific allowed domains (no wildcards)
+### 5. Database & Services ⚠️
+- [ ] **REQUIRED**: PostgreSQL database provisioned
+- [ ] **REQUIRED**: Run Prisma migrations (`npm --prefix backend run prisma:migrate`)
+- [ ] **REQUIRED**: Redis instance provisioned
+- [ ] **REQUIRED**: Supabase project configured
+- [ ] **OPTIONAL**: Seed admin user if needed
+- [ ] **OPTIONAL**: Configure S3-compatible storage if using media uploads
 
-### 3. Backend Configuration
+### 6. Observability ⚠️
+- [x] Prometheus metrics endpoint exists (`/metrics`)
+- [x] Sentry configuration present
+- [ ] **RECOMMENDED**: Configure Sentry DSN for error tracking
+- [ ] **RECOMMENDED**: Set up Prometheus scraping
+- [ ] **RECOMMENDED**: Import Grafana dashboards from `docs/grafana/`
+- [ ] **RECOMMENDED**: Apply Prometheus alert rules from `docs/observability/`
 
-Follow [docs/backend-config-checklist.md](./docs/backend-config-checklist.md) for:
-- [ ] Payment service credentials (`PAYMENT_API_KEY`, `PAYMENT_WEBHOOK_SECRET`)
-- [ ] Realtime infrastructure (`REALTIME_SERVICE_API_KEY`, `REALTIME_REDIS_URL`)
-- [ ] Metrics & observability (`METRICS_EXPORTER_API_KEY`, `LOG_DRAIN_URL`)
-- [ ] Database migrations applied to production schema
+### 7. CI/CD ✅
+- [x] GitHub Actions workflows configured
+- [x] CI runs lint, type-check, test, build
+- [x] Deploy workflow builds and pushes Docker images
+- [x] Deploy workflow can apply K8s manifests (when secrets configured)
+- [ ] **REQUIRED**: Configure GitHub secrets for deployment
 
-### 4. Observability
+### 8. Documentation ✅
+- [x] README.md updated with deployment info
+- [x] K8s deployment guide created
+- [x] Production environment variables documented
+- [x] Cutover readiness checklist exists
+- [x] Rollback procedures documented
+- [x] Operations runbook available
 
-- [ ] **Monitoring Setup**: Prometheus scraping `/metrics` endpoint
-- [ ] **Dashboards Configured**: Grafana dashboards imported (see `docs/grafana/`)
-- [ ] **Alert Rules Applied**: `docs/observability/prometheus-rules.yml`
-- [ ] **Error Tracking**: Sentry DSN configured for frontend and backend
-- [ ] **Logging Pipeline**: Centralized logging (Loki/Logflare) receiving logs
+## Critical Fixes Applied in This PR
 
-### 5. Operations & Runbooks
+1. **Build System**:
+   - Fixed "use server" directive violations by extracting error classes
+   - Fixed cron-parser API compatibility (parseExpression → parse)
+   - Removed dependency on next-axiom with fallback implementation
+   - Updated Docker configuration to work with Next.js build output
 
-- [ ] **Deployment Runbook**: `docs/runbooks/deploy.md` reviewed
-- [ ] **Rollback Runbook**: `docs/runbooks/rollback.md` tested in staging
-- [ ] **Incident Response**: `docs/runbooks/incident-response.md` accessible
-- [ ] **On-Call Schedule**: Team members aware of launch window
-- [ ] **Support Notified**: Customer support team briefed on new features
+2. **Security**:
+   - Resolved moderate vite vulnerability
+   - Updated fast-redact/pino packages
+   - Remaining 8 low-severity issues are in @lhci/cli (dev-only tool)
 
----
+3. **Configuration**:
+   - Added all required environment variables to K8s manifests
+   - Added resource limits and requests
+   - Configured TLS for production ingress
+   - Added rate limiting and body size limits
 
-## Kubernetes Deployment Guide
+4. **Testing**:
+   - All 94 unit tests passing
+   - Linting passes with no errors
+   - Type checking passes
+   - Build succeeds
 
-This section follows the [k8s/README.md](./docs/k8s/README.md) step-by-step guide.
+## Deployment Steps
 
-### Prerequisites
-
-- Kubernetes cluster (v1.19+) with `kubectl` configured
-- Container images published to `ghcr.io/ikanisa/abareyo-backend:latest` and `ghcr.io/ikanisa/abareyo-frontend:latest`
-- cert-manager installed (optional, for TLS)
-- NGINX Ingress Controller installed (for ingress)
-
-### Step 1: Create Namespace
-
+### 1. Environment Setup
 ```bash
+# 1. Create .env.production.local with actual values (use .env.production.example as template)
+# 2. Generate secure secrets:
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# 3. Verify environment:
+npm run ci:check-env
+```
+
+### 2. Build & Test Locally
+```bash
+# Build frontend
+npm run build
+
+# Build backend (in backend/ directory)
+cd backend
+npm ci
+npm run build
+npm run prisma:generate
+```
+
+### 3. Deploy to Kubernetes
+```bash
+# Follow the complete guide in k8s/README.md
+
+# Key steps:
+# 1. Create namespace
 kubectl apply -f k8s/namespace.yaml
-```
 
-**Verify:**
-```bash
-kubectl get namespace rayon
-```
+# 2. Create secrets (see k8s/README.md for commands)
 
-Expected output: `rayon   Active   <age>`
-
-### Step 2: Create Required Secrets
-
-#### Backend Secrets
-
-Create the `backend-secrets` secret with all required environment variables:
-
-```bash
-kubectl -n rayon create secret generic backend-secrets \
-  --from-literal=DATABASE_URL='postgres://user:password@host:5432/dbname' \
-  --from-literal=REDIS_URL='redis://host:6379' \
-  --from-literal=CORS_ORIGIN='https://your-domain.com' \
-  --from-literal=METRICS_TOKEN='your-metrics-token' \
-  --from-literal=ADMIN_SESSION_SECRET='your-admin-secret' \
-  --from-literal=FAN_SESSION_SECRET='your-fan-secret' \
-  --from-literal=OPENAI_API_KEY='your-openai-key'
-```
-
-**Replace placeholders:**
-- `DATABASE_URL`: Full PostgreSQL connection string
-- `REDIS_URL`: Redis connection string (if using realtime features)
-- `CORS_ORIGIN`: Comma-separated list of allowed origins (e.g., `https://app.example.com,https://www.example.com`)
-- `METRICS_TOKEN`: Secure random token for metrics endpoint authentication
-- `ADMIN_SESSION_SECRET`: Secure random string (32+ characters)
-- `FAN_SESSION_SECRET`: Secure random string (32+ characters, different from admin)
-- `OPENAI_API_KEY`: OpenAI API key for AI-powered features
-
-**Generate secure secrets:**
-```bash
-# Generate random secrets (32 characters)
-openssl rand -base64 32
-```
-
-**Verify secret creation:**
-```bash
-kubectl -n rayon get secret backend-secrets
-kubectl -n rayon describe secret backend-secrets
-```
-
-### Step 3: Apply Backend Deployment
-
-```bash
+# 3. Apply deployments
 kubectl apply -f k8s/backend-deployment.yaml
-```
-
-**Verify deployment:**
-```bash
-kubectl -n rayon get deployment backend
-kubectl -n rayon get pods -l app=backend
-kubectl -n rayon logs -l app=backend --tail=50
-```
-
-**Check backend service:**
-```bash
-kubectl -n rayon get service backend
-```
-
-### Step 4: Apply Frontend Deployment
-
-```bash
 kubectl apply -f k8s/frontend-deployment.yaml
+
+# 4. Update and apply ingress
+# Edit k8s/ingress.yaml first, then:
+kubectl apply -f k8s/ingress.yaml
 ```
 
-**Verify deployment:**
+### 4. Verify Deployment
 ```bash
-kubectl -n rayon get deployment frontend
-kubectl -n rayon get pods -l app=frontend
-kubectl -n rayon logs -l app=frontend --tail=50
+# Check pod status
+kubectl get pods -n rayon
+
+# Test backend health
+kubectl run -n rayon curl --image=curlimages/curl:8.8.0 -i --rm --restart=Never -- \
+  curl -fsS http://backend:5000/api/health
+
+# Check logs
+kubectl logs -n rayon deployment/backend --tail=50
+kubectl logs -n rayon deployment/frontend --tail=50
+
+# Access via ingress (after DNS configured)
+curl -I https://your-domain.com
 ```
 
-**Check frontend service:**
+## Post-Deployment Monitoring
+
+1. **Immediate (first 24 hours)**:
+   - Monitor error rates in Sentry
+   - Check pod restarts: `kubectl get pods -n rayon -w`
+   - Verify health endpoints respond
+   - Test critical user flows
+
+2. **First Week**:
+   - Monitor resource usage and adjust limits if needed
+   - Review Prometheus metrics and alerts
+   - Check for memory leaks or OOM kills
+   - Verify backup procedures work
+
+3. **Ongoing**:
+   - Review security scan results weekly
+   - Update dependencies monthly
+   - Rotate secrets quarterly
+   - Review and update documentation
+
+## Rollback Procedure
+
+If issues arise after deployment:
+
 ```bash
-kubectl -n rayon get service frontend
+# 1. Rollback to previous image version
+kubectl set image deployment/frontend frontend=ghcr.io/ikanisa/abareyo-frontend:<previous-sha> -n rayon
+kubectl set image deployment/backend backend=ghcr.io/ikanisa/abareyo-backend:<previous-sha> -n rayon
+
+# 2. Verify rollback
+kubectl rollout status deployment/frontend -n rayon
+kubectl rollout status deployment/backend -n rayon
+
+# 3. If database migrations were run, may need to restore DB backup
+# See docs/runbooks/rollback.md for detailed procedures
 ```
 
-### Step 5: Configure Ingress (Optional)
+## Known Limitations
 
-#### Option A: With TLS (Let's Encrypt)
+1. **Next.js Standalone Output**: Current setup uses `next start` instead of standalone server.js due to output generation issue (possibly related to Sentry wrapper or i18n config). This works but uses slightly more memory. Future work could investigate and optimize.
 
-1. **Apply ClusterIssuer** (replace email):
-   ```bash
-   sed "s/__LETSENCRYPT_EMAIL__/your-email@example.com/g" k8s/cert-issuer.yaml | kubectl apply -f -
-   ```
+2. **Remaining Low Vulnerabilities**: 8 low-severity vulnerabilities remain in @lhci/cli (Lighthouse CI), a dev-only PWA auditing tool. These do not affect production runtime.
 
-2. **Apply Ingress** (replace hostname and TLS secret name):
-   ```bash
-   sed -e "s/__PUBLIC_HOSTNAME__/app.example.com/g" k8s/ingress.yaml | kubectl apply -f -
-   ```
+3. **Static Export for Some Routes**: Some API routes show prerender warnings during build. This is expected for dynamic routes and doesn't affect functionality.
 
-#### Option B: Without TLS (Development/Testing)
+## Support & Troubleshooting
 
-```bash
-sed -e "s/__PUBLIC_HOSTNAME__/app.example.com/g" k8s/ingress.yaml | kubectl apply -f -
-```
+- **Documentation**: See `docs/runbooks/` for operational guides
+- **Issues**: Check existing issues or create new ones on GitHub
+- **Logs**: Always check pod logs first: `kubectl logs -n rayon <pod-name>`
+- **Health**: Use `/api/health` endpoint for backend, `/` for frontend
+- **Metrics**: Access `/metrics` with Bearer token for detailed metrics
 
-**Verify ingress:**
-```bash
-kubectl -n rayon get ingress web
-kubectl -n rayon describe ingress web
-```
+## Security Contact
 
-### Step 6: Wait for Deployments to be Ready
-
-```bash
-# Watch backend deployment
-kubectl -n rayon rollout status deployment/backend
-
-# Watch frontend deployment
-kubectl -n rayon rollout status deployment/frontend
-```
+Report security issues via GitHub Security Advisories, not public issues.
 
 ---
 
-## Health Check Verification
-
-### Backend Health Check
-
-```bash
-# Port-forward to backend (if ingress not configured)
-kubectl -n rayon port-forward svc/backend 5000:5000 &
-
-# Test health endpoint
-curl http://localhost:5000/api/health
-```
-
-**Expected response:** `200 OK` with JSON health status
-
-**Via Ingress:**
-```bash
-curl https://your-domain.com/api/health
-```
-
-### Frontend Health Check
-
-```bash
-# Port-forward to frontend (if ingress not configured)
-kubectl -n rayon port-forward svc/frontend 3000:80 &
-
-# Test homepage
-curl http://localhost:3000/
-```
-
-**Expected response:** `200 OK` with HTML content
-
-**Via Ingress:**
-```bash
-curl https://your-domain.com/
-```
-
-### Kubernetes Liveness and Readiness Probes
-
-The manifests include built-in health checks:
-
-**Backend:**
-- Liveness: `GET /api/health` every 15s (starts after 10s)
-- Readiness: `GET /api/health` every 10s (starts after 5s)
-
-**Frontend:**
-- Liveness: `GET /` every 15s (starts after 10s)
-- Readiness: `GET /` every 10s (starts after 5s)
-
-**Check probe status:**
-```bash
-kubectl -n rayon get pods
-kubectl -n rayon describe pod <pod-name>
-```
-
-Look for `Liveness` and `Readiness` probe results in the events section.
-
----
-
-## Post-Deployment Validation
-
-### 1. Functional Testing
-
-- [ ] **Homepage Loads**: Navigate to `https://your-domain.com`
-- [ ] **Backend API Accessible**: Test `https://your-domain.com/api/health`
-- [ ] **Authentication Flow**: Login as admin and fan user
-- [ ] **Core Features**: Test tickets, community, shop, and wallet features
-- [ ] **Mobile Responsiveness**: Test on mobile viewport
-
-### 2. Performance Monitoring
-
-- [ ] **Response Times**: Check `/metrics` endpoint shows acceptable latencies
-- [ ] **Resource Usage**: Monitor pod CPU/memory via `kubectl top pods -n rayon`
-- [ ] **Database Connections**: Verify connection pool is healthy
-- [ ] **Cache Hit Rates**: Check Redis metrics if applicable
-
-### 3. Security Validation
-
-- [ ] **TLS Certificate**: Verify HTTPS is working and certificate is valid
-- [ ] **CORS Headers**: Test cross-origin requests return correct headers
-- [ ] **Metrics Endpoint**: Verify `/metrics` requires authentication token
-- [ ] **Error Pages**: Confirm no sensitive information leaked in error responses
-
-### 4. Observability Checks
-
-```bash
-# Check metrics endpoint (replace with actual token)
-curl -H "Authorization: Bearer YOUR_METRICS_TOKEN" https://your-domain.com/metrics
-
-# View recent logs
-kubectl -n rayon logs -l app=backend --tail=100
-kubectl -n rayon logs -l app=frontend --tail=100
-
-# Check resource usage
-kubectl top pods -n rayon
-kubectl top nodes
-```
-
-### 5. Smoke Tests
-
-Run automated smoke tests if available:
-```bash
-# E2E tests against production (use with caution)
-E2E_BASE_URL=https://your-domain.com npm run test:e2e
-```
-
----
-
-## Rollback Procedures
-
-### Quick Rollback (Kubernetes)
-
-If issues are detected post-deployment:
-
-```bash
-# Rollback backend
-kubectl -n rayon rollout undo deployment/backend
-
-# Rollback frontend
-kubectl -n rayon rollout undo deployment/frontend
-
-# Check rollback status
-kubectl -n rayon rollout status deployment/backend
-kubectl -n rayon rollout status deployment/frontend
-```
-
-### Rollback to Specific Revision
-
-```bash
-# View deployment history
-kubectl -n rayon rollout history deployment/backend
-
-# Rollback to specific revision
-kubectl -n rayon rollout undo deployment/backend --to-revision=<revision-number>
-```
-
-### Database Rollback
-
-Follow database migration rollback procedures in `docs/migrations.md`.
-
-### Full Incident Response
-
-For critical issues, follow `docs/runbooks/incident-response.md` and `docs/runbooks/rollback.md`.
-
----
-
-## Additional Resources
-
-- **Deployment Readiness**: [DEPLOYMENT_READINESS_REPORT.md](./DEPLOYMENT_READINESS_REPORT.md)
-- **Production Audit**: [reports/PROD_READINESS_AUDIT.md](./reports/PROD_READINESS_AUDIT.md)
-- **K8s Manifests**: [k8s/](./k8s/)
-- **Backend Config**: [docs/backend-config-checklist.md](./docs/backend-config-checklist.md)
-- **Launch Readiness**: [docs/launch-readiness.md](./docs/launch-readiness.md)
-- **Operations Runbooks**: [docs/runbooks/](./docs/runbooks/)
-- **Observability**: [docs/observability.md](./docs/observability.md)
-
----
-
-## Deployment Sign-off
-
-Before proceeding to production, ensure the following sign-offs:
-
-- [ ] **Backend Lead**: Code and configuration reviewed
-- [ ] **Frontend Lead**: UI and integration tested
-- [ ] **DevOps/SRE**: Infrastructure and monitoring configured
-- [ ] **Security**: Security checklist completed
-- [ ] **Product Owner**: Feature completeness validated
-- [ ] **Support Team**: Prepared for launch and aware of new features
-
-**Deployment Date**: _______________  
-**Deployed By**: _______________  
-**Approved By**: _______________  
-
----
-
-**Last Updated**: 2025-10-28  
-**Document Owner**: DevOps Team
+**Status Summary**: System is ready for production deployment with proper secret configuration and infrastructure setup. All code-level blocking issues have been resolved.

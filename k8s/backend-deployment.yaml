@@ -22,6 +22,10 @@ spec:
           env:
             - name: NODE_ENV
               value: production
+            - name: APP_HOST
+              value: "0.0.0.0"
+            - name: APP_PORT
+              value: "5000"
             - name: CORS_ORIGIN
               valueFrom:
                 secretKeyRef:
@@ -32,6 +36,12 @@ spec:
                 secretKeyRef:
                   name: backend-secrets
                   key: DATABASE_URL
+            - name: DATABASE_SHADOW_URL
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: DATABASE_SHADOW_URL
+                  optional: true
             - name: REDIS_URL
               valueFrom:
                 secretKeyRef:
@@ -52,13 +62,26 @@ spec:
                 secretKeyRef:
                   name: backend-secrets
                   key: FAN_SESSION_SECRET
+            - name: SUPABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: SUPABASE_URL
+            - name: SUPABASE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: SUPABASE_SECRET_KEY
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: backend-secrets
                   key: OPENAI_API_KEY
+                  optional: true
             - name: OPENAI_BASE_URL
               value: https://api.openai.com/v1
+            - name: APP_ENABLE_CSP
+              value: "1"
           livenessProbe:
             httpGet:
               path: /api/health
@@ -71,6 +94,13 @@ spec:
               port: 5000
             initialDelaySeconds: 5
             periodSeconds: 10
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
 ---
 apiVersion: v1
 kind: Service
