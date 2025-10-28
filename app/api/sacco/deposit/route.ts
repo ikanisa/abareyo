@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { getSupabase } from '@/app/_lib/supabase';
 import { errorResponse, successResponse } from '@/app/_lib/responses';
 import { UserMiniContract } from '@rayon/contracts';
+import { resolveUserId as resolveUserIdHelper } from '@/app/api/_lib/user-helpers';
 
 // ---------- Payload types & normalizer ----------
 
@@ -39,29 +40,8 @@ function normalizePayload(p: DepositPayload | null) {
 // ---------- Helpers ----------
 
 async function resolveUserId(supabase: ReturnType<typeof getSupabase>, payload: ReturnType<typeof normalizePayload>) {
-  if (!supabase || !payload) return null;
-  if (payload.userId) return payload.userId;
-
-  const phone = payload.user?.phone?.replace(/\s+/g, "");
-  if (!phone) return null;
-
-  // Try existing by phone
-  const { data: existing } = await supabase.from("users").select("id").eq("phone", phone).maybeSingle();
-  if (existing?.id) return existing.id;
-
-  // Create minimal user
-  const { data: created, error } = await supabase
-    .from("users")
-    .insert({
-      phone,
-      name: payload.user?.name ?? null,
-      momo_number: payload.user?.momo_number ?? phone,
-    })
-    .select("id")
-    .single();
-
-  if (error) throw error;
-  return created.id;
+  if (!payload) return null;
+  return resolveUserIdHelper(supabase, payload.userId, payload.user);
 }
 
 // ---------- Routes ----------
