@@ -1,18 +1,32 @@
-import { withAxiom, type AxiomRequest } from "next-axiom";
+import { NextRequest, NextResponse } from "next/server";
 
 import { processTelemetryRequest } from "@/lib/telemetry/app-state-handler";
 
-const handler = withAxiom((req: AxiomRequest) => {
-  const telemetryLogger = {
-    with: (context: Record<string, unknown>) => ({
-      info: (message: string) => {
-        req.log.info({ ...context, message });
-      },
-    }),
-  };
-  return processTelemetryRequest(req, { logger: telemetryLogger, ip: req.ip, headers: req.headers });
+// Simple fallback logger when next-axiom is not available
+const createFallbackLogger = (req: NextRequest) => ({
+  with: (context: Record<string, unknown>) => ({
+    info: (message: string) => {
+      // Log to console in development, no-op in production
+      if (process.env.NODE_ENV === 'development') {
+        console.info('[Telemetry]', { ...context, message });
+      }
+    },
+  }),
 });
 
-export const POST = handler;
-export const OPTIONS = handler;
+export async function POST(req: NextRequest) {
+  try {
+    const telemetryLogger = createFallbackLogger(req);
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    return processTelemetryRequest(req, { logger: telemetryLogger, ip, headers: req.headers });
+  } catch (error) {
+    console.error('[Telemetry] Error processing request:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function OPTIONS(req: NextRequest) {
+  return NextResponse.json({ status: 'ok' }, { status: 200 });
+}
+
 export const dynamic = "force-dynamic";

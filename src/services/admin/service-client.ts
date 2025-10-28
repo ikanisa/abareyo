@@ -3,13 +3,10 @@ import { cache } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { createServiceSupabaseClient } from '@/integrations/supabase/server';
+import { AdminServiceClientUnavailableError } from './service-client-errors';
 
-export class AdminServiceClientUnavailableError extends Error {
-  constructor(message = 'Supabase service role client is not configured') {
-    super(message);
-    this.name = 'AdminServiceClientUnavailableError';
-  }
-}
+// Re-export error class for backward compatibility
+export { AdminServiceClientUnavailableError };
 
 const createClient = (): SupabaseClient => {
   const client = createServiceSupabaseClient();

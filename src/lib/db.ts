@@ -4,6 +4,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 import { getSupabasePublishableKey, getSupabaseSecretKey, getSupabaseUrl } from '@/integrations/supabase/env';
+import { SupabaseClientAccessError, SupabaseClientUnavailableError } from './db-errors';
 
 const ensureServerEnvironment = () => {
   if (typeof window !== 'undefined') {
@@ -11,19 +12,8 @@ const ensureServerEnvironment = () => {
   }
 };
 
-export class SupabaseClientAccessError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'SupabaseClientAccessError';
-  }
-}
-
-export class SupabaseClientUnavailableError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'SupabaseClientUnavailableError';
-  }
-}
+// Re-export error classes for backward compatibility
+export { SupabaseClientAccessError, SupabaseClientUnavailableError };
 
 let serviceRoleClient: SupabaseClient<any> | null = null;
 let serverAnonClient: SupabaseClient<any> | null = null;

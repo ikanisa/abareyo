@@ -71,7 +71,8 @@
     "tests/**/*.ts",
     "tests/**/*.tsx",
     "**/*.cjs",
-    "**/*.mjs"
+    "**/*.mjs",
+    ".next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
