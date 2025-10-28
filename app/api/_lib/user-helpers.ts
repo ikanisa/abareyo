@@ -5,8 +5,8 @@
  * creating minimal user records, and normalizing user data.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { UserMiniContract } from '@rayon/contracts';
+import { getSupabase } from './supabase';
 
 /**
  * Resolve a user ID from either a provided ID or user contact information.
@@ -19,7 +19,7 @@ import type { UserMiniContract } from '@rayon/contracts';
  * @throws Error if user creation fails
  */
 export async function resolveUserId(
-  supabase: SupabaseClient | null,
+  supabase: ReturnType<typeof getSupabase>,
   userId: string | undefined,
   user: UserMiniContract | undefined
 ): Promise<string | null> {
@@ -64,7 +64,7 @@ export async function resolveUserId(
  * @throws Error if product creation fails
  */
 export async function resolveProductIdByName(
-  supabase: SupabaseClient | null,
+  supabase: ReturnType<typeof getSupabase>,
   name: string,
   fallbackPrice: number
 ): Promise<string | null> {
