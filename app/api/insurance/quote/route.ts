@@ -1,13 +1,10 @@
 import { NextRequest } from "next/server";
 import { getSupabase } from '@/app/_lib/supabase';
 import { errorResponse, successResponse } from '@/app/_lib/responses';
+import { UserMiniContract } from '@rayon/contracts';
 
 /** Payloads we accept (both camelCase & snake_case supported) */
-type QuoteUser = {
-  name?: string;
-  phone: string;
-  momo_number?: string;
-};
+type QuoteUser = UserMiniContract;
 
 type QuotePayloadCamel = {
   userId?: string;

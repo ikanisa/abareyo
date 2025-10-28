@@ -1,13 +1,10 @@
 import { NextRequest } from "next/server";
 import { getSupabase } from '@/app/_lib/supabase';
 import { errorResponse, successResponse } from '@/app/_lib/responses';
+import { UserMiniContract } from '@rayon/contracts';
 
 // ---------- Types ----------
-type UserMini = {
-  name?: string;
-  phone: string;
-  momo_number?: string;
-};
+type UserMini = UserMiniContract;
 
 type ItemCamel =
   | { productId: string; qty: number } // price from DB

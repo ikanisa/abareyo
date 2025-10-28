@@ -1,14 +1,11 @@
 import { NextRequest } from "next/server";
 import { getSupabase } from '@/app/_lib/supabase';
 import { errorResponse, successResponse } from '@/app/_lib/responses';
+import { UserMiniContract } from '@rayon/contracts';
 
 // ---------- Payload types & normalizer ----------
 
-type SaccoUser = {
-  name?: string;
-  phone: string;
-  momo_number?: string;
-};
+type SaccoUser = UserMiniContract;
 
 type DepositPayloadCamel = {
   userId?: string;
