@@ -22,7 +22,7 @@ spec:
           env:
             # Public client-side variables
             - name: NEXT_PUBLIC_SITE_URL
-              value: https://your-domain.com
+              value: https://__INGRESS_HOST__
             - name: NEXT_PUBLIC_BACKEND_URL
               value: /api
             - name: NEXT_PUBLIC_ENVIRONMENT_LABEL
