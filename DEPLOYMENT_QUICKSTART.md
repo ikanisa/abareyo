@@ -117,11 +117,12 @@ echo "METRICS_TOKEN=${METRICS_TOKEN}"
 
 ### 3.2 Create Kubernetes Secrets
 
-Create a file `k8s-secrets.sh` (add to .gitignore):
+Create a file `k8s-secrets.sh` (**IMPORTANT**: Add to .gitignore immediately):
 
 ```bash
 #!/bin/bash
 # k8s-secrets.sh - DO NOT COMMIT THIS FILE
+# Add this file to .gitignore: echo "k8s-secrets.sh" >> .gitignore
 
 # Apply namespace
 kubectl apply -f k8s/namespace.yaml
@@ -165,6 +166,9 @@ echo "Secrets created successfully!"
 Update the values in the script, then run:
 
 ```bash
+# Add to .gitignore first!
+echo "k8s-secrets.sh" >> .gitignore
+
 chmod +x k8s-secrets.sh
 ./k8s-secrets.sh
 ```
@@ -203,8 +207,8 @@ If using cert-manager:
 # Install cert-manager (if not installed)
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.15.1/cert-manager.yaml
 
-# Wait for cert-manager to be ready
-kubectl -n cert-manager wait --for=condition=ready pod --all --timeout=180s
+# Wait for cert-manager to be ready (may take up to 5 minutes)
+kubectl -n cert-manager wait --for=condition=ready pod --all --timeout=300s
 
 # Update cert-issuer.yaml with your email
 sed -i 's/__LETSENCRYPT_EMAIL__/youremail@example.com/g' k8s/cert-issuer.yaml
@@ -318,7 +322,7 @@ kubectl -n rayon get pods
 ### 7.2 Test Backend Health
 
 ```bash
-# In-cluster test
+# In-cluster test (using stable curl 8.8.0 - known working version)
 kubectl -n rayon run curl --image=curlimages/curl:8.8.0 -i --rm --restart=Never -- \
   curl -fsS http://backend:5000/api/health
 
