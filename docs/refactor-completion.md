@@ -25,8 +25,7 @@ This document catalogs the concrete changes that satisfy the four refactor track
 
 ## 4. Deployment readiness follow-ups
 - **Backend endpoint verification script & preflight command:** `scripts/check-backend-endpoint.mjs`, `scripts/preflight.mjs`, `package.json`
-- **Expanded (legacy) Vercel secret generator covering Supabase, onboarding, telemetry, sockets, Sentry:** `scripts/vercel-generate-secrets.sh`
-- **Environment template & readiness report updates:** `.env.production.example`, `DEPLOYMENT_READINESS_REPORT.md`, `reports/VERCEL_CHECKLIST.md`
+- **Environment template & readiness report updates:** `.env.production.example`, `DEPLOYMENT_READINESS_REPORT.md`
 - **CI stability for Playwright + npm alignment:** `.github/workflows/ci.yml`, `playwright.config.ts` (timeouts/retries), added env guards and artifact uploads; npm version pinned in CI for consistency.
 
 ## 5. Tests & Accessibility

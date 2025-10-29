@@ -5,12 +5,12 @@ Use this runbook when a region-wide outage, data corruption event, or extended h
 ## 1. Objectives & Scope
 - **Recovery Time Objective (RTO)**: 2 hours for fan-facing web and API surfaces.
 - **Recovery Point Objective (RPO)**: 15 minutes for transactional data (wallet, ticketing) and 1 hour for content caches.
-- **Covered systems**: Next.js frontend (Vercel), Supabase (Postgres + storage + edge functions), and the NestJS backend (Kubernetes deployment).
+- **Covered systems**: Next.js frontend (self-hosted), Supabase (Postgres + storage + edge functions), and the NestJS backend (Kubernetes deployment).
 
 ## 2. Prerequisites
 - Backup automation verified via Supabase PITR snapshots and nightly S3 dumps of critical tables (`wallet_transactions`, `orders`, `missions`).
 - Terraform/Kubernetes manifests stored in `k8s/` with parameterized secrets in the vault.
-- Access to DNS registrar and Vercel project admin rights for failover updates.
+- Access to DNS registrar and hosting platform admin rights for failover updates.
 - Runbook copies stored offline (PDF export) in the on-call vault.
 
 ## 3. Disaster Declaration & Leadership
@@ -25,12 +25,12 @@ Use this runbook when a region-wide outage, data corruption event, or extended h
 ## 4. Recovery Phases
 ### Phase A – Stabilize
 - Freeze deployments and feature flag changes.
-- Snapshot current state (database backups, Vercel deployment IDs, Kubernetes manifests) before applying recovery steps.
+- Snapshot current state (database backups, frontend deployment IDs, Kubernetes manifests) before applying recovery steps.
 - Disable external integrations that may amplify issues (webhooks, payment retries) by toggling `MAINTENANCE_MODE` feature flag if necessary.
 
 ### Phase B – Restore Service
 1. **Failover frontend**
-   - Promote the warm standby Vercel project (`rayon-failover`) via the Vercel dashboard or `vercel promote` CLI.
+   - Promote the warm standby deployment to the primary environment.
    - Update DNS `CNAME` for `app.rayonsports.com` to point to failover deployment if traffic steering is manual.
 2. **Restore backend APIs**
    - Apply the checked-in Kubernetes manifests to the standby cluster: `kubectl apply -f k8s/`.
@@ -83,7 +83,7 @@ Rayon Sports Digital Ops
 - **Schedule**: Conduct on the first Tuesday of each quarter at 10:00 EAT.
 - **Preparation (T-7 days)**: Announce drill scope, confirm backups succeeded, and ensure failover environment is synced.
 - **Execution**:
-  1. Simulate region outage by draining traffic from primary Vercel project for 30 minutes.
+  1. Simulate region outage by draining traffic from primary deployment for 30 minutes.
   2. Execute Phase B steps against the staging environment to avoid customer disruption.
   3. Validate telemetry, smoke tests, and rollback readiness.
 - **Review (T+1 day)**: Document lessons learned in `reports/operations-log.md` and update runbooks.
