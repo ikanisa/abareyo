@@ -66,32 +66,32 @@ SELECT
   END;
 
 \echo 'Referential integrity: wallets without users'
-SELECT w.id
-FROM public.wallet w
-LEFT JOIN public.users u ON u.id = w.user_id
-WHERE w.user_id IS NOT NULL AND u.id IS NULL
-LIMIT 20;
+SELECT CASE
+  WHEN to_regclass('public.wallet') IS NULL OR to_regclass('public.users') IS NULL THEN $$SELECT 'Skipped: missing wallet or users table'::text AS notice;$$
+  ELSE $$SELECT w.id FROM public.wallet w LEFT JOIN public.users u ON u.id = w.user_id WHERE w.user_id IS NOT NULL AND u.id IS NULL LIMIT 20;$$
+END AS sql_to_run
+\gexec
 
 \echo 'Referential integrity: transactions referencing missing users'
-SELECT t.id
-FROM public.transactions t
-LEFT JOIN public.users u ON u.id = t.user_id
-WHERE t.user_id IS NOT NULL AND u.id IS NULL
-LIMIT 20;
+SELECT CASE
+  WHEN to_regclass('public.transactions') IS NULL OR to_regclass('public.users') IS NULL THEN $$SELECT 'Skipped: missing transactions or users table'::text AS notice;$$
+  ELSE $$SELECT t.id FROM public.transactions t LEFT JOIN public.users u ON u.id = t.user_id WHERE t.user_id IS NOT NULL AND u.id IS NULL LIMIT 20;$$
+END AS sql_to_run
+\gexec
 
 \echo 'Referential integrity: ticket orders without users'
-SELECT o.id
-FROM public.ticket_orders o
-LEFT JOIN public.users u ON u.id = o.user_id
-WHERE o.user_id IS NOT NULL AND u.id IS NULL
-LIMIT 20;
+SELECT CASE
+  WHEN to_regclass('public.ticket_orders') IS NULL OR to_regclass('public.users') IS NULL THEN $$SELECT 'Skipped: missing ticket_orders or users table'::text AS notice;$$
+  ELSE $$SELECT o.id FROM public.ticket_orders o LEFT JOIN public.users u ON u.id = o.user_id WHERE o.user_id IS NOT NULL AND u.id IS NULL LIMIT 20;$$
+END AS sql_to_run
+\gexec
 
 \echo 'Referential integrity: payments missing parent ticket order'
-SELECT p.id
-FROM public.payments p
-LEFT JOIN public.ticket_orders o ON o.id = p.order_id
-WHERE p.order_id IS NOT NULL AND o.id IS NULL
-LIMIT 20;
+SELECT CASE
+  WHEN to_regclass('public.payments') IS NULL OR to_regclass('public.ticket_orders') IS NULL THEN $$SELECT 'Skipped: missing payments or ticket_orders table'::text AS notice;$$
+  ELSE $$SELECT p.id FROM public.payments p LEFT JOIN public.ticket_orders o ON o.id = p.order_id WHERE p.order_id IS NOT NULL AND o.id IS NULL LIMIT 20;$$
+END AS sql_to_run
+\gexec
 
 \echo 'Recent writes within RPO window'
 SELECT GREATEST(
