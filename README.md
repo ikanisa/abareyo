@@ -128,6 +128,37 @@ Upcoming production hardening includes a reverse proxy in front of the Next.js r
 
 ## Next Steps (Production Readiness)
 
+### Deployment Checklist & Validation
+
+**NEW**: We have created a comprehensive deployment checklist and automated validation tool:
+
+- **[DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** – Complete pre-deployment, deployment, and post-deployment guide with phase-by-phase checklists covering:
+  - Code quality validation (lint, typecheck, tests, security scans)
+  - Environment configuration (frontend & backend secrets)
+  - Infrastructure provisioning (K8s, databases, services)
+  - Deployment execution (automated via GitHub Actions or manual)
+  - Post-deployment monitoring and validation
+  - Rollback procedures and incident response
+
+- **Automated Validation**: Run `npm run validate:deployment` to check:
+  - Required files and configurations present
+  - Node.js version compatibility (v20+)
+  - Dependencies installed and valid
+  - Environment variables documented
+  - Code quality (linting and type checking pass)
+  - Security vulnerabilities (npm audit)
+  
+  Add `--check-k8s` to validate Kubernetes cluster access and `--check-services` to test external service connectivity.
+
+- **Related Documentation**:
+  - [PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md) – Detailed production checklist with resolved code fixes
+  - [DEPLOYMENT_AUDIT_SUMMARY.md](./DEPLOYMENT_AUDIT_SUMMARY.md) – Security assessment and audit results
+  - [k8s/README.md](./k8s/README.md) – Complete Kubernetes deployment guide
+  - [docs/runbooks/deploy.md](./docs/runbooks/deploy.md) – Deployment procedures
+  - [docs/runbooks/on-call-enablement-checklist.md](./docs/runbooks/on-call-enablement-checklist.md) – On-call setup
+
+### Infrastructure Setup
+
 - Migrations & Seed
   - Review `docs/migrations.md` for Supabase workflow tips.
   - Promote SQL via `supabase db push` in CI/CD or run `supabase migration up` + `supabase db seed` in production environments.
