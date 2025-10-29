@@ -57,7 +57,7 @@ scripts/          # Build/utility scripts
 ### Build Errors
 **"Missing required environment variables: NEXT_PUBLIC_SITE_URL"** → Add to `.env.local`: `NEXT_PUBLIC_SITE_URL=http://localhost:3000`
 
-**Prerender errors for /api/members*** → Expected; API routes using Supabase `.from()` need runtime context. Build succeeds.
+**Prerender errors for /api/members\*** → Expected; API routes using Supabase `.from()` need runtime context. Build succeeds.
 
 **"Using edge runtime disables static generation"** → Expected for admin routes. Intentional.
 
@@ -70,12 +70,19 @@ scripts/          # Build/utility scripts
 **Expected stderr logs** (intentional, tests pass): "Unable to parse stored PWA preference" (pwa-opt-in.test.ts), "Analytics handler failed" (track.test.ts).
 
 ## Coding Standards
-**TypeScript only** (.ts/.tsx). Use path aliases (`@/lib/...`, `@rayon/contracts`). Client components need `"use client"` directive. Server components are default; no browser APIs. Components: PascalCase.tsx, utilities: camelCase.ts. Named exports preferred; default exports for React components only. **Tailwind CSS** for styling. **ESLint** (eslint.config.js): Next.js + TypeScript + jsx-a11y; accessibility rules `warn` (strict in admin/UI).
+- **TypeScript only** (.ts/.tsx). Use path aliases (`@/lib/...`, `@rayon/contracts`).
+- **Client components:** Require `"use client"` directive. **Server components:** Default; no browser APIs.
+- **Naming:** Components = PascalCase.tsx, utilities = camelCase.ts. Named exports preferred; default exports for React components only.
+- **Styling:** Tailwind CSS utility classes.
+- **Linting:** ESLint (eslint.config.js) = Next.js + TypeScript + jsx-a11y; accessibility rules `warn` (strict in admin/UI).
 
 ## Backend & Database
 **Backend (legacy NestJS in `backend/`):** `npm ci` → `npm run prisma:generate` → `npm run prisma:dev` (migrations) → `npm run seed`. Or use Makefile: `make backend-migrate`, `make backend-seed`.
 
-**Supabase (primary):** SQL in `supabase/migrations/`, Edge Functions in `supabase/functions/`. Local: `supabase start` → `supabase migration up` → `supabase db seed`. Edge Functions: `supabase functions serve sms-webhook --env-file .env`. Deploy: `supabase migration up --remote`, `supabase functions deploy sms-webhook`.
+**Supabase (primary):** SQL in `supabase/migrations/`, Edge Functions in `supabase/functions/`.  
+- **Local:** `supabase start` → `supabase migration up` → `supabase db seed`
+- **Edge Functions (local):** `supabase functions serve sms-webhook --env-file .env`
+- **Deploy:** `supabase migration up --remote`, `supabase functions deploy sms-webhook`
 
 ## Mobile (Capacitor 5)
 Native iOS/Android shells. `npm run cap:sync` (build + sync), `npm run cap:android` (Android Studio), `npm run cap:ios` (Xcode). Requires platform toolchains.
