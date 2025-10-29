@@ -1,13 +1,11 @@
 import { NextRequest } from "next/server";
 import { getSupabase } from '@/app/_lib/supabase';
 import { errorResponse, successResponse } from '@/app/_lib/responses';
+import { UserMiniContract } from '@rayon/contracts';
+import { resolveUserId, resolveProductIdByName } from '@/app/api/_lib/user-helpers';
 
 // ---------- Types ----------
-type UserMini = {
-  name?: string;
-  phone: string;
-  momo_number?: string;
-};
+type UserMini = UserMiniContract;
 
 type ItemCamel =
   | { productId: string; qty: number } // price from DB
@@ -73,62 +71,6 @@ function normalizeCreatePayload(p: CreateOrderPayload | null) {
     items,
     momoRef,
   };
-}
-
-// ---------- Helpers ----------
-async function resolveUserId(supabase: ReturnType<typeof getSupabase>, userId: string | undefined, user: UserMini | undefined) {
-  if (!supabase) return null;
-  if (userId) return userId;
-
-  const phone = user?.phone?.replace(/\s+/g, "");
-  if (!phone) return null;
-
-  // Try existing
-  const { data: existing } = await supabase.from("users").select("id").eq("phone", phone).maybeSingle();
-  if (existing?.id) return existing.id;
-
-  // Create minimal user
-  const { data: created, error } = await supabase
-    .from("users")
-    .insert({
-      phone,
-      name: user?.name ?? null,
-      momo_number: user?.momo_number ?? phone,
-    })
-    .select("id")
-    .single();
-  if (error) throw error;
-  return created.id;
-}
-
-async function resolveProductIdByName(
-  supabase: ReturnType<typeof getSupabase>,
-  name: string,
-  fallbackPrice: number
-): Promise<string | null> {
-  const trimmed = name.trim();
-  if (!trimmed) return null;
-  if (!supabase) return null;
-
-  const { data: existing } = await supabase
-    .from("shop_products")
-    .select("id")
-    .ilike("name", trimmed)
-    .maybeSingle();
-  if (existing?.id) return existing.id;
-
-  const { data: created, error } = await supabase
-    .from("shop_products")
-    .insert({
-      name: trimmed,
-      category: "misc",
-      price: fallbackPrice,
-      stock: 0,
-    })
-    .select("id")
-    .single();
-  if (error) throw error;
-  return created?.id ?? null;
 }
 
 // ---------- GET ----------

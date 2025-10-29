@@ -1,7 +1,7 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
 
-import { errorResponse } from './responses';
+import { errorResponse } from '@/app/_lib/responses';
 import { getSupabase } from './supabase';
 
 type ServiceClient = SupabaseClient;

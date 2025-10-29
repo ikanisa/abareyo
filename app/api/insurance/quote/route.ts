@@ -1,13 +1,11 @@
 import { NextRequest } from "next/server";
 import { getSupabase } from '@/app/_lib/supabase';
 import { errorResponse, successResponse } from '@/app/_lib/responses';
+import { UserMiniContract } from '@rayon/contracts';
+import { resolveUserId as resolveUserIdHelper } from '@/app/api/_lib/user-helpers';
 
 /** Payloads we accept (both camelCase & snake_case supported) */
-type QuoteUser = {
-  name?: string;
-  phone: string;
-  momo_number?: string;
-};
+type QuoteUser = UserMiniContract;
 
 type QuotePayloadCamel = {
   userId?: string;
@@ -53,41 +51,13 @@ function normalizePayload(p: QuotePayload | null) {
     Partial<QuotePayloadCamel>;
 }
 
-/** Find or create a user by phone if userId is not provided */
+/** Find or create a user by phone if userId is not provided - wrapper for shared helper */
 async function resolveUserId(
   supabase: ReturnType<typeof getSupabase>,
   normalized: ReturnType<typeof normalizePayload>
 ): Promise<string | null> {
-  if (!supabase) return null;
   if (!normalized) return null;
-
-  if (normalized.userId) return normalized.userId;
-
-  const phone = normalized.user?.phone?.replace(/\s+/g, "");
-  if (!phone) return null;
-
-  // Try existing
-  const { data: existing, error: qErr } = await supabase
-    .from("users")
-    .select("id")
-    .eq("phone", phone)
-    .maybeSingle();
-
-  if (!qErr && existing?.id) return existing.id;
-
-  // Create minimal user record
-  const { data: created, error: cErr } = await supabase
-    .from("users")
-    .insert({
-      phone,
-      name: normalized.user?.name ?? null,
-      momo_number: normalized.user?.momo_number ?? phone,
-    })
-    .select("id")
-    .single();
-
-  if (cErr) throw cErr;
-  return created.id;
+  return resolveUserIdHelper(supabase, normalized.userId, normalized.user);
 }
 
 export async function POST(req: NextRequest) {

@@ -18,6 +18,16 @@ export enum TicketZoneContract {
   GENERAL = 'GENERAL',
 }
 
+/**
+ * Minimal user information for creating orders, quotes, etc.
+ * Used across multiple API endpoints (tickets, shop, insurance, SACCO)
+ */
+export type UserMiniContract = {
+  name?: string;
+  phone: string;
+  momo_number?: string;
+};
+
 export type MembershipPlanContract = {
   id: string;
   name: string;
