@@ -5,7 +5,7 @@ Use this checklist during on-call handoff meetings and quarterly readiness revie
 ## Access & Tooling
 - [ ] PagerDuty (or designated alerting tool) schedule updated with current rotation and contact overrides.
 - [ ] Slack channels `#incident-response` and `#on-call` joined and notifications configured.
-- [ ] Vercel project access verified for production and failover projects (`rayon-production`, `rayon-failover`).
+- [ ] Hosting platform access verified for production and failover deployments.
 - [ ] Supabase dashboard permissions confirmed (database, storage, edge functions).
 - [ ] Kubernetes context for production and failover clusters saved locally via `kubectl config use-context rayon-prod` / `rayon-failover`.
 - [ ] Secrets manager/vault entries tested for read access to API keys and service accounts.

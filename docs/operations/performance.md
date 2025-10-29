@@ -32,7 +32,7 @@ Overall throughput settled at **~19 req/s** with zero failures, and global p95 l
 ## Autoscaling Recommendations
 ### Next.js Edge/API tier
 - Baseline pods comfortably handle 30 rps with p95 ≤ 200 ms. Configure autoscaling to add a replica when rolling 3-minute p95 exceeds **250 ms** or when concurrent requests surpass **35 rps**, giving margin for Supabase round-trips on admin flows. 【F:tests/perf/results-live-admin.json†L74-L86】【F:tests/perf/results-live-admin.json†L109-L172】
-- For Vercel or Kubernetes Horizontal Pod Autoscalers, translate the above into CPU targets (~55–60% at 30 rps assuming 80 ms average service time) and enable a floor of **2** instances to absorb redeploy spikes.
+- For Kubernetes Horizontal Pod Autoscalers or similar scaling mechanisms, translate the above into CPU targets (~55–60% at 30 rps assuming 80 ms average service time) and enable a floor of **2** instances to absorb redeploy spikes.
 
 ### Supabase (Postgres + Edge Functions)
 - Admin endpoints plateau at ~200 ms because of simulated Supabase access; to stay under 250 ms in production, ensure **min 2** database instances (or 1 primary + 1 read replica) during peak events and scale read IOPS when queue depth exceeds 20. 【F:tests/perf/results-live-admin.json†L135-L172】

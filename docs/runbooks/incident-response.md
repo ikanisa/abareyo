@@ -13,7 +13,7 @@ This runbook equips the Rayon Sports digital operations team to detect, triage, 
 ## 2. Alert Triage & Severity Classification
 1. **Gather context**:
    - Check Grafana for correlated spikes in latency, error counts, or resource exhaustion.
-   - Review the last deployment in Vercel and Supabase change log for recent configuration changes.
+   - Review the last deployment in the hosting platform and Supabase change log for recent configuration changes.
    - Inspect Sentry issues for stack traces, tags (release, route, locale), and user impact.
 2. **Determine severity** using the following rubric:
    - **SEV1** – Complete outage for matchday-critical surfaces (home feed, ticketing, wallet) with >50% of active users impacted.
@@ -29,7 +29,7 @@ This runbook equips the Rayon Sports digital operations team to detect, triage, 
 - **Secondary engineer**: Jumps in if primary is unresponsive for 10 minutes or requests assistance. Responsible for code-level fixes.
 - **Engineering manager**: Engaged for SEV1/SEV2 incidents to coordinate cross-team resources and approve rollbacks.
 - **Product & communications lead**: Drafts customer-facing updates when downtime exceeds 15 minutes or impacts revenue paths.
-- **Vendor contacts**: Supabase, payment processor, and hosting support (Vercel). Keep access credentials in the secure vault and copy links in the incident Slack channel topic.
+- **Vendor contacts**: Supabase, payment processor, and hosting platform support. Keep access credentials in the secure vault and copy links in the incident Slack channel topic.
 
 Escalation flow:
 1. Primary on-call acknowledges alert.
@@ -38,13 +38,13 @@ Escalation flow:
 
 ## 4. Mitigation & Remediation
 - Capture diagnostics: relevant logs, metrics queries, database snapshots (read-only).
-- Evaluate mitigations in order: feature flag rollback, Vercel redeploy from last known good build, Supabase function revert, backend scaling adjustments.
+- Evaluate mitigations in order: feature flag rollback, redeploy from last known good build, Supabase function revert, backend scaling adjustments.
 - Confirm mitigation success by observing recovery in Grafana and verifying user flows manually (home feed, wallet top-up, ticket purchase).
 - Document commands or toggles executed in the incident channel for postmortem accuracy.
 
 ## 5. Communications & Status Updates
 - **Cadence**: Provide updates every 15 minutes for SEV1 and every 30 minutes for SEV2 until resolved.
-- **Channels**: `#incident-response` Slack channel (internal), status email template (external stakeholders), and Vercel status note if applicable.
+- **Channels**: `#incident-response` Slack channel (internal), status email template (external stakeholders), and platform status note if applicable.
 
 ### Slack template
 ```

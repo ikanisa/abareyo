@@ -13,7 +13,7 @@ _Last updated: 2025-10-22 10:50:38Z_
 - Runtime env schema enforces required variables at build and run time.
 - Preview build workflow handled in GitHub Actions (`.github/workflows/preview.yml`).
 - Local preflight script consolidated under `scripts/preflight.mjs` to run env checks, backend verification, and the production build in one entry point.
-- Documented platform-agnostic secret rotation replaces the former `npm run vercel:env:sync` flow.
+- Documented platform-agnostic secret rotation for deployment configuration.
 - Root/node engines aligned on Node 20 via `.nvmrc` + package metadata.
 
 ## Environment Variables
