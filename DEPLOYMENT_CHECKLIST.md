@@ -3,6 +3,7 @@
 > **Purpose**: Comprehensive pre-deployment validation and go-live checklist  
 > **Status**: Production-Ready - All critical issues resolved  
 > **Last Updated**: 2025-10-29  
+> **Quick Start**: See [DEPLOYMENT_QUICKSTART.md](./DEPLOYMENT_QUICKSTART.md) for first-time deployment  
 > **Related Docs**: [PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md) | [k8s/README.md](./k8s/README.md) | [docs/runbooks/deploy.md](./docs/runbooks/deploy.md)
 
 ## Quick Reference
@@ -30,7 +31,15 @@
 
 **Validation Command**:
 ```bash
-npm run lint && npm run typecheck && npm run test && npm run build
+# Basic validation
+npm run validate:deployment
+# or
+make validate-deployment
+
+# Full validation (includes K8s and service checks)
+npm run validate:deployment -- --check-k8s --check-services
+# or
+make validate-deployment-full
 ```
 
 ### 1.2 Environment Configuration ⚠️

@@ -132,7 +132,15 @@ Upcoming production hardening includes a reverse proxy in front of the Next.js r
 
 **NEW**: We have created a comprehensive deployment checklist and automated validation tool:
 
-- **[DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** – Complete pre-deployment, deployment, and post-deployment guide with phase-by-phase checklists covering:
+- **[DEPLOYMENT_QUICKSTART.md](./DEPLOYMENT_QUICKSTART.md)** – **Start here!** Step-by-step guide for first-time production deployment (2-3 hours):
+  - Infrastructure provisioning (databases, K8s, services)
+  - Secret configuration and K8s setup
+  - Database migrations
+  - Automated or manual deployment
+  - Verification and troubleshooting
+  - Post-deployment monitoring setup
+
+- **[DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** – Complete reference with phase-by-phase checklists covering:
   - Code quality validation (lint, typecheck, tests, security scans)
   - Environment configuration (frontend & backend secrets)
   - Infrastructure provisioning (K8s, databases, services)
@@ -140,7 +148,7 @@ Upcoming production hardening includes a reverse proxy in front of the Next.js r
   - Post-deployment monitoring and validation
   - Rollback procedures and incident response
 
-- **Automated Validation**: Run `npm run validate:deployment` to check:
+- **Automated Validation**: Run `npm run validate:deployment` or `make validate-deployment` to check:
   - Required files and configurations present
   - Node.js version compatibility (v20+)
   - Dependencies installed and valid
@@ -148,7 +156,12 @@ Upcoming production hardening includes a reverse proxy in front of the Next.js r
   - Code quality (linting and type checking pass)
   - Security vulnerabilities (npm audit)
   
-  Add `--check-k8s` to validate Kubernetes cluster access and `--check-services` to test external service connectivity.
+  Add `--check-k8s` to validate Kubernetes cluster access and `--check-services` to test external service connectivity:
+  ```bash
+  npm run validate:deployment -- --check-k8s --check-services
+  # or
+  make validate-deployment-full
+  ```
 
 - **Related Documentation**:
   - [PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md) – Detailed production checklist with resolved code fixes
