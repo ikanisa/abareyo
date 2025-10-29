@@ -36,7 +36,8 @@
     "seed": "tsx scripts/seed.ts",
     "ci:guard-payments": "tsx scripts/ci/assert-ussd-only.ts",
     "ci:check-env": "node scripts/check-frontend-env.mjs",
-    "reports:worker": "tsx scripts/reports/report-schedule-worker.ts"
+    "reports:worker": "tsx scripts/reports/report-schedule-worker.ts",
+    "validate:deployment": "node scripts/validate-deployment-readiness.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^5.0.8",

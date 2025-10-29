@@ -40,7 +40,4 @@ playwright-report
 .logs/
 infra/cloudflared/config.yml
 infra/cloudflared/credentials/
-
-# Temporary patch files (should be applied and removed, not committed)
-*.patch
-fix_*.cjs
+k8s-secrets.sh
