@@ -68,6 +68,31 @@ function run(command, options = {}) {
   }
 }
 
+function extractCommandErrorDetails(error) {
+  if (!error || typeof error !== 'object') {
+    return 'Unknown error';
+  }
+
+  const stderr = typeof error.stderr === 'string' ? error.stderr : error.stderr?.toString?.();
+  if (stderr && stderr.trim()) {
+    return stderr.trim().split('\n')[0];
+  }
+
+  if (typeof error.status === 'number') {
+    return `Exited with status ${error.status}`;
+  }
+
+  if (error.signal) {
+    return `Terminated via signal ${error.signal}`;
+  }
+
+  if (typeof error.message === 'string' && error.message.trim()) {
+    return error.message.trim();
+  }
+
+  return 'Unknown error';
+}
+
 /**
  * Log a check result
  */
@@ -358,23 +383,31 @@ function checkExternalServices() {
   if (databaseUrl) {
     try {
       // Simple connection test (requires psql or equivalent)
-      run(`psql "${databaseUrl}" -c "SELECT 1;" >/dev/null 2>&1`, { throwOnError: false });
+      run(`psql "${databaseUrl}" -c "SELECT 1;"`, { silent: true });
       logCheck(true, 'Database connection', 'Connected successfully');
     } catch (error) {
-      logCheck('warning', 'Database connection', 'Could not verify (psql not found or connection failed)');
+      if (error?.code === 'ENOENT') {
+        logCheck('warning', 'Database connection', 'psql command not found; skipping connectivity check.');
+      } else {
+        logCheck(false, 'Database connection', `Connection failed: ${extractCommandErrorDetails(error)}`);
+      }
     }
   } else {
     logCheck('warning', 'Database configuration', 'DATABASE_URL not set');
   }
-  
+
   // Redis check
   const redisUrl = process.env.REDIS_URL;
   if (redisUrl) {
     try {
-      run(`redis-cli -u "${redisUrl}" PING >/dev/null 2>&1`, { throwOnError: false });
+      run(`redis-cli -u "${redisUrl}" --no-auth-warning PING`, { silent: true });
       logCheck(true, 'Redis connection', 'Connected successfully');
     } catch (error) {
-      logCheck('warning', 'Redis connection', 'Could not verify (redis-cli not found or connection failed)');
+      if (error?.code === 'ENOENT') {
+        logCheck('warning', 'Redis connection', 'redis-cli command not found; skipping connectivity check.');
+      } else {
+        logCheck(false, 'Redis connection', `Connection failed: ${extractCommandErrorDetails(error)}`);
+      }
     }
   } else {
     logCheck('warning', 'Redis configuration', 'REDIS_URL not set');
@@ -384,10 +417,14 @@ function checkExternalServices() {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
   if (backendUrl) {
     try {
-      run(`node scripts/check-backend-endpoint.mjs`, { silent: false, throwOnError: false });
+      run(`node scripts/check-backend-endpoint.mjs`, { silent: false });
       logCheck(true, 'Backend API reachable');
     } catch (error) {
-      logCheck('warning', 'Backend API', 'Could not verify reachability');
+      if (error?.code === 'ENOENT') {
+        logCheck('warning', 'Backend API', 'Node runtime not available; skipping reachability check.');
+      } else {
+        logCheck(false, 'Backend API', `Reachability check failed: ${extractCommandErrorDetails(error)}`);
+      }
     }
   } else {
     logCheck('warning', 'Backend URL', 'NEXT_PUBLIC_BACKEND_URL not set');
