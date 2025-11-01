@@ -46,8 +46,8 @@ The worker logs each delivery attempt (`report.schedule.delivered` or
 
 ## Production deployment
 
-- Host the worker as a separate Node.js process (Fly.io, Railway, Render, or a
-  lightweight container) so it is not tied to Vercel cron limits.
+- Host the worker as a separate Node.js process (Fly.io, Railway, or a
+  lightweight container) so it is not tied to platform-specific cron limits.
 - Provide the same environment variables listed above plus networking access to
   Supabase.
 - Monitor logs for `report.worker.poll_failed` to catch Supabase outages or
