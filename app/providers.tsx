@@ -15,6 +15,7 @@ import { AuthProvider } from "@/providers/auth-provider";
 import { I18nProvider } from "@/providers/i18n-provider";
 import { RealtimeProvider } from "@/providers/realtime-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { toast } from "sonner";
 
 const hasWindow = () => typeof window !== 'undefined';
 
@@ -205,6 +206,7 @@ export const Providers = ({ children }: { children: ReactNode }) => {
     }
 
     let removeListener: (() => void) | undefined;
+    const cleanupFns: Array<() => void> = [];
 
     (async () => {
       try {
@@ -220,8 +222,49 @@ export const Providers = ({ children }: { children: ReactNode }) => {
       }
     })();
 
+    cleanupFns.push(
+      registerCapacitorEvent('readerMode:success', (payload) => {
+        toast.success('Card scanned', {
+          description: `Transaction ${payload.transactionId as string} ready for submission.`,
+        });
+      }),
+    );
+
+    cleanupFns.push(
+      registerCapacitorEvent('readerMode:error', (payload) => {
+        toast.error('Reader mode error', {
+          description: String(payload.message ?? 'Unable to process card.'),
+        });
+      }),
+    );
+
+    cleanupFns.push(
+      registerCapacitorEvent('ussd:error', (payload) => {
+        toast.error('Payment failure', {
+          description: String(payload.message ?? 'USSD session failed.'),
+        });
+      }),
+    );
+
+    cleanupFns.push(
+      registerCapacitorEvent('ussd:success', (payload) => {
+        toast.success('Payment session completed', {
+          description: String(payload.response ?? 'USSD response captured.'),
+        });
+      }),
+    );
+
+    cleanupFns.push(
+      registerCapacitorEvent('ussd:fallback', () => {
+        toast('Dialer opened', {
+          description: 'Continue the USSD flow in the system dialer.',
+        });
+      }),
+    );
+
     return () => {
       removeListener?.();
+      cleanupFns.forEach((cleanup) => cleanup());
     };
   }, []);
 

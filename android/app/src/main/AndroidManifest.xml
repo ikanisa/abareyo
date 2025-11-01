@@ -2,46 +2,41 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.rayonsports.fanapp">
 
-    <!-- SMS Permissions for mobile money payment detection -->
-    <uses-permission android:name="android.permission.READ_SMS" />
-    <uses-permission android:name="android.permission.RECEIVE_SMS" />
-    
-    <!-- Standard permissions -->
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
+
+    <uses-feature
+        android:name="android.hardware.nfc"
+        android:required="false" />
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="Rayon Sports"
+        android:icon="@android:drawable/sym_def_app_icon"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="false"
+        android:theme="@style/Theme.Rayon.DayNight">
 
         <activity
-            android:name=".MainActivity"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
-            android:label="@string/app_name"
+            android:name="com.rayonsports.fanapp.ReaderModeActivity"
+            android:exported="false"
+            android:label="Card Reader"
+            android:launchMode="singleTop" />
+
+        <activity
+            android:name="com.rayonsports.fanapp.MainActivity"
+            android:exported="true"
             android:launchMode="singleTask"
-            android:theme="@style/AppTheme.NoActionBarLaunch"
-            android:exported="true">
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
+            android:label="Rayon Sports"
+            android:theme="@style/Theme.Rayon.DayNight">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.fileprovider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
-        </provider>
     </application>
-
 </manifest>
