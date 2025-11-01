@@ -34,7 +34,9 @@ Environment variables:
 
 The worker logs each delivery attempt (`report.schedule.delivered` or
 `report.schedule.failed`). Failed runs retain the error in
-`report_schedules.last_delivery_error` so operations can investigate.
+`report_schedules.last_delivery_error` so operations can investigate. For
+additional platform guidance (including cron migration notes), see the
+[Hosting Migration Playbook](../docs/hosting-migration.md).
 
 ## Manual execution
 
