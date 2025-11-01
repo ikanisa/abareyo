@@ -50,10 +50,16 @@ export const formatTelUri = (value: string): string => {
   return `tel:${encodeUssdPayload(trimmed)}`;
 };
 
-export const buildUssd = ({ amount, phone }: BuildUssdOptions): string => {
+const providerPrefix: Record<Provider, string> = {
+  mtn: '*182*1*1*',
+  airtel: '*500*1*',
+};
+
+export const buildUssd = ({ amount, phone, provider = 'mtn' }: BuildUssdOptions): string => {
   const sanitizedAmount = sanitizeAmount(amount);
   const sanitizedPhone = sanitizePhoneNumber(phone) ?? DEFAULT_PHONE_PLACEHOLDER;
-  const code = `*182*1*1*${sanitizedPhone}*${sanitizedAmount}#`;
+  const prefix = providerPrefix[provider] ?? providerPrefix.mtn;
+  const code = `${prefix}${sanitizedPhone}*${sanitizedAmount}#`;
   return formatTelUri(code);
 };
 
