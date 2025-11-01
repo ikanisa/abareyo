@@ -74,6 +74,8 @@
     "app/**/*.tsx",
     "src/**/*.ts",
     "src/**/*.tsx",
+    "packages/mobile/**/*.ts",
+    "packages/mobile/**/*.tsx",
     "tests/**/*.ts",
     "tests/**/*.tsx",
     "**/*.cjs",

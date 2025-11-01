@@ -8,6 +8,11 @@ import {
   sanitizeAmount,
   sanitizePhoneNumber,
 } from "@/lib/ussd";
+import { recordAppStateEvent } from "@/lib/observability";
+
+vi.mock("@/lib/observability", () => ({
+  recordAppStateEvent: vi.fn().mockResolvedValue(undefined),
+}));
 
 describe("ussd helpers", () => {
   it("sanitizes amounts and phone numbers", () => {
@@ -83,5 +88,12 @@ describe("ussd helpers", () => {
     expect(removeChild).toHaveBeenCalledWith(fakeAnchor);
     expect(fakeWindow.setTimeout).toHaveBeenCalled();
     expect(onFallback).toHaveBeenCalled();
+    expect(recordAppStateEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "ussd-launch",
+        href: "tel:*182*1*1*0780000000*2000%23",
+      }),
+      undefined,
+    );
   });
 });

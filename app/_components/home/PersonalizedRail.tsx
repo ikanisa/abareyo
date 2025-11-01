@@ -17,6 +17,7 @@ type Notifications = {
   kickoff: boolean;
   final: boolean;
   club: boolean;
+  expoPushToken?: string | null;
 };
 
 type Prefs = {
@@ -26,7 +27,7 @@ type Prefs = {
 
 const DEFAULT_PREFS: Prefs = {
   language: 'rw',
-  notifications: { goals: true, kickoff: true, final: true, club: true },
+  notifications: { goals: true, kickoff: true, final: true, club: true, expoPushToken: null },
 };
 
 const languages = [

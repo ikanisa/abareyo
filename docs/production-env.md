@@ -1,6 +1,9 @@
 Production Environment & Secrets
 
-> ℹ️ For the full Supabase admin authentication checklist (including seeding and troubleshooting), see [runbooks/admin-supabase-email-login.md](runbooks/admin-supabase-email-login.md).
+> ℹ️ For host-agnostic deployment guardrails, review the
+> [Hosting Migration Playbook](hosting-migration.md) alongside the Supabase
+> admin checklist in
+> [runbooks/admin-supabase-email-login.md](runbooks/admin-supabase-email-login.md).
 
 Required runtime env vars
 

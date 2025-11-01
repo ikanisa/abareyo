@@ -1,6 +1,5 @@
 'use client';
 
-import NextImage from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ImagePlus, Pencil, Plus, Trash2 } from 'lucide-react';
@@ -22,6 +21,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
+import { OptimizedImage } from '@/components/ui/optimized-image';
 import {
   Select,
   SelectContent,
@@ -183,7 +183,7 @@ export default function AdminShopProductsPage() {
                 </div>
                 {coverImage ? (
                   <div className="relative h-32 w-full overflow-hidden rounded-xl">
-                    <NextImage
+                    <OptimizedImage
                       src={coverImage}
                       alt={product.name}
                       fill
@@ -308,7 +308,7 @@ export default function AdminShopProductsPage() {
                 <div className="flex flex-wrap gap-3">
                   {form.images.map((image) => (
                     <div key={image} className="group relative h-20 w-20 overflow-hidden rounded-xl">
-                      <NextImage
+                      <OptimizedImage
                         src={image}
                         alt="Product"
                         fill

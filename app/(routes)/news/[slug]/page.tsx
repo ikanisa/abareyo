@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -8,6 +7,7 @@ import { findContent } from "@/lib/content";
 import { ff } from "@/lib/flags";
 import type { ArticleBlock, Article } from "../_data/articles";
 import { articles as staticArticles } from "../_data/articles";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 export const dynamic = "force-dynamic";
 
@@ -114,7 +114,7 @@ const renderStaticArticle = (article: Article) => (
     />
     {article.heroImage ? (
       <div className="relative h-72 overflow-hidden rounded-3xl border border-white/10">
-        <Image
+        <OptimizedImage
           src={article.heroImage}
           alt={`${article.title} feature`}
           fill

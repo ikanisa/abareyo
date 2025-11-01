@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { tryGetSupabaseServerAnonClient } from '@/lib/db';
+import { isSupabaseClient } from '@/app/api/_lib/supabase';
 
 const DEFAULT_FLAGS = {
   'features.personalization': true,
@@ -12,17 +13,20 @@ const DEFAULT_FLAGS = {
   'features.partnerWebviews': true,
   'features.wearables': false,
   'features.streamingCast': false,
+  'features.ticketScanner': false,
+  'features.ticketTransferV2': false,
+  'features.chatLiveSupport': false,
 };
 
 export async function GET() {
   const client = tryGetSupabaseServerAnonClient();
 
-  if (!client) {
+  if (!isSupabaseClient(client)) {
     return NextResponse.json({ flags: DEFAULT_FLAGS });
   }
 
   try {
-    const { data, error } = await client.from('feature_flags').select('key, enabled');
+    const { data, error } = await client.from('public_feature_flags').select('key, enabled, description');
 
     if (error) {
       if ((error as { code?: string }).code === 'PGRST205') {

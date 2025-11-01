@@ -10,7 +10,6 @@ import {
   useRef,
   useState,
 } from "react";
-import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import FanHero from "@/app/_components/community/FanHero";
@@ -36,6 +35,7 @@ import {
 import { fanProfile } from "@/app/_data/fanProfile";
 import { jsonFetch } from "@/app/_lib/api";
 import { useToast } from "@/components/ui/use-toast";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 const tabs = ["Feed", "Leaderboard", "Fan Clubs", "Polls"] as const;
 
@@ -409,9 +409,9 @@ const CommunityClient = () => {
             <div className="space-y-4">
               <section className="card break-words whitespace-normal break-words whitespace-normal space-y-4 text-white" aria-labelledby="composer-heading">
                 <div className="flex items-center gap-3">
-                  <Image
+                  <OptimizedImage
                     src={fallbackAvatar}
-                    alt=""
+                    alt="Your supporter avatar"
                     width={48}
                     height={48}
                     className="h-12 w-12 rounded-full object-cover"
@@ -559,7 +559,7 @@ const CommunityClient = () => {
                 Community replies and reactions will appear here in real time once the messaging bridge is connected.
               </p>
               <div className="mt-4 flex items-center gap-3">
-                <Image src="/community/avatars/gikundiro-plus.png" alt="" width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
+                <OptimizedImage src="/community/avatars/gikundiro-plus.png" alt="GIKUNDIRO+ badge avatar" width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
                 <input
                   className="flex-1 rounded-2xl border border-white/25 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/60 focus:outline-none min-h-[44px]"
                   placeholder="Share your chant or emoji"

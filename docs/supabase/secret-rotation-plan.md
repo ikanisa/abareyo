@@ -29,8 +29,8 @@ Purpose: outline how we move production secrets out of the repository and prepar
    - Invalidate refresh tokens to force re-auth.
 
 4. **Third-party services**
-   - Twilio, Stripe, MoMo, Slack → collect API keys, account SIDs.
-   - Store in Supabase Vault (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `STRIPE_SECRET_KEY`, `MOMO_API_KEY`, `SLACK_WEBHOOK_URL`, …).
+   - Twilio, card processor, MoMo, Slack → collect API keys, account SIDs.
+   - Store in Supabase Vault (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `CARD_GATEWAY_SECRET_KEY`, `MOMO_API_KEY`, `SLACK_WEBHOOK_URL`, …).
    - Reference them from Edge Functions via `supabase secrets set`.
 
 5. **Repository cleanup**

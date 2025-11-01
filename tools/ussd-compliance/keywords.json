@@ -1,0 +1,16 @@
+{
+  "patterns": [
+    { "pattern": "\\bstripe\\b", "flags": "i", "message": "Stripe SDKs are not permitted on the USSD-only distribution." },
+    { "pattern": "\\bpaypal\\b", "flags": "i", "message": "PayPal integrations are disallowed for USSD compliance." },
+    { "pattern": "\\bflutterwave\\b", "flags": "i", "message": "Flutterwave integrations violate the USSD-only requirement." },
+    { "pattern": "\\bmpesa\\b", "flags": "i", "message": "M-Pesa integrations are not part of the allowed payment stack." },
+    { "pattern": "visa_sdk", "flags": "i", "message": "Visa SDK references are forbidden." },
+    { "pattern": "\\bmastercard\\b", "flags": "i", "message": "Mastercard SDK references are forbidden." },
+    { "pattern": "\\bpaystack\\b", "flags": "i", "message": "Paystack SDK references are forbidden." },
+    { "pattern": "\\bpesapal\\b", "flags": "i", "message": "Pesapal SDK references are forbidden." }
+  ],
+  "ignore": [
+    "scripts/ci/assert-ussd-only\\.ts$",
+    "tools/ussd-compliance/keywords\\.json$"
+  ]
+}
