@@ -1,0 +1,14 @@
+{
+  "workflows": [
+    {
+      "file": ".github/workflows/host-agnostic-guard.yml",
+      "matches": [
+        {
+          "line": 14,
+          "text": "name: Check for Vercel/Render references",
+          "match": "Vercel"
+        }
+      ]
+    }
+  ]
+}
