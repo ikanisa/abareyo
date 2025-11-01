@@ -1274,6 +1274,89 @@ export type Database = {
           },
         ]
       }
+      match_events: {
+        Row: {
+          created_at: string
+          event_type: 'kickoff' | 'goal' | 'full_time'
+          id: string
+          match_id: string | null
+          payload: Json | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: 'kickoff' | 'goal' | 'full_time'
+          id?: string
+          match_id?: string | null
+          payload?: Json | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: 'kickoff' | 'goal' | 'full_time'
+          id?: string
+          match_id?: string | null
+          payload?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_events_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_notification_jobs: {
+        Row: {
+          created_at: string
+          error: string | null
+          event_id: string | null
+          event_type: 'kickoff' | 'goal' | 'full_time'
+          id: string
+          match_id: string | null
+          payload: Json | null
+          processed_at: string | null
+          status: 'pending' | 'sent' | 'error' | 'skipped'
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          event_id?: string | null
+          event_type: 'kickoff' | 'goal' | 'full_time'
+          id?: string
+          match_id?: string | null
+          payload?: Json | null
+          processed_at?: string | null
+          status?: 'pending' | 'sent' | 'error' | 'skipped'
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          event_id?: string | null
+          event_type?: 'kickoff' | 'goal' | 'full_time'
+          id?: string
+          match_id?: string | null
+          payload?: Json | null
+          processed_at?: string | null
+          status?: 'pending' | 'sent' | 'error' | 'skipped'
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_notification_jobs_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "match_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_notification_jobs_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       match_zones: {
         Row: {
           capacity: number
@@ -1519,6 +1602,59 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "membership_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_devices: {
+        Row: {
+          build: string | null
+          created_at: string
+          device_id: string | null
+          enabled: boolean | null
+          expo_token: string | null
+          id: string
+          last_seen_at: string | null
+          platform: 'expo' | 'web'
+          subscription: Json | null
+          updated_at: string
+          user_id: string | null
+          web_endpoint: string | null
+        }
+        Insert: {
+          build?: string | null
+          created_at?: string
+          device_id?: string | null
+          enabled?: boolean | null
+          expo_token?: string | null
+          id?: string
+          last_seen_at?: string | null
+          platform: 'expo' | 'web'
+          subscription?: Json | null
+          updated_at?: string
+          user_id?: string | null
+          web_endpoint?: string | null
+        }
+        Update: {
+          build?: string | null
+          created_at?: string
+          device_id?: string | null
+          enabled?: boolean | null
+          expo_token?: string | null
+          id?: string
+          last_seen_at?: string | null
+          platform?: 'expo' | 'web'
+          subscription?: Json | null
+          updated_at?: string
+          user_id?: string | null
+          web_endpoint?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_devices_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]

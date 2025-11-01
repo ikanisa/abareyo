@@ -5,6 +5,8 @@ import ClientErrorBoundary from "./_components/telemetry/ClientErrorBoundary";
 import { Providers } from "./providers";
 import { InstallPrompt, OfflineBanner } from "./_components/pwa/PwaHelpers";
 import BottomNavContainer from "./_components/BottomNavContainer";
+import NativeAppHandoff from "./_components/pwa/NativeAppHandoff";
+import WebPushGate from "./_components/pwa/WebPushGate";
 import { Suspense } from "react";
 import PageViewTracker from "./_components/telemetry/PageViewTracker";
 import SkipNavLink from "@/components/a11y/SkipNavLink";
@@ -27,6 +29,12 @@ export const metadata: Metadata = {
   metadataBase,
   title: "Rayon Sports - Fan App",
   description: "Official Rayon Sports fan experience.",
+  applicationName: "Rayon Sports",
+  appleWebApp: {
+    capable: true,
+    title: "Rayon Sports",
+    statusBarStyle: "black-translucent",
+  },
   icons: {
     icon: [
       { url: "/icon-192x192.png", type: "image/png", sizes: "192x192" },
@@ -36,11 +44,38 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   manifest: "/manifest.json",
-  other: { "theme-color": "#0033FF" },
+  appLinks: {
+    ios: {
+      app_store_id: "0000000000",
+      app_name: "Rayon Sports",
+      url: "gikundiro://home",
+    },
+    android: {
+      package: "com.rayonsports.fanapp",
+      app_name: "Rayon Sports",
+      url: "gikundiro://home",
+    },
+    web: {
+      url: siteUrl ?? "https://gikundiro.com",
+      should_fallback: true,
+    },
+  },
+  other: {
+    "theme-color": "#0033FF",
+    "apple-itunes-app": "app-id=0000000000, app-argument=gikundiro://home",
+    "google-play-app": "app-id=com.rayonsports.fanapp",
+    "al:ios:url": "gikundiro://home",
+    "al:ios:app_store_id": "0000000000",
+    "al:ios:app_name": "Rayon Sports",
+    "al:android:url": "gikundiro://home",
+    "al:android:package": "com.rayonsports.fanapp",
+    "al:android:app_name": "Rayon Sports",
+  },
 };
 
 export const viewport: Viewport = {
   themeColor: "#0033FF",
+  minimumScale: 1,
 };
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => (
@@ -55,10 +90,12 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => (
               {children}
             </div>
             <BottomNavContainer />
-          </div>
-          <Suspense fallback={null}>
-            <PageViewTracker />
-          </Suspense>
+            <Suspense fallback={null}>
+              <PageViewTracker />
+              <NativeAppHandoff />
+              <WebPushGate />
+            </Suspense>
+          </>
         </Providers>
       </ClientErrorBoundary>
       <InstallPrompt />

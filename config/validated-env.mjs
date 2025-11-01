@@ -64,6 +64,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE: z.string().optional(),
   NEXT_PUBLIC_ADMIN_API_TOKEN: z.string().optional(),
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK: z.string().optional(),
+  NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY: z.string().optional(),
 
   // === SERVER-ONLY SECRETS (NEVER use NEXT_PUBLIC_ prefix) ===
   // These must ONLY be accessed in server-side code (API routes, server components, middleware)
@@ -82,6 +83,9 @@ const envSchema = z.object({
   ADMIN_SMS_PARSER_TEST_ENABLED: z.string().optional(),
   ADMIN_SMS_PARSER_TEST_RATE_LIMIT: z.string().optional(),
   ADMIN_SMS_PARSER_TEST_WINDOW_MS: z.string().optional(),
+  WEB_PUSH_PRIVATE_KEY: z.string().optional(),
+  WEB_PUSH_CONTACT: z.string().optional(),
+  EXPO_PUSH_ACCESS_TOKEN: z.string().optional(),
 
   // === Other Variables ===
   AGENT_ID: z.string().optional(),
@@ -162,6 +166,7 @@ const serverEnv = {
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE: parsed.NEXT_PUBLIC_ADMIN_SESSION_COOKIE,
   NEXT_PUBLIC_ADMIN_API_TOKEN: parsed.NEXT_PUBLIC_ADMIN_API_TOKEN,
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK: parsed.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK,
+  NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY: parsed.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY,
   PORT: parsed.PORT,
   SUPABASE_SERVICE_ROLE_KEY: parsed.SUPABASE_SERVICE_ROLE_KEY,
   SITE_SUPABASE_URL: parsed.SITE_SUPABASE_URL,
@@ -175,6 +180,9 @@ const serverEnv = {
   ONBOARDING_API_TOKEN: parsed.ONBOARDING_API_TOKEN,
   ONBOARDING_ALLOW_MOCK: parsed.ONBOARDING_ALLOW_MOCK,
   OPENAI_API_KEY: parsed.OPENAI_API_KEY,
+  WEB_PUSH_PRIVATE_KEY: parsed.WEB_PUSH_PRIVATE_KEY,
+  WEB_PUSH_CONTACT: parsed.WEB_PUSH_CONTACT,
+  EXPO_PUSH_ACCESS_TOKEN: parsed.EXPO_PUSH_ACCESS_TOKEN,
   AGENT_ID: parsed.AGENT_ID,
   NEXT_PHASE: parsed.NEXT_PHASE,
   NEXT_RUNTIME: parsed.NEXT_RUNTIME,
@@ -209,6 +217,7 @@ const clientEnv = {
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE: parsed.NEXT_PUBLIC_ADMIN_SESSION_COOKIE,
   NEXT_PUBLIC_ADMIN_API_TOKEN: parsed.NEXT_PUBLIC_ADMIN_API_TOKEN,
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK: parsed.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK,
+  NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY: parsed.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY,
 };
 
 const runtimeConfig = Object.freeze({

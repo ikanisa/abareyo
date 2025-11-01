@@ -16,6 +16,7 @@ import { emitNfcTap } from "@/lib/nfc";
 import { recordAppStateEvent } from "@/lib/observability";
 import { useToast } from "@/components/ui/use-toast";
 import { useRealtime } from "@/providers/realtime-provider";
+import { ff } from "@/lib/flags";
 
 const LOCAL_HISTORY_KEY = "gate-local-history";
 const LOCAL_HISTORY_LIMIT = 50;
@@ -62,6 +63,7 @@ export default function Gate() {
   const [dryRun, setDryRun] = useState(true);
   const [cameraActive, setCameraActive] = useState(false);
   const [localHistory, setLocalHistory] = useState<LocalHistoryItem[]>([]);
+  const qrFeatureEnabled = ff('phase2.qrScanner', false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const scannerRef = useRef<BrowserMultiFormatReader | null>(null);
@@ -160,7 +162,7 @@ export default function Gate() {
   }, [handleVerification]);
 
   useEffect(() => {
-    if (!cameraActive) {
+    if (!cameraActive || !qrFeatureEnabled) {
       const reader = scannerRef.current as (BrowserMultiFormatReader & { reset?: () => void }) | null;
       reader?.reset?.();
       scannerRef.current = null;
@@ -201,7 +203,7 @@ export default function Gate() {
       const stream = videoRef.current?.srcObject as MediaStream | null;
       stream?.getTracks().forEach((track) => track.stop());
     };
-  }, [cameraActive, handleScanResult, toast]);
+  }, [cameraActive, handleScanResult, toast, qrFeatureEnabled]);
 
   useEffect(() => {
     if (!socket) return;
@@ -228,6 +230,12 @@ export default function Gate() {
       socket.off('tickets.gate.scan', handleRemoteScan);
     };
   }, [socket, refetchHistory]);
+
+  useEffect(() => {
+    if (!qrFeatureEnabled && cameraActive) {
+      setCameraActive(false);
+    }
+  }, [qrFeatureEnabled, cameraActive]);
 
   return (
     <div className="min-h-screen pb-24 px-4">
@@ -266,14 +274,20 @@ export default function Gate() {
                 Dry run (do not mark as used)
               </Label>
             </div>
-            <Button
-              type="button"
-              variant={cameraActive ? "hero" : "glass"}
-              size="sm"
-              onClick={() => setCameraActive((prev) => !prev)}
-            >
-              <Camera className="w-4 h-4" /> {cameraActive ? "Stop Camera" : "Scan QR"}
-            </Button>
+            {qrFeatureEnabled ? (
+              <Button
+                type="button"
+                variant={cameraActive ? "hero" : "glass"}
+                size="sm"
+                onClick={() => setCameraActive((prev) => !prev)}
+              >
+                <Camera className="w-4 h-4" /> {cameraActive ? "Stop Camera" : "Scan QR"}
+              </Button>
+            ) : (
+              <span className="rounded-full bg-muted/20 px-3 py-1 text-xs text-muted-foreground">
+                QR scanning unlocks in Phase 2
+              </span>
+            )}
           </div>
           <Button
             variant="hero"
