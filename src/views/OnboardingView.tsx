@@ -13,6 +13,7 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
+import WhatsAppLoginNotice from '@/app/_components/auth/WhatsAppLoginNotice';
 import { useAuth } from '@/providers/auth-provider';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -145,7 +146,7 @@ const OnboardingView = () => {
   const [hasBootstrapped, setHasBootstrapped] = useState(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const { toast } = useToast();
 
   const sessionQuery = useQuery({
@@ -229,6 +230,7 @@ const OnboardingView = () => {
   }, [session?.messages.length, sendMutation.isPending]);
 
   const isLoadingSession = createSessionMutation.isPending || sessionQuery.isLoading;
+  const needsWhatsappLogin = !user?.whatsappNumber;
   const isErrored = createSessionMutation.isError && !session;
 
   const messages = useMemo(() => session?.messages?.filter((message) => message.kind !== 'tool_call') ?? [], [session]);
@@ -283,6 +285,8 @@ const OnboardingView = () => {
             ) : null}
           </div>
         </header>
+
+        {needsWhatsappLogin ? <WhatsAppLoginNotice source="onboarding" /> : null}
 
         <Card className="flex min-h-[60vh] flex-1 flex-col overflow-hidden border-primary/20 bg-slate-950/80 shadow-2xl">
           <div className="flex h-full flex-col">
