@@ -1,3 +1,5 @@
+import { recordAppStateEvent } from "@/lib/observability";
+
 export type Provider = "mtn" | "airtel";
 
 export type BuildUssdOptions = {
@@ -10,6 +12,7 @@ export type UssdDialerOptions = {
   onFallback?: () => void;
   documentRef?: Document;
   windowRef?: Window;
+  telemetryEndpoint?: string;
 };
 
 export type ClipboardHandoffOptions = {
@@ -149,6 +152,16 @@ export const launchUssdDialer = (ussd: string, options?: UssdDialerOptions) => {
       options.onFallback?.();
     }
   }
+
+  void recordAppStateEvent(
+    {
+      type: "ussd-launch",
+      href,
+      original: ussd,
+      fallbackConfigured: Boolean(options?.onFallback),
+    },
+    options?.telemetryEndpoint,
+  );
 };
 
 export const startClipboardFirstUssdHandoff = async (

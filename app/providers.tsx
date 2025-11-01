@@ -10,7 +10,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { clientConfig } from "@/config/client";
 import { recordAppStateEvent } from "@/lib/observability";
-import { registerCapacitorEvent } from "@/lib/mobile/capacitor-events";
+import { NFC_TAP_EVENT, NFC_TRANSACTION_EVENT, type NfcTapDetail, type NfcTransactionDetail } from "@/lib/nfc";
 import { AuthProvider } from "@/providers/auth-provider";
 import { I18nProvider } from "@/providers/i18n-provider";
 import { RealtimeProvider } from "@/providers/realtime-provider";
@@ -89,6 +89,102 @@ export const Providers = ({ children }: { children: ReactNode }) => {
       window.removeEventListener(PWA_OPT_IN_EVENT, onOptIn);
     };
   }, []);
+
+  useEffect(() => {
+    if (!hasWindow()) {
+      return;
+    }
+
+    const handleTap = (event: Event) => {
+      const detail = (event as CustomEvent<NfcTapDetail>).detail;
+      if (!detail) {
+        return;
+      }
+
+      void recordAppStateEvent(
+        {
+          type: "nfc-tap",
+          method: detail.method ?? "nfc",
+          stewardId: detail.stewardId ?? null,
+          dryRun: detail.dryRun ?? false,
+          tokenPreview: detail.token?.slice(0, 12) ?? null,
+        },
+        telemetryEndpoint,
+      );
+    };
+
+    window.addEventListener(NFC_TAP_EVENT, handleTap as EventListener);
+    return () => {
+      window.removeEventListener(NFC_TAP_EVENT, handleTap as EventListener);
+    };
+  }, [telemetryEndpoint]);
+
+  useEffect(() => {
+    if (!hasWindow()) {
+      return;
+    }
+
+    const handleTransaction = (event: Event) => {
+      const detail = (event as CustomEvent<NfcTransactionDetail>).detail;
+      if (!detail?.transactionId) {
+        return;
+      }
+
+      const payload: NfcTransactionDetail = {
+        transactionId: detail.transactionId,
+        amount: detail.amount,
+        userId: detail.userId ?? null,
+        kind: detail.kind ?? "ticket",
+        metadata: detail.metadata ?? null,
+        orderId: detail.orderId ?? null,
+        membershipId: detail.membershipId ?? null,
+        donationId: detail.donationId ?? null,
+        source: detail.source ?? "nfc",
+      };
+
+      void recordAppStateEvent(
+        {
+          type: "nfc-transaction",
+          transactionId: payload.transactionId,
+          amount: payload.amount ?? null,
+          kind: payload.kind ?? "ticket",
+          source: payload.source ?? "nfc",
+        },
+        telemetryEndpoint,
+      );
+
+      if (process.env.NODE_ENV !== "production") {
+        const history = ((window as unknown as { __nfcEvents?: Array<{ timestamp: number; detail: NfcTransactionDetail }> })
+          .__nfcEvents ?? []) as Array<{ timestamp: number; detail: NfcTransactionDetail }>;
+        history.push({ timestamp: Date.now(), detail: payload });
+        (window as unknown as { __nfcEvents?: Array<{ timestamp: number; detail: NfcTransactionDetail }> }).__nfcEvents = history;
+      }
+
+      void fetch("/api/transactions/nfc", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          transactionId: payload.transactionId,
+          amount: payload.amount ?? null,
+          userId: payload.userId ?? null,
+          kind: payload.kind ?? "ticket",
+          metadata: payload.metadata ?? null,
+          orderId: payload.orderId ?? null,
+          membershipId: payload.membershipId ?? null,
+          donationId: payload.donationId ?? null,
+          source: payload.source ?? "nfc",
+        }),
+        keepalive: true,
+      }).catch(() => {
+        // Telemetry dispatch is best effort; swallow failures to avoid breaking UX.
+      });
+    };
+
+    window.addEventListener(NFC_TRANSACTION_EVENT, handleTransaction as EventListener);
+    return () => {
+      window.removeEventListener(NFC_TRANSACTION_EVENT, handleTransaction as EventListener);
+    };
+  }, [telemetryEndpoint]);
 
   useEffect(() => {
     if (!hasWindow() || !isNotificationSupported() || !hasPwaOptIn()) {

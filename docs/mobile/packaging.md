@@ -79,6 +79,18 @@ Add to `package.json` when ready.
 4. iOS: Archive via Xcode, upload to App Store Connect, submit for TestFlight review.
 5. Validate USSD flows on physical devices (MTN & Airtel SIMs) before public launch.
 
+## Android Instrumentation Tests
+- Ensure the Android shell ships with the latest web bundle before running instrumentation.
+- Connect at least one device or emulator and execute `npm run test:android:instrumentation` to run the headless NFC + telemetry suite.
+- Tests assert that tap-to-pay transactions dispatch pending payments to Supabase and that USSD launches emit telemetry beacons.
+- Include the test artefact summary in the release PR so reviewers can confirm device coverage.
+
+## iOS Manual QA Checklist
+- Follow the [NFC verification guide](./nfc-testing.md) to rehearse tap-to-pay and reconciliation flows on a TestFlight build.
+- Validate push notification prompts, USSD fallbacks, and background resume telemetry on at least one physical device (iPhone 13 or newer).
+- Confirm TestFlight build metadata screenshots reflect the latest UI before submitting for review.
+- Record the manual QA session outcome in the release checklist to unblock App Store submission.
+
 For a full launch-readiness checklist (CI smoke tests, telemetry verification, post-launch monitoring), see `docs/launch-readiness.md`.
 
 ## Next Steps
