@@ -10,7 +10,7 @@ source of truth when auditing future changes or onboarding new platform teams.
 | --- | --- | --- |
 | Configuration | ✅ Confirmed there is no `vercel.json`, `render.yaml`, or provider directories checked into the repo. | The `next.config.mjs` file and `middleware.ts` now express all routing logic in a portable way. |
 | Dependencies | ✅ Verified that `package.json` does not depend on `@vercel/*` or Render SDKs. | The remaining Sentry packages are framework-agnostic and required by the monitoring stack. |
-| Secrets | ✅ Removed all `VERCEL_*` / `RENDER_*` variables from documentation and `.env` samples. | `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_BACKEND_URL`, and Supabase secrets remain the canonical host-independent inputs. |
+| Secrets | ✅ Removed all `VERCEL_*` / `RENDER_*` variables from documentation and `.env` samples. | `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_BACKEND_URL`, Supabase keys, `REDIS_URL`, and WhatsApp OTP tokens (`WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_OTP_TEMPLATE`) are the canonical host-independent inputs now tracked in secret managers. |
 | Documentation | ✅ Scrubbed provider marketing language from deployment checklists, cron runbooks, and Supabase guides. | Each updated document now links back to this playbook for platform guidance. |
 | CI/CD | ✅ Confirmed no workflows target Vercel or Render. | Use Docker/Kubernetes workflows or any generic Node.js host going forward. |
 

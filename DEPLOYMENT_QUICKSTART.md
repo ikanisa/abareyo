@@ -73,7 +73,8 @@ redis-cli -u "redis://username:password@host:6379" PING
 # Expected: PONG
 ```
 
-Save the `REDIS_URL` for later.
+Save the `REDIS_URL` for later. OTP delivery, login rate limiting, and future
+queue workers rely on Redis being reachable from the backend pods.
 
 ### 2.3 Supabase Project
 
@@ -151,6 +152,11 @@ kubectl -n rayon create secret generic frontend-secrets \
 kubectl -n rayon create secret generic backend-secrets \
   --from-literal=DATABASE_URL=postgresql://user:pass@host:5432/rayon \
   --from-literal=REDIS_URL=redis://host:6379 \
+  --from-literal=WHATSAPP_ACCESS_TOKEN=your-meta-token \
+  --from-literal=WHATSAPP_PHONE_NUMBER_ID=your-number-id \
+  --from-literal=WHATSAPP_OTP_TEMPLATE=otp_template \
+  --from-literal=WHATSAPP_VERIFY_TOKEN=webhook-verify-token \
+  --from-literal=WHATSAPP_APP_SECRET=meta-app-secret \
   --from-literal=ADMIN_SESSION_SECRET=${ADMIN_SESSION_SECRET} \
   --from-literal=FAN_SESSION_SECRET=${FAN_SESSION_SECRET} \
   --from-literal=METRICS_TOKEN=${METRICS_TOKEN} \

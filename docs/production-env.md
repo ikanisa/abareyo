@@ -16,6 +16,11 @@ Required runtime env vars
   - DATABASE_URL (Postgres)
   - DATABASE_SHADOW_URL (optional for Prisma)
   - REDIS_URL
+  - WHATSAPP_ACCESS_TOKEN (Meta Cloud token for OTP notifications)
+  - WHATSAPP_PHONE_NUMBER_ID (WhatsApp sender number for OTP)
+  - WHATSAPP_OTP_TEMPLATE (optional template override)
+  - WHATSAPP_VERIFY_TOKEN (used by webhook verification handshake)
+  - WHATSAPP_APP_SECRET (optional HMAC validation for webhook payloads)
   - METRICS_TOKEN (required in prod for /metrics)
   - ADMIN_SESSION_SECRET (required in prod)
   - FAN_SESSION_SECRET (required in prod)

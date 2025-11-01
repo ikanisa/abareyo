@@ -45,6 +45,17 @@ Visit <http://localhost:3000> in your browser. The admin PWA loads without
 needing any proprietary hosting platform features. Leave the terminal open
 while testing.
 
+## Redis (OTP, Rate Limits, Queues)
+- Bring up Redis alongside the frontend when exercising OTP flows or
+  server-side rate limiting:
+  ```bash
+  docker compose up redis -d
+  ```
+- Point your environment at the local instance with
+  `REDIS_URL="redis://localhost:6379"`.
+- Use `redis-cli -u redis://localhost:6379 PING` to confirm the
+  container is reachable before running the OTP unit tests.
+
 ## Supabase Notes
 - `supabase start` launches a local stack. Use this when you need Postgres or
   Storage offline.
