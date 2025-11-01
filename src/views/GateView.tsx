@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { fetchGateHistory, verifyTicketPass } from "@/lib/api/tickets";
+import { emitNfcTap } from "@/lib/nfc";
+import { recordAppStateEvent } from "@/lib/observability";
 import { useToast } from "@/components/ui/use-toast";
 import { useRealtime } from "@/providers/realtime-provider";
 
@@ -123,7 +125,23 @@ export default function Gate() {
   }, [stewardId, token]);
 
   const handleVerification = useCallback((inputToken: string) => {
-    mutateVerification(inputToken, {
+    const trimmedToken = inputToken.trim();
+    emitNfcTap({
+      token: trimmedToken,
+      method: cameraActive ? "camera" : "manual",
+      stewardId: stewardId.trim() || null,
+      dryRun,
+    });
+
+    void recordAppStateEvent({
+      type: "nfc-tap-attempt",
+      method: cameraActive ? "camera" : "manual",
+      stewardId: stewardId.trim() || null,
+      dryRun,
+      tokenPreview: trimmedToken.slice(0, 12) || null,
+    });
+
+    mutateVerification(trimmedToken, {
       onSuccess: (res) => {
         if (dryRun) {
           appendLocalHistory(`${res.status}-preview`, res.zone);
@@ -133,7 +151,7 @@ export default function Gate() {
         }
       },
     });
-  }, [appendLocalHistory, dryRun, mutateVerification, refetchHistory]);
+  }, [appendLocalHistory, cameraActive, dryRun, mutateVerification, refetchHistory, stewardId]);
 
   const handleScanResult = useCallback((result: Result) => {
     const text = result.getText();

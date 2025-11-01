@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
 import { fetchWalletSummary, fetchWalletTransactions } from "@/lib/api/wallet";
 import { fetchActivePasses, fetchTicketReceipt, rotateTicketPass, type ActiveTicketPassContract, type TicketOrderReceiptContract } from "@/lib/api/tickets";
+import { recordAppStateEvent } from "@/lib/observability";
 import { useAuth } from "@/providers/auth-provider";
 
 const formatter = new Intl.NumberFormat("en-RW", { style: "currency", currency: "RWF" });
@@ -157,6 +158,39 @@ const Wallet = () => {
 
   const pendingAmount = totals ? formatter.format(totals.pending) : formatter.format(0);
   const confirmedAmount = totals ? formatter.format(totals.confirmed) : formatter.format(0);
+
+  useEffect(() => {
+    if (!activeUserId || !totals) {
+      return;
+    }
+    void recordAppStateEvent({
+      type: "wallet-summary",
+      userId: activeUserId,
+      pending: totals.pending,
+      confirmed: totals.confirmed,
+    });
+  }, [activeUserId, totals]);
+
+  useEffect(() => {
+    if (!activeUserId || transactions.length === 0) {
+      return;
+    }
+
+    const counts = transactions.reduce(
+      (acc, tx) => {
+        const status = tx.status ?? "pending";
+        acc[status] = (acc[status] ?? 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    void recordAppStateEvent({
+      type: "wallet-reconciliation",
+      userId: activeUserId,
+      counts,
+    });
+  }, [activeUserId, transactions]);
 
   const handleLoad = () => {
     const trimmed = userIdInput.trim();

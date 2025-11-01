@@ -1,3 +1,5 @@
+import { recordAppStateEvent } from "@/lib/observability";
+
 export type Provider = "mtn" | "airtel";
 
 export type BuildUssdOptions = {
@@ -10,6 +12,7 @@ export type UssdDialerOptions = {
   onFallback?: () => void;
   documentRef?: Document;
   windowRef?: Window;
+  telemetryEndpoint?: string;
 };
 
 const DEFAULT_PHONE_PLACEHOLDER = "07xxxxxxx";
@@ -101,4 +104,14 @@ export const launchUssdDialer = (ussd: string, options?: UssdDialerOptions) => {
       options.onFallback?.();
     }, IOS_FALLBACK_DELAY_MS);
   }
+
+  void recordAppStateEvent(
+    {
+      type: "ussd-launch",
+      href,
+      original: ussd,
+      fallbackConfigured: Boolean(options?.onFallback),
+    },
+    options?.telemetryEndpoint,
+  );
 };

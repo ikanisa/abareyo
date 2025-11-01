@@ -27,6 +27,10 @@
     "type-check": "npm run typecheck",
     "test": "npm run typecheck && npm run test:unit",
     "test:unit": "vitest run",
+    "test:native": "vitest run tests/unit/native",
+    "test:native:android": "vitest run tests/unit/native/android",
+    "test:native:ios": "vitest run tests/unit/native/ios",
+    "test:android:instrumentation": "vitest run tests/unit/native/android",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:a11y": "playwright test tests/e2e/a11y",
@@ -37,7 +41,8 @@
     "ci:guard-payments": "tsx scripts/ci/assert-ussd-only.ts",
     "ci:check-env": "node scripts/check-frontend-env.mjs",
     "reports:worker": "tsx scripts/reports/report-schedule-worker.ts",
-    "validate:deployment": "node scripts/validate-deployment-readiness.mjs"
+    "validate:deployment": "node scripts/validate-deployment-readiness.mjs",
+    "ci:verify-mobile-qa": "node tools/ci/verify-mobile-qa.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^5.0.8",
