@@ -29,13 +29,16 @@ import { AdminTranslationsController } from './translations/admin-translations.c
 import { AdminTranslationsService } from './translations/admin-translations.service.js';
 import { AdminReportsController } from './reports/admin-reports.controller.js';
 import { AdminReportsService } from './reports/admin-reports.service.js';
+import { OtpModule } from '../otp/otp.module.js';
+import { AdminOtpController } from './otp/admin-otp.controller.js';
 
 @Module({
-  imports: [PrismaModule, ConfigModule, SmsModule, PaymentsModule, RealtimeModule, AdminMatchModule],
+  imports: [PrismaModule, ConfigModule, SmsModule, PaymentsModule, RealtimeModule, AdminMatchModule, OtpModule],
   controllers: [
     AdminAuthController,
     AdminOrdersController,
     AdminSmsController,
+    AdminOtpController,
     AdminUssdController,
     AdminMembershipController,
     AdminShopController,

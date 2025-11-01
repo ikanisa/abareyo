@@ -18,6 +18,7 @@ import { MatchesModule } from './modules/matches/matches.module.js';
 import { FanAuthModule } from './modules/fan-auth/fan-auth.module.js';
 import { MetricsModule } from './modules/metrics/metrics.module.js';
 import { HealthController } from './modules/health/health.controller.js';
+import { OtpModule } from './modules/otp/otp.module.js';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { HealthController } from './modules/health/health.controller.js';
     MatchesModule,
     FanAuthModule,
     MetricsModule,
+    OtpModule,
   ],
   controllers: [HealthController],
 })
