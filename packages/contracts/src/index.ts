@@ -58,33 +58,13 @@ export type UserMiniContract = {
   momo_number?: string;
 };
 
-export type MembershipPlanContract = {
-  id: string;
-  name: string;
-  price: number;
-  perks: Record<string, unknown>;
-};
-
-export type MembershipStatusContract = 'pending' | 'active' | 'expired' | 'cancelled';
-
-export type MembershipUpgradeRequestContract = {
-  userId: string;
-  planId: string;
-  channel: 'mtn' | 'airtel';
-};
-
-export type MembershipUpgradeResponseContract = {
-  membershipId?: string;
-  paymentId?: string;
-  ussdCode?: string;
-  amount?: number;
-  expiresAt?: string;
-  status?: MembershipStatusContract;
-  message?: string;
-};
-
 export * from './community';
 export * from './onboarding';
+export * from './commerce';
+export * from './services';
+export * from './rewards';
+export * from './news';
+export * from './members';
 
 export type TicketCheckoutItemContract = {
   zone: TicketZoneContract;
