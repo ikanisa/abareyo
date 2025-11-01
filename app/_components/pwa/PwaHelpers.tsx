@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { getStoredPwaOptIn, recordPwaOptIn } from "@/app/_lib/pwa";
 
@@ -22,6 +22,10 @@ export function InstallPrompt() {
   const [showIosPrompt, setShowIosPrompt] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [show, setShow] = useState(false);
+  const installButtonRef = useRef<HTMLButtonElement | null>(null);
+  const closeIosButtonRef = useRef<HTMLButtonElement | null>(null);
+  const dialogTitleId = useId();
+  const dialogDescriptionId = useId();
 
   useEffect(() => {
     if (!hasWindow()) return;
@@ -59,20 +63,17 @@ export function InstallPrompt() {
     }
   }, []);
 
-  // Render iOS guidance if necessary
-  if (showIosPrompt) {
-    return (
-      <div className="card break-words whitespace-normal fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
-        <span>Install GIKUNDIRO App to your Home Screen</span>
-        <p className="text-xs text-white/70">Tap the Share icon and select “Add to Home Screen”.</p>
-        <button className="btn" onClick={() => setShowIosPrompt(false)}>
-          Close
-        </button>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (show) {
+      installButtonRef.current?.focus();
+    }
+  }, [show]);
 
-  if (!show) return null;
+  useEffect(() => {
+    if (showIosPrompt) {
+      closeIosButtonRef.current?.focus();
+    }
+  }, [showIosPrompt]);
 
   const handleInstall = async () => {
     recordPwaOptIn({ reason: "install" });
@@ -85,15 +86,60 @@ export function InstallPrompt() {
     }
   };
 
+  // Render iOS guidance if necessary
+  if (showIosPrompt) {
+    return (
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={dialogTitleId}
+        aria-describedby={dialogDescriptionId}
+        className="card break-words whitespace-normal fixed inset-x-0 bottom-24 mx-auto flex w-fit max-w-lg flex-col gap-2 p-4"
+      >
+        <h2 id={dialogTitleId} className="text-base font-semibold">
+          Install GIKUNDIRO on iOS
+        </h2>
+        <p id={dialogDescriptionId} className="text-sm text-white/80">
+          Tap the Share icon and choose “Add to Home Screen” to keep matchday access one tap away.
+        </p>
+        <div className="flex items-center justify-end gap-2">
+          <button
+            ref={closeIosButtonRef}
+            type="button"
+            className="btn"
+            onClick={() => setShowIosPrompt(false)}
+          >
+            Dismiss message
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!show) return null;
+
   return (
-    <div className="card break-words whitespace-normal fixed inset-x-0 bottom-24 mx-auto flex w-fit items-center gap-2">
-      <span>Install GIKUNDIRO App?</span>
-      <button className="btn-primary" onClick={handleInstall}>
-        Install
-      </button>
-      <button className="btn" onClick={() => setShow(false)}>
-        Later
-      </button>
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={dialogTitleId}
+      aria-describedby={dialogDescriptionId}
+      className="card break-words whitespace-normal fixed inset-x-0 bottom-24 mx-auto flex w-fit max-w-lg flex-col gap-3 p-4"
+    >
+      <h2 id={dialogTitleId} className="text-base font-semibold">
+        Install GIKUNDIRO App?
+      </h2>
+      <p id={dialogDescriptionId} className="text-sm text-white/80">
+        Save fixtures, tickets, and wallet access offline with the home screen app experience.
+      </p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <button ref={installButtonRef} type="button" className="btn-primary" onClick={handleInstall}>
+          Install
+        </button>
+        <button type="button" className="btn" onClick={() => setShow(false)}>
+          Not now
+        </button>
+      </div>
     </div>
   );
 }
@@ -120,7 +166,11 @@ export function OfflineBanner() {
   if (!offline) return null;
 
   return (
-    <div className="fixed inset-x-0 top-14 bg-yellow-500/20 p-2 text-center text-yellow-100">
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed inset-x-0 top-16 z-[60] bg-amber-300 px-4 py-3 text-center text-sm font-semibold text-slate-900 shadow-lg dark:bg-amber-200"
+    >
       You’re offline. We’ll sync when you’re back.
     </div>
   );

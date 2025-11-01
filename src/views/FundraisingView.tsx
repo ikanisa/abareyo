@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { HeartHandshake, Flame, PhoneCall, Copy, Loader2, Target } from "lucide-react";
@@ -11,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { donateToProject, fetchFundraisingProjects } from "@/lib/api/fundraising";
 import type { FundraisingProject, FundraisingDonationResponse } from "@/lib/api/fundraising";
 import { launchUssdDialer } from "@/lib/ussd";
@@ -174,7 +174,7 @@ export default function Fundraising() {
             >
               {project.coverImageUrl && (
                 <div className="relative h-36 w-full overflow-hidden rounded-2xl">
-                  <Image
+                  <OptimizedImage
                     src={project.coverImageUrl}
                     alt={project.title}
                     fill

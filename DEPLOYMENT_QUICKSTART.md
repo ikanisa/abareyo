@@ -32,6 +32,10 @@ npm ci
 # Run deployment readiness check
 npm run validate:deployment
 
+# Accessibility / performance spot checks
+npm run lint:pwa
+npm run test:e2e:a11y
+
 # Expected output: All checks passed or warnings only
 ```
 
@@ -216,6 +220,13 @@ sed -i 's/__LETSENCRYPT_EMAIL__/youremail@example.com/g' k8s/cert-issuer.yaml
 # Apply cert issuer
 kubectl apply -f k8s/cert-issuer.yaml
 ```
+
+### 4.4 Launch Assets & Accessibility
+
+1. Export store icons and storyboard mocks from [`docs/launch/icons`](./docs/launch/icons) and [`docs/launch/screenshots`](./docs/launch/screenshots).
+2. Paste the latest marketing copy from [`docs/launch/promo-copy.md`](./docs/launch/promo-copy.md) into App Store Connect / Google Play Console.
+3. Attach signed accessibility and performance checklists from [`docs/launch/checklists`](./docs/launch/checklists) to the release ticket.
+4. Verify manual screen reader notes are captured in the release QA document.
 
 ---
 

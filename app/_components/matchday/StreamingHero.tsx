@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 import { MatchMeta } from "@/app/_data/matchday";
 
@@ -36,7 +36,7 @@ const StreamingHero = ({ match }: StreamingHeroProps) => {
       <div className="mt-4 flex items-center justify-between gap-6">
         <div className="flex items-center gap-3">
           <div className="relative h-12 w-12 overflow-hidden rounded-2xl bg-white/20">
-            <Image
+            <OptimizedImage
               src={match.badge}
               alt={`${match.competition} badge`}
               fill
