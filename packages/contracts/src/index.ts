@@ -18,6 +18,36 @@ export enum TicketZoneContract {
   GENERAL = 'GENERAL',
 }
 
+export type PublicFeatureFlagContract = {
+  key: string;
+  enabled: boolean;
+  description?: string | null;
+};
+
+export type PublicPartnerContract = {
+  id: string;
+  name: string;
+  category: string | null;
+  url: string | null;
+  logoUrl: string | null;
+  slug: string;
+  metadata?: Record<string, unknown> | null;
+};
+
+export type PublicMatchContract = {
+  id: string;
+  opponent: string | null;
+  kickoff: string;
+  venue: string | null;
+  status: string;
+  bluePrice?: number | null;
+  regularPrice?: number | null;
+  vipPrice?: number | null;
+  seatsBlue?: number | null;
+  seatsRegular?: number | null;
+  seatsVip?: number | null;
+};
+
 /**
  * Minimal user information for creating orders, quotes, etc.
  * Used across multiple API endpoints (tickets, shop, insurance, SACCO)
