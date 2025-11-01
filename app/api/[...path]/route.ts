@@ -231,7 +231,7 @@ async function mockResponse(req: NextRequest, ctx: MockContext) {
         id: randomUUID(),
         role: 'assistant',
         kind: 'text',
-        text: `Byiza cyane! Tuzakomeza kukumenyesha kuri WhatsApp ${whatsapp} kandi ukoreshe MoMo ${momo} gushyigikira ikipe. Uri kumwe natwe!`,
+        text: `Byiza cyane! Tuzakomeza kukohereza amakuru na OTP kuri WhatsApp ${whatsapp}. Ushobora guhagarika ubutumwa ukoresheje STOP kandi uzakoresha MoMo ${momo} gushyigikira ikipe. Uri kumwe natwe!`,
         createdAt: new Date(baseTime + 400).toISOString(),
       };
 

@@ -3,7 +3,7 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { fetchFanSession, finalizeFanOnboarding, logoutFan } from "@/lib/api/fan";
+import { fetchFanSession, finalizeFanOnboarding, loginWithSupabaseToken, logoutFan } from "@/lib/api/fan";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { FanSession } from "@/lib/api/fan";
 
@@ -16,6 +16,7 @@ type AuthContextValue = {
   onboardingStatus: string | null;
   loading: boolean;
   login: (sessionId: string) => Promise<void>;
+  completeWhatsappLogin: (payload: { accessToken: string; refreshToken?: string | null }) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
 };
@@ -47,6 +48,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     },
   });
 
+  const whatsappLoginMutation = useMutation({
+    mutationFn: async ({ accessToken, refreshToken }: { accessToken: string; refreshToken?: string | null }) => {
+      if (!supabase) {
+        throw new Error('Supabase client is not available');
+      }
+
+      const { error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken ?? accessToken,
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      await loginWithSupabaseToken({ accessToken });
+      await queryClient.invalidateQueries({ queryKey: ['fan', 'session'] });
+    },
+  });
+
   const value = useMemo(() => {
     const data = sessionQuery.data ?? null;
     return {
@@ -57,9 +78,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         sessionQuery.isLoading ||
         sessionQuery.isFetching ||
         loginMutation.isPending ||
-        logoutMutation.isPending,
+        logoutMutation.isPending ||
+        whatsappLoginMutation.isPending,
       login: async (sessionId: string) => {
         await loginMutation.mutateAsync(sessionId);
+      },
+      completeWhatsappLogin: async ({ accessToken, refreshToken }) => {
+        await whatsappLoginMutation.mutateAsync({ accessToken, refreshToken });
       },
       logout: async () => {
         await logoutMutation.mutateAsync();
@@ -73,6 +98,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loginMutation.isPending,
     logoutMutation,
     logoutMutation.isPending,
+    whatsappLoginMutation,
+    whatsappLoginMutation.isPending,
     queryClient,
     sessionQuery.data,
     sessionQuery.isFetching,

@@ -27,6 +27,7 @@ import {
 import PageShell from "@/app/_components/shell/PageShell";
 import TopAppBar from "@/app/_components/ui/TopAppBar";
 import HeroBlock from "@/app/_components/widgets/HeroBlock";
+import WhatsAppLoginNotice from "@/app/_components/auth/WhatsAppLoginNotice";
 import { SectionHeader } from "@/app/_components/widgets/SectionHeader";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Progress } from "@/components/ui/progress";
@@ -165,10 +166,14 @@ export default function More() {
     </>
   );
 
+  const showWhatsAppNotice = !user?.whatsappNumber;
+
   return (
     <PageShell mainClassName="space-y-6 pb-24">
       <TopAppBar right={topBarActions} />
       <HeroBlock title={t("nav.more", "More")} subtitle={heroSubtitle} ctas={heroCtas} />
+
+      {showWhatsAppNotice ? <WhatsAppLoginNotice source="profile" /> : null}
 
       <section className="space-y-3">
         <SectionHeader title={t("copy.profileOverview", "Your profile")} />

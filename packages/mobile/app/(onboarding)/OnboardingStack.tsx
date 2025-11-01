@@ -110,6 +110,10 @@ const StepOne = ({ value, onChange, onNext }: StepOneProps) => {
       <Text style={styles.stepLabel}>Step 1</Text>
       <Text style={styles.cardTitle}>How should we reach you?</Text>
       <Text style={styles.cardSubtitle}>We only use your contact for match alerts and account recovery.</Text>
+      <Text style={styles.notice}>
+        We use your WhatsApp number for OTP logins and club updates. Uzakira amakuru na OTP kuri WhatsApp kandi ushobora
+        guhagarika igihe ushakiye.
+      </Text>
       <TextInput
         accessibilityLabel="WhatsApp number"
         placeholder="e.g. +2507XXXXXXX"
@@ -261,6 +265,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "rgba(255,255,255,0.7)",
     marginBottom: 12,
+  },
+  notice: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.6)",
+    lineHeight: 18,
   },
   card: {
     backgroundColor: "rgba(4, 15, 26, 0.75)",

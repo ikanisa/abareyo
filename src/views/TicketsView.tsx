@@ -9,6 +9,7 @@ import { Calendar, MapPin, Users, Ticket, PhoneCall, Copy, CheckCircle2, Loader2
 import PageShell from "@/app/_components/shell/PageShell";
 import TopAppBar from "@/app/_components/ui/TopAppBar";
 import HeroBlock from "@/app/_components/widgets/HeroBlock";
+import WhatsAppLoginNotice from "@/app/_components/auth/WhatsAppLoginNotice";
 import { SectionHeader } from "@/app/_components/widgets/SectionHeader";
 import { EmptyState as WidgetEmptyState } from "@/app/_components/widgets/EmptyState";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -447,10 +448,14 @@ export default function Tickets() {
     </Link>
   );
 
+  const needsWhatsappLogin = !user?.whatsappNumber;
+
   return (
     <PageShell mainClassName="space-y-6 pb-28">
       <TopAppBar right={topBarActions} />
       <HeroBlock title="Match Tickets" subtitle={heroSubtitle} ctas={heroCtas} />
+
+      {needsWhatsappLogin ? <WhatsAppLoginNotice source="tickets" /> : null}
 
       <section className="space-y-3">
         <SectionHeader

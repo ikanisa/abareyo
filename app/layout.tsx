@@ -95,7 +95,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => (
               <NativeAppHandoff />
               <WebPushGate />
             </Suspense>
-          </>
+          </div>
         </Providers>
       </ClientErrorBoundary>
       <InstallPrompt />

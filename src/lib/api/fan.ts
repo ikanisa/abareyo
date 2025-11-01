@@ -48,6 +48,12 @@ export const finalizeFanOnboarding = (payload: { sessionId: string }) =>
     body: JSON.stringify(payload),
   });
 
+export const loginWithSupabaseToken = (payload: { accessToken: string }) =>
+  request<FanSession>('/auth/fan/supabase', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
 export const logoutFan = () =>
   request<{ status: string }>('/auth/fan/logout', {
     method: 'POST',

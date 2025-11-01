@@ -32,6 +32,8 @@ const DEFAULT_PERMISSION_KEYS = [
   'sms:retry',
   'sms:view',
   'sms:parser:update',
+  'otp:view',
+  'otp:blacklist:update',
   'gate:update',
   'membership:plan:create',
   'membership:plan:update',
