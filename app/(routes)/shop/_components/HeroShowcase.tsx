@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
@@ -9,6 +8,7 @@ import { Sparkles } from "lucide-react";
 import { formatPrice, minPrice } from "../_logic/useShop";
 import type { Product } from "../_data/products";
 import { useShopLocale } from "../_hooks/useShopLocale";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 type HeroShowcaseProps = {
   product: Product;
@@ -41,7 +41,7 @@ const HeroShowcase = ({ product }: HeroShowcaseProps) => {
               aria-hidden
             />
           )}
-          <Image
+          <OptimizedImage
             src={heroImage.src}
             alt={heroImage.alt}
             fill

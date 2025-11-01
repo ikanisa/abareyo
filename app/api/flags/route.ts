@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { tryGetSupabaseServerAnonClient } from '@/lib/db';
+import { isSupabaseClient } from '@/app/api/_lib/supabase';
 
 const DEFAULT_FLAGS = {
   'features.personalization': true,
@@ -17,7 +18,7 @@ const DEFAULT_FLAGS = {
 export async function GET() {
   const client = tryGetSupabaseServerAnonClient();
 
-  if (!client) {
+  if (!isSupabaseClient(client)) {
     return NextResponse.json({ flags: DEFAULT_FLAGS });
   }
 

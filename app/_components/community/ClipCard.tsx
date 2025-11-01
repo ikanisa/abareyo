@@ -1,10 +1,10 @@
 "use client";
 
 import { type KeyboardEvent, useEffect, useRef } from "react";
-import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 
 import type { Clip } from "@/app/_data/community";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 type ClipCardProps = Clip & {
   isActive?: boolean;
@@ -58,7 +58,7 @@ const ClipCard = ({
     >
       <div className="absolute inset-0">
         {prefersReducedMotion ? (
-          <Image
+          <OptimizedImage
             src={thumbnail}
             alt=""
             fill
@@ -74,6 +74,7 @@ const ClipCard = ({
             loop
             muted
             playsInline
+            preload="metadata"
             className="h-full w-full object-cover"
           />
         )}
@@ -93,6 +94,7 @@ const ClipCard = ({
             type="button"
             className="ml-auto btn min-h-[44px] bg-white/25 px-4 py-3 text-sm font-semibold"
             onClick={onOpenComments}
+            aria-label={`Open comments for ${title}`}
           >
             Comment
           </button>

@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Crown, MapPin } from "lucide-react";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
@@ -9,6 +8,7 @@ import type { Membership, Profile } from "@/app/_data/more";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { cn } from "@/lib/utils";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 const tierStyles: Record<Membership["tier"], string> = {
   Guest: "from-white/30 to-white/10",
@@ -53,7 +53,7 @@ export function ProfileCard({ profile, membership }: ProfileCardProps) {
         <div className="flex items-center gap-4">
           <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-3xl border border-white/30 bg-white/10">
             {profile.avatar ? (
-              <Image
+              <OptimizedImage
                 src={profile.avatar}
                 alt={`${profile.name} avatar`}
                 fill

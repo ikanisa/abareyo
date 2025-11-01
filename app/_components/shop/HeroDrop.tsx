@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import type { Product } from "@/app/_data/shop_v2";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 const getTimeParts = (target: Date) => {
   const now = new Date();
@@ -59,7 +59,7 @@ const HeroDrop = ({
           <div className="absolute -left-24 top-10 h-64 w-64 rounded-full bg-blue-500/40 blur-3xl" />
           <div className="absolute -right-16 bottom-10 h-72 w-72 rounded-full bg-amber-400/30 blur-3xl" />
           {fallbackImage ? (
-            <Image
+            <OptimizedImage
               src={fallbackImage}
               alt="Hero drop backdrop"
               fill
@@ -100,7 +100,7 @@ const HeroDrop = ({
         </div>
         <div className="relative grid place-items-center md:flex-1">
           <div className="relative aspect-[3/4] w-48 overflow-hidden rounded-3xl bg-white/5 p-4 backdrop-blur">
-            <Image
+            <OptimizedImage
               src={product.images[0] ?? fallbackImage ?? "/shop/home-front.svg"}
               alt={`${product.name} limited drop`}
               width={320}

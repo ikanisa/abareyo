@@ -1,12 +1,13 @@
-import Image from "next/image";
 import Link from "next/link";
+
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 export function FooterBrand() {
   return (
     <footer className="mt-10 flex flex-col items-center gap-2 text-center text-xs text-white/80">
       <div className="flex items-center gap-2">
         <span className="inline-flex items-center justify-center rounded-full bg-white/15 p-1">
-          <Image
+          <OptimizedImage
             src="/icon-192.png"
             alt="Rayon Sports crest"
             width={18}
