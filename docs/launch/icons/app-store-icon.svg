@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">GIKUNDIRO App Icon</title>
+  <desc id="desc">Rayon Sports crest inspired app icon with blue gradient background.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#0047FF" />
+      <stop offset="100%" stop-color="#00B4FF" />
+    </linearGradient>
+    <linearGradient id="shield" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#D9E8FF" stop-opacity="0.85" />
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="220" fill="url(#bg)" />
+  <g transform="translate(192 192)">
+    <path fill="url(#shield)" d="M320 0c128 0 256 64 256 192v96c0 160-128 288-256 320-128-32-256-160-256-320v-96C64 64 192 0 320 0z" />
+    <path fill="#0047FF" d="M320 122c-78 0-142 64-142 142s64 142 142 142 142-64 142-142S398 122 320 122zm0 220c-43 0-78-35-78-78s35-78 78-78 78 35 78 78-35 78-78 78z" />
+    <path fill="#00B4FF" d="M320 470c-98 0-178 63-178 140v34c0 11 9 20 20 20h316c11 0 20-9 20-20v-34c0-77-80-140-178-140z" />
+    <path fill="#FFC843" d="M320 60l40 90 98 12-74 68 18 96-82-48-82 48 18-96-74-68 98-12z" />
+  </g>
+</svg>

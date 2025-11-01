@@ -9,6 +9,7 @@ import NativeAppHandoff from "./_components/pwa/NativeAppHandoff";
 import WebPushGate from "./_components/pwa/WebPushGate";
 import { Suspense } from "react";
 import PageViewTracker from "./_components/telemetry/PageViewTracker";
+import SkipNavLink from "@/components/a11y/SkipNavLink";
 import { clientEnv } from "@/config/env";
 
 const siteUrl = clientEnv.NEXT_PUBLIC_SITE_URL;
@@ -80,11 +81,14 @@ export const viewport: Viewport = {
 const RootLayout = ({ children }: { children: React.ReactNode }) => (
   <html lang="en" suppressHydrationWarning>
     <body className="bg-background text-foreground">
+      <SkipNavLink />
       <OfflineBanner />
       <ClientErrorBoundary>
         <Providers>
-          <>
-            {children}
+          <div className="flex min-h-screen flex-col">
+            <div id="main-content" tabIndex={-1} className="flex-1 focus:outline-none focus-visible:outline-none">
+              {children}
+            </div>
             <BottomNavContainer />
             <Suspense fallback={null}>
               <PageViewTracker />

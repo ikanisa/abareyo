@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 
 import type { Bundle, Product } from "@/app/_data/shop_v2";
 import { formatCurrency } from "@/app/_data/shop_v2";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 type BundleCardProps = {
   bundle: Bundle;
@@ -33,7 +33,7 @@ const BundleCard = ({ bundle, products }: BundleCardProps) => {
       <div className="flex gap-4">
         {bundleProducts.map((product) => (
           <div key={product.id} className="relative aspect-square w-24 overflow-hidden rounded-2xl bg-white/10 p-3">
-            <Image src={product.images[0]} alt={product.name} width={120} height={120} className="h-full w-full object-contain" />
+            <OptimizedImage src={product.images[0]} alt={product.name} width={120} height={120} className="h-full w-full object-contain" />
           </div>
         ))}
       </div>

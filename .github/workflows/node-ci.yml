@@ -38,3 +38,12 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Native unit tests
+        run: pnpm test:native
+
+      - name: Android instrumentation tests
+        run: pnpm test:android:instrumentation
+
+      - name: Verify mobile QA documentation
+        run: pnpm ci:verify-mobile-qa

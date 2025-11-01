@@ -171,7 +171,7 @@ export const PRODUCTS: Product[] = [
     category: 'accessories',
     description:
       'Double-sided jacquard scarf with rallying cry fringe. Keeps you warm and waving high.',
-    images: [{ src: '/shop/scarf.svg', alt: 'Rayon Sports matchday scarf with rallying stripes.' }],
+    images: [{ src: '/shop/scarf.svg', alt: 'Rayon Sports matchday scarf with rallying colour bands.' }],
     badges: ['sale'],
     tags: ['Official'],
     materials: 'Acrylic knit.',

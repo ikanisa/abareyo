@@ -1,5 +1,3 @@
-import { withSentryConfig } from '@sentry/nextjs';
-
 import './config/validated-env.mjs';
 import { buildSecurityHeaders } from './config/security-headers.mjs';
 
@@ -7,8 +5,8 @@ import { buildSecurityHeaders } from './config/security-headers.mjs';
 const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
-  // Ensure local package '@rayon/contracts' is transpiled in Next.js build
-  transpilePackages: ['@rayon/contracts'],
+  // Ensure local packages are transpiled in the Next.js build
+  transpilePackages: ['@rayon/contracts', '@rayon/mobile-widgets'],
   images: {
     unoptimized: true,
     remotePatterns: [
@@ -33,14 +31,4 @@ const nextConfig = {
   },
 };
 
-const sentryOptions = {
-  silent: true,
-};
-
-const sentryWebpackPluginOptions = {
-  hideSourcemaps: true,
-};
-
-const configWithSentry = withSentryConfig(nextConfig, sentryOptions, sentryWebpackPluginOptions);
-
-export default configWithSentry;
+export default nextConfig;

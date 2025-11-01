@@ -1,6 +1,4 @@
-import type { RegisterOptions } from "@sentry/nextjs";
-
-export const register = async (_options?: RegisterOptions) => {
+export const register = async (_options?: Record<string, unknown>) => {
   const runtime = process.env.NEXT_RUNTIME;
 
   if (runtime === "nodejs") {

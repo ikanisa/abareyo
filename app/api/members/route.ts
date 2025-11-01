@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { getSupabase } from '@/app/_lib/supabase';
+import { isSupabaseClient } from '@/app/api/_lib/supabase';
 import type { Database } from '@/integrations/supabase/types';
 
 type PublicMember = Database['public']['Views']['public_members']['Row'];
 
 export async function GET(_req: NextRequest) {
-  const supabase = getSupabase();
   const fallback = { members: [] as PublicMember[] };
-
-  if (!supabase) {
+  const supabase = getSupabase();
+  if (!isSupabaseClient(supabase)) {
     return NextResponse.json(fallback);
   }
 

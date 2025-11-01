@@ -15,6 +15,8 @@ _Last updated: 2025-10-22 10:50:38Z_
 - Local preflight script consolidated under `scripts/preflight.mjs` to run env checks, backend verification, and the production build in one entry point.
 - Documented platform-agnostic secret rotation for deployment configuration.
 - Root/node engines aligned on Node 20 via `.nvmrc` + package metadata.
+- Lighthouse + axe accessibility suites part of pre-flight (`npm run lint:pwa`, `npm run test:e2e:a11y`) with artefacts tracked under `docs/launch/checklists`.
+- Store icons, screenshots, and promo copy standardised in `docs/launch/` for App Store / Play Store submissions.
 
 ## Environment Variables
 - Source of truth: `audit/env-matrix.csv` plus `.env.example` and `backend/.env.example`.
@@ -48,6 +50,7 @@ _Last updated: 2025-10-22 10:50:38Z_
 
 ## Follow-up / Open Risks
 - Consider automating backend env validation within its own CI job (outside scope of this audit).
+- Capture real device screenshots before final store submission (SVG storyboards included here as placeholders).
 
 ## References
 - Audit artifacts: `audit/inventory.json`, `audit/env-matrix.csv`

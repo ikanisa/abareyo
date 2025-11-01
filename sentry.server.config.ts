@@ -1,4 +1,4 @@
-import * as Sentry from "@sentry/nextjs";
+import * as Sentry from "@sentry/node";
 
 import { resolveSentryConfiguration } from "./src/lib/observability/sentry-config";
 
