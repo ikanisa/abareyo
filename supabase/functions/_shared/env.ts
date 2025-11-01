@@ -44,6 +44,9 @@ export const getRealtimeSigningSecret = (): string | null =>
 export const getSmsWebhookToken = (): string | null =>
   pick([Deno.env.get("SMS_WEBHOOK_TOKEN"), Deno.env.get("SMS_DIGEST_TOKEN")]);
 
+export const getSmsIngestToken = (): string | null =>
+  pick([Deno.env.get("SMS_INGEST_TOKEN"), Deno.env.get("SMS_WEBHOOK_TOKEN"), Deno.env.get("SMS_DIGEST_TOKEN")]);
+
 export const getOpenAiApiKey = (): string | null =>
   pick([Deno.env.get("OPENAI_API_KEY"), Deno.env.get("OPENAI_SECRET_KEY")]);
 

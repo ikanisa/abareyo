@@ -71,10 +71,10 @@ _(Full output retained in project notes; final row confirms the pending `partner
 | `.env` | Publishable Supabase key placeholder + updated project ID (`paysnhuxngsvzdpwlosv`). | Fill in a fresh publishable key from Supabase dashboard when ready; keep secrets out of git. See `docs/supabase/vault-secret-map.md` for live storage locations. |
 | `.env.production` | Now ships as template only; real secrets must be pulled from secure stores. | Ensure the deployment platform + Vault copies stay authoritative; remove any stray plaintext files after rotation. |
 | Preview secret store | Houses local OIDC/development tokens (legacy preview-specific env files were removed). | Confirm they stay scoped to preview; document rotation cadence. |
-| `backend/.env.example` | MoMo pay codes & backend defaults. | Expand to include Twilio/Stripe/Slack placeholders so Vault list is complete. |
+| `backend/.env.example` | MoMo pay codes & backend defaults. | Expand to include Twilio/card-gateway/Slack placeholders so Vault list is complete. |
 
 Additional gaps identified during review:
-- No committed values for `SUPABASE_SERVICE_ROLE_KEY`, Twilio, Stripe, Slack, CSP, or metrics bearer token in the repo. Ensure Vault + the hosting platform hold the definitive copies.
+- No committed values for `SUPABASE_SERVICE_ROLE_KEY`, Twilio, card gateway, Slack, CSP, or metrics bearer token in the repo. Ensure Vault + the hosting platform hold the definitive copies.
 - Generate fresh Supabase publishable/service-role keys as part of Phase 1, then delete the old values from `.env`/`.env.production`.
 - Capture a single source of truth for environment variables (Prod/Preview/Dev) in `docs/` once rotation completes.
 

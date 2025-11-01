@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">GIKUNDIRO Play Store Icon</title>
+  <desc id="desc">Dynamic triangular mark echoing Rayon Sports lightning motif.</desc>
+  <defs>
+    <linearGradient id="tri" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#0030B4" />
+      <stop offset="100%" stop-color="#31C4FF" />
+    </linearGradient>
+    <linearGradient id="beam" x1="0" x2="1" y1="0" y2="0.9">
+      <stop offset="0%" stop-color="#FFE066" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#FF9E2C" stop-opacity="0.8" />
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="220" fill="#00143A" />
+  <g transform="translate(192 160)">
+    <path fill="url(#beam)" d="M512 96 96 352l416 64z" opacity="0.85" />
+    <path fill="url(#tri)" d="M128 64 576 352 128 640z" />
+    <circle cx="220" cy="352" r="68" fill="#FFFFFF" opacity="0.95" />
+    <path fill="#00143A" d="M200 352c0-11 9-20 20-20s20 9 20 20-9 20-20 20-20-9-20-20z" />
+  </g>
+</svg>

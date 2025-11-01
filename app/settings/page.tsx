@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { buildRouteMetadata } from '@/app/_lib/navigation';
+import { MatchReminderToggles } from '@/app/settings/_components/MatchReminderToggles';
 
 export const metadata = buildRouteMetadata('/settings');
 
@@ -14,15 +15,12 @@ const SettingsPage = () => (
           Tune language, theme, notifications, and support options for your GIKUNDIRO experience.
         </p>
       </header>
-      <section className="card break-words whitespace-normal break-words whitespace-normal space-y-4 text-sm text-white/80">
+      <section className="card break-words whitespace-normal space-y-6 text-sm text-white/80">
         <div>
           <h2 className="text-lg font-semibold text-white">Language</h2>
           <p>Switch between Kinyarwanda, English, and French inside the More → Control Center screen.</p>
         </div>
-        <div>
-          <h2 className="text-lg font-semibold text-white">Notifications</h2>
-          <p>Manage match alerts, shop drops, and service reminders directly from your dashboard.</p>
-        </div>
+        <MatchReminderToggles />
         <div className="flex flex-wrap gap-3">
           <Link href="/more" className="btn-primary">
             Open dashboard

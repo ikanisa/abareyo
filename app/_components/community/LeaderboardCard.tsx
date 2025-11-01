@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import { animate, motion, useMotionValue, useReducedMotion } from "framer-motion";
 
 import type { Leader } from "@/app/_data/community";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 type LeaderboardCardProps = {
   weekly: Leader[];
@@ -89,7 +89,7 @@ const LeaderboardCard = ({ weekly, monthly }: LeaderboardCardProps) => {
           >
             <span className="text-lg font-semibold text-white/80">#{leader.rank}</span>
             <div className="h-12 w-12 overflow-hidden rounded-full border border-white/40">
-              <Image src={leader.avatar} alt="" width={48} height={48} className="h-full w-full object-cover" />
+              <OptimizedImage src={leader.avatar} alt={`${leader.name} avatar`} width={48} height={48} className="h-full w-full object-cover" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-semibold">{leader.name}</p>

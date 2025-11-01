@@ -39,7 +39,7 @@ To enable scheduling, upgrade the project to Pro → Supabase Dashboard → Data
 - **OpenAI**: Set `OPENAI_API_KEY` and optional `OPENAI_BASE_URL` in Supabase Vault for `parse-sms`, `ops-digest`, and `moderate`.
 - **SMS Webhook**: Rotate `SMS_WEBHOOK_TOKEN` via Vault and telecom provider; validate signature logic in `sms-webhook`.
 - **MoMo**: `handle_momo_webhook` expects MoMo payloads; ensure the hosting platform/Supabase API gateway restricts access by IP or secret.
-- **Stripe/Payments**: Not yet integrated; `match-payment` is a placeholder for manual reconciliation. Track Stripe integration separately.
+- **Card processor/Payments**: Not yet integrated; `match-payment` is a placeholder for manual reconciliation. Track card-processor integration separately.
 
 ## Logging & Alerts
 - Use Supabase logs → Edge Functions to enable email/slack alerts for failures.
