@@ -49,6 +49,12 @@
       "@rayon/contracts/*": [
         "./packages/contracts/src/*.ts"
       ],
+      "@rayon/design-tokens": [
+        "./packages/design-tokens/src/index.ts"
+      ],
+      "@rayon/design-tokens/*": [
+        "./packages/design-tokens/src/*.ts"
+      ],
       "@/*": [
         "./src/*",
         "*"
