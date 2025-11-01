@@ -35,7 +35,7 @@ serve(async (req) => {
 
   const { data: sp, error: spError } = await supabase
     .from("sms_parsed")
-    .select("id, amount, ref, created_at")
+    .select("id, amount, ref, created_at, sms_raw:sms_id(user_id)")
     .eq("id", smsParsedId)
     .single();
 
@@ -44,6 +44,7 @@ serve(async (req) => {
   }
 
   const amount = sp.amount ?? 0;
+  const userId = (sp as any).sms_raw?.user_id ?? null;
   const windowStart = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
 
   const { data: existingPayments } = await supabase
@@ -79,12 +80,18 @@ serve(async (req) => {
   let orderId: string | null = null;
   let matchedEntity: string | null = null;
   let paymentStatus: "pending" | "confirmed" | "failed" = "pending";
+  let momoStatus: "pending" | "allocated" | "failed" | "manual" = "pending";
+  let allocatedTo: string | null = null;
+  let allocatedId: string | null = null;
 
   if (matchedOrder) {
     orderId = matchedOrder.id;
     matchedEntity = `order:${orderId}`;
     kind = "ticket";
     paymentStatus = "confirmed";
+    momoStatus = "allocated";
+    allocatedTo = "ticket_order";
+    allocatedId = orderId;
 
     await supabase
       .from("ticket_orders")
@@ -123,6 +130,21 @@ serve(async (req) => {
 
   if (paymentError) {
     return jsonError(paymentError.message, 500);
+  }
+
+  // Create mobile_money_payments record if user_id is available
+  if (userId) {
+    await supabase.from("mobile_money_payments").insert({
+      sms_parsed_id: sp.id,
+      user_id: userId,
+      amount,
+      currency: "RWF",
+      ref: sp.ref ?? null,
+      status: momoStatus,
+      allocated_to: allocatedTo,
+      allocated_id: allocatedId,
+      allocated_at: momoStatus === "allocated" ? new Date().toISOString() : null,
+    });
   }
 
   try {
