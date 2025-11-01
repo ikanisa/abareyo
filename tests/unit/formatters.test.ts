@@ -1,10 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { formatCurrency, percentage } from '@/lib/formatters';
+import { formatCurrency, formatDateTime, formatNumber, percentage } from '@/lib/formatters';
 
 describe('formatCurrency', () => {
   it('formats values with the provided currency code', () => {
     expect(formatCurrency(12500, 'RWF')).toMatch(/RWF/);
+  });
+
+  it('respects provided locales for currency formatting', () => {
+    expect(formatCurrency(12500, 'RWF', 'fr-RW')).toBe('12 500 RF');
   });
 
   it('falls back gracefully when Intl formatting fails', () => {
@@ -15,6 +19,24 @@ describe('formatCurrency', () => {
     expect(formatCurrency(5000, 'XYZ')).toBe('5,000 XYZ');
 
     spy.mockRestore();
+  });
+});
+
+describe('formatNumber', () => {
+  it('formats plain numbers using the supplied locale', () => {
+    expect(formatNumber(25000, 'fr-RW')).toBe('25 000');
+  });
+});
+
+describe('formatDateTime', () => {
+  it('produces stable locale-aware date strings', () => {
+    const value = formatDateTime('2024-01-01T15:30:00Z', 'fr-RW', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+      timeZone: 'UTC',
+    });
+
+    expect(value).toBe('1 janv. 2024, 15:30');
   });
 });
 

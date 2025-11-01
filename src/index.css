@@ -49,8 +49,8 @@
     --radius: 1rem;
 
     /* Glass & Motion */
-    --glass-bg: 0 0% 100% / 0.75;
-    --glass-border: 232 80% 52% / 0.08;
+    --glass-bg: 0 0% 100% / 0.82;
+    --glass-border: 232 80% 52% / 0.12;
     --glass-blur: 24px;
 
     --gradient-hero: linear-gradient(135deg, hsl(232 95% 52%), hsl(195 92% 46%));
@@ -99,8 +99,8 @@
     --input: 232 50% 20%;
     --ring: 232 100% 50%;
 
-    --glass-bg: 232 95% 15% / 0.5;
-    --glass-border: 0 0% 100% / 0.1;
+    --glass-bg: 232 95% 15% / 0.68;
+    --glass-border: 0 0% 100% / 0.16;
 
     --gradient-hero: linear-gradient(135deg, hsl(232 100% 50%), hsl(195 100% 43%));
     --gradient-accent: linear-gradient(135deg, hsl(195 100% 43%), hsl(48 98% 51%));

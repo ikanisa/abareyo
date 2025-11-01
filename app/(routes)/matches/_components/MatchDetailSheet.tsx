@@ -82,7 +82,12 @@ export default function MatchDetailSheet({ id, onClose }: MatchDetailSheetProps)
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} role="presentation" />
+      <button
+        type="button"
+        className="absolute inset-0 cursor-pointer bg-black/40"
+        aria-label="Close match centre overlay"
+        onClick={onClose}
+      />
       <div
         aria-live="polite"
         aria-modal="true"

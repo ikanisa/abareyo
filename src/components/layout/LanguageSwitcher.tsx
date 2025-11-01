@@ -1,10 +1,23 @@
 "use client";
 
-import { useI18n } from "@/providers/i18n-provider";
-import { Button } from "@/components/ui/button";
+import { useMemo } from "react";
+import { ChevronDown } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useI18n } from "@/providers/i18n-provider";
+
 type Locale = "en" | "fr" | "rw";
+
+const LOCALES: Locale[] = ["en", "fr", "rw"];
 
 const names: Record<Locale, string> = {
   en: "English",
@@ -13,27 +26,58 @@ const names: Record<Locale, string> = {
 };
 
 export const LanguageSwitcher = () => {
-  const { locale } = useI18n();
+  const { locale, setLocale } = useI18n();
   const router = useRouter();
   const pathname = usePathname();
 
-  const computePath = (to: Locale) => {
-    // Remove any existing locale prefix
-    const bare = (pathname || '/').replace(/^\/(en|fr|rw)(?=\/|$)/, "") || "/";
-    if (to === "en") return bare; // default locale without prefix
-    return bare === "/" ? `/${to}` : `/${to}${bare}`;
-  };
+  const computePath = useMemo(() => {
+    const bare = (pathname || "/").replace(/^\/(en|fr|rw)(?=\/|$)/, "") || "/";
+    return (to: Locale) => {
+      if (to === "en") return bare;
+      return bare === "/" ? `/${to}` : `/${to}${bare}`;
+    };
+  }, [pathname]);
 
-  const cycle = () => {
-    const order: Locale[] = ["en", "fr", "rw"];
-    const idx = order.indexOf(locale as Locale);
-    const next = order[(idx + 1) % order.length];
+  const handleSelect = (next: Locale) => {
+    if (next === locale) {
+      return;
+    }
+    setLocale(next);
     router.push(computePath(next));
   };
 
+  const label = names[(locale as Locale) ?? "en"];
+
   return (
-    <Button variant="glass" size="sm" onClick={cycle}>
-      {names[locale as Locale]}
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="glass"
+          size="sm"
+          aria-haspopup="listbox"
+          aria-label={`Change language, current ${label}`}
+          className="inline-flex items-center gap-2"
+        >
+          <span>{label}</span>
+          <ChevronDown className="h-4 w-4" aria-hidden />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-[180px] bg-slate-950/95 text-slate-100">
+        <DropdownMenuLabel className="text-xs uppercase tracking-wide text-white/60">
+          Interface language
+        </DropdownMenuLabel>
+        <DropdownMenuRadioGroup
+          value={(locale as Locale) ?? "en"}
+          onValueChange={(value) => handleSelect(value as Locale)}
+          aria-label="Available languages"
+        >
+          {LOCALES.map((code) => (
+            <DropdownMenuRadioItem key={code} value={code}>
+              {names[code]}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
