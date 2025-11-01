@@ -12,6 +12,7 @@ import HybridPayModal from "@/app/_components/shop/HybridPayModal";
 import OrderTracker from "@/app/_components/shop/OrderTracker";
 import RecommendationCarousel from "@/app/_components/shop/RecommendationCarousel";
 import { findProductById, formatCurrency, type Product, type ShopData } from "@/app/_data/shop_v2";
+import { subscribeToPush } from "@/app/_lib/push";
 
 const CATALOG_STORAGE_KEY = "rs-shop-v2-catalog";
 
@@ -129,6 +130,9 @@ const InstallPrompt = () => {
     try {
       const status = await window.Notification.requestPermission();
       setNotificationStatus(status);
+      if (status === "granted") {
+        void subscribeToPush();
+      }
     } catch (error) {
       console.warn("Notification permission failed", error);
       setNotificationStatus("denied");

@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { applySecurityHeaders as withSecurityHeaders } from './config/security-headers.mjs';
 import { getAllowedHosts } from '@/lib/server/origins';
+import {
+  APP_STORE_URL,
+  PLAY_STORE_URL,
+  buildNativeUrl,
+  isMobileUserAgent,
+  shouldAttemptNativeHandoff,
+} from '@/lib/native/links';
 
 const LOCALES = ['en', 'fr', 'rw'] as const;
 const LOCALE_RE = new RegExp(`^/(?:${LOCALES.join('|')})(?=/|$)`);
@@ -39,6 +46,9 @@ const isTrustedLocaleRedirect = (req: NextRequest, locale: string | null) => {
   }
 };
 
+const shouldAttemptNativeHandoffRequest = (req: NextRequest) =>
+  shouldAttemptNativeHandoff(req.nextUrl.searchParams);
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
@@ -62,11 +72,24 @@ export function middleware(req: NextRequest) {
     pathname === '/favicon.ico' ||
     pathname === '/robots.txt' ||
     pathname === '/manifest.json' ||
+    pathname === '/site.webmanifest' ||
+    pathname.startsWith('/.well-known') ||
     pathname.startsWith('/icon') ||
     pathname === '/apple-touch-icon.png' ||
     /\.[\w-]+$/.test(pathname)
   ) {
     return withSecurityHeaders(NextResponse.next());
+  }
+
+  const userAgent = req.headers.get('user-agent');
+  if (shouldAttemptNativeHandoffRequest(req) && isMobileUserAgent(userAgent)) {
+    const nativeUrl = buildNativeUrl(pathname, req.nextUrl.searchParams);
+    if (nativeUrl) {
+      const response = NextResponse.redirect(nativeUrl, 307);
+      response.headers.set('x-native-fallback-android', PLAY_STORE_URL);
+      response.headers.set('x-native-fallback-ios', APP_STORE_URL);
+      return withSecurityHeaders(response);
+    }
   }
 
   const hasPrefix = LOCALE_RE.test(pathname);

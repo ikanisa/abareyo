@@ -22,6 +22,7 @@ export type RuntimeEnv = {
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE?: string;
   NEXT_PUBLIC_ADMIN_API_TOKEN?: string;
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK?: string;
+  NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY?: string;
   PORT?: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
   SITE_SUPABASE_URL: string;
@@ -38,6 +39,9 @@ export type RuntimeEnv = {
   ADMIN_SMS_PARSER_TEST_ENABLED?: string;
   ADMIN_SMS_PARSER_TEST_RATE_LIMIT?: string;
   ADMIN_SMS_PARSER_TEST_WINDOW_MS?: string;
+  WEB_PUSH_PRIVATE_KEY?: string;
+  WEB_PUSH_CONTACT?: string;
+  EXPO_PUSH_ACCESS_TOKEN?: string;
   AGENT_ID?: string;
   NEXT_PHASE?: string;
   NEXT_RUNTIME?: string;
@@ -69,6 +73,7 @@ export interface ServerEnv {
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE?: string;
   NEXT_PUBLIC_ADMIN_API_TOKEN?: string;
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK?: string;
+  NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY?: string;
   PORT?: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
   SITE_SUPABASE_URL: string;
@@ -113,6 +118,7 @@ export interface ClientEnv {
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE?: string;
   NEXT_PUBLIC_ADMIN_API_TOKEN?: string;
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK?: string;
+  NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY?: string;
 }
 
 export interface RuntimeConfig {

@@ -20,6 +20,7 @@ type RuntimeEnv = {
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE?: string;
   NEXT_PUBLIC_ADMIN_API_TOKEN?: string;
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK?: string;
+  NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY?: string;
   PORT?: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
   SITE_SUPABASE_URL: string;
@@ -32,7 +33,10 @@ type RuntimeEnv = {
   SUPABASE_ANON_KEY?: string;
   ONBOARDING_API_TOKEN: string;
   ONBOARDING_ALLOW_MOCK?: string;
-  OPENAI_API_KEY: string;
+  OPENAI_API_KEY?: string;
+  WEB_PUSH_PRIVATE_KEY?: string;
+  WEB_PUSH_CONTACT?: string;
+  EXPO_PUSH_ACCESS_TOKEN?: string;
   AGENT_ID?: string;
   NEXT_PHASE?: string;
   NEXT_RUNTIME?: string;
@@ -64,6 +68,7 @@ type ServerEnv = {
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE?: string;
   NEXT_PUBLIC_ADMIN_API_TOKEN?: string;
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK?: string;
+  NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY?: string;
   PORT?: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
   SITE_SUPABASE_URL: string;
@@ -76,7 +81,10 @@ type ServerEnv = {
   SUPABASE_ANON_KEY?: string;
   ONBOARDING_API_TOKEN: string;
   ONBOARDING_ALLOW_MOCK?: string;
-  OPENAI_API_KEY: string;
+  OPENAI_API_KEY?: string;
+  WEB_PUSH_PRIVATE_KEY?: string;
+  WEB_PUSH_CONTACT?: string;
+  EXPO_PUSH_ACCESS_TOKEN?: string;
   AGENT_ID?: string;
   NEXT_PHASE?: string;
   NEXT_RUNTIME?: string;
@@ -105,6 +113,7 @@ type ClientEnv = {
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE?: string;
   NEXT_PUBLIC_ADMIN_API_TOKEN?: string;
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK?: string;
+  NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY?: string;
 };
 
 type RuntimeConfig = {
