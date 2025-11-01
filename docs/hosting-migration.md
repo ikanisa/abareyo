@@ -69,6 +69,7 @@ Provider-agnostic options:
 The `scripts/host_agnostic_guard.ts` script runs in CI to prevent reintroduction of:
 - `@vercel/*` package imports
 - Vercel/Render environment variables (`VERCEL_*`, `RENDER_*`)
+- Direct `process.env.VERCEL` / `process.env.RENDER` lookups
 - Provider-specific domains (vercel.app, onrender.com, render.com)
 - Provider-specific config files
 

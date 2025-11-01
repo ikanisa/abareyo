@@ -23,8 +23,10 @@ const banned = [
   /\bvercel\.json\b/i,    // vercel.json config
   /\bonrender\b/i,        // onrender references
   /render\.com/i,         // render.com domains
-  /\bRENDER_[A-Z_]+/,     // RENDER_* env vars
-  /\bVERCEL_[A-Z_]+/,     // VERCEL_* env vars
+  /\bRENDER_[A-Z_]+/,                    // RENDER_* env vars
+  /\bVERCEL_[A-Z_]+/,                    // VERCEL_* env vars
+  /process\.env\.(?:VERCEL|RENDER)\b/i, // Direct process.env.VERCEL / process.env.RENDER usage
+  /process\.env\[['"](?:VERCEL|RENDER)['"]\]/i, // Bracket access to VERCEL/RENDER envs
 ];
 
 // Allowlist patterns to reduce false positives
