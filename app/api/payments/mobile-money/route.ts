@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { getSupabase } from '@/app/_lib/supabase';
 
 /**
  * GET /api/payments/mobile-money
@@ -7,7 +7,14 @@ import { createClient } from '@/lib/supabase/server';
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = getSupabase();
+
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Database unavailable' },
+        { status: 503 }
+      );
+    }
 
     // Check authentication
     const {
@@ -71,10 +78,10 @@ export async function GET(request: NextRequest) {
 
     const counts = {
       total: statusCounts?.length || 0,
-      pending: statusCounts?.filter((p) => p.status === 'pending').length || 0,
-      allocated: statusCounts?.filter((p) => p.status === 'allocated').length || 0,
-      failed: statusCounts?.filter((p) => p.status === 'failed').length || 0,
-      manual: statusCounts?.filter((p) => p.status === 'manual').length || 0,
+      pending: statusCounts?.filter((p: { status: string }) => p.status === 'pending').length || 0,
+      allocated: statusCounts?.filter((p: { status: string }) => p.status === 'allocated').length || 0,
+      failed: statusCounts?.filter((p: { status: string }) => p.status === 'failed').length || 0,
+      manual: statusCounts?.filter((p: { status: string }) => p.status === 'manual').length || 0,
     };
 
     return NextResponse.json({
@@ -101,7 +108,14 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = getSupabase();
+
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Database unavailable' },
+        { status: 503 }
+      );
+    }
 
     // Check authentication
     const {

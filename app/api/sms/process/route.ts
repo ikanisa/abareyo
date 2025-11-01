@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { getSupabase } from '@/app/_lib/supabase';
 
 /**
  * POST /api/sms/process
@@ -7,7 +7,14 @@ import { createClient } from '@/lib/supabase/server';
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = getSupabase();
+
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Database unavailable' },
+        { status: 503 }
+      );
+    }
 
     // Check authentication
     const {
@@ -132,7 +139,14 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = getSupabase();
+
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Database unavailable' },
+        { status: 503 }
+      );
+    }
 
     const {
       data: { user },
@@ -158,8 +172,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const processed = stats?.filter((s) => s.processed).length || 0;
-    const pending = stats?.filter((s) => !s.processed).length || 0;
+    const processed = stats?.filter((s: { processed: boolean }) => s.processed).length || 0;
+    const pending = stats?.filter((s: { processed: boolean }) => !s.processed).length || 0;
 
     return NextResponse.json({
       total: stats?.length || 0,

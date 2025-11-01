@@ -80,7 +80,7 @@ class SmsReaderWeb implements SmsReaderPlugin {
  * SmsReader instance - uses native implementation on Android, web fallback otherwise
  */
 export const SmsReader: SmsReaderPlugin = Capacitor.isNativePlatform()
-  ? (Capacitor as any).Plugins.SmsReader || new SmsReaderWeb()
+  ? (Capacitor as { Plugins: Record<string, unknown> }).Plugins.SmsReader as SmsReaderPlugin || new SmsReaderWeb()
   : new SmsReaderWeb();
 
 /**

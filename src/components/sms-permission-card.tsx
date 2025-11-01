@@ -146,7 +146,7 @@ export function SmsPermissionCard({
       </CardContent>
 
       <CardFooter>
-        {permissionStatus === 'unknown' || permissionStatus === 'denied' ? (
+        {(permissionStatus === 'unknown' || permissionStatus === 'denied' || permissionStatus === 'requesting') && (
           <Button
             onClick={handleRequestPermission}
             disabled={permissionStatus === 'requesting'}
@@ -154,11 +154,13 @@ export function SmsPermissionCard({
           >
             {permissionStatus === 'requesting' ? 'Requesting...' : 'Grant SMS Permission'}
           </Button>
-        ) : permissionStatus === 'checking' ? (
+        )}
+        {permissionStatus === 'checking' && (
           <Button disabled className="w-full">
             Checking permission...
           </Button>
-        ) : (
+        )}
+        {permissionStatus === 'granted' && (
           <Button onClick={checkCurrentPermission} variant="outline" className="w-full">
             Recheck Permission
           </Button>
