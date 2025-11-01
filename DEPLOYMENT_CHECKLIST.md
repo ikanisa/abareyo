@@ -4,7 +4,7 @@
 > **Status**: Production-Ready - All critical issues resolved  
 > **Last Updated**: 2025-10-29  
 > **Quick Start**: See [DEPLOYMENT_QUICKSTART.md](./DEPLOYMENT_QUICKSTART.md) for first-time deployment  
-> **Related Docs**: [PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md) | [k8s/README.md](./k8s/README.md) | [docs/runbooks/deploy.md](./docs/runbooks/deploy.md)
+> **Related Docs**: [PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md) | [docs/hosting-migration.md](./docs/hosting-migration.md) | [k8s/README.md](./k8s/README.md) | [docs/runbooks/deploy.md](./docs/runbooks/deploy.md)
 
 ## Quick Reference
 

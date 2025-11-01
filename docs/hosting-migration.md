@@ -1,155 +1,84 @@
-# Hosting Migration - Vercel & Render Cleanup
+# Hosting Migration Playbook
 
-This document records the migration to a host-agnostic architecture, removing all provider-specific code and configuration for Vercel and Render (onrender.com).
+This guide captures the migration away from Vercel- and Render-specific
+positioning to a fully host-agnostic deployment model. Use it as the single
+source of truth when auditing future changes or onboarding new platform teams.
 
-## Background
+## 1. Cleanup Summary
 
-The Rayon Sports Digital Platform was designed to be deployable on multiple hosting platforms. This cleanup ensures the codebase remains truly platform-agnostic and prevents accidental reintroduction of provider-specific dependencies.
+| Area | Action | Notes |
+| --- | --- | --- |
+| Configuration | ✅ Confirmed there is no `vercel.json`, `render.yaml`, or provider directories checked into the repo. | The `next.config.mjs` file and `middleware.ts` now express all routing logic in a portable way. |
+| Dependencies | ✅ Verified that `package.json` does not depend on `@vercel/*` or Render SDKs. | The remaining Sentry packages are framework-agnostic and required by the monitoring stack. |
+| Secrets | ✅ Removed all `VERCEL_*` / `RENDER_*` variables from documentation and `.env` samples. | `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_BACKEND_URL`, and Supabase secrets remain the canonical host-independent inputs. |
+| Documentation | ✅ Scrubbed provider marketing language from deployment checklists, cron runbooks, and Supabase guides. | Each updated document now links back to this playbook for platform guidance. |
+| CI/CD | ✅ Confirmed no workflows target Vercel or Render. | Use Docker/Kubernetes workflows or any generic Node.js host going forward. |
 
-## What Changed
+## 2. Replacements & Migrations
 
-### Configuration Files
-- ✅ No `vercel.json` or `render.yaml` files were present (already clean)
-- ✅ No `.vercel/` or `.render/` directories were present (already clean)
+### 2.1 Scheduled Workloads
 
-### Dependencies
-- ✅ No `@vercel/*` packages in `package.json` (already clean)
-- ✅ Sentry instrumentation uses `@sentry/node` and `@sentry/react` only (edge adapters removed)
+Scheduled jobs previously pitched as "Vercel cron" or "Render cron" are now
+handled via host-neutral options:
 
-### Environment Variables
-- ✅ No `VERCEL_*` or `RENDER_*` environment variables in `.env*` files (already clean)
-- ✅ Codebase uses host-agnostic env vars: `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_BASE_URL`
+- **Primary** – `scripts/reports/report-schedule-worker.ts` runs as a long-lived
+  process (Kubernetes CronJob, Fly.io app, GitHub Actions schedule, etc.).
+- **Database-native** – Supabase `pg_cron` remains available for light SQL
+  maintenance tasks.
+- **External orchestrators** – When the platform of choice lacks scheduling,
+  rely on Cronhub, EasyCron, or similar hosted schedulers that make HTTPS calls
+  into the worker.
 
-### Documentation Updates
-- 📝 `scripts/cron.md`: Updated to remove provider-specific references
-  - Changed "Vercel cron limits" → "platform-specific cron limits"
-  - Removed "Render" from hosting options list
+> **TODO:** When porting any remaining provider-specific cron triggers, capture
+> the replacement (GitHub Actions, Supabase `pg_cron`, or containerized worker)
+> in the owning runbook and cross-link this document.
 
-### CI/CD
-- ✅ No Vercel or Render deployment workflows were present (already clean)
-- ➕ Added `host-agnostic-guard.yml` workflow to prevent future violations
-- ➕ Added `scripts/host_agnostic_guard.ts` guard script
+### 2.2 Rewrites, Redirects, and Headers
 
-## Host-Agnostic Replacements
+Legacy rewrites from `vercel.json` are represented directly in the framework:
 
-### Rewrites & Headers
-Use Next.js native features instead of provider-specific configs:
-- **Rewrites**: Implement in `next.config.mjs` or Next.js middleware
-- **Headers**: Use `next.config.mjs` `headers()` function or middleware
-- **Redirects**: Use `next.config.mjs` `redirects()` function
+- **Rewrites & Redirects** – Implement in `next.config.mjs` using the
+  `rewrites()` / `redirects()` hooks. None are required today, but this is the
+  sanctioned location for future changes.
+- **Headers** – Global security headers are already centralized in
+  `config/security-headers.mjs` and applied through `next.config.mjs`.
+- **Dynamic Logic** – Reach for `middleware.ts` when rewrites depend on runtime
+  conditions (user agent detection, locale negotiation, etc.).
 
-### Cron Jobs & Scheduled Tasks
-Provider-agnostic options:
-- **GitHub Actions**: Use scheduled workflows (`.github/workflows/*.yml`)
-- **Supabase Edge Functions**: Use `pg_cron` extension for database-driven scheduling
-- **External Cron Service**: Cron-job.org, EasyCron, or similar
-- **Application-level**: Report worker (`scripts/reports/report-schedule-worker.ts`)
+> **TODO:** Audit historical `vercel.json` snippets (if discovered in earlier PRs)
+> and re-implement them with Next.js middleware or the config hooks above. Track
+> the outcome in the architecture docs (new ADR or routing note) if a
+> non-trivial flow is restored.
 
-### Analytics
-- ✅ Already using Sentry for error tracking and performance monitoring
-- Add additional analytics providers as needed (Google Analytics, Plausible, etc.)
+### 2.3 Observability & Guards
 
-### OG Images
-- Use Next.js built-in OG image generation (`next/og`)
-- Or implement custom OG image service with ImageResponse API
+The `scripts/host_agnostic_guard.ts` script protects against regressions by
+failing CI when provider-specific identifiers appear. Run it locally with
+`npx tsx scripts/host_agnostic_guard.ts` when reviewing third-party
+contributions.
 
-### Key-Value Storage
-- ✅ Primary data: Supabase PostgreSQL
-- For KV needs: Use Supabase, Redis, or any KV service
+## 3. Future Guidance
 
-## Payments & USSD
+1. **Design for containers first.** Build Docker images or Kubernetes manifests
+   as the baseline, then adapt to platforms that support them (Fly.io, Railway,
+   Render, AWS ECS, etc.).
+2. **Document platform choices.** When a team selects a hosting provider,
+   capture the decision in an ADR and reference this playbook so future
+   migrations remain lightweight.
+3. **Keep secrets generic.** Prefer neutral names (`SITE_*`, `NEXT_PUBLIC_*`) so
+   environment migrations require only value changes, not code edits.
+4. **Automate enforcement.** Extend the guard script allow/deny lists instead of
+   relying on manual review for provider drift.
+5. **Centralize cron/middleware behavior.** Whenever a new scheduled task or
+   rewrite ships, add a short note here with the owning team and runtime to keep
+   the inventory current.
 
-**No changes** - USSD-only payment flows remain unchanged:
-- iOS users see "Copy USSD" fallback
-- Core payment logic uses USSD exclusively
-- Supabase integrations unaffected
+## 4. Verification Checklist
 
-## Guard Script
+- [x] `npm run build`
+- [x] `npm run lint`
+- [x] `npx tsx scripts/host_agnostic_guard.ts`
+- [x] Scheduled worker smoke-tested via `npm run reports:worker`
 
-The `scripts/host_agnostic_guard.ts` script runs in CI to prevent reintroduction of:
-- `@vercel/*` package imports
-- Vercel/Render environment variables (`VERCEL_*`, `RENDER_*`)
-- Direct `process.env.VERCEL` / `process.env.RENDER` lookups
-- Provider-specific domains (vercel.app, onrender.com, render.com)
-- Provider-specific config files
-
-### False Positives
-The guard has allowlist patterns for common false positives:
-- React rendering concepts ("render prop", "server-side rendering")
-- Verbs like "to render", "will render"
-- Historical Sentry edge references (documentation only)
-
-### Running Locally
-```bash
-npx tsx scripts/host_agnostic_guard.ts
-```
-
-## Deployment Options
-
-The platform can now be deployed to any Node.js hosting provider:
-
-### Docker-based
-- **Kubernetes**: Use manifests in `k8s/`
-- **Docker Compose**: `docker compose up web`
-- **Fly.io**: Dockerfile-based deployment
-- **Railway**: Dockerfile support
-- **DigitalOcean App Platform**: Docker support
-
-### Platform-as-a-Service
-- **Netlify**: Next.js support
-- **Cloudflare Pages**: Next.js support
-- **AWS Amplify**: Next.js support
-
-### Self-hosted
-- **VPS**: Any Ubuntu/Debian server with Node.js 20
-- **Bare metal**: On-premises deployment
-
-## Required Environment Variables
-
-All platforms need these core variables (see `.env.example`):
-```bash
-# Required
-NEXT_PUBLIC_SITE_URL=https://your-domain.com
-NEXT_PUBLIC_BACKEND_URL=https://your-domain.com/api
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-
-# Optional
-NEXT_PUBLIC_ENVIRONMENT_LABEL=production
-SENTRY_DSN=your-sentry-dsn
-```
-
-## Rollback Plan
-
-If you need to revert these changes:
-
-1. **Via Git Tag**:
-   ```bash
-   git checkout pre-vercel-render-cleanup
-   ```
-
-2. **Via GitHub**: Revert the PR from the GitHub UI
-
-3. **Restore Quarantined Files**: No files were quarantined (none needed removal)
-
-## Verification
-
-After deployment, verify:
-- ✅ Application builds successfully: `npm run build`
-- ✅ Tests pass: `npm test`
-- ✅ Guard passes: `npx tsx scripts/host_agnostic_guard.ts`
-- ✅ USSD flows work correctly
-- ✅ Supabase integration functional
-- ✅ Admin console accessible
-
-## Support
-
-For deployment assistance:
-1. Check deployment docs: `DEPLOYMENT_QUICKSTART.md`
-2. Review platform-specific guides in `docs/`
-3. Test locally with `npm run dev` before deploying
-
----
-
-**Status**: ✅ Repository is host-agnostic and ready for deployment on any platform.
+Re-run the checklist whenever infrastructure decisions change to ensure the
+platform stays portable.
