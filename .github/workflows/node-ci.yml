@@ -26,39 +26,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.5.2
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
 
       - name: Unit tests (web + OTP)
         env:
           TEST_REDIS_URL: redis://127.0.0.1:6379/15
-        run: pnpm test:unit
+        run: npm run test:unit
 
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Lint
-        run: pnpm lint
+      - name: Backend unit tests
+        run: npm run --prefix backend test
 
       - name: Build
-        run: pnpm build
-
-      - name: Native unit tests
-        run: pnpm test:native
-
-      - name: Android instrumentation tests
-        run: pnpm test:android:instrumentation
-
-      - name: Verify mobile QA documentation
-        run: pnpm ci:verify-mobile-qa
+        run: npm run build

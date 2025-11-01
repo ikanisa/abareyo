@@ -40,8 +40,8 @@ describe('AdminOrdersService', () => {
           status: 'paid',
           OR: [
             { id: { contains: 'ABC', mode: 'insensitive' } },
-            { user: { email: { contains: 'ABC', mode: 'insensitive' } } },
-            { user: { phoneMask: { contains: 'ABC', mode: 'insensitive' } } },
+            { user: { is: { email: { contains: 'ABC', mode: 'insensitive' } } } },
+            { user: { is: { phoneMask: { contains: 'ABC', mode: 'insensitive' } } } },
             { ussdCode: { contains: 'ABC', mode: 'insensitive' } },
           ],
         },

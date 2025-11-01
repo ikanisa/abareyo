@@ -72,7 +72,12 @@ export default async function TicketPDP({ params }: { params: { id: string } }) 
           </p>
         </div>
 
-        <TicketZoneSelector zones={zones} renderPay={(amount) => <UssdPayButton amount={amount} />} />
+        <TicketZoneSelector
+          zones={zones}
+          renderPay={(amount, { disabled }) => (
+            <UssdPayButton amount={amount} disabled={disabled} disabledLabel="Sold out" />
+          )}
+        />
       </section>
     </PageShell>
   );
