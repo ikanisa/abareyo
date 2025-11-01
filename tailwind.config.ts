@@ -1,5 +1,12 @@
 import type { Config } from "tailwindcss";
 
+import {
+  gradientTokens,
+  motionTokens,
+  spacingTokens,
+  typographyTokens,
+} from "./packages/design-tokens/src";
+
 export default {
   darkMode: ["class"],
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
@@ -13,6 +20,16 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: typographyTokens.fontFamily.sans,
+        display: typographyTokens.fontFamily.display,
+        mono: typographyTokens.fontFamily.mono,
+      },
+      fontSize: typographyTokens.fontSize,
+      letterSpacing: typographyTokens.letterSpacing,
+      spacing: {
+        ...spacingTokens,
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -59,10 +76,11 @@ export default {
         gold: "hsl(var(--gold))",
       },
       backgroundImage: {
-        "gradient-hero": "var(--gradient-hero)",
-        "gradient-accent": "var(--gradient-accent)",
-        "gradient-success": "var(--gradient-success)",
-        "gradient-gold": "var(--gradient-gold)",
+        "gradient-hero": gradientTokens.hero,
+        "gradient-accent": gradientTokens.accent,
+        "gradient-success": gradientTokens.success,
+        "gradient-gold": gradientTokens.gold,
+        "gradient-surface": gradientTokens.surface,
       },
       backdropBlur: {
         glass: "var(--glass-blur)",
@@ -94,10 +112,27 @@ export default {
             height: "0",
           },
         },
+        "skeleton-pulse": {
+          "0%": { opacity: "0.55" },
+          "50%": { opacity: "1" },
+          "100%": { opacity: "0.55" },
+        },
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
+        "accordion-down": `accordion-down ${motionTokens.toMs(motionTokens.duration.standard)} ${motionTokens.easing.standard}`,
+        "accordion-up": `accordion-up ${motionTokens.toMs(motionTokens.duration.standard)} ${motionTokens.easing.standard}`,
+        skeleton: `skeleton-pulse ${motionTokens.toMs(motionTokens.duration.deliberate)} ${motionTokens.easing.standard} infinite`,
+      },
+      transitionDuration: {
+        fast: motionTokens.toMs(motionTokens.duration.fast),
+        standard: motionTokens.toMs(motionTokens.duration.standard),
+        deliberate: motionTokens.toMs(motionTokens.duration.deliberate),
+      },
+      transitionTimingFunction: {
+        standard: motionTokens.easing.standard,
+        emphasize: motionTokens.easing.emphasize,
+        entrance: motionTokens.easing.entrance,
+        exit: motionTokens.easing.exit,
       },
     },
   },

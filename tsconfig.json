@@ -49,11 +49,11 @@
       "@rayon/contracts/*": [
         "./packages/contracts/src/*.ts"
       ],
-      "@rayon/mobile-widgets": [
-        "./packages/mobile/widgets/src/index.ts"
+      "@rayon/design-tokens": [
+        "./packages/design-tokens/src/index.ts"
       ],
-      "@rayon/mobile-widgets/*": [
-        "./packages/mobile/widgets/src/*.ts"
+      "@rayon/design-tokens/*": [
+        "./packages/design-tokens/src/*.ts"
       ],
       "@/*": [
         "./src/*",

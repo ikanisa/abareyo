@@ -1,7 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
-import { QueryClient, QueryClientProvider, type QueryClientConfig } from "@tanstack/react-query";
+import { ReactNode, useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
 
 import { PWA_OPT_IN_EVENT, getStoredPwaOptIn } from "@/app/_lib/pwa";
@@ -10,9 +9,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { clientConfig } from "@/config/client";
 import { recordAppStateEvent } from "@/lib/observability";
-import { NFC_TAP_EVENT, NFC_TRANSACTION_EVENT, type NfcTapDetail, type NfcTransactionDetail } from "@/lib/nfc";
+import { QueryProvider } from "@/lib/api";
 import { AuthProvider } from "@/providers/auth-provider";
 import { I18nProvider } from "@/providers/i18n-provider";
+import { MotionProvider } from "@/providers/motion-provider";
 import { RealtimeProvider } from "@/providers/realtime-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { toast } from "sonner";
@@ -68,7 +68,6 @@ const hasPwaOptIn = () => {
 };
 
 export const Providers = ({ children }: { children: ReactNode }) => {
-  const [queryClient] = useState(() => new QueryClient(queryClientConfig));
   const telemetryEndpoint = clientConfig.telemetryEndpoint;
 
   useEffect(() => {
@@ -269,19 +268,21 @@ export const Providers = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <I18nProvider>
-          <AuthProvider>
-            <RealtimeProvider>
-              <TooltipProvider>{children}</TooltipProvider>
-            </RealtimeProvider>
-            <Toaster />
-            <Sonner />
-          </AuthProvider>
-        </I18nProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <QueryProvider>
+      <MotionProvider>
+        <ThemeProvider>
+          <I18nProvider>
+            <AuthProvider>
+              <RealtimeProvider>
+                <TooltipProvider>{children}</TooltipProvider>
+              </RealtimeProvider>
+              <Toaster />
+              <Sonner />
+            </AuthProvider>
+          </I18nProvider>
+        </ThemeProvider>
+      </MotionProvider>
+    </QueryProvider>
   );
 };
 
