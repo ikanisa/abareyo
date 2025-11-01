@@ -93,7 +93,8 @@ public class SmsReaderPlugin extends Plugin {
     /**
      * Permission callback handler
      */
-    private void permissionCallback(PluginCall call) {
+    @PluginMethod
+    public void permissionCallback(PluginCall call) {
         JSObject result = new JSObject();
         result.put("granted", hasRequiredPermissions());
         call.resolve(result);

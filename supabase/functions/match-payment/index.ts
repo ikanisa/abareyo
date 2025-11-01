@@ -44,7 +44,9 @@ serve(async (req) => {
   }
 
   const amount = sp.amount ?? 0;
-  const userId = (sp as any).sms_raw?.user_id ?? null;
+  const userId = sp.sms_raw && typeof sp.sms_raw === 'object' && 'user_id' in sp.sms_raw 
+    ? (sp.sms_raw as { user_id: string | null }).user_id 
+    : null;
   const windowStart = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
 
   const { data: existingPayments } = await supabase

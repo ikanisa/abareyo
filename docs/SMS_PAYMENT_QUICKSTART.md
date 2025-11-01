@@ -107,7 +107,7 @@ cd android
 
 ```bash
 # Send test SMS via ADB
-adb emu sms send +250788000000 "MTN Mobile Money: You have received 5000 RWF from ***789. Transaction Ref: MP123456789. Date: $(date)"
+adb emu sms send +250788000000 "MTN Mobile Money: You have received 5000 RWF from ***789. Transaction Ref: MP123456789. Date: 15 Nov 2025 14:30"
 ```
 
 #### Method B: Using Physical Device

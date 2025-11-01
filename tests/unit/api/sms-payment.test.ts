@@ -1,9 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 // Mock modules before imports
 vi.mock('@/app/_lib/supabase', () => ({
   getSupabase: vi.fn(),
 }));
+
+type MockSupabaseClient = {
+  auth: {
+    getUser: ReturnType<typeof vi.fn>;
+  };
+  from?: (table: string) => unknown;
+};
 
 describe('SMS Process API', () => {
   beforeEach(() => {
@@ -12,7 +20,7 @@ describe('SMS Process API', () => {
 
   it('should require authentication', async () => {
     const { getSupabase } = await import('@/app/_lib/supabase');
-    const mockSupabase = {
+    const mockSupabase: MockSupabaseClient = {
       auth: {
         getUser: vi.fn().mockResolvedValue({
           data: { user: null },
@@ -20,7 +28,7 @@ describe('SMS Process API', () => {
         }),
       },
     };
-    vi.mocked(getSupabase).mockReturnValue(mockSupabase as any);
+    vi.mocked(getSupabase).mockReturnValue(mockSupabase as unknown as SupabaseClient);
 
     const { POST } = await import('@/app/api/sms/process/route');
     const request = new Request('http://localhost:3000/api/sms/process', {
@@ -28,7 +36,7 @@ describe('SMS Process API', () => {
       body: JSON.stringify({ text: 'Test SMS' }),
     });
 
-    const response = await POST(request as any);
+    const response = await POST(request as never);
     const data = await response.json();
 
     expect(response.status).toBe(401);
@@ -37,7 +45,7 @@ describe('SMS Process API', () => {
 
   it('should require SMS text in request body', async () => {
     const { getSupabase } = await import('@/app/_lib/supabase');
-    const mockSupabase = {
+    const mockSupabase: MockSupabaseClient = {
       auth: {
         getUser: vi.fn().mockResolvedValue({
           data: { user: { id: 'user-123' } },
@@ -45,7 +53,7 @@ describe('SMS Process API', () => {
         }),
       },
     };
-    vi.mocked(getSupabase).mockReturnValue(mockSupabase as any);
+    vi.mocked(getSupabase).mockReturnValue(mockSupabase as unknown as SupabaseClient);
 
     const { POST } = await import('@/app/api/sms/process/route');
     const request = new Request('http://localhost:3000/api/sms/process', {
@@ -53,7 +61,7 @@ describe('SMS Process API', () => {
       body: JSON.stringify({}),
     });
 
-    const response = await POST(request as any);
+    const response = await POST(request as never);
     const data = await response.json();
 
     expect(response.status).toBe(400);
@@ -70,7 +78,7 @@ describe('SMS Process API', () => {
       body: JSON.stringify({ text: 'Test SMS' }),
     });
 
-    const response = await POST(request as any);
+    const response = await POST(request as never);
     const data = await response.json();
 
     expect(response.status).toBe(503);
@@ -85,7 +93,7 @@ describe('Mobile Money Payments API', () => {
 
   it('should require authentication for GET', async () => {
     const { getSupabase } = await import('@/app/_lib/supabase');
-    const mockSupabase = {
+    const mockSupabase: MockSupabaseClient = {
       auth: {
         getUser: vi.fn().mockResolvedValue({
           data: { user: null },
@@ -93,14 +101,14 @@ describe('Mobile Money Payments API', () => {
         }),
       },
     };
-    vi.mocked(getSupabase).mockReturnValue(mockSupabase as any);
+    vi.mocked(getSupabase).mockReturnValue(mockSupabase as unknown as SupabaseClient);
 
     const { GET } = await import('@/app/api/payments/mobile-money/route');
     const request = new Request('http://localhost:3000/api/payments/mobile-money', {
       method: 'GET',
     });
 
-    const response = await GET(request as any);
+    const response = await GET(request as never);
     const data = await response.json();
 
     expect(response.status).toBe(401);
@@ -116,7 +124,7 @@ describe('Mobile Money Payments API', () => {
       method: 'GET',
     });
 
-    const response = await GET(request as any);
+    const response = await GET(request as never);
     const data = await response.json();
 
     expect(response.status).toBe(503);
