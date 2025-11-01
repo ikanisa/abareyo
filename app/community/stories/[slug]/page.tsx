@@ -1,9 +1,9 @@
-import Image from "next/image";
 import { notFound } from "next/navigation";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
 import { communityStories } from "@/app/community/_data/stories";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 type StoryPageProps = {
   params: { slug: string };
@@ -24,7 +24,7 @@ const CommunityStoryPage = ({ params }: StoryPageProps) => {
         backHref="/community"
       />
       <div className="relative h-72 overflow-hidden rounded-3xl border border-white/15">
-        <Image
+        <OptimizedImage
           src={story.heroImage}
           alt={`${story.title} hero`}
           fill

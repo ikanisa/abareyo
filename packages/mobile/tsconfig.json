@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-native",
+    "types": ["expo"],
+    "noEmit": false,
+    "paths": {},
+    "plugins": []
+  },
+  "include": ["App.tsx", "app/**/*.ts", "app/**/*.tsx", "hooks/**/*.ts", "hooks/**/*.tsx"],
+  "exclude": ["node_modules", "dist"]
+}

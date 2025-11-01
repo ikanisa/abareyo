@@ -205,7 +205,7 @@ function checkEnvironment() {
           missingDocs.push(envVar);
         }
       }
-      
+
       logCheck(
         missingDocs.length === 0,
         'Critical env vars documented',
@@ -215,6 +215,43 @@ function checkEnvironment() {
       logCheck(false, 'Failed to read .env.example', error.message);
     }
   }
+
+  const envTemplates = ['.env.example', '.env.template', '.env.production.example'];
+  const providerSpecificRefs = [];
+  const bannedPrefixes = [/^VERCEL/i, /^RENDER/i];
+
+  for (const file of envTemplates) {
+    const filePath = path.join(rootDir, file);
+    if (!existsSync(filePath)) {
+      continue;
+    }
+
+    try {
+      const content = run(`cat ${file}`, { silent: true }) ?? '';
+      for (const line of content.split('\n')) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) {
+          continue;
+        }
+        const [rawKey] = trimmed.split('=');
+        const key = rawKey?.trim();
+        if (!key) {
+          continue;
+        }
+        if (bannedPrefixes.some((rx) => rx.test(key))) {
+          providerSpecificRefs.push(`${file}:${key}`);
+        }
+      }
+    } catch (error) {
+      providerSpecificRefs.push(`${file} (read failed: ${error instanceof Error ? error.message : String(error)})`);
+    }
+  }
+
+  logCheck(
+    providerSpecificRefs.length === 0,
+    'Provider-specific env vars removed from templates',
+    providerSpecificRefs.length > 0 ? `Found: ${providerSpecificRefs.join(', ')}` : 'Clean'
+  );
 }
 
 /**

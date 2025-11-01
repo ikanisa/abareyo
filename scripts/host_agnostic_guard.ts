@@ -55,8 +55,8 @@ const allowlist = [
   /does\s+render/i,                    // "does render" verb
   /pre.*render/i,                      // Pre-rendering
   /re.*render/i,                       // Re-rendering
-  /@sentry\/vercel-edge/i,             // Sentry transitive dependency (allowed)
-  /sentry.*vercel.*edge/i,             // Sentry edge runtime references
+  /@sentry\/vercel-edge/i,             // Historical reference to removed Sentry edge adapter
+  /sentry.*vercel.*edge/i,             // Legacy documentation references
   /host-agnostic-guard/i,              // This guard script itself
   /hosting.*migration/i,               // Migration documentation
   /vercel.*cleanup/i,                  // Cleanup documentation

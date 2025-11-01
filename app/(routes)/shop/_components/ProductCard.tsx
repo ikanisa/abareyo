@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -9,6 +8,7 @@ import { CheckCircle, ShoppingBag } from "lucide-react";
 import { formatPrice, minPrice, useCart } from "../_logic/useShop";
 import { useShopLocale, type CopyKey } from "../_hooks/useShopLocale";
 import type { Color, Product, Size } from "../_data/products";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 const swatchColor: Record<string, string> = {
   blue: "#0033FF",
@@ -138,7 +138,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
               <span className="block text-[9px] font-normal text-white/80">{saleBadgeCopy.secondary}</span>
             </span>
           )}
-          <Image
+          <OptimizedImage
             src={displayImage.src}
             alt={displayImage.alt}
             fill

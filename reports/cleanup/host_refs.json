@@ -1,0 +1,522 @@
+{
+  "matches": [
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 1,
+      "column": 3,
+      "match": "Vercel",
+      "lineText": "# Vercel & Render Cleanup - Completion Summary"
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 14,
+      "column": 11,
+      "match": "vercel",
+      "lineText": "- ✅ No `vercel.json` or `render.yaml` config files"
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 15,
+      "column": 11,
+      "match": "@vercel/",
+      "lineText": "- ✅ No `@vercel/*` packages in dependencies"
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 16,
+      "column": 11,
+      "match": "VERCEL",
+      "lineText": "- ✅ No `VERCEL_*` or `RENDER_*` environment variables"
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 17,
+      "column": 12,
+      "match": "vercel",
+      "lineText": "- ✅ No `.vercel/` or `.render/` directories"
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 18,
+      "column": 39,
+      "match": "Vercel",
+      "lineText": "- ✅ No CI/CD workflows deploying to Vercel or Render"
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 24,
+      "column": 16,
+      "match": "Vercel",
+      "lineText": "- **Before**: \"Vercel cron limits\""
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 30,
+      "column": 29,
+      "match": "Vercel",
+      "lineText": "- Comprehensive scanner for Vercel/Render references"
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 32,
+      "column": 6,
+      "match": "@vercel/",
+      "lineText": "  - `@vercel/*` package imports"
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 33,
+      "column": 6,
+      "match": "VERCEL",
+      "lineText": "  - `VERCEL_*` and `RENDER_*` environment variables"
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 34,
+      "column": 32,
+      "match": "vercel",
+      "lineText": "  - Provider-specific domains (vercel.app, onrender.com)"
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 34,
+      "column": 44,
+      "match": "onrender",
+      "lineText": "  - Provider-specific domains (vercel.app, onrender.com)"
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 35,
+      "column": 19,
+      "match": "vercel",
+      "lineText": "  - Config files (vercel.json, render.yaml)"
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 72,
+      "column": 16,
+      "match": "@vercel/",
+      "lineText": "- ✅ Detects `@vercel/*` imports"
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 73,
+      "column": 16,
+      "match": "VERCEL",
+      "lineText": "- ✅ Detects `VERCEL_*` / `RENDER_*` env vars"
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 82,
+      "column": 17,
+      "match": "vercel",
+      "lineText": "- **Tag**: `pre-vercel-render-cleanup`"
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 84,
+      "column": 34,
+      "match": "vercel",
+      "lineText": "- **Command**: `git checkout pre-vercel-render-cleanup`"
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 118,
+      "column": 34,
+      "match": "Vercel",
+      "lineText": "- [x] No remaining references to Vercel/Render (guard passes)"
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 136,
+      "column": 18,
+      "match": "vercel",
+      "lineText": "git checkout pre-vercel-render-cleanup"
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 154,
+      "column": 27,
+      "match": "Vercel",
+      "lineText": "2. ✅ Any attempt to add Vercel/Render references will fail CI"
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 166,
+      "column": 29,
+      "match": "vercel",
+      "lineText": "**Branch**: `copilot/remove-vercel-render-integration`  "
+    },
+    {
+      "file": "reports/cleanup/completion-summary.md",
+      "line": 167,
+      "column": 22,
+      "match": "vercel",
+      "lineText": "**Safety Tag**: `pre-vercel-render-cleanup`"
+    },
+    {
+      "file": ".github/workflows/host-agnostic-guard.yml",
+      "line": 14,
+      "column": 21,
+      "match": "Vercel",
+      "lineText": "    name: Check for Vercel/Render references"
+    },
+    {
+      "file": "docs/hosting-migration.md",
+      "line": 1,
+      "column": 23,
+      "match": "Vercel",
+      "lineText": "# Hosting Migration - Vercel & Render Cleanup"
+    },
+    {
+      "file": "docs/hosting-migration.md",
+      "line": 3,
+      "column": 128,
+      "match": "Vercel",
+      "lineText": "This document records the migration to a host-agnostic architecture, removing all provider-specific code and configuration for Vercel and Render (onrender.com)."
+    },
+    {
+      "file": "docs/hosting-migration.md",
+      "line": 3,
+      "column": 147,
+      "match": "onrender",
+      "lineText": "This document records the migration to a host-agnostic architecture, removing all provider-specific code and configuration for Vercel and Render (onrender.com)."
+    },
+    {
+      "file": "docs/hosting-migration.md",
+      "line": 12,
+      "column": 11,
+      "match": "vercel",
+      "lineText": "- ✅ No `vercel.json` or `render.yaml` files were present (already clean)"
+    },
+    {
+      "file": "docs/hosting-migration.md",
+      "line": 13,
+      "column": 12,
+      "match": "vercel",
+      "lineText": "- ✅ No `.vercel/` or `.render/` directories were present (already clean)"
+    },
+    {
+      "file": "docs/hosting-migration.md",
+      "line": 16,
+      "column": 11,
+      "match": "@vercel/",
+      "lineText": "- ✅ No `@vercel/*` packages in `package.json` (already clean)"
+    },
+    {
+      "file": "docs/hosting-migration.md",
+      "line": 17,
+      "column": 19,
+      "match": "vercel",
+      "lineText": "- ℹ️ `@sentry/vercel-edge` remains as a transitive dependency of `@sentry/nextjs` (required for Sentry Edge runtime)"
+    },
+    {
+      "file": "docs/hosting-migration.md",
+      "line": 20,
+      "column": 11,
+      "match": "VERCEL",
+      "lineText": "- ✅ No `VERCEL_*` or `RENDER_*` environment variables in `.env*` files (already clean)"
+    },
+    {
+      "file": "docs/hosting-migration.md",
+      "line": 25,
+      "column": 14,
+      "match": "Vercel",
+      "lineText": "  - Changed \"Vercel cron limits\" → \"platform-specific cron limits\""
+    },
+    {
+      "file": "docs/hosting-migration.md",
+      "line": 29,
+      "column": 10,
+      "match": "Vercel",
+      "lineText": "- ✅ No Vercel or Render deployment workflows were present (already clean)"
+    },
+    {
+      "file": "docs/hosting-migration.md",
+      "line": 70,
+      "column": 4,
+      "match": "@vercel/",
+      "lineText": "- `@vercel/*` package imports"
+    },
+    {
+      "file": "docs/hosting-migration.md",
+      "line": 71,
+      "column": 3,
+      "match": "Vercel",
+      "lineText": "- Vercel/Render environment variables (`VERCEL_*`, `RENDER_*`)"
+    },
+    {
+      "file": "docs/hosting-migration.md",
+      "line": 71,
+      "column": 41,
+      "match": "VERCEL",
+      "lineText": "- Vercel/Render environment variables (`VERCEL_*`, `RENDER_*`)"
+    },
+    {
+      "file": "docs/hosting-migration.md",
+      "line": 72,
+      "column": 30,
+      "match": "vercel",
+      "lineText": "- Provider-specific domains (vercel.app, onrender.com, render.com)"
+    },
+    {
+      "file": "docs/hosting-migration.md",
+      "line": 72,
+      "column": 42,
+      "match": "onrender",
+      "lineText": "- Provider-specific domains (vercel.app, onrender.com, render.com)"
+    },
+    {
+      "file": "docs/hosting-migration.md",
+      "line": 72,
+      "column": 56,
+      "match": "render.com",
+      "lineText": "- Provider-specific domains (vercel.app, onrender.com, render.com)"
+    },
+    {
+      "file": "docs/hosting-migration.md",
+      "line": 79,
+      "column": 33,
+      "match": "vercel",
+      "lineText": "- Sentry dependencies (`@sentry/vercel-edge`)"
+    },
+    {
+      "file": "docs/hosting-migration.md",
+      "line": 128,
+      "column": 21,
+      "match": "vercel",
+      "lineText": "   git checkout pre-vercel-render-cleanup"
+    },
+    {
+      "file": "scripts/cleanup/collect-hosting-audit.mjs",
+      "line": 18,
+      "column": 23,
+      "match": "vercel",
+      "lineText": "const hostPattern = '(vercel|render\\\\.com|onrender|@vercel/)';"
+    },
+    {
+      "file": "scripts/cleanup/collect-hosting-audit.mjs",
+      "line": 18,
+      "column": 43,
+      "match": "onrender",
+      "lineText": "const hostPattern = '(vercel|render\\\\.com|onrender|@vercel/)';"
+    },
+    {
+      "file": "scripts/cleanup/collect-hosting-audit.mjs",
+      "line": 18,
+      "column": 52,
+      "match": "@vercel/",
+      "lineText": "const hostPattern = '(vercel|render\\\\.com|onrender|@vercel/)';"
+    },
+    {
+      "file": "scripts/cleanup/collect-hosting-audit.mjs",
+      "line": 19,
+      "column": 37,
+      "match": "VERCEL",
+      "lineText": "const envKeyPattern = '[A-Z0-9_]*(?:VERCEL|RENDER)[A-Z0-9_]*';"
+    },
+    {
+      "file": "scripts/cleanup/collect-hosting-audit.mjs",
+      "line": 34,
+      "column": 5,
+      "match": "vercel",
+      "lineText": "  '.vercel',"
+    },
+    {
+      "file": "scripts/cleanup/collect-hosting-audit.mjs",
+      "line": 223,
+      "column": 24,
+      "match": "@vercel/",
+      "lineText": "  if (name.startsWith('@vercel/')) return true;"
+    },
+    {
+      "file": "scripts/cleanup/collect-hosting-audit.mjs",
+      "line": 314,
+      "column": 34,
+      "match": "vercel",
+      "lineText": "      const match = line.match(/(vercel|render\\\\.com|onrender|@vercel\\/)/i);"
+    },
+    {
+      "file": "scripts/cleanup/collect-hosting-audit.mjs",
+      "line": 314,
+      "column": 54,
+      "match": "onrender",
+      "lineText": "      const match = line.match(/(vercel|render\\\\.com|onrender|@vercel\\/)/i);"
+    },
+    {
+      "file": "scripts/cleanup/collect-hosting-audit.mjs",
+      "line": 314,
+      "column": 64,
+      "match": "vercel",
+      "lineText": "      const match = line.match(/(vercel|render\\\\.com|onrender|@vercel\\/)/i);"
+    },
+    {
+      "file": "scripts/cleanup/collect-hosting-audit.mjs",
+      "line": 335,
+      "column": 6,
+      "match": "vercel",
+      "lineText": "    'vercel.json',"
+    },
+    {
+      "file": "scripts/cleanup/collect-hosting-audit.mjs",
+      "line": 337,
+      "column": 7,
+      "match": "vercel",
+      "lineText": "    '.vercel',"
+    },
+    {
+      "file": "scripts/host_agnostic_guard.ts",
+      "line": 5,
+      "column": 69,
+      "match": "Vercel",
+      "lineText": " * Prevents reintroduction of provider-specific hosting references (Vercel, Render)."
+    },
+    {
+      "file": "scripts/host_agnostic_guard.ts",
+      "line": 21,
+      "column": 5,
+      "match": "vercel",
+      "lineText": "  /@vercel\\//i,           // @vercel/ packages"
+    },
+    {
+      "file": "scripts/host_agnostic_guard.ts",
+      "line": 21,
+      "column": 30,
+      "match": "@vercel/",
+      "lineText": "  /@vercel\\//i,           // @vercel/ packages"
+    },
+    {
+      "file": "scripts/host_agnostic_guard.ts",
+      "line": 22,
+      "column": 6,
+      "match": "vercel",
+      "lineText": "  /\\bvercel\\.app\\b/i,     // vercel.app domains"
+    },
+    {
+      "file": "scripts/host_agnostic_guard.ts",
+      "line": 22,
+      "column": 30,
+      "match": "vercel",
+      "lineText": "  /\\bvercel\\.app\\b/i,     // vercel.app domains"
+    },
+    {
+      "file": "scripts/host_agnostic_guard.ts",
+      "line": 23,
+      "column": 6,
+      "match": "vercel",
+      "lineText": "  /\\bvercel\\.json\\b/i,    // vercel.json config"
+    },
+    {
+      "file": "scripts/host_agnostic_guard.ts",
+      "line": 23,
+      "column": 30,
+      "match": "vercel",
+      "lineText": "  /\\bvercel\\.json\\b/i,    // vercel.json config"
+    },
+    {
+      "file": "scripts/host_agnostic_guard.ts",
+      "line": 24,
+      "column": 6,
+      "match": "onrender",
+      "lineText": "  /\\bonrender\\b/i,        // onrender references"
+    },
+    {
+      "file": "scripts/host_agnostic_guard.ts",
+      "line": 24,
+      "column": 30,
+      "match": "onrender",
+      "lineText": "  /\\bonrender\\b/i,        // onrender references"
+    },
+    {
+      "file": "scripts/host_agnostic_guard.ts",
+      "line": 25,
+      "column": 30,
+      "match": "render.com",
+      "lineText": "  /render\\.com/i,         // render.com domains"
+    },
+    {
+      "file": "scripts/host_agnostic_guard.ts",
+      "line": 27,
+      "column": 6,
+      "match": "VERCEL",
+      "lineText": "  /\\bVERCEL_[A-Z_]+/,     // VERCEL_* env vars"
+    },
+    {
+      "file": "scripts/host_agnostic_guard.ts",
+      "line": 27,
+      "column": 30,
+      "match": "VERCEL",
+      "lineText": "  /\\bVERCEL_[A-Z_]+/,     // VERCEL_* env vars"
+    },
+    {
+      "file": "scripts/host_agnostic_guard.ts",
+      "line": 44,
+      "column": 13,
+      "match": "vercel",
+      "lineText": "  /@sentry\\/vercel-edge/i,             // Sentry transitive dependency (allowed)"
+    },
+    {
+      "file": "scripts/host_agnostic_guard.ts",
+      "line": 45,
+      "column": 12,
+      "match": "vercel",
+      "lineText": "  /sentry.*vercel.*edge/i,             // Sentry edge runtime references"
+    },
+    {
+      "file": "scripts/host_agnostic_guard.ts",
+      "line": 48,
+      "column": 4,
+      "match": "vercel",
+      "lineText": "  /vercel.*cleanup/i,                  // Cleanup documentation"
+    },
+    {
+      "file": "scripts/host_agnostic_guard.ts",
+      "line": 53,
+      "column": 8,
+      "match": "vercel",
+      "lineText": "  /no.*vercel/i,                       // Documentation about absence"
+    },
+    {
+      "file": "scripts/host_agnostic_guard.ts",
+      "line": 69,
+      "column": 5,
+      "match": "vercel",
+      "lineText": "  '.vercel',"
+    },
+    {
+      "file": "scripts/host_agnostic_guard.ts",
+      "line": 149,
+      "column": 54,
+      "match": "Vercel",
+      "lineText": "  console.error('Found provider-specific references (Vercel/Render) in:\\n');"
+    },
+    {
+      "file": "package-lock.json",
+      "line": 5353,
+      "column": 18,
+      "match": "vercel",
+      "lineText": "        \"@sentry/vercel-edge\": \"10.22.0\","
+    },
+    {
+      "file": "package-lock.json",
+      "line": 5533,
+      "column": 27,
+      "match": "vercel",
+      "lineText": "    \"node_modules/@sentry/vercel-edge\": {"
+    },
+    {
+      "file": "package-lock.json",
+      "line": 5535,
+      "column": 55,
+      "match": "vercel",
+      "lineText": "      \"resolved\": \"https://registry.npmjs.org/@sentry/vercel-edge/-/vercel-edge-10.22.0.tgz\","
+    },
+    {
+      "file": "package-lock.json",
+      "line": 5535,
+      "column": 69,
+      "match": "vercel",
+      "lineText": "      \"resolved\": \"https://registry.npmjs.org/@sentry/vercel-edge/-/vercel-edge-10.22.0.tgz\","
+    }
+  ]
+}

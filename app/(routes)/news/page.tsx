@@ -1,9 +1,11 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
 import NewsClient from "./_components/NewsClient";
 import { articles } from "./_data/articles";
+import { highlights } from "./_data/highlights";
 
 export const dynamic = "force-dynamic";
 
@@ -54,19 +56,84 @@ const ArticleCard = ({ slug, title, summary, category, updatedAt }: ArticleCardP
   );
 };
 
+type HighlightCardProps = (typeof highlights)[number];
+
+const HighlightCard = ({ slug, title, summary, duration, tags, poster }: HighlightCardProps) => (
+  <Link
+    href={`/news/highlights/${slug}`}
+    className="group flex flex-col overflow-hidden rounded-3xl border border-white/15 bg-white/10 transition hover:-translate-y-1 hover:border-white/30"
+  >
+    <div className="relative aspect-video overflow-hidden bg-black/30">
+      {poster ? (
+        <Image
+          src={poster}
+          alt={`${title} highlight poster`}
+          fill
+          sizes="(max-width: 768px) 100vw, 33vw"
+          className="object-cover object-center transition group-hover:scale-105"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-sm text-white/70">{duration}</div>
+      )}
+      <span className="absolute bottom-3 left-3 rounded-full bg-black/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.26em] text-white">
+        {duration}
+      </span>
+    </div>
+    <div className="space-y-2 p-5 text-white">
+      <h3 className="text-lg font-semibold text-white transition group-hover:text-white">{title}</h3>
+      <p className="text-sm text-white/75">{summary}</p>
+      <div className="flex flex-wrap gap-2 text-xs text-white/60">
+        {tags.map((tag) => (
+          <span key={tag} className="rounded-full bg-white/10 px-2 py-1 uppercase tracking-wide">
+            #{tag}
+          </span>
+        ))}
+      </div>
+    </div>
+  </Link>
+);
+
 const NewsIndexPage = () => (
   <PageShell>
     <SubpageHeader
       title="Club Newsroom"
       eyebrow="Updates"
-      description="Training ground briefs, academy spotlights, and community highlights curated for Rayon Nation."
+      description="Training ground briefs, academy spotlights, video highlights, and community features curated for Rayon Nation."
       backHref="/"
       actions={
         <span className="rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white/80">
-          {articles.length} stories
+          {articles.length} stories · {highlights.length} highlights
         </span>
       }
     />
+    {highlights.length ? (
+      <section className="space-y-4">
+        <div className="rounded-3xl border border-white/15 bg-white/5 p-6 text-white shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
+          <p className="text-xs uppercase tracking-[0.26em] text-white/60">Featured highlight</p>
+          <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,3fr),minmax(0,2fr)]">
+            <HighlightCard {...highlights[0]} />
+            <div className="space-y-3">
+              <p className="text-sm text-white/70">
+                Stream the latest behind-the-scenes footage directly in the app. Videos respect reduced-motion preferences and
+                auto-captioned playback on the mobile client via Expo AV.
+              </p>
+              <div className="grid gap-3">
+                {highlights.slice(1, 3).map((item) => (
+                  <HighlightCard key={item.slug} {...item} />
+                ))}
+              </div>
+              <Link
+                href="/news/highlights"
+                className="inline-flex w-fit items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.26em] text-white/70 transition hover:border-white/40"
+              >
+                Browse highlight archive
+                <span aria-hidden>→</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    ) : null}
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
       {articles.map((article) => (
         <ArticleCard key={article.slug} {...article} />

@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useId, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import clsx from "clsx";
@@ -8,6 +7,7 @@ import clsx from "clsx";
 import QuoteForm from "./insurance/QuoteForm";
 import DepositForm from "./sacco/DepositForm";
 import type { Partner } from "@/app/_data/services";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 type Props = {
   partner: Partner;
@@ -33,7 +33,7 @@ const ServiceCard = ({ partner, anchorId }: Props) => {
       <div className="flex items-center gap-3">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10">
           {partner.logo ? (
-            <Image
+            <OptimizedImage
               alt={`${partner.name} logo`}
               src={partner.logo}
               width={56}
