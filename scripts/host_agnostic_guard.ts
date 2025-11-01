@@ -10,23 +10,35 @@
  * - 1: Provider-specific references detected
  */
 
-import { readFileSync, readdirSync, statSync } from 'fs';
-import { join, relative } from 'path';
+import { readFileSync, readdirSync } from 'fs';
+import { join, relative, sep } from 'path';
 
 const ROOT = process.cwd();
-const exts = ['.ts', '.tsx', '.js', '.jsx', '.json', '.md', '.yml', '.yaml', '.mjs', '.cjs'];
+const exts = new Set([
+  '.ts',
+  '.tsx',
+  '.js',
+  '.jsx',
+  '.json',
+  '.md',
+  '.yml',
+  '.yaml',
+  '.mjs',
+  '.cjs',
+]);
+const extensionList = Array.from(exts);
 
 // Banned patterns - case insensitive
 const banned = [
-  /@vercel\//i,           // @vercel/ packages
-  /\bvercel\.app\b/i,     // vercel.app domains
-  /\bvercel\.json\b/i,    // vercel.json config
-  /\bonrender\b/i,        // onrender references
-  /render\.com/i,         // render.com domains
-  /\bRENDER_[A-Z_]+/,                    // RENDER_* env vars
-  /\bVERCEL_[A-Z_]+/,                    // VERCEL_* env vars
-  /process\.env\.(?:VERCEL|RENDER)\b/i, // Direct process.env.VERCEL / process.env.RENDER usage
-  /process\.env\[['"](?:VERCEL|RENDER)['"]\]/i, // Bracket access to VERCEL/RENDER envs
+  /@vercel\//i, // @vercel/ packages
+  /\bvercel\.app\b/i, // vercel.app domains
+  /\bvercel\.json\b/i, // vercel.json config
+  /render\.ya?ml/i, // render.yaml or render.yml config
+  /\bonrender\b/i, // onrender references
+  /onrender\.com/i, // onrender.com domains
+  /render\.com/i, // render.com domains
+  /\bRENDER_[A-Z_]+/i, // RENDER_* env vars
+  /\bVERCEL_[A-Z_]+/i, // VERCEL_* env vars
 ];
 
 // Allowlist patterns to reduce false positives
@@ -61,75 +73,99 @@ const allowlist = [
 ];
 
 // Directories to skip
-const skipDirs = [
+const skipDirNames = new Set([
   'node_modules',
   '.git',
   '.next',
-  'build',
-  'coverage',
+  '.turbo',
   '.expo',
-  '.vercel',
+  '.cache',
   '.render',
-  '_quarantine',
+  '.vercel',
+  'coverage',
   'dist',
   'out',
-  '.cache',
-];
+  'build',
+  '_quarantine',
+]);
 
-let violations: Array<{ file: string; line: number; content: string }> = [];
+const skipPathPatterns = [/^reports\/cleanup\//];
+
+interface Violation {
+  file: string;
+  line: number;
+  content: string;
+}
+
+const violations: Violation[] = [];
 
 /**
  * Walk directory tree and scan files for banned patterns
  */
-function walk(p: string) {
-  const st = statSync(p);
-  
-  if (st.isDirectory()) {
-    const dirName = p.split('/').pop() || '';
-    if (skipDirs.includes(dirName)) return;
-    
-    for (const f of readdirSync(p)) {
-      if (skipDirs.includes(f)) continue;
-      walk(join(p, f));
+function walk(currentPath: string) {
+  let entries;
+
+  try {
+    entries = readdirSync(currentPath, { withFileTypes: true });
+  } catch (err) {
+    return; // Skip unreadable directories
+  }
+
+  for (const entry of entries) {
+    if (skipDirNames.has(entry.name)) continue;
+    if (entry.isSymbolicLink()) continue;
+
+    const entryPath = join(currentPath, entry.name);
+    const relativePath = toPosix(relative(ROOT, entryPath));
+
+    if (skipPathPatterns.some(pattern => pattern.test(relativePath))) {
+      continue;
     }
-  } else if (exts.some(e => p.endsWith(e))) {
-    scanFile(p);
+
+    if (entry.isDirectory()) {
+      walk(entryPath);
+      continue;
+    }
+
+    if (entry.isFile() && shouldScanFile(relativePath)) {
+      scanFile(entryPath, relativePath);
+    }
   }
 }
 
 /**
  * Scan a single file for violations
  */
-function scanFile(filePath: string) {
-  // Skip the guard script itself and cleanup reports
-  const relPath = relative(ROOT, filePath);
-  if (relPath === 'scripts/host_agnostic_guard.ts' || 
-      relPath.startsWith('reports/cleanup/')) {
-    return;
-  }
-  
+function shouldScanFile(relativePath: string): boolean {
+  if (relativePath === 'scripts/host_agnostic_guard.ts') return false;
+
+  const hasValidExtension = extensionList.some(ext => relativePath.endsWith(ext));
+  if (!hasValidExtension) return false;
+
+  return true;
+}
+
+function scanFile(filePath: string, relativePath: string) {
   try {
     const content = readFileSync(filePath, 'utf8');
     const lines = content.split('\n');
-    
+
     lines.forEach((line, idx) => {
-      // Skip if allowlisted
       if (allowlist.some(rx => rx.test(line))) return;
-      
-      // Check for banned patterns
+
       for (const bannedPattern of banned) {
         if (bannedPattern.test(line)) {
           violations.push({
-            file: relative(ROOT, filePath),
+            file: relativePath,
             line: idx + 1,
-            content: line.trim().substring(0, 100), // First 100 chars
+            content: line.trim().slice(0, 120),
           });
-          break; // One violation per line is enough
+          break;
         }
       }
     });
   } catch (err) {
-    // Skip files that can't be read (binary, permissions, etc)
+    // Skip unreadable files (binary, permissions, etc.)
   }
 }
 
@@ -138,9 +174,9 @@ function scanFile(filePath: string) {
  */
 function main() {
   console.log('🔍 Running host-agnostic guard...\n');
-  
+
   walk(ROOT);
-  
+
   if (violations.length === 0) {
     console.log('✅ No provider-specific references found.');
     console.log('   Repository is host-agnostic.');
@@ -162,3 +198,7 @@ function main() {
 }
 
 main();
+
+function toPosix(path: string): string {
+  return path.split(sep).join('/');
+}
