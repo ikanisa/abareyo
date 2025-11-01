@@ -86,6 +86,30 @@ Realtime payment confirmations are delivered through the SMS webhook. Use `node 
 
 If you plan to surface media (shop products, fundraising covers), configure S3-compatible storage in the Supabase project storage bucket or an external CDN and update product image URLs accordingly.
 
+### WhatsApp OTP Smoke Tests
+
+With the Next.js server running (`pnpm dev`) and the WhatsApp Cloud credentials set in `.env.local`, use the following `curl` commands to validate the OTP flow end-to-end:
+
+```bash
+# 1) Issue an OTP to your WhatsApp number
+curl -X POST http://localhost:3000/api/auth/whatsapp/start \
+  -H 'content-type: application/json' \
+  -d '{"phone":"+250788888888"}'
+
+# Response
+# {"ok":true,"expiresAt":"2025-01-01T12:00:00.000Z"}
+
+# 2) Verify the code you received on WhatsApp (replace 123456 with the actual OTP)
+curl -X POST http://localhost:3000/api/auth/whatsapp/verify \
+  -H 'content-type: application/json' \
+  -d '{"phone":"+250788888888","otp":"123456"}'
+
+# Response
+# {"ok":true,"token":"<hs256-jwt>"}
+```
+
+If you attempt to reuse the same OTP or submit the wrong code more than five times, the API returns descriptive errors such as `otp_expired`, `otp_invalid`, or `otp_attempts_exceeded`. The start endpoint enforces `RATE_LIMIT_PER_PHONE_PER_HOUR`, returning HTTP `429` with a `retryAt` timestamp when the hourly cap is reached.
+
 ## Run Commands
 
 `package.json` exposes the same script names across npm and pnpm. We standardise on the following pnpm invocations during local development and CI smoke tests:

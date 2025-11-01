@@ -86,6 +86,14 @@ const envSchema = z.object({
   WEB_PUSH_PRIVATE_KEY: z.string().optional(),
   WEB_PUSH_CONTACT: z.string().optional(),
   EXPO_PUSH_ACCESS_TOKEN: z.string().optional(),
+  META_WABA_BASE_URL: z.string().url().default('https://graph.facebook.com/v21.0'),
+  META_WABA_PHONE_NUMBER_ID: z.string().min(1),
+  META_WABA_ACCESS_TOKEN: z.string().min(1),
+  OTP_TEMPLATE_NAME: z.string().min(1),
+  OTP_TEMPLATE_LANGUAGE: z.string().min(1),
+  OTP_TTL_SEC: z.coerce.number().int().min(30).default(300),
+  RATE_LIMIT_PER_PHONE_PER_HOUR: z.coerce.number().int().min(1).default(5),
+  JWT_SECRET: z.string().min(32),
 
   // === Other Variables ===
   AGENT_ID: z.string().optional(),
@@ -112,6 +120,11 @@ for (const key of [
   'SITE_SUPABASE_URL',
   'SITE_SUPABASE_SECRET_KEY',
   'ONBOARDING_API_TOKEN',
+  'META_WABA_PHONE_NUMBER_ID',
+  'META_WABA_ACCESS_TOKEN',
+  'OTP_TEMPLATE_NAME',
+  'OTP_TEMPLATE_LANGUAGE',
+  'JWT_SECRET',
 ]) {
   if (!parsed[key]) {
     missingCritical.push(key);
@@ -183,6 +196,14 @@ const serverEnv = {
   WEB_PUSH_PRIVATE_KEY: parsed.WEB_PUSH_PRIVATE_KEY,
   WEB_PUSH_CONTACT: parsed.WEB_PUSH_CONTACT,
   EXPO_PUSH_ACCESS_TOKEN: parsed.EXPO_PUSH_ACCESS_TOKEN,
+  META_WABA_BASE_URL: parsed.META_WABA_BASE_URL,
+  META_WABA_PHONE_NUMBER_ID: parsed.META_WABA_PHONE_NUMBER_ID,
+  META_WABA_ACCESS_TOKEN: parsed.META_WABA_ACCESS_TOKEN,
+  OTP_TEMPLATE_NAME: parsed.OTP_TEMPLATE_NAME,
+  OTP_TEMPLATE_LANGUAGE: parsed.OTP_TEMPLATE_LANGUAGE,
+  OTP_TTL_SEC: parsed.OTP_TTL_SEC,
+  RATE_LIMIT_PER_PHONE_PER_HOUR: parsed.RATE_LIMIT_PER_PHONE_PER_HOUR,
+  JWT_SECRET: parsed.JWT_SECRET,
   AGENT_ID: parsed.AGENT_ID,
   NEXT_PHASE: parsed.NEXT_PHASE,
   NEXT_RUNTIME: parsed.NEXT_RUNTIME,

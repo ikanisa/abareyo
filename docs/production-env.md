@@ -32,6 +32,13 @@ Required runtime env vars
   - NEXT_PUBLIC_TELEMETRY_URL (optional override for telemetry beacons; defaults to `/api/telemetry/app-state`)
   - NEXT_PUBLIC_ENVIRONMENT_LABEL (optional ribbon)
   - NEXT_PUBLIC_ADMIN_SESSION_COOKIE (optional; default admin_session)
+  - META_WABA_BASE_URL (WhatsApp Cloud API base URL; defaults to https://graph.facebook.com/v21.0)
+  - META_WABA_PHONE_NUMBER_ID (Meta WhatsApp Business phone number identifier)
+  - META_WABA_ACCESS_TOKEN (Meta Cloud API access token with message send permissions)
+  - OTP_TEMPLATE_NAME / OTP_TEMPLATE_LANGUAGE (template identifier + locale code for OTP message)
+  - OTP_TTL_SEC (lifetime in seconds for issued OTPs and signed JWTs)
+  - RATE_LIMIT_PER_PHONE_PER_HOUR (number of OTP sends allowed per phone per hour)
+  - JWT_SECRET (HS256 secret used to hash OTPs and sign verification tokens; minimum 32 characters)
 
 - Supabase Edge Functions / Vault secrets
   - SITE_SUPABASE_URL (custom prefix required because Supabase reserves `SUPABASE_*`)
