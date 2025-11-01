@@ -99,6 +99,11 @@ Create these secrets for backend deployment:
 **Services** (Optional):
 - [ ] `APP_ENABLE_CSP=1` - Enable Content Security Policy
 - [ ] `LOG_LEVEL` - Logging level (info, debug, error)
+- [ ] `WHATSAPP_ACCESS_TOKEN` - Meta Cloud API token for OTP delivery
+- [ ] `WHATSAPP_PHONE_NUMBER_ID` - WhatsApp sender number configured for OTP
+- [ ] `WHATSAPP_OTP_TEMPLATE` - (Optional) approved template for OTP messages
+- [ ] `WHATSAPP_VERIFY_TOKEN` - Shared secret for webhook handshake
+- [ ] `WHATSAPP_APP_SECRET` - Optional signature validation secret
 
 **Secret Generation Helper**:
 ```bash
@@ -120,6 +125,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
   - [ ] Instance created
   - [ ] Connection string obtained
   - [ ] Persistence enabled (recommended)
+  - [ ] OTP/login rate limit usage monitored via `INFO`/dashboard
   
 - [ ] **Supabase Project** configured with:
   - [ ] Project created
@@ -200,6 +206,11 @@ kubectl -n rayon create secret generic frontend-secrets \
 kubectl -n rayon create secret generic backend-secrets \
   --from-literal=DATABASE_URL=postgresql://user:pass@host:5432/db \
   --from-literal=REDIS_URL=redis://host:6379 \
+  --from-literal=WHATSAPP_ACCESS_TOKEN=your-meta-token \
+  --from-literal=WHATSAPP_PHONE_NUMBER_ID=your-number-id \
+  --from-literal=WHATSAPP_OTP_TEMPLATE=otp_template \
+  --from-literal=WHATSAPP_VERIFY_TOKEN=webhook-verify-token \
+  --from-literal=WHATSAPP_APP_SECRET=meta-app-secret \
   --from-literal=ADMIN_SESSION_SECRET=$(openssl rand -hex 32) \
   --from-literal=FAN_SESSION_SECRET=$(openssl rand -hex 32) \
   --from-literal=METRICS_TOKEN=$(openssl rand -hex 32) \
