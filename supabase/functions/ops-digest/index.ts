@@ -10,7 +10,7 @@ const OPENAI_API_KEY = requireEnv(getOpenAiApiKey(), "OPENAI_API_KEY");
 serve(async (_req) => {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-  const [{ data: sms }, { data: payments }] = await Promise.all([
+  const [{ data: sms }, { data: payments }, { data: perks }, { data: matches }] = await Promise.all([
     supabase
       .from("sms_parsed")
       .select("id, amount, currency, matched_entity, confidence, created_at")
@@ -19,6 +19,17 @@ serve(async (_req) => {
       .from("payments")
       .select("id, kind, status, amount, order_id, created_at")
       .gte("created_at", since),
+    supabase
+      .from("rewards_events")
+      .select("id, user_id, meta, created_at")
+      .eq("source", "ticket_perk")
+      .gte("created_at", since),
+    supabase
+      .from("matches")
+      .select("id, opponent, kickoff, status, is_public")
+      .gte("kickoff", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+      .order("kickoff", { ascending: true })
+      .limit(6),
   ]);
 
   const prompt = [
@@ -27,6 +38,8 @@ serve(async (_req) => {
     "Provide 3 actionable suggestions max.",
     `SMS_PARSED_DATA=${JSON.stringify(sms ?? [])}`,
     `PAYMENTS_DATA=${JSON.stringify(payments ?? [])}`,
+    `PERK_EVENTS=${JSON.stringify(perks ?? [])}`,
+    `UPCOMING_MATCHES=${JSON.stringify(matches ?? [])}`,
   ].join("\n");
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {

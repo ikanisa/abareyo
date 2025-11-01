@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -22,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 import {
   createCommunityComment,
@@ -187,7 +187,7 @@ function PostCard({
                   key={url}
                   className="relative h-32 w-full overflow-hidden rounded-xl border border-border/60"
                 >
-                  <Image
+                  <OptimizedImage
                     src={url}
                     alt="Post attachment"
                     fill
