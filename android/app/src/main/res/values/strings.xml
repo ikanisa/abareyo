@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Rayon Sports</string>
-    <string name="tapmomo_service_description">TapMoMo virtual merchant card</string>
+    <string name="supabase_url">https://example.supabase.co</string>
+    <string name="supabase_service_key">supabase-service-key-placeholder</string>
 </resources>
