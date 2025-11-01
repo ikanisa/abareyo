@@ -14,7 +14,7 @@ The Rayon Sports Digital Platform was designed to be deployable on multiple host
 
 ### Dependencies
 - ✅ No `@vercel/*` packages in `package.json` (already clean)
-- ℹ️ `@sentry/vercel-edge` remains as a transitive dependency of `@sentry/nextjs` (required for Sentry Edge runtime)
+- ✅ Sentry instrumentation uses `@sentry/node` and `@sentry/react` only (edge adapters removed)
 
 ### Environment Variables
 - ✅ No `VERCEL_*` or `RENDER_*` environment variables in `.env*` files (already clean)
@@ -76,7 +76,7 @@ The `scripts/host_agnostic_guard.ts` script runs in CI to prevent reintroduction
 The guard has allowlist patterns for common false positives:
 - React rendering concepts ("render prop", "server-side rendering")
 - Verbs like "to render", "will render"
-- Sentry dependencies (`@sentry/vercel-edge`)
+- Historical Sentry edge references (documentation only)
 
 ### Running Locally
 ```bash
