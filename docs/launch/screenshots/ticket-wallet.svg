@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 3040" role="img" aria-labelledby="title desc">
+  <title id="title">Ticket Wallet Screenshot Mock</title>
+  <desc id="desc">Wallet and ticket management preview for store marketing.</desc>
+  <rect width="1440" height="3040" rx="120" fill="#001633" />
+  <rect x="160" y="240" width="1120" height="320" rx="48" fill="#022c57" />
+  <rect x="200" y="300" width="1040" height="200" rx="36" fill="#0e4ea3" />
+  <rect x="160" y="620" width="1120" height="520" rx="56" fill="#ffffff" opacity="0.96" />
+  <rect x="220" y="680" width="520" height="420" rx="48" fill="#0e4ea3" opacity="0.85" />
+  <rect x="780" y="680" width="320" height="120" rx="32" fill="#0e4ea3" opacity="0.6" />
+  <rect x="780" y="840" width="320" height="80" rx="28" fill="#0e4ea3" opacity="0.6" />
+  <rect x="780" y="960" width="320" height="80" rx="28" fill="#0e4ea3" opacity="0.6" />
+  <rect x="160" y="1180" width="1120" height="680" rx="60" fill="#ffffff" opacity="0.94" />
+  <rect x="220" y="1240" width="1000" height="160" rx="32" fill="#0e4ea3" opacity="0.75" />
+  <rect x="220" y="1440" width="1000" height="320" rx="44" fill="#f2f6ff" />
+  <rect x="160" y="1900" width="1120" height="780" rx="64" fill="#ffffff" opacity="0.94" />
+  <rect x="200" y="1960" width="520" height="260" rx="42" fill="#0e4ea3" opacity="0.82" />
+  <rect x="760" y="1960" width="520" height="260" rx="42" fill="#0e4ea3" opacity="0.82" />
+  <rect x="200" y="2260" width="1080" height="360" rx="48" fill="#0e4ea3" opacity="0.65" />
+</svg>

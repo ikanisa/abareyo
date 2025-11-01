@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { useCallback, useMemo, useRef, useState, type TouchEvent as ReactTouchEvent, type WheelEvent as ReactWheelEvent } from "react";
 import { motion, useReducedMotion, type PanInfo } from "framer-motion";
 
 import type { Product } from "../_data/products";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 const PDPGallery = ({ product }: { product: Product }) => {
   const [index, setIndex] = useState(0);
@@ -115,7 +115,7 @@ const PDPGallery = ({ product }: { product: Product }) => {
             onWheel={handleWheel}
             onDoubleClick={toggleZoom}
           >
-            <Image
+            <OptimizedImage
               src={active.src}
               alt={active.alt}
               fill
@@ -151,7 +151,7 @@ const PDPGallery = ({ product }: { product: Product }) => {
               aria-label={`Show image ${thumbIndex + 1}`}
               aria-pressed={isActive}
             >
-              <Image
+              <OptimizedImage
                 src={image.src}
                 alt={image.alt}
                 fill

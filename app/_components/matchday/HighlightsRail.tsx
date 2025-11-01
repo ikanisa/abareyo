@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import Image from "next/image";
 
 import type { Clip } from "@/app/_data/matchday";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 type HighlightsRailProps = {
   clips: Clip[];
@@ -82,7 +82,7 @@ const HighlightsRail = ({ clips, activeClip, onSelect, onClose }: HighlightsRail
             aria-pressed={activeClip?.id === clip.id}
           >
             <div className="relative h-32 w-56 overflow-hidden rounded-xl">
-              <Image
+              <OptimizedImage
                 src={clip.thumb}
                 alt={clip.title}
                 fill
