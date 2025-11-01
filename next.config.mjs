@@ -7,8 +7,8 @@ import { buildSecurityHeaders } from './config/security-headers.mjs';
 const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
-  // Ensure local package '@rayon/contracts' is transpiled in Next.js build
-  transpilePackages: ['@rayon/contracts'],
+  // Ensure local packages are transpiled in the Next.js build
+  transpilePackages: ['@rayon/contracts', '@rayon/mobile-widgets'],
   images: {
     unoptimized: true,
     remotePatterns: [

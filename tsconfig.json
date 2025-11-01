@@ -49,6 +49,12 @@
       "@rayon/contracts/*": [
         "./packages/contracts/src/*.ts"
       ],
+      "@rayon/mobile-widgets": [
+        "./packages/mobile/widgets/src/index.ts"
+      ],
+      "@rayon/mobile-widgets/*": [
+        "./packages/mobile/widgets/src/*.ts"
+      ],
       "@/*": [
         "./src/*",
         "*"
