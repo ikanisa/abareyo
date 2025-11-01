@@ -10,6 +10,7 @@ import {
   type Match,
 } from "@/app/_data/matches";
 import { tryGetSupabaseServerAnonClient } from "@/lib/db";
+import { invokeSupabaseFunction } from "@/lib/supabase-edge";
 
 export const runtime = "edge";
 
@@ -21,17 +22,28 @@ type SupabaseMatchRow = {
 };
 
 async function fetchMatchesFromSupabase() {
-  const supabase = tryGetSupabaseServerAnonClient();
-  if (!supabase) return null;
+  try {
+    const payload = await invokeSupabaseFunction<{
+      matches?: Array<Record<string, unknown>>;
+      updatedAt?: string;
+    }>("match-centre");
+    if (!payload || !Array.isArray(payload.matches)) {
+      return null;
+    }
+    return payload.matches;
+  } catch (error) {
+    console.warn("match-centre function failed", error);
+    const supabase = tryGetSupabaseServerAnonClient();
+    if (!supabase) return null;
 
-  const { data, error } = await supabase.from("public_match_schedule").select("*").order("kickoff");
+    const { data, error: queryError } = await supabase.from("matches").select("*").order("kickoff");
 
-  if (error) {
-    // Swallow error and allow fallback to fixtures
-    console.error("Supabase matches fetch failed:", error.message);
-    return null;
+    if (queryError) {
+      console.error("Supabase matches fetch failed:", queryError.message);
+      return null;
+    }
+    return data ?? null;
   }
-  return data ?? null;
 }
 
 /**
