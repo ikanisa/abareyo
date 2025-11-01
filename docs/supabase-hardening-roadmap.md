@@ -27,7 +27,7 @@ This document captures the remaining production-readiness work for the Supabase 
 - Populate Supabase **Vault** with production secrets and reference them from Edge Functions:
   - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`
   - `MOMO_API_KEY` or payment provider equivalents
-  - `STRIPE_SECRET_KEY` (if Stripe wrapper is enabled)
+  - `CARD_GATEWAY_SECRET_KEY` (if a card-processing wrapper is enabled)
   - Slack / Teams webhook URLs for alerts
   - `OPENAI_API_KEY`, `SMS_WEBHOOK_TOKEN`, etc. (migrate existing plain secrets)
 - Use the `SITE_SUPABASE_URL` / `SITE_SUPABASE_PUBLISHABLE_KEY` / `SITE_SUPABASE_SECRET_KEY` aliases when storing Supabase credentials in Vault or via the CLI (`SUPABASE_*` names are reserved).
@@ -58,7 +58,7 @@ This document captures the remaining production-readiness work for the Supabase 
   1. `supabase functions deploy <function-name> --import-map supabase/functions/import_map.json`
   2. Set secrets via `supabase secrets set`.
 - Install official wrappers where required:
-  - **Stripe** for payments.
+  - **Payment gateway** for card processing integrations.
   - **Cron** for scheduled jobs (e.g., nightly digests, ticket expiry).
   - **Queues** if asynchronous processing is needed.
 - Write smoke tests for functions (simulate webhooks, failure cases) and run in CI.
@@ -96,7 +96,7 @@ This document captures the remaining production-readiness work for the Supabase 
 | Enable attack protection & MFA | Auth | ☐ | Capture policy decisions |
 | Create storage buckets & RLS | Backend | ☐ | Document bucket naming |
 | Deploy all edge functions | Platform | ☐ | Add CLI deploy script |
-| Install Stripe / Cron / Queues wrappers | Platform | ☐ | Confirm billing impact |
+| Install payment gateway / Cron / Queues wrappers | Platform | ☐ | Confirm billing impact |
 | Configure log streaming & alerts | DevOps | ☐ | Slack channel #alerts |
 | Integrate Supabase CLI into CI | DevOps | ☐ | Add manual approval step |
 | Runbook & governance docs | Ops | ☐ | Publish in `docs/operations` |

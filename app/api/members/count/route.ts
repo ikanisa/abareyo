@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getSupabase } from '@/app/_lib/supabase';
+import { isSupabaseClient } from '@/app/api/_lib/supabase';
 
 export async function GET() {
   const supabase = getSupabase();
-  if (!supabase) {
+  if (!isSupabaseClient(supabase)) {
     return NextResponse.json({ count: 0 });
   }
 

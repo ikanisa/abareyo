@@ -1,13 +1,11 @@
-import * as Sentry from "@sentry/nextjs";
-
 import { resolveSentryConfiguration } from "./src/lib/observability/sentry-config";
 
 const { dsn, environment } = resolveSentryConfiguration("edge");
-const enabled = Boolean(dsn);
 
-Sentry.init({
-  dsn: dsn || undefined,
-  enabled,
-  environment,
-  tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? "0.1"),
-});
+if (dsn) {
+  console.warn(
+    `Sentry edge runtime DSN detected for ${environment}, but edge instrumentation is disabled after removing vercel-edge adapters.`,
+  );
+} else if (process.env.NODE_ENV !== "production") {
+  console.info("Sentry edge runtime instrumentation is disabled; no DSN configured.");
+}

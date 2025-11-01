@@ -14,6 +14,13 @@ export class ServiceSupabaseClientUnavailableError extends Error {
   }
 }
 
+export const isSupabaseClient = (
+  client: unknown,
+): client is SupabaseClient =>
+  typeof client === 'object' &&
+  client !== null &&
+  typeof (client as { from?: unknown }).from === 'function';
+
 export const resetServiceSupabaseClient = () => {
   resetSupabaseClients();
 };

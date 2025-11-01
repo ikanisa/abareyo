@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode, useEffect, useState } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, type QueryClientConfig } from "@tanstack/react-query";
 import { Capacitor } from "@capacitor/core";
 
 import { PWA_OPT_IN_EVENT, getStoredPwaOptIn } from "@/app/_lib/pwa";
@@ -18,6 +18,26 @@ import { ThemeProvider } from "@/providers/theme-provider";
 import { toast } from "sonner";
 
 const hasWindow = () => typeof window !== 'undefined';
+
+const queryClientConfig: QueryClientConfig = {
+  defaultOptions: {
+    queries: {
+      staleTime: 90_000,
+      gcTime: 15 * 60_000,
+      refetchOnReconnect: 'always',
+      refetchOnWindowFocus: false,
+      retry(failureCount, error) {
+        if (failureCount >= 2) {
+          return false;
+        }
+        return !(error instanceof Error && /404|403/.test(error.message));
+      },
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+};
 
 let serviceWorkerRegistered = false;
 const registerServiceWorker = async () => {
@@ -48,7 +68,7 @@ const hasPwaOptIn = () => {
 };
 
 export const Providers = ({ children }: { children: ReactNode }) => {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(() => new QueryClient(queryClientConfig));
   const telemetryEndpoint = clientConfig.telemetryEndpoint;
 
   useEffect(() => {
