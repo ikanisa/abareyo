@@ -66,6 +66,10 @@ Create these secrets in your deployment platform or K8s secrets:
 - [ ] `ONBOARDING_API_TOKEN` - Server-side onboarding API token
 - [ ] `OPENAI_API_KEY` - OpenAI API key for AI features
 
+**Mobile Auth (Required for OTP flows)**:
+- [ ] `EXPO_PUBLIC_WEB_URL` - Expo mobile API base (falls back to `NEXT_PUBLIC_SITE_URL`)
+- [ ] `API_BASE_URL` - Native mobile API base for Compose/SwiftUI builds
+
 **Production Services** (Optional but Recommended):
 - [ ] `NEXT_PUBLIC_SENTRY_DSN` - Error tracking
 - [ ] `SENTRY_DSN` - Server-side error tracking
