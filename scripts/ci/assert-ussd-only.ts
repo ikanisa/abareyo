@@ -12,7 +12,13 @@ const bannedPatterns = [
   /pesapal/i,
 ];
 
-const whitelist = [/scripts\/ci\/assert-ussd-only\.ts$/];
+const whitelist = [
+  /scripts\/ci\/assert-ussd-only\.ts$/,
+  /package-lock\.json$/,
+  /pnpm-lock\.ya?ml$/,
+  /yarn\.lock$/,
+  /bun\.lockb$/,
+];
 
 const files = execSync('git ls-files', { encoding: 'utf-8' })
   .split('\n')
