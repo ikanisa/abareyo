@@ -1,0 +1,44 @@
+{
+  "scan_date": "2025-11-01T06:44:24.120Z",
+  "summary": "Comprehensive scan for Vercel and Render references",
+  "findings": {
+    "config_files": {
+      "vercel.json": "NOT FOUND",
+      "render.yaml": "NOT FOUND",
+      "render.yml": "NOT FOUND",
+      ".vercel/": "NOT FOUND",
+      ".render/": "NOT FOUND"
+    },
+    "packages": {
+      "@vercel/*": "NONE in package.json",
+      "render_related": "NONE in package.json",
+      "transitive_dependencies": {
+        "@sentry/vercel-edge": "REMOVED - Sentry now initialised via @sentry/node and @sentry/react"
+      }
+    },
+    "env_vars": {
+      "VERCEL_*": "NONE found in .env* files",
+      "RENDER_*": "NONE found in .env* files"
+    },
+    "code_references": {
+      "scripts/cron.md:50": "mention of 'Vercel cron limits' in documentation (informational only)"
+    },
+    "workflows": {
+      "vercel_deploy": "NONE",
+      "render_deploy": "NONE"
+    }
+  },
+  "action_required": {
+    "files_to_update": [
+      "scripts/cron.md - line 50: update wording to be provider-agnostic"
+    ],
+    "guard_to_add": [
+      "scripts/host_agnostic_guard.ts",
+      ".github/workflows/host-agnostic-guard.yml"
+    ],
+    "docs_to_create": [
+      "docs/hosting-migration.md"
+    ]
+  },
+  "status": "MINIMAL CLEANUP NEEDED - Repository is already largely host-agnostic"
+}

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { CreditCard, Clock, CheckCircle2, Search, RefreshCw, Ticket } from "lucide-react";
+import { CreditCard, Clock, CheckCircle2, Search, RefreshCw, Ticket, Nfc } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
 import { QRCodeCanvas } from "qrcode.react";
 
 import { GlassCard } from "@/components/ui/glass-card";
@@ -12,7 +13,10 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
 import { fetchWalletSummary, fetchWalletTransactions } from "@/lib/api/wallet";
+import { requestTapMoMoPayload } from "@/lib/api/tapmomo";
+import { TapMoMo } from "@/lib/native/tapmomo";
 import { fetchActivePasses, fetchTicketReceipt, rotateTicketPass, type ActiveTicketPassContract, type TicketOrderReceiptContract } from "@/lib/api/tickets";
+import { recordAppStateEvent } from "@/lib/observability";
 import { useAuth } from "@/providers/auth-provider";
 
 const formatter = new Intl.NumberFormat("en-RW", { style: "currency", currency: "RWF" });
@@ -70,7 +74,39 @@ const Wallet = () => {
   const [activeUserId, setActiveUserId] = useState<string | null>(null);
   const [passTokens, setPassTokens] = useState<PassTokenState>(() => loadStoredTokens());
   const [receipt, setReceipt] = useState<TicketOrderReceiptContract | null>(null);
+  const [tapStatus, setTapStatus] = useState<"idle" | "arming" | "armed" | "unsupported">("unsupported");
+  const [armedUntil, setArmedUntil] = useState<number | null>(null);
+  const [tapCountdown, setTapCountdown] = useState<number>(0);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      setTapStatus("idle");
+    } else {
+      setTapStatus("unsupported");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (armedUntil === null) {
+      setTapCountdown(0);
+      return;
+    }
+    if (typeof window === "undefined") {
+      return;
+    }
+    const updateCountdown = () => {
+      const remaining = Math.max(0, Math.ceil((armedUntil - Date.now()) / 1000));
+      setTapCountdown(remaining);
+      if (remaining <= 0) {
+        setTapStatus("idle");
+        setArmedUntil(null);
+      }
+    };
+    updateCountdown();
+    const interval = window.setInterval(updateCountdown, 500);
+    return () => window.clearInterval(interval);
+  }, [armedUntil]);
 
   useEffect(() => {
     persistTokens(passTokens);
@@ -157,6 +193,94 @@ const Wallet = () => {
 
   const pendingAmount = totals ? formatter.format(totals.pending) : formatter.format(0);
   const confirmedAmount = totals ? formatter.format(totals.confirmed) : formatter.format(0);
+  const isNativeReady = tapStatus !== "unsupported";
+
+  const handleArmTapMoMo = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      toast({
+        title: "TapMoMo unavailable",
+        description: "Install the Android build to use tap-to-pay.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setTapStatus("arming");
+    try {
+      const payload = await requestTapMoMoPayload();
+      const cookie = typeof document !== "undefined" ? document.cookie ?? "" : "";
+      const backendBase = clientConfig.backendBaseUrl;
+      let resolvedBase = backendBase;
+      if (!resolvedBase) {
+        resolvedBase = typeof window !== "undefined" ? `${window.location.origin}/api` : "/api";
+      } else if (!/^https?:/iu.test(resolvedBase) && typeof window !== "undefined") {
+        resolvedBase = `${window.location.origin}${resolvedBase}`;
+      }
+      if (!resolvedBase) {
+        throw new Error("Backend URL is not configured");
+      }
+      const armDuration = Math.min(60, Math.max(45, payload.ttlSeconds ?? 60));
+      const result = await TapMoMo.arm({
+        baseUrl: resolvedBase,
+        durationSeconds: armDuration,
+        cookie,
+        initialPayload: {
+          payload: payload.payload,
+          nonce: payload.nonce,
+          issuedAt: payload.issuedAt,
+          expiresAt: payload.expiresAt,
+          signature: payload.signature,
+        },
+      });
+      const remaining = Math.max(0, Math.ceil((result.armedUntil - Date.now()) / 1000));
+      setTapStatus("armed");
+      setArmedUntil(result.armedUntil);
+      setTapCountdown(remaining);
+      toast({
+        title: "Tap ready",
+        description: "Present your phone to the payer within the next minute.",
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to arm TapMoMo.";
+      setTapStatus("idle");
+      setArmedUntil(null);
+      setTapCountdown(0);
+      toast({ title: "TapMoMo unavailable", description: message, variant: "destructive" });
+    }
+  };
+
+  useEffect(() => {
+    if (!activeUserId || !totals) {
+      return;
+    }
+    void recordAppStateEvent({
+      type: "wallet-summary",
+      userId: activeUserId,
+      pending: totals.pending,
+      confirmed: totals.confirmed,
+    });
+  }, [activeUserId, totals]);
+
+  useEffect(() => {
+    if (!activeUserId || transactions.length === 0) {
+      return;
+    }
+
+    const counts = transactions.reduce(
+      (acc, tx) => {
+        const status = tx.status ?? "pending";
+        acc[status] = (acc[status] ?? 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    void recordAppStateEvent({
+      type: "wallet-reconciliation",
+      userId: activeUserId,
+      counts,
+    });
+  }, [activeUserId, transactions]);
 
   const handleLoad = () => {
     const trimmed = userIdInput.trim();
@@ -277,6 +401,60 @@ const Wallet = () => {
             <Button variant="ghost" onClick={handleClear}>
               Clear
             </Button>
+          </div>
+        </div>
+      </GlassCard>
+
+      <GlassCard className="mt-6 p-5 space-y-4">
+        <div className="flex items-center gap-3">
+          <Nfc className="w-6 h-6 text-primary" />
+          <div>
+            <p className="font-semibold text-foreground">TapMoMo Merchant</p>
+            <p className="text-xs text-muted-foreground">
+              Activate a virtual card to accept tap-to-pay MoMo transfers.
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <Button
+            variant="hero"
+            onClick={handleArmTapMoMo}
+            disabled={!isNativeReady || tapStatus === "arming" || tapStatus === "armed"}
+          >
+            {tapStatus === "arming" ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                Preparing…
+              </>
+            ) : (
+              <>
+                <Nfc className="w-4 h-4" />
+                Get Paid
+              </>
+            )}
+          </Button>
+          <div className="flex flex-col items-start gap-1 text-xs text-muted-foreground sm:items-end">
+            {tapStatus === "armed" ? (
+              <>
+                <Badge variant="success">Armed · {tapCountdown}s</Badge>
+                <span>Hold your phone near the customer's device to complete payment.</span>
+              </>
+            ) : tapStatus === "arming" ? (
+              <>
+                <Badge variant="secondary">Preparing…</Badge>
+                <span>Fetching a fresh TapMoMo credential.</span>
+              </>
+            ) : isNativeReady ? (
+              <>
+                <Badge variant="outline">Idle</Badge>
+                <span>Ready to arm for the next tap payment.</span>
+              </>
+            ) : (
+              <>
+                <Badge variant="outline">Android native only</Badge>
+                <span>Install the Android app to enable TapMoMo acceptance.</span>
+              </>
+            )}
           </div>
         </div>
       </GlassCard>

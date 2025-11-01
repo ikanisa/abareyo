@@ -1,0 +1,3 @@
+-keep class com.getcapacitor.** { *; }
+-keep class androidx.room.** { *; }
+-keep class kotlinx.coroutines.** { *; }

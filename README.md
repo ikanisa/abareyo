@@ -37,6 +37,7 @@ SUPABASE_SECRET_KEY=
 # SUPABASE_SERVICE_ROLE_KEY=
 SUPABASE_PROJECT_REF=
 SMS_WEBHOOK_TOKEN=
+SMS_INGEST_TOKEN=
 NEXT_PUBLIC_BACKEND_URL=http://localhost:3000
 NEXT_PUBLIC_ENVIRONMENT_LABEL=local
 ```
@@ -64,10 +65,15 @@ NEXT_PUBLIC_ENVIRONMENT_LABEL=local
    ```
 5. Deploy or emulate Edge Functions if you plan to test payment automation locally:
    ```bash
-   supabase functions serve sms-webhook --env-file .env
+   supabase functions serve sms-ingest --env-file .env
+   supabase functions serve parse-sms --env-file .env
+   supabase functions serve issue-perk --env-file .env
+   supabase functions serve ops-digest --env-file .env
    supabase functions serve issue-policy --env-file .env
    ```
-   These functions can also be deployed via `supabase functions deploy <name>`.
+   These functions can also be deployed via `supabase functions deploy <name>`. Production rollouts should include `sms-ingest`,
+   `parse-sms`, `issue-perk`, `ops-digest`, and `issue-policy` so that inbound payments, perks, and nightly summaries execute
+   without manual intervention.
 6. Run the Next.js dev server:
    ```bash
    pnpm dev
@@ -114,6 +120,7 @@ Upcoming production hardening includes a reverse proxy in front of the Next.js r
 - Use `npx cordova-res` and `npx @bubblewrap/cli` on demand for mobile asset generation and TWA packaging; they are no longer pinned in `devDependencies` to avoid shipping known vulnerabilities.
 - `docker compose up web` – build and run the production web image locally.
 - `node tools/gsm-emulator/send-sms.js "…"` – simulate inbound MoMo/Airtel confirmation messages during flows.
+- `npm run lint:ussd` – shared keyword audit for the web and React Native clients (guards against non-USSD payment SDKs).
 - Admin console → `/admin/sms` lists inbound traffic and a manual review queue for low-confidence parses; link SMS to payments directly from the UI.
 - Realtime dashboard → `/admin/realtime` visualises websocket events (ticket confirmations, gate scans, manual review, donations) for match-day ops.
 - Community feed now supports reactions, quick comments, media attachments, and highlights flagged keywords for moderators.

@@ -1,0 +1,10 @@
+{
+  "packageJson": [],
+  "lockfiles": {
+    "package-lock.json": [],
+    "bun.lockb": {
+      "parsed": false,
+      "reason": "Binary Bun lockfile parsing not implemented"
+    }
+  }
+}

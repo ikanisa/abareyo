@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Rayon Sports</string>
+    <string name="supabase_url">https://example.supabase.co</string>
+    <string name="supabase_service_key">supabase-service-key-placeholder</string>
+</resources>

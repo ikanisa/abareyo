@@ -18,14 +18,21 @@ The login page instantiates a Supabase browser client and forwards the resulting
 
 ### Hosting platform configuration
 
-1. Open *Project Settings → Environment Variables*.
-2. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` with values from **Project Settings → API** in the Supabase dashboard.
-3. Add `NEXT_PUBLIC_BACKEND_URL` pointing to the deployed backend (for example `https://api.gikundiro.com`).
-4. Redeploy the Next.js app so the new variables are available to the login page.
+Use the [Hosting Migration Playbook](../hosting-migration.md) as the source of
+truth for environment scoping before updating secrets.
+
+1. Open your platform's environment/secret manager (Kubernetes `Secret`,
+   Fly.io variables, Docker Compose `.env`, etc.).
+2. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+   with values from **Project Settings → API** in the Supabase dashboard.
+3. Add `NEXT_PUBLIC_BACKEND_URL` pointing to the deployed backend (for example
+   `https://api.gikundiro.com`).
+4. Redeploy the Next.js app so the new variables are available to the login
+   page.
 
 ### Backend configuration
 
-1. In your backend host (Fly.io, Render, etc.), set `SUPABASE_URL` and `SUPABASE_SECRET_KEY` (or the legacy `SUPABASE_SERVICE_ROLE_KEY`) using the same values as above.
+1. In your backend host (Kubernetes, Fly.io, or another container runtime), set `SUPABASE_URL` and `SUPABASE_SECRET_KEY` (or the legacy `SUPABASE_SERVICE_ROLE_KEY`) using the same values as above.
 2. Ensure session secrets (`ADMIN_SESSION_SECRET`, `FAN_SESSION_SECRET`, and related cookie names) match the production checklist in [production-env.md](../production-env.md).
 3. Restart the backend deployment to load the new secrets.
 
