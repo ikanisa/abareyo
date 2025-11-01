@@ -6,6 +6,7 @@ import { CreditCard, Clock, CheckCircle2, Search, RefreshCw, Ticket, Nfc } from 
 import { Capacitor } from "@capacitor/core";
 import { QRCodeCanvas } from "qrcode.react";
 
+import WhatsAppLoginNotice from "@/app/_components/auth/WhatsAppLoginNotice";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -113,6 +114,7 @@ const Wallet = () => {
   }, [passTokens]);
 
   const sessionUserId = user?.id ?? null;
+  const needsWhatsappLogin = !user?.whatsappNumber;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -376,6 +378,8 @@ const Wallet = () => {
         <h1 className="text-3xl font-black gradient-text">Wallet</h1>
         <p className="text-muted-foreground">Track payments and manage your digital passes.</p>
       </div>
+
+      {needsWhatsappLogin ? <WhatsAppLoginNotice source="wallet" className="mb-6" /> : null}
 
       <GlassCard className="p-5 space-y-4">
         <div className="flex items-center gap-3">

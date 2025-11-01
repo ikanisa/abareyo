@@ -3,11 +3,13 @@
 import { useMemo, useState } from "react";
 import { Users, ShieldCheck, MapPin, Award, ToggleLeft } from "lucide-react";
 
+import WhatsAppLoginNotice from "@/app/_components/auth/WhatsAppLoginNotice";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { useAuth } from "@/providers/auth-provider";
 
 type Member = {
   id: string;
@@ -64,10 +66,13 @@ const members: Member[] = [
 const formatter = new Intl.DateTimeFormat("en-GB", { month: "short", year: "numeric" });
 
 export function MembersDirectoryClient() {
+  const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [showPublicOnly, setShowPublicOnly] = useState(false);
   const [shareLocation, setShareLocation] = useState(true);
   const [shareAvailability, setShareAvailability] = useState(true);
+
+  const needsWhatsappLogin = !user?.whatsappNumber;
 
   const filteredMembers = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -85,6 +90,8 @@ export function MembersDirectoryClient() {
 
   return (
     <div className="space-y-6">
+      {needsWhatsappLogin ? <WhatsAppLoginNotice source="members" /> : null}
+
       <section className="grid gap-4 lg:grid-cols-[minmax(0,3fr),minmax(0,2fr)]">
         <article className="space-y-4 rounded-3xl border border-white/15 bg-white/5 p-6 text-white">
           <header className="flex flex-wrap items-center justify-between gap-3">
