@@ -5,7 +5,7 @@ _Updated: 2025-02-14_
 Use this checklist before every staging or production deployment. Confirm each item, record in the release ticket, and capture any remediation follow-up tasks.
 
 ## Payment services
-- [ ] `PAYMENT_PROVIDER` set to the active gateway (`stripe`, `paynow`, etc.).
+- [ ] `PAYMENT_PROVIDER` set to the active gateway (`card_processor`, `paynow`, etc.).
 - [ ] `PAYMENT_API_KEY` present in environment secrets.
 - [ ] `PAYMENT_WEBHOOK_SECRET` configured and rotated within the last 90 days.
 - [ ] `PAYMENT_CALLBACK_URL` matches the deployed domain (staging vs production).
@@ -14,7 +14,7 @@ Use this checklist before every staging or production deployment. Confirm each i
 | Service | Secret | Source of truth | Rotation owner |
 | --- | --- | --- | --- |
 | Payments | `PAYMENT_API_KEY` | 1Password › Payments Vault | Finance Ops |
-| Payments | `PAYMENT_WEBHOOK_SECRET` | Stripe dashboard › Webhooks | Backend Lead |
+| Payments | `PAYMENT_WEBHOOK_SECRET` | Payment gateway dashboard › Webhooks | Backend Lead |
 | Payments | `PAYMENT_USSD_SHORTCODE` | MTN USSD console | Partnerships |
 
 ## Realtime infrastructure

@@ -32,9 +32,8 @@ export async function GET(
 
   const baseQuery = () =>
     anon
-      .from('partners')
-      .select('id,name,category,url,logo_url,active,slug')
-      .eq('active', true)
+      .from('public_partners')
+      .select('id,name,category,url,logo_url,slug,metadata')
       .limit(1);
 
   const bySlug = await baseQuery().eq('slug', slug).maybeSingle();

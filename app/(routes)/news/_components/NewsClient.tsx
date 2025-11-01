@@ -27,6 +27,8 @@ export default function NewsClient() {
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState<'all' | 'article' | 'video'>('all');
   const [items, setItems] = useState<ContentItem[]>([]);
+  const [tag, setTag] = useState<string | null>(null);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,21 +50,31 @@ export default function NewsClient() {
       if (kind !== 'all') {
         params.set('kind', kind);
       }
+      if (tag) {
+        params.set('tag', tag);
+      }
       const url = params.toString() ? `/api/content?${params.toString()}` : '/api/content';
       const response = await fetch(url, { cache: 'no-store' });
       if (!response.ok) {
         throw new Error('Failed to load content');
       }
       const payload = await response.json();
-      setItems(payload.items ?? []);
+      const received: ContentItem[] = payload.items ?? [];
+      setItems(received);
+      const tags = new Set<string>();
+      for (const item of received) {
+        item.tags?.forEach((entry) => tags.add(entry));
+      }
+      setAvailableTags(Array.from(tags).sort());
     } catch (err) {
       console.error(err);
       setError('Inkuru ntizabonetse.');
       setItems([]);
+      setAvailableTags([]);
     } finally {
       setLoading(false);
     }
-  }, [kind, query]);
+  }, [kind, query, tag]);
 
   useEffect(() => {
     if (!enabled) {
@@ -101,6 +113,27 @@ export default function NewsClient() {
             </button>
           ))}
         </div>
+        {availableTags.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {availableTags.map((entry) => {
+              const isActive = tag === entry;
+              return (
+                <button
+                  key={entry}
+                  className={`rounded-full border px-3 py-1 text-xs uppercase tracking-wide transition ${
+                    isActive
+                      ? 'border-white/80 bg-white text-black'
+                      : 'border-white/20 bg-black/30 text-white/60'
+                  }`}
+                  type="button"
+                  onClick={() => setTag(isActive ? null : entry)}
+                >
+                  #{entry}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
         <div className="flex flex-wrap gap-2">
           <input
             className="min-w-0 flex-1 rounded-2xl bg-black/20 px-3 py-2 text-sm"

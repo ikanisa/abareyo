@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import clsx from "clsx";
 
 import type { Fixture } from "@/app/_data/fixtures";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 type FixtureCardProps = {
   fixture: Fixture;
@@ -31,7 +31,7 @@ const FixtureCard = ({ fixture, onSelect }: FixtureCardProps) => {
         isSoldOut ? "cursor-not-allowed opacity-70" : "cursor-pointer"
       )}
     >
-      <Image
+      <OptimizedImage
         alt={fixture.title}
         src={fixture.heroImage}
         fill

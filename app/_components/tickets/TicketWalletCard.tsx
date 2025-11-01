@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import Image from "next/image";
+
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 import type { TicketZone } from "@/app/_data/fixtures";
 
@@ -111,7 +112,7 @@ const TicketWalletCard = ({ ticket, animationDelay }: TicketWalletCardProps) => 
 
       <div className="flex flex-col gap-4 md:flex-row">
         <div className="flex h-40 w-full max-w-[180px] items-center justify-center overflow-hidden rounded-3xl bg-black/40">
-          <Image alt="Ticket QR code" src={status.qr} width={160} height={160} className="rounded-2xl" />
+          <OptimizedImage alt="Ticket QR code" src={status.qr} width={160} height={160} className="rounded-2xl" priority={ticket.paid} />
         </div>
 
         <div className="flex flex-1 flex-col justify-between gap-4">

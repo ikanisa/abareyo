@@ -4,7 +4,7 @@
 > **Status**: Production-Ready - All critical issues resolved  
 > **Last Updated**: 2025-10-29  
 > **Quick Start**: See [DEPLOYMENT_QUICKSTART.md](./DEPLOYMENT_QUICKSTART.md) for first-time deployment  
-> **Related Docs**: [PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md) | [k8s/README.md](./k8s/README.md) | [docs/runbooks/deploy.md](./docs/runbooks/deploy.md)
+> **Related Docs**: [PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md) | [docs/hosting-migration.md](./docs/hosting-migration.md) | [k8s/README.md](./k8s/README.md) | [docs/runbooks/deploy.md](./docs/runbooks/deploy.md)
 
 ## Quick Reference
 
@@ -28,6 +28,8 @@
 - [x] **Build**: `npm run build` succeeds
 - [x] **Security Scan**: CodeQL clean, 8 low-severity in dev-only tool accepted
 - [x] **Preflight Script**: `node scripts/preflight.mjs` validates environment and build
+- [x] **PWA Audit**: `npm run lint:pwa` (Lighthouse + bundle analysis)
+- [x] **A11y Smoke**: `npm run test:e2e:a11y`
 
 **Validation Command**:
 ```bash
@@ -150,6 +152,13 @@ kubectl cluster-info
 # Test ingress controller
 kubectl get ingressclass
 ```
+
+### 1.4 Launch Assets & Accessibility ✅
+
+- [x] Store icons & storyboard mocks exported from [`docs/launch/icons`](./docs/launch/icons) and [`docs/launch/screenshots`](./docs/launch/screenshots)
+- [x] Promo copy synced from [`docs/launch/promo-copy.md`](./docs/launch/promo-copy.md)
+- [x] Accessibility/performance checklists reviewed (`docs/launch/checklists/*`)
+- [x] VoiceOver/TalkBack spot checks noted in release ticket
 
 ---
 

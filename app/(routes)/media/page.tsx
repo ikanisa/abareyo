@@ -1,10 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
 import MediaClient from "./_components/MediaClient";
 import { mediaFeatures } from "./_data/videos";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +35,7 @@ const MediaIndexPage = () => (
           aria-label={`Watch ${feature.title}`}
         >
           <div className="relative h-48 w-full overflow-hidden">
-            <Image
+            <OptimizedImage
               src={feature.poster}
               alt={`${feature.title} poster`}
               fill

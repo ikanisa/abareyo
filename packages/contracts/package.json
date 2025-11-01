@@ -16,6 +16,26 @@
     "./onboarding": {
       "types": "./src/onboarding.ts",
       "default": "./src/onboarding.ts"
+    },
+    "./commerce": {
+      "types": "./src/commerce.ts",
+      "default": "./src/commerce.ts"
+    },
+    "./services": {
+      "types": "./src/services.ts",
+      "default": "./src/services.ts"
+    },
+    "./rewards": {
+      "types": "./src/rewards.ts",
+      "default": "./src/rewards.ts"
+    },
+    "./news": {
+      "types": "./src/news.ts",
+      "default": "./src/news.ts"
+    },
+    "./members": {
+      "types": "./src/members.ts",
+      "default": "./src/members.ts"
     }
   }
 }

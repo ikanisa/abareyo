@@ -1,0 +1,24 @@
+{
+  "candidates": [
+    {
+      "path": "vercel.json",
+      "exists": false,
+      "type": null
+    },
+    {
+      "path": "render.yaml",
+      "exists": false,
+      "type": null
+    },
+    {
+      "path": ".vercel",
+      "exists": false,
+      "type": null
+    },
+    {
+      "path": ".render",
+      "exists": false,
+      "type": null
+    }
+  ]
+}

@@ -13,7 +13,7 @@
       "@vercel/*": "NONE in package.json",
       "render_related": "NONE in package.json",
       "transitive_dependencies": {
-        "@sentry/vercel-edge": "present as transitive dep of @sentry/nextjs (KEEP - necessary for Sentry)"
+        "@sentry/vercel-edge": "REMOVED - Sentry now initialised via @sentry/node and @sentry/react"
       }
     },
     "env_vars": {

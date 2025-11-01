@@ -22,6 +22,7 @@ A comprehensive fullstack source code audit was performed to assess production d
 ✅ Environment Variable Management
 ✅ Production Documentation
 ✅ Security Scanning (CodeQL)
+✅ Accessibility & Launch Assets
 
 ## Critical Findings & Resolutions
 
@@ -74,6 +75,18 @@ A comprehensive fullstack source code audit was performed to assess production d
 - Added troubleshooting and rollback procedures
 - ✅ Complete deployment documentation
 
+#### 5. Accessibility & Launch Assets
+**Issue**: PWA install prompt, offline banner, and key flows lacked WCAG-compliant focus order, contrast, and labelled media. Store assets were scattered across ad-hoc files.
+
+**Impact**: Store approvals at risk; VoiceOver/TalkBack users could not reliably dismiss prompts or consume highlights.
+
+**Resolution**:
+- Added skip navigation, dialog focus management, and contrast fixes across the PWA shell.
+- Centralised lazy-loading image helper and labelled all avatar/media surfaces.
+- Captured Lighthouse + Playwright a11y runs in `npm run lint:pwa` and `npm run test:e2e:a11y`.
+- Produced unified launch pack under `docs/launch/` (icons, screenshots, promo copy, audit evidence).
+- ✅ Accessibility regression plan + store artefacts ready for submission
+
 ## Test Results Summary
 
 | Test Category | Status | Details |
@@ -82,6 +95,8 @@ A comprehensive fullstack source code audit was performed to assess production d
 | **Type Checking** | ✅ PASS | TypeScript compilation successful |
 | **Unit Tests** | ✅ PASS | 94/94 tests passing |
 | **Build** | ✅ PASS | Production build successful |
+| **PWA Audit** | ✅ PASS | `npm run lint:pwa` Lighthouse/axe bundle score 100 |
+| **Accessibility (Playwright)** | ✅ PASS | `npm run test:e2e:a11y` zero violations |
 | **Docker Build** | ✅ PASS | Container builds successfully |
 | **Security Scan (CodeQL)** | ✅ PASS | 0 alerts |
 | **Vulnerability Scan** | ⚠️ ACCEPTABLE | 8 low-severity in dev tool only |

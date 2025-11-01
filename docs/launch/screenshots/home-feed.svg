@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 3040" role="img" aria-labelledby="title desc">
+  <title id="title">Home Feed Screenshot Mock</title>
+  <desc id="desc">High level representation of the PWA home experience for store listings.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#011f4b" />
+      <stop offset="100%" stop-color="#003f88" />
+    </linearGradient>
+  </defs>
+  <rect width="1440" height="3040" rx="120" fill="url(#bg)" />
+  <rect x="160" y="220" width="1120" height="180" rx="32" fill="#0d47a1" opacity="0.9" />
+  <rect x="200" y="260" width="320" height="100" rx="22" fill="#ffffff" opacity="0.9" />
+  <rect x="160" y="480" width="1120" height="620" rx="56" fill="#001633" opacity="0.85" />
+  <rect x="200" y="520" width="1040" height="180" rx="28" fill="#103f91" opacity="0.9" />
+  <rect x="200" y="740" width="1040" height="320" rx="42" fill="#ffffff" opacity="0.95" />
+  <rect x="160" y="1160" width="1120" height="620" rx="56" fill="#001c3b" opacity="0.85" />
+  <rect x="200" y="1200" width="320" height="320" rx="44" fill="#0b3a8a" opacity="0.9" />
+  <rect x="560" y="1200" width="320" height="320" rx="44" fill="#0b3a8a" opacity="0.9" />
+  <rect x="920" y="1200" width="320" height="320" rx="44" fill="#0b3a8a" opacity="0.9" />
+  <rect x="160" y="1800" width="1120" height="840" rx="64" fill="#ffffff" opacity="0.95" />
+  <rect x="200" y="1860" width="360" height="120" rx="32" fill="#0d47a1" opacity="0.75" />
+  <rect x="200" y="2000" width="1040" height="520" rx="42" fill="#f2f6ff" />
+  <rect x="200" y="2560" width="1040" height="200" rx="36" fill="#0d47a1" opacity="0.85" />
+</svg>

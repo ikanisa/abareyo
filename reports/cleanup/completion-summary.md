@@ -35,7 +35,7 @@ The repository was **already largely host-agnostic**:
   - Config files (vercel.json, render.yaml)
 - Smart allowlist to prevent false positives:
   - React rendering concepts
-  - Sentry transitive dependencies
+  - Historical Sentry edge references
   - Cleanup documentation
 - Exits with code 1 if violations detected
 
@@ -72,7 +72,7 @@ The repository was **already largely host-agnostic**:
 - ✅ Detects `@vercel/*` imports
 - ✅ Detects `VERCEL_*` / `RENDER_*` env vars
 - ✅ Detects provider-specific domains
-- ✅ Allows Sentry transitive dependencies
+- ✅ Allows historical Sentry edge references
 - ✅ Allows React rendering terminology
 - ✅ Allows cleanup documentation
 
