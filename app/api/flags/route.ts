@@ -22,7 +22,7 @@ export async function GET() {
   }
 
   try {
-    const { data, error } = await client.from('feature_flags').select('key, enabled');
+    const { data, error } = await client.from('public_feature_flags').select('key, enabled, description');
 
     if (error) {
       if ((error as { code?: string }).code === 'PGRST205') {

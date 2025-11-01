@@ -24,7 +24,7 @@ async function fetchMatchesFromSupabase() {
   const supabase = tryGetSupabaseServerAnonClient();
   if (!supabase) return null;
 
-  const { data, error } = await supabase.from("matches").select("*").order("date");
+  const { data, error } = await supabase.from("public_match_schedule").select("*").order("kickoff");
 
   if (error) {
     // Swallow error and allow fallback to fixtures
