@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Ban, Clock3, Inbox, Link2, RefreshCw, RotateCcw, ShieldCheck, TriangleAlert, Wand2 } from 'lucide-react';
@@ -258,6 +259,18 @@ export default function AdminSmsView() {
 
   return (
     <div className="space-y-8">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-100">SMS Reconciliation</h1>
+          <p className="text-sm text-slate-400">
+            Match inbound confirmations, parser prompts, and OTP traffic controls in one place.
+          </p>
+        </div>
+        <Button asChild variant="outline" size="sm">
+          <Link href="/admin/sms/otp">View OTP dashboard</Link>
+        </Button>
+      </div>
+
       <GlassCard className="space-y-4 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

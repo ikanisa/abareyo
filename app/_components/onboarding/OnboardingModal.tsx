@@ -133,16 +133,20 @@ export function OnboardingModal({ open, onClose }: { open: boolean; onClose: () 
               />
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-start space-x-3">
             <input
               type="checkbox"
               id="consent-whatsapp"
               checked={consentWhatsApp}
               onChange={(e) => setConsentWhatsApp(e.target.checked)}
-              className="h-4 w-4"
+              className="mt-1 h-4 w-4"
             />
-            <label htmlFor="consent-whatsapp" className="text-sm">
-              I consent to receive WhatsApp promotions
+            <label htmlFor="consent-whatsapp" className="text-sm leading-relaxed text-slate-200">
+              I agree to receive WhatsApp OTP codes and club updates. Guhabwa amakuru na OTP kuri WhatsApp biremewe.
+              <span className="mt-1 block text-xs text-slate-400">
+                We send login codes, match reminders, and ticket notices using the approved Meta template. You can opt out at
+                any time by replying STOP.
+              </span>
             </label>
           </div>
           <div>

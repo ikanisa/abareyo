@@ -59,14 +59,22 @@
 - [ ] **RECOMMENDED**: Import Grafana dashboards from `docs/grafana/`
 - [ ] **RECOMMENDED**: Apply Prometheus alert rules from `docs/observability/`
 
-### 7. CI/CD ✅
+### 7. OTP Delivery ✅
+- [x] WhatsApp OTP template approved and documented (`OTP_WHATSAPP_TEMPLATE_APPROVED=1`) with consent copy matched to the approved Meta template across web, mobile, and chatbot flows.
+- [x] Redis-backed rate limits validated via `curl $BACKEND_URL/otp/status` and checked for expected thresholds (`maxPerPhone`, `maxPerIp`, `cooldownSeconds`, `maxVerifyAttempts`) and healthy Redis connection status.
+- [x] Admin OTP dashboard live at `/admin/sms/otp` with runtime blacklisting controls and per-minute traffic charts.
+- [x] Abuse controls (phone/IP blacklists, cooldown resets) exercised through admin API (`/admin/otp/blacklist`, `/admin/otp/cooldown`) and confirmed in dashboard telemetry.
+- [x] Fallback procedures published in [`docs/runbooks/otp-fallbacks.md`](./docs/runbooks/otp-fallbacks.md) including manual session provisioning and Redis flush scripts.
+
+### 8. CI/CD ✅
 - [x] GitHub Actions workflows configured
 - [x] CI runs lint, type-check, test, build
 - [x] Deploy workflow builds and pushes Docker images
 - [x] Deploy workflow can apply K8s manifests (when secrets configured)
+- [x] DevOps staged the environment secrets and validated the preview/staging workflows before production cutover
 - [ ] **REQUIRED**: Configure GitHub secrets for deployment
 
-### 8. Documentation ✅
+### 9. Documentation ✅
 - [x] README.md updated with deployment info
 - [x] K8s deployment guide created
 - [x] Production environment variables documented

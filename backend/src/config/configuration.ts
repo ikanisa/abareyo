@@ -67,4 +67,36 @@ export default () => ({
   metrics: {
     token: process.env.METRICS_TOKEN ?? '',
   },
+  otp: {
+    redisPrefix: process.env.OTP_REDIS_PREFIX ?? 'otp',
+    ttlSeconds: Number(process.env.OTP_TTL_SECONDS ?? 600),
+    codeLength: Number(process.env.OTP_CODE_LENGTH ?? 6),
+    rateLimits: {
+      windowSeconds: Number(process.env.OTP_RATE_WINDOW_SECONDS ?? 900),
+      maxPerPhone: Number(process.env.OTP_RATE_MAX_PER_PHONE ?? 5),
+      maxPerIp: Number(process.env.OTP_RATE_MAX_PER_IP ?? 15),
+      cooldownSeconds: Number(process.env.OTP_COOLDOWN_SECONDS ?? 60),
+      verifyWindowSeconds: Number(process.env.OTP_VERIFY_WINDOW_SECONDS ?? 900),
+      maxVerifyAttempts: Number(process.env.OTP_VERIFY_MAX_ATTEMPTS ?? 5),
+    },
+    blacklists: {
+      phone: (process.env.OTP_BLOCKED_NUMBERS ?? '')
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean),
+      ip: (process.env.OTP_BLOCKED_IPS ?? '')
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean),
+    },
+    whatsappTemplate: {
+      name: process.env.OTP_WHATSAPP_TEMPLATE_NAME ?? 'fan_otp',
+      namespace: process.env.OTP_WHATSAPP_TEMPLATE_NAMESPACE ?? '',
+      locale: process.env.OTP_WHATSAPP_TEMPLATE_LOCALE ?? 'en',
+      approved: ['1', 'true', 'yes'].includes(
+        (process.env.OTP_WHATSAPP_TEMPLATE_APPROVED ?? '').toLowerCase(),
+      ),
+      rateLimitApproval: process.env.OTP_WHATSAPP_RATE_LIMIT_DOC ?? '',
+    },
+  },
 });

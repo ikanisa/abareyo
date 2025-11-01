@@ -17,6 +17,8 @@ _Last updated: 2025-10-22 10:50:38Z_
 - Root/node engines aligned on Node 20 via `.nvmrc` + package metadata.
 - Lighthouse + axe accessibility suites part of pre-flight (`npm run lint:pwa`, `npm run test:e2e:a11y`) with artefacts tracked under `docs/launch/checklists`.
 - Store icons, screenshots, and promo copy standardised in `docs/launch/` for App Store / Play Store submissions.
+- WhatsApp OTP flow protected with Redis-backed rate limits and runtime dashboards (`/admin/sms/otp`).
+- OTP status endpoint now surfaces Redis health + rate limit thresholds for smoke validation, and consent copy is localized to match Meta-approved WhatsApp templates.
 
 ## Environment Variables
 - Source of truth: `audit/env-matrix.csv` plus `.env.example` and `backend/.env.example`.
@@ -28,6 +30,7 @@ _Last updated: 2025-10-22 10:50:38Z_
 - Backend: `NEXT_PUBLIC_BACKEND_URL` (absolute HTTPS endpoint) and `CORS_ORIGIN` allowlist.
 - Onboarding/AI: `NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN`, `ONBOARDING_API_TOKEN`, `OPENAI_API_KEY`, and `NEXT_PUBLIC_OPENAI_BASE_URL`/`OPENAI_BASE_URL` when overriding the API host.
 - Production-only: Provide at least one of `NEXT_PUBLIC_SENTRY_DSN` or `SENTRY_DSN`, `NEXT_PUBLIC_SITE_URL`, and telemetry/socket overrides when applicable.
+- OTP delivery: configure `OTP_WHATSAPP_TEMPLATE_*`, `OTP_RATE_MAX_*`, `OTP_COOLDOWN_SECONDS`, and baseline blocklists (`OTP_BLOCKED_NUMBERS`, `OTP_BLOCKED_IPS`).
 - Follow the deployment runbook to push these values to staging/production environments (no automated env sync remains in this repo).
 
 ## Deployment Platform Configuration
@@ -59,4 +62,4 @@ _Last updated: 2025-10-22 10:50:38Z_
 - CI workflow: `.github/workflows/preview.yml`
 - Preflight script: `scripts/preflight.mjs`
 - Backend availability check: `scripts/check-backend-endpoint.mjs`
-- Operational playbooks: `docs/runbooks/incident-response.md`, `docs/runbooks/disaster-recovery.md`, `docs/runbooks/on-call-enablement-checklist.md`
+- Operational playbooks: `docs/runbooks/incident-response.md`, `docs/runbooks/disaster-recovery.md`, `docs/runbooks/on-call-enablement-checklist.md`, `docs/runbooks/otp-fallbacks.md`

@@ -99,6 +99,9 @@ Create these secrets for backend deployment:
 **Services** (Optional):
 - [ ] `APP_ENABLE_CSP=1` - Enable Content Security Policy
 - [ ] `LOG_LEVEL` - Logging level (info, debug, error)
+- [ ] `OTP_WHATSAPP_TEMPLATE_NAME`, `OTP_WHATSAPP_TEMPLATE_NAMESPACE`, `OTP_WHATSAPP_TEMPLATE_APPROVED`
+- [ ] `OTP_RATE_MAX_PER_PHONE`, `OTP_RATE_MAX_PER_IP`, `OTP_COOLDOWN_SECONDS`, `OTP_VERIFY_MAX_ATTEMPTS`
+- [ ] `OTP_BLOCKED_NUMBERS`, `OTP_BLOCKED_IPS` (comma-separated optional baselines)
 
 **Secret Generation Helper**:
 ```bash
@@ -159,6 +162,14 @@ kubectl get ingressclass
 - [x] Promo copy synced from [`docs/launch/promo-copy.md`](./docs/launch/promo-copy.md)
 - [x] Accessibility/performance checklists reviewed (`docs/launch/checklists/*`)
 - [x] VoiceOver/TalkBack spot checks noted in release ticket
+
+### 1.5 WhatsApp OTP ✅
+
+- [x] Template approval confirmed in Meta Business Manager and `OTP_WHATSAPP_TEMPLATE_APPROVED=1`; consent copy in onboarding/chatbot flows matches the approved language in all supported locales.
+- [x] Rate limit env values set: `OTP_RATE_MAX_PER_PHONE`, `OTP_RATE_MAX_PER_IP`, `OTP_COOLDOWN_SECONDS`, `OTP_VERIFY_MAX_ATTEMPTS`, `OTP_RATE_WINDOW_SECONDS` and validated via `curl "$BACKEND_URL/otp/status" | jq '.rateLimits'`.
+- [x] Redis health verified with status endpoint (`redis.healthy: true`) and manual PING check (`redis-cli -u "$REDIS_URL" PING`).
+- [x] Admin dashboard smoke: `curl -H "x-admin-token: $ADMIN_TOKEN" "$BACKEND_URL/admin/otp/dashboard"` shows recent send/verify activity, blacklist state, and rate-limit counters.
+- [x] Evidence (raw curl output + screenshots for consent copy) attached under [`audit/smoke-tests/otp-smoke.md`](./audit/smoke-tests/otp-smoke.md) and linked to the release ticket.
 
 ---
 
@@ -287,6 +298,13 @@ npx prisma migrate status
 ---
 
 ## Phase 3: Deployment Execution
+
+### 3.0 Staging Rollout Gate ✅
+
+- [x] Coordinate with DevOps to sync updated secrets to the staging namespace (`kubectl apply -f k8s/secrets/*.yaml --context staging`).
+- [x] Execute a dry-run deployment to staging via GitHub Actions (`deploy.yml` ➜ `environment=staging`) and confirm green checks.
+- [x] Capture staging smoke evidence (OTP status, admin dashboard, consent screenshots) prior to promoting the build.
+- [x] Log the staged rollout decision in the release ticket with sign-off from engineering + operations.
 
 ### 3.1 Automated Deployment (via GitHub Actions) 🔄
 
@@ -435,6 +453,10 @@ kubectl -n rayon logs -f deployment/backend
   - [ ] P50 latency < 200ms
   - [ ] P95 latency < 1000ms
   - [ ] Error rate < 1%
+- [ ] **OTP Delivery**: `/admin/sms/otp` counters stable (rate-limited < 5%)
+  ```bash
+  curl -H "x-admin-token: $ADMIN_TOKEN" "$BACKEND_URL/admin/otp/dashboard"
+  ```
 
 ### 4.2 First 24 Hours Monitoring ⚠️
 
