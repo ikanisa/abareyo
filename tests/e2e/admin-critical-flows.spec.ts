@@ -1,5 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
 
+const ADMIN_CSRF_COOKIE = 'gikundiro-admin-csrf';
+const ADMIN_CSRF_HEADER = 'x-admin-csrf';
+
 const login = async (page: Page) => {
   await page.goto('/admin/login');
   await page.getByLabel('Email').fill('admin@example.com');
@@ -7,6 +10,29 @@ const login = async (page: Page) => {
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page).toHaveURL(/\/admin$/);
 };
+
+const ensureCsrfToken = async (page: Page) =>
+  page.evaluate(
+    async ({ cookieName }: { cookieName: string }) => {
+      const readCookie = (name: string) => {
+        const entry = document.cookie
+          .split(';')
+          .map((part) => part.trim())
+          .find((part) => part.startsWith(`${name}=`));
+        return entry ? decodeURIComponent(entry.split('=').slice(1).join('=')) : null;
+      };
+
+      let token = readCookie(cookieName);
+      if (token) {
+        return token;
+      }
+
+      await fetch('/admin/api/auth/csrf', { credentials: 'include', cache: 'no-store' });
+      token = readCookie(cookieName);
+      return token ?? '';
+    },
+    { cookieName: ADMIN_CSRF_COOKIE },
+  );
 
 test.describe('Admin critical flows', () => {
   test('navigation exposes gated modules', async ({ page }) => {
@@ -47,12 +73,16 @@ test.describe('Admin critical flows', () => {
     });
     await page.goto('/admin/shop');
     await expect(page.getByRole('heading', { name: /Orders/i })).toBeVisible();
-    await page.evaluate(() =>
-      fetch('/admin/api/shop/orders', {
-        method: 'PATCH',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ id: 'order-1', status: 'paid' }),
-      }),
+    const csrfToken = await ensureCsrfToken(page);
+    await page.evaluate(
+      ({ token, headerName }: { token: string; headerName: string }) =>
+        fetch('/admin/api/shop/orders', {
+          method: 'PATCH',
+          headers: { 'content-type': 'application/json', [headerName]: token },
+          credentials: 'include',
+          body: JSON.stringify({ id: 'order-1', status: 'paid' }),
+        }),
+      { token: csrfToken, headerName: ADMIN_CSRF_HEADER },
     );
   });
 

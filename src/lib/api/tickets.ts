@@ -1,3 +1,5 @@
+import { adminFetch } from '@/lib/admin/csrf';
+
 // Type definitions inlined from contracts
 export enum TicketZoneContract {
   VIP = 'VIP',
@@ -145,7 +147,6 @@ export type RotateTicketPassResponseContract = {
 };
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? '/api';
-const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_API_TOKEN ?? '';
 
 export async function createTicketCheckout(
   payload: TicketCheckoutRequestContract,
@@ -212,11 +213,7 @@ export interface GateHistoryItem {
 }
 
 export async function fetchGateHistory() {
-  const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/tickets/gate/history`, {
-    headers: {
-      'x-admin-token': ADMIN_TOKEN,
-    },
-  });
+  const response = await adminFetch('/admin/api/tickets/gate-history', { cache: 'no-store' });
 
   if (!response.ok) {
     throw new Error(await response.text());
@@ -317,11 +314,7 @@ export async function fetchMatchSummaries() {
 }
 
 export async function fetchTicketAnalytics() {
-  const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/tickets/analytics`, {
-    headers: {
-      'x-admin-token': ADMIN_TOKEN,
-    },
-  });
+  const response = await adminFetch('/admin/api/tickets/analytics', { cache: 'no-store' });
 
   if (!response.ok) {
     throw new Error(await response.text());

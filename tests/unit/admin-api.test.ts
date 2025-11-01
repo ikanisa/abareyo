@@ -46,7 +46,6 @@ const originalFetch = global.fetch;
 describe('admin API helpers', () => {
   beforeEach(() => {
     vi.stubEnv('NEXT_PUBLIC_BACKEND_URL', '/api');
-    vi.stubEnv('NEXT_PUBLIC_ADMIN_API_TOKEN', 'admin-token');
     global.fetch = vi.fn();
   });
 
@@ -462,9 +461,8 @@ describe('admin API helpers', () => {
     );
   });
 
-  it('calls legacy admin SMS endpoints with admin token', async () => {
+  it('calls legacy admin SMS endpoints with admin credentials', async () => {
     vi.resetModules();
-    vi.stubEnv('NEXT_PUBLIC_ADMIN_API_TOKEN', 'admin-token');
     const legacy = await import('@/lib/api/admin');
     const fetchLegacyInboundSms = legacy.fetchInboundSms;
     const fetchLegacyManualSms = legacy.fetchManualReviewSms;
@@ -476,32 +474,42 @@ describe('admin API helpers', () => {
       json: async () => ({ data: [] }),
     });
 
-    const expectLastCallAuthHeader = () => {
+    const expectLastCallUsesSession = () => {
       const lastCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.at(-1);
       const init = (lastCall?.[1] ?? {}) as RequestInit;
       const headers = new Headers(init.headers);
-      expect(headers.get('x-admin-token')).toBe('admin-token');
+      expect(headers.get('x-admin-token')).toBeNull();
+      expect(init.credentials).toBe('include');
     };
 
     await fetchLegacyInboundSms();
-    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/sms/inbound'), expect.anything());
-    expectLastCallAuthHeader();
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/admin/sms/inbound'),
+      expect.anything(),
+    );
+    expectLastCallUsesSession();
 
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       json: async () => ({ data: [] }),
     });
     await fetchLegacyManualSms();
-    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/sms/manual-review'), expect.anything());
-    expectLastCallAuthHeader();
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/admin/sms/manual'),
+      expect.anything(),
+    );
+    expectLastCallUsesSession();
 
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       json: async () => ({ data: [] }),
     });
     await fetchLegacyManualPayments();
-    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/payments/manual-review'), expect.anything());
-    expectLastCallAuthHeader();
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/admin/sms/manual/payments'),
+      expect.anything(),
+    );
+    expectLastCallUsesSession();
 
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
@@ -509,13 +517,13 @@ describe('admin API helpers', () => {
     });
     await legacyAttachSmsToPayment({ smsId: 'sms-1', paymentId: 'payment-1' });
     expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/sms/manual-review/attach'),
+      expect.stringContaining('/admin/sms/manual/attach'),
       expect.objectContaining({
         method: 'POST',
         headers: expect.anything(),
       }),
     );
-    expectLastCallAuthHeader();
+    expectLastCallUsesSession();
     const lastCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.at(-1);
     const init = (lastCall?.[1] ?? {}) as RequestInit;
     const headers = new Headers(init.headers);

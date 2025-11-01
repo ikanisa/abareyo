@@ -9,7 +9,6 @@ Use this checklist when copying secrets from local `.env*` files into managed st
 | `SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_URL` | Hosting platform & Supabase Vault | Backend + frontend | Must match `https://paysnhuxngsvzdpwlosv.supabase.co`. |
 | `ADMIN_SESSION_SECRET` | Hosting platform → Backend | NestJS admin session cookies | Required in prod; rotate quietly with cookie invalidation. |
 | `FAN_SESSION_SECRET` | Hosting platform → Backend | NestJS fan session cookies | Required in prod. |
-| `ADMIN_API_TOKEN` | Hosting platform → Backend | Protected admin API jobs (if used) | Remove if unused; otherwise document issuance. |
 | `ADMIN_DEFAULT_EMAIL` / `ADMIN_DEFAULT_PASSWORD` | 1Password (not in env after bootstrap) | One-time bootstrap for admin login | After first login rotate + delete from env. |
 | `METRICS_TOKEN` | Hosting platform → Backend | `/metrics` endpoint | Needed to protect Prometheus scrape.
 | `SMS_WEBHOOK_TOKEN` | Supabase Vault & hosting platform | SMS ingest webhook | Keep in sync with telecom provider. |
@@ -37,5 +36,6 @@ Use this checklist when copying secrets from local `.env*` files into managed st
    - `/metrics` requires the updated token.
    - Edge functions read secrets via `supabase secrets list`.
 6. Revoke old keys in Supabase dashboard / providers.
+7. If CI reports a `reports/sbom/gitleaks.json` finding, treat it as a blocking incident: revoke the exposed secret immediately, purge or invalidate any credentials committed to git history, and rerun the pipeline after confirming the rotated values have been applied in every environment.
 
 Keep this file aligned with `docs/production-env.md` whenever env vars change.

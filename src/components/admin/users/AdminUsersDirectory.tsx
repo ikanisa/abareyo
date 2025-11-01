@@ -6,6 +6,7 @@ import { AdminBottomSheet, AdminInlineMessage, AdminList } from '@/components/ad
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import { adminFetch } from '@/lib/admin/csrf';
 
 export type AdminUsersDirectoryProps = {
   initialUsers: Array<{
@@ -25,13 +26,13 @@ export const AdminUsersDirectory = ({ initialUsers }: AdminUsersDirectoryProps) 
   const { toast } = useToast();
 
   const search = async () => {
-    const data = await fetch(`/admin/api/users/directory${query ? `?q=${encodeURIComponent(query)}` : ''}`).then((res) => res.json());
+    const data = await adminFetch(`/admin/api/users/directory${query ? `?q=${encodeURIComponent(query)}` : ''}`).then((res) => res.json());
     setUsers(data.data?.users ?? data.users ?? []);
   };
 
   const merge = async () => {
     try {
-      const response = await fetch('/admin/api/users/directory', {
+      const response = await adminFetch('/admin/api/users/directory', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ primary_user_id: primaryId, secondary_user_id: secondaryId }),
