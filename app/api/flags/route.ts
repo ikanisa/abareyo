@@ -13,6 +13,9 @@ const DEFAULT_FLAGS = {
   'features.partnerWebviews': true,
   'features.wearables': false,
   'features.streamingCast': false,
+  'features.ticketScanner': false,
+  'features.ticketTransferV2': false,
+  'features.chatLiveSupport': false,
 };
 
 export async function GET() {
