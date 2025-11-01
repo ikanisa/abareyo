@@ -1,4 +1,4 @@
-import { captureException, captureMessage, withScope } from '@sentry/nextjs';
+import { captureException, captureMessage, withScope } from '@sentry/node';
 
 type ContextExtras = Record<string, unknown>;
 
