@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 
 import type { Post } from "@/app/_data/community";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 type PostCardProps = Post & {
   onOpenComments?: (postId: string) => void;
@@ -29,7 +29,7 @@ const PostCard = ({ id, avatar, user, text, media, likes, comments, time, onOpen
     <article className="card break-words whitespace-normal break-words whitespace-normal flex flex-col gap-4 text-white" aria-label={`${user} post`}>
       <header className="flex items-center gap-3">
         <div className="h-12 w-12 overflow-hidden rounded-full border border-white/30 bg-white/10">
-          <Image src={avatar} alt="" width={48} height={48} className="h-full w-full object-cover" />
+          <OptimizedImage src={avatar} alt={`${user} avatar`} width={48} height={48} className="h-full w-full object-cover" />
         </div>
         <div className="flex flex-col">
           <span className="text-sm font-semibold tracking-wide">{user}</span>
@@ -47,11 +47,12 @@ const PostCard = ({ id, avatar, user, text, media, likes, comments, time, onOpen
               src={media}
               controls
               playsInline
+              preload="metadata"
               poster={media.replace(".mp4", "-poster.jpg")}
               className="h-64 w-full object-cover"
             />
           ) : (
-            <Image src={media} alt="Post media" width={640} height={360} className="h-64 w-full object-cover" />
+            <OptimizedImage src={media} alt={`${user} shared media`} width={640} height={360} className="h-64 w-full object-cover" />
           )}
         </div>
       ) : null}
@@ -75,6 +76,7 @@ const PostCard = ({ id, avatar, user, text, media, likes, comments, time, onOpen
             type="button"
             className="btn min-h-[44px] bg-white/15 px-4 py-3 text-xs font-semibold"
             onClick={() => onOpenComments?.(id)}
+            aria-label={`View comments on ${user}'s post`}
           >
             💬 {comments}
           </button>

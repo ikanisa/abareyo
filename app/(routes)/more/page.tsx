@@ -14,17 +14,23 @@ export default async function MorePage() {
       />
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <Link className="tile flex h-28 flex-col justify-center gap-2 text-lg font-semibold" href="/more/wallet">
+        <Link className="tile flex h-28 flex-col justify-center gap-2 text-lg font-semibold" href="/wallet">
           <span aria-hidden className="text-3xl">
             💼
           </span>
           Wallet &amp; Passes
         </Link>
-        <Link className="tile flex h-28 flex-col justify-center gap-2 text-lg font-semibold" href="/more/rewards">
+        <Link className="tile flex h-28 flex-col justify-center gap-2 text-lg font-semibold" href="/rewards">
           <span aria-hidden className="text-3xl">
             ⭐
           </span>
           Rewards Hub
+        </Link>
+        <Link className="tile flex h-28 flex-col justify-center gap-2 text-lg font-semibold" href="/members">
+          <span aria-hidden className="text-3xl">
+            🙌
+          </span>
+          Members Directory
         </Link>
         <Link className="tile flex h-28 flex-col justify-center gap-2 text-lg font-semibold" href="/services">
           <span aria-hidden className="text-3xl">
@@ -32,11 +38,17 @@ export default async function MorePage() {
           </span>
           Insurance &amp; Savings
         </Link>
-        <Link className="tile flex h-28 flex-col justify-center gap-2 text-lg font-semibold" href="/more/settings">
+        <Link className="tile flex h-28 flex-col justify-center gap-2 text-lg font-semibold" href="/settings">
           <span aria-hidden className="text-3xl">
             ⚙️
           </span>
           Settings
+        </Link>
+        <Link className="tile flex h-28 flex-col justify-center gap-2 text-lg font-semibold" href="/news">
+          <span aria-hidden className="text-3xl">
+            📰
+          </span>
+          Club Newsroom
         </Link>
         <Link className="tile flex h-28 flex-col justify-center gap-2 text-lg font-semibold" href="/community">
           <span aria-hidden className="text-3xl">

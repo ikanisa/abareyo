@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -12,6 +11,7 @@ import HybridPayModal from "@/app/_components/shop/HybridPayModal";
 import OrderTracker from "@/app/_components/shop/OrderTracker";
 import RecommendationCarousel from "@/app/_components/shop/RecommendationCarousel";
 import { findProductById, formatCurrency, type Product, type ShopData } from "@/app/_data/shop_v2";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 const CATALOG_STORAGE_KEY = "rs-shop-v2-catalog";
 
@@ -223,7 +223,7 @@ const FeaturedCollectionCard = ({
       <div className="flex gap-3">
         {items.map((product) => (
           <div key={product.id} className="relative aspect-square w-20 overflow-hidden rounded-2xl bg-white/10 p-3">
-            <Image src={product.images[0]} alt={product.name} width={96} height={96} className="h-full w-full object-contain" />
+            <OptimizedImage src={product.images[0]} alt={product.name} width={96} height={96} className="h-full w-full object-contain" />
           </div>
         ))}
       </div>
@@ -532,7 +532,7 @@ const ShopExperience = ({ data }: { data: ShopData }) => {
                         onFocus={() => !isLocked && prefetchProduct(product.slug)}
                       >
                         <div className="relative aspect-square overflow-hidden rounded-2xl bg-white/10 p-4">
-                          <Image
+                          <OptimizedImage
                             src={product.images[0]}
                             alt={product.name}
                             width={240}

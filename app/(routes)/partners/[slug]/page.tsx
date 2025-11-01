@@ -40,9 +40,8 @@ export default async function PartnerWebview({ params }: { params: { slug: strin
   const client = anon;
 
   const { data: bySlug, error: slugError } = await client
-    .from('partners')
-    .select('id,name,category,url,logo_url,slug')
-    .eq('active', true)
+    .from('public_partners')
+    .select('id,name,category,url,logo_url,slug,metadata')
     .eq('slug', slug)
     .maybeSingle();
 
@@ -54,9 +53,8 @@ export default async function PartnerWebview({ params }: { params: { slug: strin
 
   if (!partner) {
     const { data: byId, error: idError } = await client
-      .from('partners')
-      .select('id,name,category,url,logo_url,slug')
-      .eq('active', true)
+      .from('public_partners')
+      .select('id,name,category,url,logo_url,slug,metadata')
       .eq('id', slug)
       .maybeSingle();
 

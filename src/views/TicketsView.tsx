@@ -31,9 +31,15 @@ import {
   type TicketOrderReceiptContract,
 } from "@/lib/api/tickets";
 import { useToast } from "@/components/ui/use-toast";
-import { launchUssdDialer } from "@/lib/ussd";
+import {
+  formatUssdDisplay,
+  startClipboardFirstUssdHandoff,
+  type ClipboardHandoffResult,
+} from "@/lib/ussd";
+import { recordTicketPendingPayment } from "@/lib/payments";
 import { useRealtime } from "@/providers/realtime-provider";
 import { useAuth } from "@/providers/auth-provider";
+import { UssdHandoffGuide } from "@/app/_components/payments/UssdHandoffGuide";
 
 type Channel = "mtn" | "airtel";
 
@@ -62,6 +68,10 @@ export default function Tickets() {
   const [contactPhone, setContactPhone] = useState("");
   const [receipt, setReceipt] = useState<TicketOrderReceiptContract | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [orderHandoff, setOrderHandoff] = useState<ClipboardHandoffResult | null>(null);
+  const [orderHandoffError, setOrderHandoffError] = useState<string | null>(null);
+  const [receiptHandoff, setReceiptHandoff] = useState<ClipboardHandoffResult | null>(null);
+  const [receiptHandoffError, setReceiptHandoffError] = useState<string | null>(null);
 
   const matches = catalogQuery.data ?? [];
 
@@ -100,6 +110,20 @@ export default function Tickets() {
       window.history.replaceState(null, "", url.toString());
     }
   }, [searchParams, toast]);
+
+  useEffect(() => {
+    if (!order?.ussdCode) {
+      setOrderHandoff(null);
+      setOrderHandoffError(null);
+    }
+  }, [order?.ussdCode]);
+
+  useEffect(() => {
+    if (!receipt?.ussdCode) {
+      setReceiptHandoff(null);
+      setReceiptHandoffError(null);
+    }
+  }, [receipt?.ussdCode]);
 
 
   const matchIndex = useMemo(
@@ -209,6 +233,19 @@ export default function Tickets() {
       setValidationError(null);
       return checkout;
     },
+    onSuccess: (checkout) => {
+      void recordTicketPendingPayment({
+        ticketOrderId: checkout.orderId,
+        paymentId: checkout.paymentId,
+        amount: checkout.total,
+        channel,
+        contactName: contactName.trim() || null,
+        contactPhone: contactPhone.trim() || null,
+        ussdCode: checkout.ussdCode,
+        expiresAt: checkout.expiresAt,
+        userId: trimmedUserId,
+      });
+    },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : "Checkout failed";
       toast({ title: "Could not start payment", description: message, variant: "destructive" });
@@ -265,26 +302,53 @@ export default function Tickets() {
     checkoutMutation.reset();
   };
 
-  const ussdDisplay = order?.ussdCode?.replace(/%23/g, "#");
+  const ussdDisplay = order?.ussdCode ? formatUssdDisplay(order.ussdCode) : null;
+  const receiptDisplay = receipt?.ussdCode ? formatUssdDisplay(receipt.ussdCode) : null;
 
-  const launchDialer = () => {
-    if (!order) return;
-    launchUssdDialer(order.ussdCode, {
-      onFallback: () => {
-        if (ussdDisplay) {
-          toast({
-            title: "Dial not opened?",
-            description: `Open your Phone app and dial ${ussdDisplay} manually.`,
-          });
-        }
-      },
-    });
+  const launchDialer = async () => {
+    if (!order?.ussdCode) return;
+    try {
+      const result = await startClipboardFirstUssdHandoff(order.ussdCode);
+      setOrderHandoff(result);
+      setOrderHandoffError(null);
+      toast({ title: "USSD ready", description: "Paste the code into your Phone app to finish payment." });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to open the dialer.";
+      setOrderHandoff(null);
+      setOrderHandoffError(message);
+      toast({ title: "Dialer blocked", description: message, variant: "destructive" });
+    }
   };
 
   const copyCode = async () => {
     if (!ussdDisplay) return;
     try {
       await navigator.clipboard.writeText(ussdDisplay);
+      toast({ title: "USSD copied", description: "Paste the code into your dialer if needed." });
+    } catch (error) {
+      toast({ title: "Unable to copy", description: "Select and copy the code manually.", variant: "destructive" });
+    }
+  };
+
+  const launchReceiptDialer = async () => {
+    if (!receipt?.ussdCode) return;
+    try {
+      const result = await startClipboardFirstUssdHandoff(receipt.ussdCode);
+      setReceiptHandoff(result);
+      setReceiptHandoffError(null);
+      toast({ title: "USSD ready", description: "Paste the code into your Phone app to finish payment." });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to open the dialer.";
+      setReceiptHandoff(null);
+      setReceiptHandoffError(message);
+      toast({ title: "Dialer blocked", description: message, variant: "destructive" });
+    }
+  };
+
+  const copyReceiptCode = async () => {
+    if (!receiptDisplay) return;
+    try {
+      await navigator.clipboard.writeText(receiptDisplay);
       toast({ title: "USSD copied", description: "Paste the code into your dialer if needed." });
     } catch (error) {
       toast({ title: "Unable to copy", description: "Select and copy the code manually.", variant: "destructive" });
@@ -596,7 +660,12 @@ export default function Tickets() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Button variant="hero" onClick={launchDialer}>
+              <Button
+                variant="hero"
+                onClick={() => {
+                  void launchDialer();
+                }}
+              >
                 <PhoneCall className="h-4 w-4" />
                 Open Dialer
               </Button>
@@ -609,6 +678,17 @@ export default function Tickets() {
             <p className="text-xs text-muted-foreground">
               Leave this screen open while we wait for the SMS confirmation. You can start another order afterwards.
             </p>
+
+            {orderHandoffError ? <p className="text-xs text-destructive">{orderHandoffError}</p> : null}
+            {orderHandoff ? (
+              <UssdHandoffGuide
+                state={orderHandoff}
+                onDismiss={() => setOrderHandoff(null)}
+                onRetry={() => {
+                  void launchDialer();
+                }}
+              />
+            ) : null}
           </GlassCard>
         </section>
       ) : null}
@@ -785,6 +865,39 @@ export default function Tickets() {
                 })}
               </ul>
             </div>
+            {receipt.status === "pending" && receiptDisplay ? (
+              <div className="space-y-3 rounded-xl border border-muted/40 bg-muted/10 p-4">
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground">Dial this code to finish payment</p>
+                  <p className="select-all font-mono text-lg tracking-wider text-foreground">{receiptDisplay}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="hero"
+                    onClick={() => {
+                      void launchReceiptDialer();
+                    }}
+                  >
+                    <PhoneCall className="h-4 w-4" />
+                    Dial again
+                  </Button>
+                  <Button variant="glass" onClick={copyReceiptCode}>
+                    <Copy className="h-4 w-4" />
+                    Copy code
+                  </Button>
+                </div>
+                {receiptHandoffError ? <p className="text-xs text-destructive">{receiptHandoffError}</p> : null}
+                {receiptHandoff ? (
+                  <UssdHandoffGuide
+                    state={receiptHandoff}
+                    onDismiss={() => setReceiptHandoff(null)}
+                    onRetry={() => {
+                      void launchReceiptDialer();
+                    }}
+                  />
+                ) : null}
+              </div>
+            ) : null}
             {receipt.passes.length ? (
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold text-foreground">Passes</h4>
