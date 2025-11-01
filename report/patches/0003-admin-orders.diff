@@ -1,0 +1,66 @@
+diff --git a/backend/src/modules/admin/orders/admin-orders.service.ts b/backend/src/modules/admin/orders/admin-orders.service.ts
+index 8e0d4e6..20d4379 100644
+--- a/backend/src/modules/admin/orders/admin-orders.service.ts
++++ b/backend/src/modules/admin/orders/admin-orders.service.ts
+@@
+-      if (params.search) {
+-        const term = params.search.trim();
+-        where.OR = [
+-          { id: { contains: term, mode: 'insensitive' } },
+-          { user: { is: { phoneMask: { contains: term, mode: 'insensitive' } } } },
+-          { ussdCode: { contains: term, mode: 'insensitive' } },
+-        ];
+-      }
++      if (params.search) {
++        const term = params.search.trim();
++        where.OR = [
++          { id: { contains: term, mode: 'insensitive' } },
++          {
++            user: {
++              is: {
++                phoneMask: { contains: term, mode: 'insensitive' },
++              },
++            },
++          },
++          {
++            user: {
++              is: {
++                email: { contains: term, mode: 'insensitive' },
++              },
++            },
++          },
++          { ussdCode: { contains: term, mode: 'insensitive' } },
++        ];
++      }
+@@
+-          include: {
+-            user: { select: { id: true, phoneMask: true } },
++          include: {
++            user: { select: { id: true, phoneMask: true, email: true } },
+             match: { select: { id: true, opponent: true, kickoff: true, venue: true } },
+             payments: true,
+           },
+@@
+-      const order = await this.prisma.ticketOrder.findUnique({
++      const order = await this.prisma.ticketOrder.findUnique({
+         where: { id: orderId },
+         include: {
+-          user: { select: { id: true, phoneMask: true } },
++          user: { select: { id: true, phoneMask: true, email: true } },
+           match: { select: { id: true, opponent: true, kickoff: true, venue: true, status: true } },
+           items: true,
+           payments: true,
+@@
+-      const updated = await this.prisma.ticketOrder.update({
++      const updated = await this.prisma.ticketOrder.update({
+         where: { id: orderId },
+         data: {
+           status: 'cancelled',
+@@
+-        include: {
+-          user: { select: { id: true, phoneMask: true } },
++        include: {
++          user: { select: { id: true, phoneMask: true, email: true } },
+           match: { select: { id: true, opponent: true, kickoff: true, venue: true, status: true } },
+           items: true,
+           payments: true,
