@@ -41,3 +41,4 @@ playwright-report
 infra/cloudflared/config.yml
 infra/cloudflared/credentials/
 k8s-secrets.sh
+ios/.build/
