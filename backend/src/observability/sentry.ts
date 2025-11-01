@@ -9,27 +9,39 @@ const normaliseEnvironment = (value: string) =>
     .replace(/^_+|_+$/g, '')
     .toUpperCase();
 
-const lookupDsn = (environment: string) => {
+type SentryConfig = {
+  defaultDsn?: string;
+  dsnsByEnvironment?: {
+    backend?: Record<string, string>;
+    shared?: Record<string, string>;
+  };
+  tracesSampleRate?: number;
+  profilesSampleRate?: number;
+};
+
+const lookupDsn = (config: SentryConfig | undefined, environment: string) => {
+  if (!config) {
+    return '';
+  }
   const normalised = normaliseEnvironment(environment);
-  return (
-    process.env[`BACKEND_SENTRY_DSN_${normalised}`] ??
-    process.env[`SENTRY_DSN_${normalised}`] ??
-    process.env.SENTRY_DSN ??
-    process.env.NEXT_PUBLIC_SENTRY_DSN ??
-    ''
-  );
+  const backendDsn = config.dsnsByEnvironment?.backend?.[normalised];
+  const sharedDsn = config.dsnsByEnvironment?.shared?.[normalised];
+  return backendDsn ?? sharedDsn ?? config.defaultDsn ?? '';
 };
 
 export const initSentry = (configService: ConfigService) => {
   const environment = configService.get<string>('app.env', 'development');
-  const dsn = lookupDsn(environment);
+  const sentryConfig = configService.get<SentryConfig>('observability.sentry');
+  const dsn = lookupDsn(sentryConfig, environment);
 
   if (!dsn) {
     return false;
   }
 
-  const tracesSampleRate = Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? '0.1');
-  const profilesSampleRate = Number(process.env.SENTRY_PROFILES_SAMPLE_RATE ?? '0');
+  const traceRateCandidate = Number(sentryConfig?.tracesSampleRate ?? 0.1);
+  const profileRateCandidate = Number(sentryConfig?.profilesSampleRate ?? 0);
+  const tracesSampleRate = Number.isNaN(traceRateCandidate) ? 0.1 : traceRateCandidate;
+  const profilesSampleRate = Number.isNaN(profileRateCandidate) ? 0 : profileRateCandidate;
 
   Sentry.init({
     dsn,

@@ -1,0 +1,40 @@
+{
+  "policyVersion": "2025-01-01",
+  "allow": [
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "BlueOak-1.0.0",
+    "BSD",
+    "CC-BY-4.0",
+    "CC0-1.0",
+    "ISC",
+    "MIT",
+    "MPL-2.0",
+    "Python-2.0",
+    "0BSD",
+    "UNLICENSE",
+    "UNLICENSED"
+  ],
+  "deny": [
+    "AGPL-3.0",
+    "GPL-2.0",
+    "GPL-3.0",
+    "LGPL-3.0",
+    "SSPL-1.0"
+  ],
+  "exceptions": {
+    "vite_react_shadcn_ts@0.0.0": "Monorepo root package is private",
+    "@rayon/contracts@0.1.0": "Internal contract package",
+    "rayon-backend@0.1.0": "Internal backend package",
+    "@rayon/mobile@0.1.0": "Internal mobile package"
+  },
+  "guidance": {
+    "owner": "Security & Legal",
+    "reviewCadence": "quarterly",
+    "notes": [
+      "Update this list whenever onboarding a dependency with a new license.",
+      "Submit exceptions with an expiry date and risk owner before shipping."
+    ]
+  }
+}

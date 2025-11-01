@@ -9,6 +9,8 @@ on:
 
 permissions:
   contents: read
+  id-token: write
+  attestations: write
 
 concurrency:
   group: ci-preview-${{ github.ref }}
@@ -38,6 +40,9 @@ jobs:
 
       - name: Install
         run: npm ci
+
+      - name: License policy compliance
+        run: npm run check:licenses
 
       - name: Typecheck
         run: |
@@ -118,4 +123,62 @@ jobs:
         with:
           name: next-build
           path: .next
+
+      - name: Generate SBOMs
+        run: npm run sbom
+
+      - name: Package supply chain artifacts
+        run: |
+          mkdir -p report/sbom
+          tar -czf report/sbom/web-next-build.tar.gz -C .next .
+          tar -czf report/sbom/mobile-app-source.tar.gz --exclude='packages/mobile/node_modules' packages/mobile
+          node scripts/generate-checksums.mjs report/sbom/web-mobile.sha256 \
+            report/sbom/web-next-build.tar.gz \
+            report/sbom/mobile-app-source.tar.gz \
+            report/sbom/web-app.cdx.json \
+            report/sbom/mobile-app.cdx.json \
+            report/sbom/license-scan.json \
+            report/sbom/license-policy.json \
+            report/sbom/manifest.json
+          node scripts/write-provenance.mjs \
+            --artifact web \
+            --binary report/sbom/web-next-build.tar.gz \
+            --sbom report/sbom/web-app.cdx.json \
+            --checksums report/sbom/web-mobile.sha256 \
+            --output report/sbom/web.provenance.json
+          node scripts/write-provenance.mjs \
+            --artifact mobile \
+            --binary report/sbom/mobile-app-source.tar.gz \
+            --sbom report/sbom/mobile-app.cdx.json \
+            --checksums report/sbom/web-mobile.sha256 \
+            --output report/sbom/mobile.provenance.json
+
+      - name: Upload SBOM + provenance bundle
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-supply-chain
+          path: |
+            report/sbom/web-app.cdx.json
+            report/sbom/mobile-app.cdx.json
+            report/sbom/license-policy.json
+            report/sbom/license-scan.json
+            report/sbom/manifest.json
+            report/sbom/web-next-build.tar.gz
+            report/sbom/mobile-app-source.tar.gz
+            report/sbom/web-mobile.sha256
+            report/sbom/web.provenance.json
+            report/sbom/mobile.provenance.json
+
+      - name: Attest web build provenance
+        if: ${{ always() }}
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: report/sbom/web-next-build.tar.gz
+
+      - name: Attest mobile bundle provenance
+        if: ${{ always() }}
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: report/sbom/mobile-app-source.tar.gz
 

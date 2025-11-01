@@ -9,6 +9,8 @@ on:
 permissions:
   contents: read
   packages: write
+  id-token: write
+  attestations: write
 
 jobs:
   deploy:
@@ -42,6 +44,15 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: License policy compliance
+        run: npm run check:licenses
+
+      - name: Generate SBOMs (workspace)
+        run: npm run sbom
 
       - name: Install backend deps
         working-directory: backend
@@ -79,6 +90,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push frontend image
+        id: build_frontend
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -91,6 +103,7 @@ jobs:
             ghcr.io/${{ github.repository }}-frontend:${{ github.sha }}
 
       - name: Build and push backend image
+        id: build_backend
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -99,6 +112,79 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}-backend:latest
             ghcr.io/${{ github.repository }}-backend:${{ github.sha }}
+
+      - name: Capture container supply chain metadata
+        run: |
+          mkdir -p report/sbom
+          echo "${{ steps.build_frontend.outputs.digest }}" > report/sbom/frontend-image.digest
+          echo "${{ steps.build_backend.outputs.digest }}" > report/sbom/backend-image.digest
+
+      - name: Generate container SBOMs
+        uses: anchore/sbom-action@v0
+        with:
+          image: ghcr.io/${{ github.repository }}-frontend:${{ github.sha }}
+          output-file: report/sbom/frontend-image.cdx.json
+
+      - name: Generate backend container SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: ghcr.io/${{ github.repository }}-backend:${{ github.sha }}
+          output-file: report/sbom/backend-image.cdx.json
+
+      - name: Generate backend checksums and provenance
+        run: |
+          node scripts/generate-checksums.mjs report/sbom/backend-images.sha256 \
+            report/sbom/frontend-image.cdx.json \
+            report/sbom/backend-image.cdx.json \
+            report/sbom/frontend-image.digest \
+            report/sbom/backend-image.digest \
+            report/sbom/backend-service.cdx.json \
+            report/sbom/license-scan.json \
+            report/sbom/license-policy.json \
+            report/sbom/manifest.json
+          node scripts/write-provenance.mjs \
+            --artifact frontend-image \
+            --binary report/sbom/frontend-image.digest \
+            --sbom report/sbom/frontend-image.cdx.json \
+            --checksums report/sbom/backend-images.sha256 \
+            --output report/sbom/frontend-image.provenance.json
+          node scripts/write-provenance.mjs \
+            --artifact backend-image \
+            --binary report/sbom/backend-image.digest \
+            --sbom report/sbom/backend-image.cdx.json \
+            --checksums report/sbom/backend-images.sha256 \
+            --output report/sbom/backend-image.provenance.json
+
+      - name: Upload backend supply chain bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-supply-chain
+          path: |
+            report/sbom/backend-service.cdx.json
+            report/sbom/frontend-image.cdx.json
+            report/sbom/backend-image.cdx.json
+            report/sbom/frontend-image.digest
+            report/sbom/backend-image.digest
+            report/sbom/backend-images.sha256
+            report/sbom/frontend-image.provenance.json
+            report/sbom/backend-image.provenance.json
+            report/sbom/license-policy.json
+            report/sbom/license-scan.json
+            report/sbom/manifest.json
+
+      - name: Attest frontend image provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ghcr.io/${{ github.repository }}-frontend
+          subject-digest: ${{ steps.build_frontend.outputs.digest }}
+          push-to-registry: true
+
+      - name: Attest backend image provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ghcr.io/${{ github.repository }}-backend
+          subject-digest: ${{ steps.build_backend.outputs.digest }}
+          push-to-registry: true
 
       - name: Setup kubectl (optional)
         if: env.KUBE_CONFIG_B64 != ''

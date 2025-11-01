@@ -5,10 +5,16 @@ const required = [
   'CORS_ORIGIN',
   'ADMIN_SESSION_SECRET',
   'FAN_SESSION_SECRET',
-  'METRICS_TOKEN',
 ];
 
 const missing = required.filter((k) => !process.env[k] || String(process.env[k]).trim().length === 0);
+
+const metricsToken = process.env.METRICS_TOKEN?.trim();
+const metricsBasicUser = process.env.METRICS_BASIC_AUTH_USER?.trim();
+const metricsBasicPassword = process.env.METRICS_BASIC_AUTH_PASSWORD?.trim();
+if (!metricsToken && (!metricsBasicUser || !metricsBasicPassword)) {
+  missing.push('METRICS_TOKEN or METRICS_BASIC_AUTH_USER/METRICS_BASIC_AUTH_PASSWORD');
+}
 
 if (missing.length) {
   console.error('Missing required environment variables:', missing.join(', '));

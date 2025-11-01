@@ -87,6 +87,17 @@ A comprehensive fullstack source code audit was performed to assess production d
 - Produced unified launch pack under `docs/launch/` (icons, screenshots, promo copy, audit evidence).
 - ✅ Accessibility regression plan + store artefacts ready for submission
 
+#### 6. Supply Chain Visibility & License Governance
+**Issue**: Build pipelines emitted no SBOMs or provenance metadata; license policies were tracked out-of-band, limiting auditability.
+
+**Impact**: Unable to satisfy Vercel/marketplace attestation requirements or prove compliance during security reviews.
+
+**Resolution**:
+- Automated CycloneDX SBOM generation for web, mobile, and backend during every CI run (`npm run sbom`).
+- Captured license allow/deny policy in `config/compliance/license-policies.json` and enforced via `npm run check:licenses`.
+- Added checksum + provenance bundle uploads to CI/preview/deploy workflows under `report/sbom/` with GitHub attestations.
+- ✅ Release artifacts now ship with traceable SBOMs, checksums, and container digests.
+
 ## Test Results Summary
 
 | Test Category | Status | Details |
@@ -100,6 +111,7 @@ A comprehensive fullstack source code audit was performed to assess production d
 | **Docker Build** | ✅ PASS | Container builds successfully |
 | **Security Scan (CodeQL)** | ✅ PASS | 0 alerts |
 | **Vulnerability Scan** | ⚠️ ACCEPTABLE | 8 low-severity in dev tool only |
+| **Supply Chain Integrity** | ✅ PASS | SBOM, license policy, provenance artifacts uploaded in CI |
 
 ## Security Assessment
 
@@ -127,13 +139,15 @@ A comprehensive fullstack source code audit was performed to assess production d
 - ✅ Resource limits configured (256Mi-512Mi / 250m-500m CPU)
 - ✅ Health checks configured
 
-### Backend (NestJS API)  
+### Backend (NestJS API)
 - ✅ Prisma migrations ready
 - ✅ Environment validation implemented
 - ✅ K8s deployment manifest ready
 - ✅ Resource limits configured (512Mi-1Gi / 500m-1000m CPU)
 - ✅ Health endpoint available (/api/health)
-- ✅ Metrics endpoint secured (/metrics with Bearer token)
+- ✅ Metrics endpoint secured (/metrics with bearer token or basic auth)
+- ✅ Supabase/OpenAI clients resilient (timeouts + circuit breakers)
+- ✅ Loki/Sentry/Prometheus secrets centralised in config service
 
 ### Infrastructure Components
 - ✅ Kubernetes namespace defined
@@ -197,6 +211,13 @@ All secret creation commands are provided in `k8s/README.md`:
 6. **Run** database migrations
 7. **Verify** health checks pass
 8. **Configure** monitoring and observability (recommended)
+
+## Rollback & Incident Response Readiness
+
+- **Rollback path**: Container digests and SBOM manifests are archived under `report/sbom/`; restore by redeploying the prior GHCR digest and applying the accompanying provenance bundle.
+- **CI linkage**: Node/preview/deploy workflows upload attestation artifacts for every build, enabling fast verification before rollbacks.
+- **Escalation ladder**: On-call engineer → Product owner → Founding team, with Sentry alert thresholds documented in `DEPLOYMENT_CHECKLIST.md`.
+- **License hotfixes**: Quarterly dependency review cadence codified in `docs/dependency-review-cadence.md` outlines branch protection and release expectations.
 
 Detailed step-by-step instructions are in `k8s/README.md`.
 
