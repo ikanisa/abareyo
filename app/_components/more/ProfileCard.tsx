@@ -7,8 +7,10 @@ import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion
 import type { Membership, Profile } from "@/app/_data/more";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { formatNumber } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { OptimizedImage } from "@/components/ui/optimized-image";
+import { useI18n } from "@/providers/i18n-provider";
 
 const tierStyles: Record<Membership["tier"], string> = {
   Guest: "from-white/30 to-white/10",
@@ -16,16 +18,13 @@ const tierStyles: Record<Membership["tier"], string> = {
   Gold: "from-amber-400/80 to-yellow-500/70",
 };
 
-const pointsFormatter = new Intl.NumberFormat("en-US", {
-  maximumFractionDigits: 0,
-});
-
 export type ProfileCardProps = {
   profile: Profile;
   membership: Membership;
 };
 
 export function ProfileCard({ profile, membership }: ProfileCardProps) {
+  const { locale } = useI18n();
   const { scrollY } = useScroll();
   const prefersReducedMotion = useReducedMotion();
   const y = useTransform(scrollY, [0, 180], prefersReducedMotion ? [0, 0] : [0, -26]);
@@ -78,7 +77,7 @@ export function ProfileCard({ profile, membership }: ProfileCardProps) {
                 {membership.tier} Member
               </span>
               <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1">
-                {pointsFormatter.format(profile.points)} pts
+                {formatNumber(profile.points, locale)} pts
               </span>
               {profile.location ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1">

@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { applySecurityHeaders as withSecurityHeaders } from './config/security-headers.mjs';
-import { ADMIN_CSRF_COOKIE, ADMIN_CSRF_ENDPOINT, ADMIN_CSRF_HEADER } from '@/lib/admin/csrf';
-import { getAllowedHosts } from '@/lib/server/origins';
+import { getAllowedHosts } from './src/lib/server/origins';
 import {
   APP_STORE_URL,
   PLAY_STORE_URL,
   buildNativeUrl,
   isMobileUserAgent,
   shouldAttemptNativeHandoff,
-} from '@/lib/native/links';
+} from './src/lib/native/links';
 
 const LOCALES = ['en', 'fr', 'rw'] as const;
 const LOCALE_RE = new RegExp(`^/(?:${LOCALES.join('|')})(?=/|$)`);
