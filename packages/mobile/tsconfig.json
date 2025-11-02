@@ -1,12 +1,13 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../config/tsconfig/base.json",
   "compilerOptions": {
     "jsx": "react-jsx",
     "moduleResolution": "node",
-    "baseUrl": "./src",
+    "baseUrl": ".",
+    "exactOptionalPropertyTypes": false,
     "paths": {
       "@/api/*": ["./src/api/*"],
-      "@/providers/*": ["./src/providers/*"],
+      "@/providers/*": ["./src/providers/*", "../../src/providers/*"],
       "@/theme/*": ["./src/theme/*"],
       "@/ui/*": ["./src/ui/*"],
       "@/linking": ["./src/linking"],

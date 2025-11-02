@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "incremental": true,
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationMap": false,
+    "rootDir": "./src",
+    "outDir": "./node_modules/.cache/types",
+    "tsBuildInfoFile": "./node_modules/.cache/mobile-widgets.build.tsbuildinfo"
+  }
+}

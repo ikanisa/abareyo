@@ -1,6 +1,7 @@
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
 import UssdPayButton from "@/app/_components/payments/UssdPayButton";
+import { buildRouteMetadata } from "@/app/_lib/navigation";
 import { ff } from "@/lib/flags";
 import { formatNumber } from "@/lib/formatters";
 
@@ -8,6 +9,11 @@ const mockItems = [
   { name: "Jersey", qty: 1, price: 25_000 },
   { name: "Scarf", qty: 1, price: 10_000 },
 ];
+
+export const metadata = buildRouteMetadata("/cart", {
+  title: "Cart — Rayon Sports Shop",
+  description: "Review your items and pay securely via USSD or hybrid checkout.",
+});
 
 export default function CartPage() {
   const total = mockItems.reduce((sum, item) => sum + item.price * item.qty, 0);

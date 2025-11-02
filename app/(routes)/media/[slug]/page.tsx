@@ -1,8 +1,10 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
 import { mediaFeatures } from "../_data/videos";
+import { buildRouteMetadata } from "@/app/_lib/navigation";
 
 const formatter = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
@@ -64,3 +66,19 @@ const MediaFeaturePage = ({ params }: MediaPageProps) => {
 };
 
 export default MediaFeaturePage;
+
+export async function generateMetadata({ params }: MediaPageProps): Promise<Metadata> {
+  const feature = mediaFeatures.find((item) => item.slug === params.slug);
+
+  if (!feature) {
+    return buildRouteMetadata("/media", {
+      title: "Media hub",
+      description: "Watch highlights, behind-the-scenes content, and Rayon Sports interviews.",
+    });
+  }
+
+  return buildRouteMetadata(`/media/${feature.slug}`, {
+    title: `${feature.title} — Media hub`,
+    description: feature.summary,
+  });
+}

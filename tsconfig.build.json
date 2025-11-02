@@ -1,0 +1,14 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/design-tokens/tsconfig.build.json"
+    },
+    {
+      "path": "./packages/contracts/tsconfig.build.json"
+    },
+    {
+      "path": "./packages/mobile/tsconfig.build.json"
+    }
+  ]
+}

@@ -1,9 +1,10 @@
 "use server";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { getSupabasePublishableKey, getSupabaseSecretKey, getSupabaseUrl } from '@/integrations/supabase/env';
+import { createServerClient, SupabaseConfigurationError } from '@rayon/api/supabase';
+
 import { SupabaseClientAccessError, SupabaseClientUnavailableError } from './db-errors';
 
 const ensureServerEnvironment = () => {
@@ -20,22 +21,26 @@ let serverAnonClient: SupabaseClient<any> | null = null;
 
 export const createSupabaseServiceRoleClient = <Schema = any>(): SupabaseClient<Schema> | null => {
   ensureServerEnvironment();
-  const url = getSupabaseUrl();
-  const key = getSupabaseSecretKey();
-  if (!url || !key) {
-    return null;
+  try {
+    return createServerClient({ accessType: 'service_role' }) as SupabaseClient<Schema>;
+  } catch (error) {
+    if (error instanceof SupabaseConfigurationError) {
+      return null;
+    }
+    throw error;
   }
-  return createClient<Schema>(url, key, { auth: { persistSession: false } });
 };
 
 export const createSupabaseServerAnonClient = <Schema = any>(): SupabaseClient<Schema> | null => {
   ensureServerEnvironment();
-  const url = getSupabaseUrl();
-  const key = getSupabasePublishableKey();
-  if (!url || !key) {
-    return null;
+  try {
+    return createServerClient({ accessType: 'anon' }) as SupabaseClient<Schema>;
+  } catch (error) {
+    if (error instanceof SupabaseConfigurationError) {
+      return null;
+    }
+    throw error;
   }
-  return createClient<Schema>(url, key, { auth: { persistSession: false } });
 };
 
 export const getSupabaseServiceRoleClient = <Schema = any>(): SupabaseClient<Schema> => {

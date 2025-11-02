@@ -1,9 +1,14 @@
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
+import { buildRouteMetadata } from "@/app/_lib/navigation";
 
 import { MembersDirectoryClient } from "./_components/MembersDirectoryClient";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = buildRouteMetadata("/members", {
+  description: "Browse the GIKUNDIRO supporters directory and connect with volunteer captains.",
+});
 
 const MembersPage = () => (
   <PageShell>

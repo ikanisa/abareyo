@@ -56,7 +56,9 @@ describe('requireAdmin CSRF enforcement', () => {
       session: { id: 'session-1', expiresAt: null },
     };
 
-    const spy = vi.spyOn(adminSession, 'fetchAdminContextForToken').mockResolvedValue(context);
+    const spy = vi
+      .spyOn(adminSession.adminSessionInternals, 'fetchContext')
+      .mockResolvedValue(context);
 
     const request = buildRequest({
       method: 'DELETE',

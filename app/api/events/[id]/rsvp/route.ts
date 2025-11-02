@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { requireAuthUser } from '@/app/_lib/auth';
 import {
   ServiceSupabaseClientUnavailableError,
   getServiceSupabaseClient,
@@ -82,6 +83,27 @@ export async function POST(
     return NextResponse.json({ error: 'invalid_event_id', message }, { status: 400 });
   }
 
+  let supabase: ReturnType<typeof getServiceSupabaseClient>;
+  try {
+    supabase = getServiceSupabaseClient();
+  } catch (error) {
+    if (error instanceof ServiceSupabaseClientUnavailableError) {
+      return NextResponse.json(
+        {
+          error: 'service_unavailable',
+          message: 'The RSVP service is not configured. Please try again later.',
+        },
+        { status: 503 },
+      );
+    }
+    throw error;
+  }
+
+  const auth = await requireAuthUser(request, supabase);
+  if ('response' in auth) {
+    return auth.response;
+  }
+
   let body: RsvpPayload;
   try {
     body = (await request.json()) as RsvpPayload;
@@ -92,14 +114,28 @@ export async function POST(
     );
   }
 
-  const memberIdCandidate = body.member_id?.trim() || body.user_id?.trim() || null;
-  let memberId: string;
-
+  const authenticatedMemberId = auth.user.id;
   try {
-    memberId = parseUuid(memberIdCandidate, 'member_id');
+    parseUuid(authenticatedMemberId, 'member_id');
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Invalid member_id';
-    return NextResponse.json({ error: 'invalid_member_id', message }, { status: 400 });
+    return NextResponse.json(
+      {
+        error: 'invalid_member_id',
+        message: 'Authenticated user does not have a valid member identifier.',
+      },
+      { status: 500 },
+    );
+  }
+
+  const requestedMemberId = body.member_id?.trim() || body.user_id?.trim();
+  if (requestedMemberId && requestedMemberId !== authenticatedMemberId) {
+    return NextResponse.json(
+      {
+        error: 'member_mismatch',
+        message: 'You can only RSVP on behalf of the authenticated member.',
+      },
+      { status: 403 },
+    );
   }
 
   let status: string;
@@ -126,25 +162,9 @@ export async function POST(
     return NextResponse.json({ error: 'invalid_metadata', message }, { status: 400 });
   }
 
-  let supabase: ReturnType<typeof getServiceSupabaseClient>;
-  try {
-    supabase = getServiceSupabaseClient();
-  } catch (error) {
-    if (error instanceof ServiceSupabaseClientUnavailableError) {
-      return NextResponse.json(
-        {
-          error: 'service_unavailable',
-          message: 'The RSVP service is not configured. Please try again later.',
-        },
-        { status: 503 },
-      );
-    }
-    throw error;
-  }
-
   const upsertPayload: Record<string, unknown> = {
     event_id: eventIdParam,
-    member_id: memberId,
+    member_id: authenticatedMemberId,
     status,
     note: typeof body.note === 'string' && body.note.trim().length > 0 ? body.note.trim() : null,
     party_size: partySize,

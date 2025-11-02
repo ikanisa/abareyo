@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { applySecurityHeaders as withSecurityHeaders } from './config/security-headers.mjs';
+import { applySecurityHeaders as withSecurityHeaders } from './src/config/security-headers';
+import { ADMIN_CSRF_COOKIE, ADMIN_CSRF_ENDPOINT, ADMIN_CSRF_HEADER } from './src/lib/admin/csrf';
 import { getAllowedHosts } from './src/lib/server/origins';
 import {
   APP_STORE_URL,
@@ -16,10 +17,75 @@ const LOCALE_SET = new Set(LOCALES);
 const isProduction = process.env.NODE_ENV === 'production';
 const ADMIN_API_PREFIX = '/admin/api';
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+const API_PREFIX = '/api';
+
+type RateLimitRule = {
+  matcher: RegExp;
+  bucket: string;
+  windowMs: number;
+  max: number;
+};
+
+const RATE_LIMIT_RULES: RateLimitRule[] = [
+  { matcher: /^\/api\/auth\//, bucket: 'auth', windowMs: 60_000, max: 10 },
+  { matcher: /^\/api\/onboarding\//, bucket: 'onboarding', windowMs: 60_000, max: 12 },
+  { matcher: /^\/api\/sms/, bucket: 'sms', windowMs: 60_000, max: 8 },
+  { matcher: /^\/api\/payments\//, bucket: 'payments', windowMs: 60_000, max: 15 },
+  { matcher: /^\/api\/webhook\//, bucket: 'webhook', windowMs: 60_000, max: 30 },
+  { matcher: /^\/api\/community\//, bucket: 'community', windowMs: 60_000, max: 20 },
+  { matcher: /^\/api\/telemetry\//, bucket: 'telemetry', windowMs: 60_000, max: 20 },
+];
 
 const normaliseHost = (host: string | null) => host?.toLowerCase() ?? null;
 
 const getConfiguredHosts = () => getAllowedHosts();
+
+const matchRateLimitRule = (pathname: string): RateLimitRule | null => {
+  for (const rule of RATE_LIMIT_RULES) {
+    if (rule.matcher.test(pathname)) {
+      return rule;
+    }
+  }
+  return null;
+};
+
+const resolveClientIdentifier = (req: NextRequest) => {
+  const forwarded = req.headers.get('x-forwarded-for');
+  if (forwarded) {
+    const [first] = forwarded.split(',').map((segment) => segment.trim()).filter(Boolean);
+    if (first) {
+      return first;
+    }
+  }
+
+  const candidates = [req.headers.get('cf-connecting-ip'), req.headers.get('x-real-ip')];
+  for (const candidate of candidates) {
+    if (candidate && candidate.trim().length > 0) {
+      return candidate.trim();
+    }
+  }
+
+  return req.ip ?? 'anonymous';
+};
+
+const applyCors = (response: NextResponse, req: NextRequest) => {
+  const corsHeaders = buildCorsHeaders({
+    requestOrigin: req.headers.get('origin'),
+    allowCredentials: true,
+  });
+
+  if (corsHeaders['Access-Control-Allow-Origin'] === '*') {
+    delete corsHeaders['Access-Control-Allow-Credentials'];
+  }
+
+  corsHeaders['Access-Control-Max-Age'] = '86400';
+
+  for (const [key, value] of Object.entries(corsHeaders)) {
+    response.headers.set(key, value);
+  }
+
+  return response;
+};
 
 const isTrustedLocaleRedirect = (req: NextRequest, locale: string | null) => {
   if (!locale || !LOCALE_SET.has(locale as (typeof LOCALES)[number])) {
@@ -42,7 +108,8 @@ const isTrustedLocaleRedirect = (req: NextRequest, locale: string | null) => {
       trustedHosts.add(host);
     }
 
-    return trustedHosts.has(normaliseHost(refererUrl.host));
+    const refererHost = normaliseHost(refererUrl.host);
+    return refererHost ? trustedHosts.has(refererHost) : false;
   } catch (error) {
     return false;
   }
@@ -80,10 +147,46 @@ export function middleware(req: NextRequest) {
     }
   }
 
+  if (pathname.startsWith(API_PREFIX)) {
+    if (method === 'OPTIONS') {
+      const response = new NextResponse(null, { status: 204 });
+      applyCors(response, req);
+      return withSecurityHeaders(response);
+    }
+
+    if (method === 'POST') {
+      const rule = matchRateLimitRule(pathname);
+      if (rule) {
+        const clientId = resolveClientIdentifier(req);
+        const result = consumeRateLimit(`${rule.bucket}:${clientId}`, {
+          windowMs: rule.windowMs,
+          max: rule.max,
+        });
+
+        if (!result.success) {
+          const retryAfterSeconds = Math.max(Math.ceil((result.resetAt - Date.now()) / 1000), 1);
+          const response = NextResponse.json(
+            {
+              error: 'rate_limit_exceeded',
+              retryAfter: retryAfterSeconds,
+            },
+            { status: 429 },
+          );
+          response.headers.set('Retry-After', retryAfterSeconds.toString());
+          applyCors(response, req);
+          return withSecurityHeaders(response);
+        }
+      }
+    }
+
+    const response = NextResponse.next();
+    applyCors(response, req);
+    return withSecurityHeaders(response);
+  }
+
   // Skip internal next assets and explicit files
   if (
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
     pathname === '/favicon.ico' ||
     pathname === '/robots.txt' ||
     pathname === '/manifest.json' ||

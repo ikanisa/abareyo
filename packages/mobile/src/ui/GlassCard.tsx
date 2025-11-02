@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+  type ReactNode,
+} from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import LottieView from "lottie-react-native";
@@ -20,10 +28,26 @@ const skiaModule: SkiaModule | undefined = (() => {
   }
 })();
 
+type SkiaCanvasLike = React.ComponentType<
+  ComponentProps<typeof import("@shopify/react-native-skia").Canvas> & { children?: ReactNode }
+>;
+
+type SkiaRectLike = React.ComponentType<
+  ComponentProps<typeof import("@shopify/react-native-skia").Rect> & { children?: ReactNode }
+>;
+
+type SkiaBlurMaskLike = React.ComponentType<ComponentProps<typeof import("@shopify/react-native-skia").BlurMask>>;
+
+const SkiaCanvas = skiaModule?.Canvas as unknown as SkiaCanvasLike | undefined;
+const SkiaRect = skiaModule?.Rect as unknown as SkiaRectLike | undefined;
+const SkiaBlurMask = skiaModule?.BlurMask as unknown as SkiaBlurMaskLike | undefined;
+
+type LottieSource = ComponentProps<typeof LottieView>["source"];
+
 type GlassCardProps = {
   children: ReactNode;
   gradient?: keyof typeof gradientTokens;
-  lottieSource?: Parameters<typeof LottieView>[0]["source"];
+  lottieSource?: LottieSource;
   padding?: number;
 };
 
@@ -92,12 +116,12 @@ export const GlassCard = ({
         pointerEvents="none"
         style={[StyleSheet.absoluteFill, styles.surface, { borderColor: theme.colors.border }]}
       >
-        {skiaModule && layout.width > 0 && layout.height > 0 ? (
-          <skiaModule.Canvas style={StyleSheet.absoluteFill}>
-            <skiaModule.Rect x={0} y={0} width={layout.width} height={layout.height} color="rgba(255,255,255,0.08)">
-              <skiaModule.BlurMask blur={24} style="normal" />
-            </skiaModule.Rect>
-          </skiaModule.Canvas>
+        {SkiaCanvas && SkiaRect && SkiaBlurMask && layout.width > 0 && layout.height > 0 ? (
+          <SkiaCanvas style={StyleSheet.absoluteFill}>
+            <SkiaRect x={0} y={0} width={layout.width} height={layout.height} color="rgba(255,255,255,0.08)">
+              <SkiaBlurMask blur={24} style="normal" />
+            </SkiaRect>
+          </SkiaCanvas>
         ) : (
           <LinearGradient colors={gradientColors} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
         )}

@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "baseUrl": "./",
+    "paths": {
+      "@rayon/ui": ["./src/index.ts"],
+      "@rayon/ui/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*"]
+}

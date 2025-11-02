@@ -28,7 +28,6 @@ export default function TabsLayout() {
           height: 64,
         },
         tabBarHideOnKeyboard: true,
-        animation: reducedMotion ? "none" : "shift",
       }}
     >
       {routes.map((route) => (
