@@ -1,0 +1,61 @@
+name: ios
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-14
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      EAS_BUILD_PROFILE: production
+      EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_APP_ID: ${{ secrets.APPLE_APP_ID }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      API_BASE_URL: ${{ vars.IOS_API_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build shared packages
+        run: npm run build:packages
+      - name: Run Expo iOS unit tests
+        run: npm run test:native:ios
+      - name: Swift package tests
+        working-directory: ios
+        run: swift test --parallel
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+      - name: Login to EAS
+        run: eas whoami || eas login --token "$EAS_TOKEN"
+      - name: Install cocoapods
+        run: sudo gem install cocoapods
+      - name: Generate web bundle for Capacitor
+        run: npm run build:capacitor
+      - name: Sync native projects
+        run: npx cap sync ios
+      - name: Create TestFlight archive
+        env:
+          EAS_NO_VCS_CHECK: 1
+        run: |
+          eas build --platform ios --profile "$EAS_BUILD_PROFILE" --non-interactive --local --output ios-build
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: ios-build/*.ipa

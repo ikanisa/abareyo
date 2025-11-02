@@ -49,7 +49,7 @@ const sendTelemetry = (payload: Record<string, unknown>) => {
 const parseBody = async (request: NextRequest) => {
   try {
     return (await request.json()) as Record<string, unknown>;
-  } catch (error) {
+  } catch (_error) {
     return null;
   }
 };

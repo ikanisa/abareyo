@@ -1,3 +1,5 @@
+import { adminFetch } from '@/lib/admin/csrf';
+
 export type AdminShopProduct = {
   id: string;
   name: string;
@@ -41,13 +43,13 @@ export async function listAdminShopProducts(params: { category?: string; q?: str
   if (params.category) search.set('category', params.category);
   if (params.q) search.set('q', params.q);
   const query = search.toString();
-  const response = await fetch(`/admin/api/shop/products${query ? `?${query}` : ''}`, { cache: 'no-store' });
+  const response = await adminFetch(`/admin/api/shop/products${query ? `?${query}` : ''}`, { cache: 'no-store' });
   const payload = await parseResponse<{ products: AdminShopProduct[] }>(response);
   return payload.products;
 }
 
 export async function createAdminShopProduct(payload: Partial<AdminShopProduct>) {
-  const response = await fetch('/admin/api/shop/products', {
+  const response = await adminFetch('/admin/api/shop/products', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -57,7 +59,7 @@ export async function createAdminShopProduct(payload: Partial<AdminShopProduct>)
 }
 
 export async function updateAdminShopProduct(payload: Partial<AdminShopProduct> & { id: string }) {
-  const response = await fetch('/admin/api/shop/products', {
+  const response = await adminFetch('/admin/api/shop/products', {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -67,14 +69,14 @@ export async function updateAdminShopProduct(payload: Partial<AdminShopProduct> 
 }
 
 export async function deleteAdminShopProduct(id: string) {
-  const response = await fetch(`/admin/api/shop/products?id=${encodeURIComponent(id)}`, {
+  const response = await adminFetch(`/admin/api/shop/products?id=${encodeURIComponent(id)}`, {
     method: 'DELETE',
   });
   await parseResponse<{ ok: boolean }>(response);
 }
 
 export async function uploadAdminMedia(payload: { fileName: string; dataUrl: string }) {
-  const response = await fetch('/admin/api/upload', {
+  const response = await adminFetch('/admin/api/upload', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -88,13 +90,13 @@ export async function listAdminShopOrders(params: { status?: string; q?: string 
   if (params.status) search.set('status', params.status);
   if (params.q) search.set('q', params.q);
   const query = search.toString();
-  const response = await fetch(`/admin/api/shop/orders${query ? `?${query}` : ''}`, { cache: 'no-store' });
+  const response = await adminFetch(`/admin/api/shop/orders${query ? `?${query}` : ''}`, { cache: 'no-store' });
   const payload = await parseResponse<{ orders: AdminShopOrder[] }>(response);
   return payload.orders;
 }
 
 export async function updateAdminShopOrder(payload: { id: string; status?: string; momo_ref?: string | null }) {
-  const response = await fetch('/admin/api/shop/orders', {
+  const response = await adminFetch('/admin/api/shop/orders', {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rayon Sports – Offline</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: radial-gradient(circle at top, #0f172a, #020617 45%);
+        color: #e2e8f0;
+        display: flex;
+        min-height: 100vh;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1.5rem;
+      }
+      main {
+        max-width: 420px;
+        text-align: center;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        border-radius: 24px;
+        padding: 2.25rem 2rem;
+        box-shadow: 0 24px 60px rgba(2, 6, 23, 0.45);
+        backdrop-filter: blur(12px);
+      }
+      h1 {
+        margin: 0 0 1rem;
+        font-size: 1.6rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+      p {
+        margin: 0 0 0.85rem;
+        line-height: 1.5;
+        font-size: 0.95rem;
+        color: rgba(226, 232, 240, 0.85);
+      }
+      .cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border-radius: 9999px;
+        padding: 0.65rem 1.5rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: #0f172a;
+        background: linear-gradient(135deg, #38bdf8, #3b82f6);
+        box-shadow: 0 12px 30px rgba(56, 189, 248, 0.35);
+      }
+      .cta:focus-visible {
+        outline: 2px solid #38bdf8;
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Offline mode</h1>
+      <p>
+        You&apos;re offline right now, but your recent Rayon Sports updates stay cached for quick
+        access.
+      </p>
+      <p>Reconnect to sync live scores, ticket updates, and new highlights automatically.</p>
+      <a class="cta" href="/">
+        Retry connection
+        <span aria-hidden="true">→</span>
+      </a>
+    </main>
+  </body>
+</html>

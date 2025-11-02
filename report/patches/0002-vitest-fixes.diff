@@ -1,0 +1,47 @@
+diff --git a/package.json b/package.json
+index b7837ac..9fd1d1e 100644
+--- a/package.json
++++ b/package.json
+@@
+-    "@testing-library/react": "^16.3.0",
++    "@testing-library/react": "^16.3.0",
++    "@testing-library/user-event": "^14.5.2",
+@@
+-    "vitest": "^3.2.4"
++    "vitest": "^3.2.4"
+diff --git a/tests/unit/app/api/auth/otp/send.test.ts b/tests/unit/app/api/auth/otp/send.test.ts
+index 2d7fe2c..6a6c41f 100644
+--- a/tests/unit/app/api/auth/otp/send.test.ts
++++ b/tests/unit/app/api/auth/otp/send.test.ts
+@@
+-vi.mock("@/lib/observability/node-observability", () => ({
+-  setupNodeObservability: vi.fn(),
+-}));
+-
+-const telemetryMock = vi.fn(async () => undefined);
++vi.mock("@/lib/observability/node-observability", () => ({
++  setupNodeObservability: vi.fn(),
++}));
++
++const telemetryMock = vi.hoisted(() => vi.fn(async () => undefined));
+@@
+-const whatsappMock = vi.fn(async () => ({ ok: true, status: "mocked" as const }));
++const whatsappMock = vi.hoisted(() => vi.fn(async () => ({ ok: true, status: "mocked" as const })));
+diff --git a/tests/unit/app/api/auth/otp/verify.test.ts b/tests/unit/app/api/auth/otp/verify.test.ts
+index 1e92f25..5eec6eb 100644
+--- a/tests/unit/app/api/auth/otp/verify.test.ts
++++ b/tests/unit/app/api/auth/otp/verify.test.ts
+@@
+-vi.mock("@/lib/observability/node-observability", () => ({
+-  setupNodeObservability: vi.fn(),
+-}));
+-
+-const telemetryMock = vi.fn(async () => undefined);
++vi.mock("@/lib/observability/node-observability", () => ({
++  setupNodeObservability: vi.fn(),
++}));
++
++const telemetryMock = vi.hoisted(() => vi.fn(async () => undefined));
+@@
+-const whatsappMock = vi.fn(async () => ({ ok: true, status: "mocked" as const }));
++const whatsappMock = vi.hoisted(() => vi.fn(async () => ({ ok: true, status: "mocked" as const })));

@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: read
+  id-token: write
+  attestations: write
 
 jobs:
   quality-checks:
@@ -37,6 +39,9 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: License policy compliance
+        run: pnpm check:licenses
 
       - name: Unit tests (web + OTP)
         env:

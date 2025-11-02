@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { processTelemetryRequest } from "@/lib/telemetry/app-state-handler";
 
 // Simple fallback logger when next-axiom is not available
-const createFallbackLogger = (req: NextRequest) => ({
+const createFallbackLogger = (_req: NextRequest) => ({
   with: (context: Record<string, unknown>) => ({
     info: (message: string) => {
       // Log to console in development, no-op in production
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function OPTIONS(req: NextRequest) {
+export async function OPTIONS(_req: NextRequest) {
   return NextResponse.json({ status: 'ok' }, { status: 200 });
 }
 

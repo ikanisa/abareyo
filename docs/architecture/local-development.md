@@ -20,7 +20,6 @@ npm install
 Create `.env` in repo root for the frontend. Next.js exposes any keys prefixed with `NEXT_PUBLIC_` to the browser:
 ```
 NEXT_PUBLIC_BACKEND_URL=http://localhost:5000/api
-NEXT_PUBLIC_ADMIN_API_TOKEN=admin-dev-token
 SMS_PARSE_CONFIDENCE_THRESHOLD=0.65
 ```
 
@@ -73,12 +72,9 @@ Open `http://localhost:3000` and execute a ticket checkout. Use the GSM emulator
 node tools/gsm-emulator/send-sms.js "You have received RWF 8,000 from 0788***123. Ref RS-ORDER-123" --from=0788123123 --token=dev-token
 ```
 
-Observe the backend logs for queue processing. For quick insights, hit the admin SMS endpoint:
-```bash
-curl -H "x-admin-token: admin-dev-token" http://localhost:5000/api/sms/inbound
-```
-
-The richer console will arrive in a later phase; until then inspect records with Prisma Studio (`npx prisma studio`).
+Observe the backend logs for queue processing. The admin console at `/admin/sms` now proxies requests through the Next.js API
+using your authenticated session cookie. If you need to inspect raw records, sign in via `/admin/login` and use the in-app tools
+or Prisma Studio (`npx prisma studio`).
 
 ### Realtime gateway
 - Socket.IO namespace lives at `<backend>/ws` and streams ticket confirmations, gate scans, donation status, and manual-review alerts.
@@ -86,15 +82,15 @@ The richer console will arrive in a later phase; until then inspect records with
 
 ### Gate & Wallet flows
 - Steward gate UI lives at `/gate` and posts to `POST /tickets/verify-pass`. Supply `dryRun=true` while testing so passes remain active.
-- Use the optional steward ID field to tag scans; the backend records entries in `GateScan`. Refresh the history panel to confirm `GET /tickets/gate/history` (requires admin token) is capturing activity.
+- Use the optional steward ID field to tag scans; the backend records entries in `GateScan`. Refresh the history panel to confirm `GET /tickets/gate/history` is capturing activity—the UI now proxies through `/admin/api/tickets/gate-history`, so make sure you are signed into `/admin/login` to satisfy the session + CSRF guard.
 - Wallet dashboard (`/wallet`) calls `GET /wallet/summary` and `GET /wallet/transactions`. Provide a UUID tied to seeded data once users exist; for now you can create a dummy user in Prisma Studio and re-run the flow.
 - Membership upgrade runs through `/membership`. After setting a user ID and selecting a plan, the screen triggers `POST /membership/upgrade` to generate a USSD code. When the GSM emulator posts the payment SMS, the membership activates automatically (status visible on refresh).
 - Shop checkout is available at `/shop`. Add items to the cart, optionally provide contact info, and trigger `POST /shop/checkout`. Once the SMS emulator submits a confirmation with the matching amount, the order status updates to `confirmed`; verify via `GET /wallet/transactions?userId=...` or a direct DB query.
-- Community feed lives at `/community`. Posts with suspicious keywords are flagged; refresh `/admin/community` (requires `NEXT_PUBLIC_ADMIN_API_TOKEN`) to approve or remove flagged entries.
+- Community feed lives at `/community`. Posts with suspicious keywords are flagged; refresh `/admin/community` (requires an authenticated admin session) to approve or remove flagged entries.
   - `GET /community/leaderboard?period=weekly` returns the top fans, powering the leaderboard card in the Community view (toggle between weekly/monthly).
 - Fundraising page (`/fundraising`) starts `POST /fundraising/donate` flows. After dialing the USSD code, send a matching SMS via the emulator and confirm the donation appears in `/wallet` transactions (kind `donation`).
 - Ticket transfers are available at `/tickets/transfer`. Owners generate a code via `POST /tickets/passes/initiate-transfer`; recipients redeem the code using `POST /tickets/passes/claim-transfer` to link the pass to their user ID.
-- `GET /tickets/analytics` returns consolidated ticket KPIs (revenue, status breakdowns, match performance). The admin dashboard at `/admin/tickets` visualises this feed with 14-day sales trends and top matches.
+- `GET /tickets/analytics` returns consolidated ticket KPIs (revenue, status breakdowns, match performance). The admin dashboard at `/admin/tickets` now calls `/admin/api/tickets/analytics`, which forwards the request with the active admin session and rejects it when CSRF headers/cookies are missing.
 - Fans can review order history via `GET /tickets/orders?userId=...`, cancel pending orders with `POST /tickets/orders/:orderId/cancel`, and fetch shareable receipts using `GET /tickets/orders/:orderId/receipt?userId=...`. The Tickets screen surfaces these actions alongside the checkout flow.
 - Manual reconciliation lives at `/admin/sms`: low-confidence parses appear under **Manual Review Queue** alongside pending payments. Select an SMS + payment pair and press *Attach* to confirm manually.
 - Live telemetry dashboard lives at `/admin/realtime` (websocket namespace `/ws`). Use it to observe ticket confirmations, gate scans, manual-review events, and donation receipts in real time.

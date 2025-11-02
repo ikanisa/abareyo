@@ -1,0 +1,102 @@
+{
+  "apps": [
+    {
+      "name": "clientPWA",
+      "framework": "Next.js 14 App Router",
+      "path": "app",
+      "dependencies": ["next", "react", "@supabase/supabase-js", "workbox-sw"],
+      "entry": "app/layout.tsx"
+    },
+    {
+      "name": "adminPWA",
+      "framework": "Next.js route group",
+      "path": "app/admin",
+      "dependencies": ["@/components/admin/AdminShell", "@tanstack/react-table"],
+      "entry": "app/admin/(dashboard)/layout.tsx"
+    },
+    {
+      "name": "android",
+      "framework": "Android Compose + Capacitor shell",
+      "path": "android",
+      "dependencies": ["androidx.compose:compose-bom", "retrofit", "capacitor-android"],
+      "entry": "android/app/src/main/AndroidManifest.xml"
+    },
+    {
+      "name": "ios",
+      "framework": "Expo Router + Swift package",
+      "path": "packages/mobile / ios",
+      "dependencies": ["expo", "expo-router", "AuthModule"],
+      "entry": "packages/mobile/App.tsx"
+    },
+    {
+      "name": "backend",
+      "framework": "NestJS + Fastify",
+      "path": "backend",
+      "dependencies": ["@nestjs/core", "fastify", "@prisma/client", "bullmq"],
+      "entry": "backend/src/main.ts"
+    }
+  ],
+  "scores": {
+    "clientPWA": 48,
+    "adminPWA": 42,
+    "android": 38,
+    "ios": 38
+  },
+  "risks": [
+    {
+      "id": "R1",
+      "severity": "critical",
+      "area": "Platform",
+      "evidence": "Strict env validation blocks build without prod secrets.",
+      "fix": "Apply report/patches/0001-next-env-guard.diff and seed CI secrets.",
+      "etaHours": 4
+    },
+    {
+      "id": "R2",
+      "severity": "critical",
+      "area": "Web",
+      "evidence": "Vitest OTP suites fail due to missing user-event and hoisted mocks.",
+      "fix": "Apply report/patches/0002-vitest-fixes.diff and re-run npm run test:unit.",
+      "etaHours": 3
+    },
+    {
+      "id": "R3",
+      "severity": "high",
+      "area": "Backend",
+      "evidence": "Admin order search omits email filter causing test failure and incorrect UX.",
+      "fix": "Apply report/patches/0003-admin-orders.diff and update fixtures.",
+      "etaHours": 2
+    },
+    {
+      "id": "R4",
+      "severity": "high",
+      "area": "Backend",
+      "evidence": "Tickets controller spec crashes without reflect-metadata.",
+      "fix": "Apply report/patches/0005-tickets-reflect.diff and ensure Jest setup loads metadata.",
+      "etaHours": 3
+    },
+    {
+      "id": "R5",
+      "severity": "critical",
+      "area": "Security",
+      "evidence": "NEXT_PUBLIC_ADMIN_API_TOKEN exposed in client bundle.",
+      "fix": "Move token to server-only config and gate fetches via API proxy.",
+      "etaHours": 6
+    }
+  ],
+  "ci": {
+    "web": "report/ci/web.yml",
+    "android": "report/ci/android.yml",
+    "ios": "report/ci/ios.yml"
+  },
+  "sbom": {
+    "path": "report/sbom/sbom.json",
+    "issues": ["Confirm BSD-3-Clause packages have attribution", "Review OpenAI data processing agreements"]
+  },
+  "checklists": {
+    "pwa": "report/checklists/pwa.md",
+    "android": "report/checklists/android.md",
+    "ios": "report/checklists/ios.md",
+    "admin": "report/checklists/admin.md"
+  }
+}

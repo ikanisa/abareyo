@@ -4,6 +4,22 @@ importScripts('/workbox-v6.5.4/workbox-sw.js');
 const WEB_PUSH_SUBSCRIPTION_ENDPOINT = '/api/notifications/subscription';
 let webPushPublicKey = null;
 
+const OFFLINE_FALLBACK_URL = '/offline.html';
+const OFFLINE_FALLBACK_REVISION = '20250114';
+
+const broadcastLifecycleEvent = async (phase, detail) => {
+  const payload = {
+    source: 'rayon-service-worker',
+    type: 'sw:lifecycle',
+    phase,
+    detail: detail ?? null,
+  };
+  const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  clientList.forEach((client) => {
+    client.postMessage(payload);
+  });
+};
+
 const base64UrlToUint8Array = (input) => {
   const padding = '='.repeat((4 - (input.length % 4)) % 4);
   const base64 = (input + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -31,6 +47,18 @@ if (self.workbox) {
   workbox.setConfig({ modulePathPrefix: '/workbox-v6.5.4' });
   workbox.core.setCacheNameDetails({ prefix: 'rayon' });
   workbox.precaching.cleanupOutdatedCaches();
+
+  workbox.precaching.precacheAndRoute([
+    { url: OFFLINE_FALLBACK_URL, revision: OFFLINE_FALLBACK_REVISION },
+  ]);
+
+  const navigationStrategy = new workbox.strategies.NetworkFirst({
+    cacheName: 'rayon-pages',
+    plugins: [
+      new workbox.cacheableResponse.CacheableResponsePlugin({ statuses: [0, 200] }),
+      new workbox.expiration.ExpirationPlugin({ maxEntries: 24, maxAgeSeconds: 60 * 60 }),
+    ],
+  });
 
   workbox.routing.registerRoute(
     ({ url }) => url.pathname.startsWith('/api/tickets/passes'),
@@ -74,10 +102,7 @@ if (self.workbox) {
     'GET',
   );
 
-  workbox.routing.registerRoute(
-    ({ request }) => request.destination === 'document',
-    new workbox.strategies.NetworkFirst({ cacheName: 'rayon-pages' }),
-  );
+  workbox.routing.registerRoute(({ request }) => request.mode === 'navigate', navigationStrategy);
 
   workbox.routing.registerRoute(
     ({ url }) => url.pathname.startsWith('/tickets') || url.pathname.startsWith('/mytickets'),
@@ -98,14 +123,49 @@ if (self.workbox) {
       ],
     }),
   );
+  workbox.routing.setCatchHandler(async ({ request }) => {
+    if (request.destination === 'document') {
+      const cache = await caches.open(workbox.core.cacheNames.precache);
+      const cachedResponse = await cache.match(OFFLINE_FALLBACK_URL);
+      if (cachedResponse) {
+        await broadcastLifecycleEvent('offline-fallback-served');
+        return cachedResponse;
+      }
+    }
+    return Response.error();
+  });
 } else {
   console.warn('Workbox failed to load.');
 }
 
 self.addEventListener('message', (event) => {
+  if (event.data?.type === 'skip-waiting') {
+    self.skipWaiting();
+    return;
+  }
   if (event.data?.type === 'web-push:set-public-key') {
     webPushPublicKey = event.data.key;
   }
+});
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    (async () => {
+      await broadcastLifecycleEvent('installing');
+      await self.skipWaiting();
+      await broadcastLifecycleEvent('installed');
+    })(),
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    (async () => {
+      await broadcastLifecycleEvent('activating');
+      await self.clients.claim();
+      await broadcastLifecycleEvent('activated');
+    })(),
+  );
 });
 
 self.addEventListener('push', (event) => {

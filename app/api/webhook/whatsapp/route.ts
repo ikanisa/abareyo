@@ -50,10 +50,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: "rejected", reason: "invalid_signature" }, { status: 403 });
   }
 
-  let payload: unknown;
   try {
-    payload = JSON.parse(rawBody);
-  } catch (error) {
+    JSON.parse(rawBody);
+  } catch (_error) {
     logEvent({ stage: "ingest.failed", reason: "invalid_json" });
     return NextResponse.json({ status: "rejected", reason: "invalid_json" }, { status: 400 });
   }

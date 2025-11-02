@@ -3,23 +3,32 @@ import { NextResponse } from 'next/server';
 
 import type { Tables } from '@/integrations/supabase/types';
 
+import { ADMIN_CSRF_COOKIE, ADMIN_CSRF_HEADER } from '@/lib/admin/csrf';
+
 import { getServiceClient } from './db';
 
 const ADMIN_COOKIE_NAME = process.env.NEXT_PUBLIC_ADMIN_SESSION_COOKIE ?? 'admin_session';
 const DEFAULT_SESSION_TTL_HOURS = 12;
+const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-const parseCookie = (cookieHeader: string | null) => {
-  if (!cookieHeader) return null;
-  const parts = cookieHeader.split(';');
-  for (const part of parts) {
-    const [rawKey, ...rest] = part.trim().split('=');
-    if (!rawKey || rest.length === 0) continue;
-    if (rawKey === ADMIN_COOKIE_NAME) {
-      return decodeURIComponent(rest.join('='));
-    }
+const parseCookies = (cookieHeader: string | null) => {
+  const entries = new Map<string, string>();
+  if (!cookieHeader) {
+    return entries;
   }
-  return null;
+
+  for (const part of cookieHeader.split(';')) {
+    const [rawKey, ...rest] = part.trim().split('=');
+    if (!rawKey || rest.length === 0) {
+      continue;
+    }
+    entries.set(rawKey, decodeURIComponent(rest.join('=')));
+  }
+
+  return entries;
 };
+
+const getCookieValue = (cookies: Map<string, string>, name: string) => cookies.get(name) ?? null;
 
 const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
 
@@ -138,7 +147,19 @@ export const requireAdmin = async (
   req: Request,
   options?: RequireAdminOptions,
 ): Promise<RequireAdminResult> => {
-  const token = parseCookie(req.headers.get('cookie'));
+  const method = req.method?.toUpperCase?.() ?? 'GET';
+  const cookies = parseCookies(req.headers.get('cookie'));
+
+  if (MUTATING_METHODS.has(method)) {
+    const csrfHeader = req.headers.get(ADMIN_CSRF_HEADER);
+    const csrfCookie = getCookieValue(cookies, ADMIN_CSRF_COOKIE);
+
+    if (!csrfHeader || !csrfCookie || csrfHeader !== csrfCookie) {
+      return { response: NextResponse.json({ message: 'Forbidden' }, { status: 403 }) };
+    }
+  }
+
+  const token = getCookieValue(cookies, ADMIN_COOKIE_NAME);
   if (!token) {
     return { response: NextResponse.json({ message: 'Unauthorized' }, { status: 401 }) };
   }

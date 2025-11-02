@@ -10,6 +10,7 @@ import {
 } from '@/components/admin/ui';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { adminFetch } from '@/lib/admin/csrf';
 
 export type AdminServicesDashboardProps = {
   initialInsurance: Array<{
@@ -49,7 +50,7 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
 
   const issuePolicy = async (quoteId: string) => {
     try {
-      const response = await fetch('/admin/api/services/insurance', {
+      const response = await adminFetch('/admin/api/services/insurance', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ quote_id: quoteId }),
@@ -57,7 +58,7 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error?.message ?? 'policy_issue_failed');
       toast({ title: 'Policy issued', description: 'The policy has been issued successfully.' });
-      const refreshed = await fetch('/admin/api/services/insurance').then((res) => res.json());
+      const refreshed = await adminFetch('/admin/api/services/insurance').then((res) => res.json());
       setInsurance(refreshed.data?.quotes ?? refreshed.quotes ?? []);
     } catch (error) {
       toast({ title: 'Failed to issue policy', description: (error as Error).message, variant: 'destructive' });
@@ -66,7 +67,7 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
 
   const updateDeposit = async (depositId: string, status: 'pending' | 'confirmed') => {
     try {
-      const response = await fetch('/admin/api/services/sacco', {
+      const response = await adminFetch('/admin/api/services/sacco', {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ id: depositId, status }),
@@ -74,7 +75,7 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error?.message ?? 'deposit_update_failed');
       toast({ title: 'Deposit updated', description: `Status set to ${status}.` });
-      const refreshed = await fetch('/admin/api/services/sacco').then((res) => res.json());
+      const refreshed = await adminFetch('/admin/api/services/sacco').then((res) => res.json());
       setDeposits(refreshed.data?.deposits ?? refreshed.deposits ?? []);
     } catch (error) {
       toast({ title: 'Failed to update deposit', description: (error as Error).message, variant: 'destructive' });
@@ -165,7 +166,7 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
           if (!quote) return;
           try {
             setUpdating(true);
-            const response = await fetch('/admin/api/services/insurance', {
+            const response = await adminFetch('/admin/api/services/insurance', {
               method: 'PATCH',
               headers: { 'content-type': 'application/json' },
               body: JSON.stringify({ id: quote.id, status: quote.status, ticket_perk: quote.ticket_perk }),
@@ -173,7 +174,7 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
             const payload = await response.json();
             if (!response.ok) throw new Error(payload?.error?.message ?? 'quote_update_failed');
             toast({ title: 'Quote updated', description: 'Changes applied successfully.' });
-            const refreshed = await fetch('/admin/api/services/insurance').then((res) => res.json());
+            const refreshed = await adminFetch('/admin/api/services/insurance').then((res) => res.json());
             setInsurance(refreshed.data?.quotes ?? refreshed.quotes ?? []);
             setSelectedQuote(null);
           } catch (error) {

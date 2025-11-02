@@ -1,0 +1,78 @@
+{
+  "cli": {
+    "version": ">= 6.0.0"
+  },
+  "build": {
+    "development": {
+      "distribution": "internal",
+      "developmentClient": true,
+      "credentialsSource": "remote",
+      "channel": "development",
+      "env": {
+        "SUPABASE_URL": "${SUPABASE_URL}",
+        "SUPABASE_SERVICE_KEY": "${SUPABASE_SERVICE_KEY}",
+        "API_BASE_URL": "${API_BASE_URL}",
+        "ANDROID_KEYSTORE_PATH": "${ANDROID_KEYSTORE_PATH}",
+        "ANDROID_KEYSTORE_PASSWORD": "${ANDROID_KEYSTORE_PASSWORD}",
+        "ANDROID_KEY_ALIAS": "${ANDROID_KEY_ALIAS}",
+        "ANDROID_KEY_PASSWORD": "${ANDROID_KEY_PASSWORD}"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "credentialsSource": "remote",
+      "channel": "preview",
+      "env": {
+        "SUPABASE_URL": "${SUPABASE_URL}",
+        "SUPABASE_SERVICE_KEY": "${SUPABASE_SERVICE_KEY}",
+        "API_BASE_URL": "${API_BASE_URL}",
+        "IOS_PROVISIONING_PROFILE_PATH": "${IOS_PROVISIONING_PROFILE_PATH}",
+        "IOS_SIGNING_CERT_PATH": "${IOS_SIGNING_CERT_PATH}",
+        "IOS_SIGNING_CERT_PASSWORD": "${IOS_SIGNING_CERT_PASSWORD}"
+      }
+    },
+    "production": {
+      "distribution": "store",
+      "credentialsSource": "remote",
+      "channel": "production",
+      "env": {
+        "SUPABASE_URL": "${SUPABASE_URL}",
+        "SUPABASE_SERVICE_KEY": "${SUPABASE_SERVICE_KEY}",
+        "API_BASE_URL": "${API_BASE_URL}",
+        "IOS_PROVISIONING_PROFILE_PATH": "${IOS_PROVISIONING_PROFILE_PATH}",
+        "IOS_SIGNING_CERT_PATH": "${IOS_SIGNING_CERT_PATH}",
+        "IOS_SIGNING_CERT_PASSWORD": "${IOS_SIGNING_CERT_PASSWORD}",
+        "ANDROID_KEYSTORE_PATH": "${ANDROID_KEYSTORE_PATH}",
+        "ANDROID_KEYSTORE_PASSWORD": "${ANDROID_KEYSTORE_PASSWORD}",
+        "ANDROID_KEY_ALIAS": "${ANDROID_KEY_ALIAS}",
+        "ANDROID_KEY_PASSWORD": "${ANDROID_KEY_PASSWORD}"
+      }
+    }
+  },
+  "submit": {
+    "preview": {
+      "android": {
+        "buildProfile": "preview",
+        "track": "internal"
+      },
+      "ios": {
+        "buildProfile": "preview",
+        "appleTeamId": "${IOS_TEAM_ID}",
+        "ascAppId": "${IOS_ASC_APP_ID}",
+        "appleId": "${IOS_APPLE_ID}"
+      }
+    },
+    "production": {
+      "android": {
+        "buildProfile": "production",
+        "track": "production"
+      },
+      "ios": {
+        "buildProfile": "production",
+        "appleTeamId": "${IOS_TEAM_ID}",
+        "ascAppId": "${IOS_ASC_APP_ID}",
+        "appleId": "${IOS_APPLE_ID}"
+      }
+    }
+  }
+}

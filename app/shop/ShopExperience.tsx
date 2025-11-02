@@ -12,6 +12,7 @@ import OrderTracker from "@/app/_components/shop/OrderTracker";
 import RecommendationCarousel from "@/app/_components/shop/RecommendationCarousel";
 import { findProductById, formatCurrency, type Product, type ShopData } from "@/app/_data/shop_v2";
 import { subscribeToPush } from "@/app/_lib/push";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 const CATALOG_STORAGE_KEY = "rs-shop-v2-catalog";
 

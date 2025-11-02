@@ -13,3 +13,10 @@ This note documents the security changes introduced by `supabase/migrations/2025
 3. **Legacy Table Cleanup** – The `wallets`, `tickets_legacy`, `transactions_legacy`, and `products_legacy` tables are now service-role only. Plan their archival/removal once data exports are verified.
 4. **Admin UI Smoke Tests** – Retest admin workflows (shop management, match scheduling, leaderboards, translations) with an admin JWT to confirm the new policies grant expected access.
 5. **Monitoring** – Add Postgres log alerts for `insufficient_privilege` to catch any edge cases caused by the tighter policies.
+
+## Follow-on: Fan Club Events & Membership RLS
+- **Moderator Assertions** – `p_fan_club_events_moderator_manage` and `p_fan_club_event_registrations_staff_manage` require the `fan_club_members.role` enum to be populated with `moderator`/`admin`. The product surface needs an onboarding flow that promotes at least one user per club; otherwise all event writes will fail.
+- **Guest RSVP Path** – Anonymous fans can read `fan_club_events_public`, but RSVPs require a Supabase user. We still need an edge function to accept phone-only RSVPs and insert rows via the service role.
+- **View Cache** – The `fan_club_events_public` view calculates attendee counts on the fly. If performance degrades, add a nightly materialized view refresh job that hydrates counts into a denormalised table while respecting RLS.
+- **Moderation Hooks** – Event descriptions are not currently sanitised. Wire up existing content moderation pipelines (OpenAI/Transformers) before exposing event creation broadly.
+- **Audit Logging** – Membership changes and event approvals should emit records into `audit_logs`. Extend the NestJS service layer to call a stored procedure or insert rows after each mutation.

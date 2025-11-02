@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/use-toast';
+import { adminFetch } from '@/lib/admin/csrf';
 import { useAdminSession } from '@/providers/admin-session-provider';
 
 const now = () => new Date();
@@ -75,7 +76,10 @@ export default function PromotionsPage() {
   const fetchPromotions = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/admin/api/shop/promotions');
+      const response = await adminFetch('/admin/api/shop/promotions', {
+        credentials: 'include',
+        cache: 'no-store',
+      });
       if (!response.ok) {
         throw new Error('Failed to load promotions');
       }
@@ -109,9 +113,10 @@ export default function PromotionsPage() {
         ends_at: draft.ends_at,
         adminId,
       };
-      const response = await fetch('/admin/api/shop/promotions', {
+      const response = await adminFetch('/admin/api/shop/promotions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload),
       });
       const body = await response.json().catch(() => ({}));
@@ -160,9 +165,10 @@ export default function PromotionsPage() {
         ends_at: editDraft.ends_at,
         adminId,
       };
-      const response = await fetch('/admin/api/shop/promotions', {
+      const response = await adminFetch('/admin/api/shop/promotions', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload),
       });
       const body = await response.json().catch(() => ({}));
@@ -185,7 +191,10 @@ export default function PromotionsPage() {
     async (promotion: Promotion) => {
       setIsSaving(true);
       try {
-        const response = await fetch(`/admin/api/shop/promotions?id=${promotion.id}`, { method: 'DELETE' });
+        const response = await adminFetch(`/admin/api/shop/promotions?id=${promotion.id}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
         const body = await response.json().catch(() => ({}));
         if (!response.ok) {
           throw new Error(body?.error ?? 'Unable to delete promotion');
