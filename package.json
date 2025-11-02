@@ -35,6 +35,7 @@
     "test:native:android": "vitest run tests/unit/native/android",
     "test:native:ios": "vitest run tests/unit/native/ios",
     "test:android:instrumentation": "vitest run tests/unit/native/android",
+    "test:mobile:smoke": "npm run test:smoke --prefix packages/mobile",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:a11y": "playwright test tests/e2e/a11y",

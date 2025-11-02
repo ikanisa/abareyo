@@ -5,14 +5,25 @@
       "url": [
         "http://localhost:4310"
       ],
-      "numberOfRuns": 1,
+      "numberOfRuns": 2,
       "settings": {
-        "onlyCategories": ["pwa"]
+        "onlyCategories": ["performance", "pwa"],
+        "preset": "desktop",
+        "budgetsPath": "./lighthouse-budgets.json",
+        "chromeFlags": "--disable-dev-shm-usage"
       }
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": ".lighthouseci"
     },
     "assert": {
       "assertions": {
+        "categories:performance": ["warn", { "minScore": 0.85 }],
         "categories:pwa": ["warn", { "minScore": 0.9 }],
+        "first-contentful-paint": ["warn", { "maxNumericValue": 2500 }],
+        "largest-contentful-paint": ["warn", { "maxNumericValue": 3000 }],
+        "total-blocking-time": ["warn", { "maxNumericValue": 200 }],
         "service-worker": "error",
         "installable-manifest": "error"
       }

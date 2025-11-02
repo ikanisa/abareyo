@@ -27,10 +27,10 @@ export const getBackendBaseUrl = (): string => {
 
   try {
     return new URL(raw).toString().replace(/\/$/, "");
-  } catch (absoluteError) {
+  } catch (_absoluteError) {
     try {
       return new URL(raw, `${fallback}/`).toString().replace(/\/$/, "");
-    } catch (relativeError) {
+    } catch (_relativeError) {
       return fallback;
     }
   }

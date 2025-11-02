@@ -1,0 +1,41 @@
+name: android-eas
+summary: |
+  Android build profiles used by CI and release pipelines. Keep env var names in sync with packages/mobile/eas.json
+  and android/app/build.gradle.kts so that keystore + API credentials are injected consistently.
+profiles:
+  development:
+    description: Internal dev client for QA automation and feature smoke testing.
+    command: npx eas build --profile development --platform android --non-interactive
+    artifact: build-outputs/development/app-development.apk
+    env:
+      SUPABASE_URL: secrets.ANDROID_SUPABASE_URL
+      SUPABASE_SERVICE_KEY: secrets.ANDROID_SUPABASE_SERVICE_KEY
+      API_BASE_URL: secrets.ANDROID_API_BASE_URL
+      ANDROID_KEYSTORE_PATH: secrets.ANDROID_KEYSTORE_PATH
+      ANDROID_KEYSTORE_PASSWORD: secrets.ANDROID_KEYSTORE_PASSWORD
+      ANDROID_KEY_ALIAS: secrets.ANDROID_KEY_ALIAS
+      ANDROID_KEY_PASSWORD: secrets.ANDROID_KEY_PASSWORD
+  preview:
+    description: Signed QA artifact uploaded to Play Console internal testing.
+    command: npx eas build --profile preview --platform android --non-interactive
+    artifact: build-outputs/preview/app-preview.aab
+    env:
+      SUPABASE_URL: secrets.ANDROID_SUPABASE_URL
+      SUPABASE_SERVICE_KEY: secrets.ANDROID_SUPABASE_SERVICE_KEY
+      API_BASE_URL: secrets.ANDROID_API_BASE_URL
+      ANDROID_KEYSTORE_PATH: secrets.ANDROID_KEYSTORE_PATH
+      ANDROID_KEYSTORE_PASSWORD: secrets.ANDROID_KEYSTORE_PASSWORD
+      ANDROID_KEY_ALIAS: secrets.ANDROID_KEY_ALIAS
+      ANDROID_KEY_PASSWORD: secrets.ANDROID_KEY_PASSWORD
+  production:
+    description: Play Store bundle promoted to production track after QA sign-off.
+    command: npx eas build --profile production --platform android --non-interactive
+    artifact: build-outputs/production/app-production.aab
+    env:
+      SUPABASE_URL: secrets.ANDROID_SUPABASE_URL
+      SUPABASE_SERVICE_KEY: secrets.ANDROID_SUPABASE_SERVICE_KEY
+      API_BASE_URL: secrets.ANDROID_API_BASE_URL
+      ANDROID_KEYSTORE_PATH: secrets.ANDROID_KEYSTORE_PATH
+      ANDROID_KEYSTORE_PASSWORD: secrets.ANDROID_KEYSTORE_PASSWORD
+      ANDROID_KEY_ALIAS: secrets.ANDROID_KEY_ALIAS
+      ANDROID_KEY_PASSWORD: secrets.ANDROID_KEY_PASSWORD

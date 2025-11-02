@@ -117,6 +117,18 @@ jobs:
             'preview-openai-key'
           }}
 
+      - name: Lighthouse CI
+        run: npx lhci autorun --config=./lighthouserc.json
+
+      - name: Upload Lighthouse report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: .lighthouseci
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Upload Build Artifact (optional)
         if: ${{ always() }}
         uses: actions/upload-artifact@v4

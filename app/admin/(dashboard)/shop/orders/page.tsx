@@ -17,11 +17,7 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/use-toast';
-import {
-  AdminShopOrder,
-  listAdminShopOrders,
-  updateAdminShopOrder,
-} from '@/lib/api/admin/shop-console';
+import { listAdminShopOrders, updateAdminShopOrder } from '@/lib/api/admin/shop-console';
 
 const SHOP_STATUS_OPTIONS = ['all', 'pending', 'paid', 'ready', 'pickedup'] as const;
 

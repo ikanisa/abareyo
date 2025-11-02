@@ -44,7 +44,7 @@ class OtpStore {
     if (this.redis && this.redisHealthy) {
       try {
         await this.redis.sendCommand("SET", key, hash.toString("hex"), "PX", ttlMs, "NX");
-      } catch (error) {
+      } catch (_error) {
         this.redisHealthy = false;
       }
     }
@@ -68,7 +68,7 @@ class OtpStore {
           }
           return false;
         }
-      } catch (error) {
+      } catch (_error) {
         this.redisHealthy = false;
       }
     }
@@ -98,7 +98,7 @@ class OtpStore {
     if (this.redis && this.redisHealthy) {
       try {
         await this.redis.sendCommand("DEL", key);
-      } catch (error) {
+      } catch (_error) {
         this.redisHealthy = false;
       }
     }

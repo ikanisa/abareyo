@@ -72,7 +72,7 @@ export class RateLimiter {
     if (this.redis && this.redisHealthy) {
       try {
         return await this.consumeRedis(identifier);
-      } catch (error) {
+      } catch (_error) {
         this.redisHealthy = false;
         return this.consumeMemory(identifier);
       }
@@ -87,7 +87,7 @@ export class RateLimiter {
     if (this.redis && this.redisHealthy) {
       try {
         await this.redis.sendCommand("DEL", key);
-      } catch (error) {
+      } catch (_error) {
         this.redisHealthy = false;
       }
     }

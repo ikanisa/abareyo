@@ -74,7 +74,7 @@ export default function OnboardingWizard() {
             setUseSameMomo(deriveMomoPreview(me.phone ?? '') === me.momo_number);
           }
         }
-      } catch (fetchError) {
+      } catch (_fetchError) {
         if (!cancelled) {
           setError('We could not load your saved details. You can still continue.');
         }

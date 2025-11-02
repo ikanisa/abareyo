@@ -16,9 +16,9 @@ Owner: Platform Engineering
 ## 2. Environment & Secrets Snapshot
 
 - The project expects Supabase credentials (`SITE_SUPABASE_URL`, `SITE_SUPABASE_SECRET_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) for both build-time and run-time contexts.
-- Admin-specific tokens observed:
-  - `NEXT_PUBLIC_ADMIN_API_TOKEN` used for legacy SMS endpoints.
-  - `NEXT_PUBLIC_BACKEND_URL` bridging to the legacy REST bridge.
+- Admin-specific configuration observed:
+  - Admin dashboards proxy through `/admin/api/*` using session cookies; no shared browser token is required.
+  - `NEXT_PUBLIC_BACKEND_URL` bridges to the legacy REST bridge.
 - Supabase CLI operations require `SUPABASE_DB_PASSWORD` / `PGPASSWORD` (currently stored in the secure shell session as `MoMo!!0099`), plus logged-in profile tokens under `supabase/.config`.
 - Deployment targets:
   - **Hosting platform** replacing the legacy managed host that previously served `ikanisa/abareyo` (retired after January 2026).

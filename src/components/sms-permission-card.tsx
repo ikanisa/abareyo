@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Smartphone, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { useSmsReader, isSmsReadingSupported } from '@/lib/capacitor/sms-reader';
+import { useSmsReader } from '@/lib/capacitor/sms-reader';
 
 interface SmsPermissionCardProps {
   onPermissionGranted?: () => void;

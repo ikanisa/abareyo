@@ -40,7 +40,7 @@ const flushRedis = async () => {
   if (redisClient && redisAvailable) {
     try {
       await redisClient.sendCommand("FLUSHDB");
-    } catch (error) {
+    } catch (_error) {
       // ignore
     }
   }
@@ -71,7 +71,7 @@ describe("POST /api/auth/otp/verify", () => {
       try {
         await redisClient.sendCommand("PING");
         redisAvailable = true;
-      } catch (error) {
+      } catch (_error) {
         redisAvailable = false;
       }
     }

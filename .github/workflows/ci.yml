@@ -74,6 +74,9 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Mobile OTP smoke tests
+        run: npm run test:mobile:smoke
+
       - name: Preflight (env + backend + build)
         run: node scripts/preflight.mjs
         env:

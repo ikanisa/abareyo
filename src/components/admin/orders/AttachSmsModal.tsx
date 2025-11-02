@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/use-toast';
+import { adminFetch } from '@/lib/admin/csrf';
 
 const formatter = new Intl.NumberFormat('en-RW', {
   style: 'currency',
@@ -69,7 +70,7 @@ export function AttachSmsModal({
     if (!open || !amount) return;
     setIsLoading(true);
     try {
-      const response = await fetch(
+      const response = await adminFetch(
         `/admin/api/sms/candidates?amount=${encodeURIComponent(amount)}&minutes=${encodeURIComponent(windowMinutes)}`,
       );
       if (!response.ok) {
@@ -107,7 +108,7 @@ export function AttachSmsModal({
       try {
         setActiveRequestId(smsId);
         const note = manualReference.trim();
-        const response = await fetch('/admin/api/sms/attach', {
+        const response = await adminFetch('/admin/api/sms/attach', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

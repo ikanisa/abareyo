@@ -8,6 +8,16 @@ android {
     namespace = "com.rayonsports.fanapp"
     compileSdk = 34
 
+    fun resolveSecret(property: String, env: String? = null): String? {
+        val gradleValue = providers.gradleProperty(property).orNull
+            ?: findProperty(property) as? String
+        if (!gradleValue.isNullOrBlank()) {
+            return gradleValue
+        }
+        val envKey = env ?: property.uppercase().replace('.', '_')
+        return System.getenv(envKey)?.takeIf { it.isNotBlank() }
+    }
+
     defaultConfig {
         applicationId = "com.rayonsports.fanapp"
         minSdk = 26
@@ -15,18 +25,60 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "SUPABASE_URL", "\"${System.getenv("SUPABASE_URL") ?: ""}\"")
-        buildConfigField("String", "SUPABASE_SERVICE_KEY", "\"${System.getenv("SUPABASE_SERVICE_KEY") ?: ""}\"")
-        buildConfigField("String", "API_BASE_URL", "\"${System.getenv("API_BASE_URL") ?: ""}\"")
+
+        val supabaseUrl = resolveSecret("supabase.url", "SUPABASE_URL") ?: ""
+        val supabaseServiceKey = resolveSecret("supabase.service_key", "SUPABASE_SERVICE_KEY") ?: ""
+        val apiBaseUrl = resolveSecret("api.base_url", "API_BASE_URL") ?: ""
+
+        buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
+        buildConfigField("String", "SUPABASE_SERVICE_KEY", "\"$supabaseServiceKey\"")
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+    }
+
+    val releaseSigning = signingConfigs.create("release") {
+        val keystorePath = resolveSecret("android.keystore.path", "ANDROID_KEYSTORE_PATH")
+        val keystorePassword = resolveSecret("android.keystore.password", "ANDROID_KEYSTORE_PASSWORD")
+        val keyAliasValue = resolveSecret("android.keystore.alias", "ANDROID_KEY_ALIAS")
+        val keyPasswordValue = resolveSecret("android.keystore.key_password", "ANDROID_KEY_PASSWORD")
+
+        if (!keystorePath.isNullOrBlank() && !keyAliasValue.isNullOrBlank()) {
+            storeFile = file(keystorePath)
+            storePassword = keystorePassword
+            keyAlias = keyAliasValue
+            keyPassword = keyPasswordValue
+        }
     }
 
     buildTypes {
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("debug")
+        }
+
         getByName("release") {
-            isMinifyEnabled = false
+            if (releaseSigning.storeFile != null && !releaseSigning.keyAlias.isNullOrBlank()) {
+                signingConfig = releaseSigning
+            }
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
+        }
+    }
+
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a", "x86_64")
+            isUniversalApk = false
+        }
+    }
+
+    bundle {
+        abi {
+            enableSplit = true
         }
     }
 

@@ -23,7 +23,14 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": "off",
       "react-hooks/exhaustive-deps": "off",
-      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
       "jsx-a11y/click-events-have-key-events": "warn",
       "jsx-a11y/mouse-events-have-key-events": "warn",
       "jsx-a11y/no-noninteractive-element-interactions": "warn",

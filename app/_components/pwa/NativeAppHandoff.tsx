@@ -52,7 +52,7 @@ const NativeAppHandoff = () => {
           window.location.href = fallbackUrl;
         }, HANDOFF_FALLBACK_DELAY_MS);
       }
-    } catch (error) {
+    } catch (_error) {
       if (fallbackUrl) {
         window.location.href = fallbackUrl;
       }
