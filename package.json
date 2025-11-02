@@ -30,7 +30,7 @@
     "start": "next start",
     "check:backend": "node scripts/check-backend-endpoint.mjs",
     "health": "node -e \"fetch('http://localhost:3000/api/health').then(r=>r.text()).then(console.log).catch(console.error)\"",
-    "typecheck": "tsc -b tsconfig.build.json",
+    "typecheck": "tsc --noEmit && tsc -b tsconfig.build.json",
     "type-check": "npm run typecheck",
     "test": "npm run typecheck && npm run test:unit",
     "test:unit": "vitest run",
