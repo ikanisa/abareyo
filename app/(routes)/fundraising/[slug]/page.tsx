@@ -1,8 +1,10 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
 import { fundraisingCampaigns } from "@/app/_config/home";
+import { buildRouteMetadata } from "@/app/_lib/navigation";
 
 type FundraisingPageProps = {
   params: { slug: string };
@@ -71,3 +73,21 @@ const FundraisingDetailPage = ({ params }: FundraisingPageProps) => {
 };
 
 export default FundraisingDetailPage;
+
+export async function generateMetadata({ params }: FundraisingPageProps): Promise<Metadata> {
+  const campaign = fundraisingCampaigns.find(
+    (entry) => entry.href.replace("/fundraising/", "") === params.slug,
+  );
+
+  if (!campaign) {
+    return buildRouteMetadata("/fundraising", {
+      title: "Fundraising spotlight",
+      description: "Discover the latest Rayon Sports projects and pledge your support.",
+    });
+  }
+
+  return buildRouteMetadata(campaign.href, {
+    title: `${campaign.title} — Fundraising spotlight`,
+    description: campaign.description,
+  });
+}

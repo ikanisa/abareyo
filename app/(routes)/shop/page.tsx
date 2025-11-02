@@ -1,7 +1,12 @@
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
+import { buildRouteMetadata } from "@/app/_lib/navigation";
 import { shopData } from "@/app/_data/shop_v2";
 import MinimalCatalog from "./_components/MinimalCatalog";
+
+export const metadata = buildRouteMetadata("/shop", {
+  description: "Shop Rayon Sports kits, merch, and matchday essentials with hybrid checkout options.",
+});
 
 export default function Shop() {
   const products = shopData.products.slice(0, 8);

@@ -1,9 +1,15 @@
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
+import { buildRouteMetadata } from "@/app/_lib/navigation";
 
 import ExternalLauncher from "../_components/ExternalLauncher";
 
 const WHATSAPP_URL = "https://wa.me/22893002751?text=home";
+
+export const metadata = buildRouteMetadata("/services/insurance", {
+  title: "Motor insurance partner",
+  description: "Launch a WhatsApp conversation with Rayon Sports' trusted insurance provider.",
+});
 
 export default function InsuranceRedirectPage() {
   return (
