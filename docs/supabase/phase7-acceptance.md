@@ -26,3 +26,5 @@
 3. Finalize KPI dashboards and alerting.
 4. Deliver training sessions and collect feedback.
 5. Validate all documentation is discoverable (link from onboarding portal).
+6. Replace any hard-coded user IDs in Edge Functions, scheduled jobs, or seeds with role-based lookups aligned to the approved acceptance scenarios.
+7. Wire the admin tooling (feature flag panel, RLS overrides, audit exports) into the acceptance walkthrough so operators can rehearse the end-to-end flows without manual database edits.

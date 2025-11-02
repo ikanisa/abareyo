@@ -19,6 +19,7 @@ _Last updated: 2025-10-22 10:50:38Z_
 - Store icons, screenshots, and promo copy standardised in `docs/launch/` for App Store / Play Store submissions.
 - WhatsApp OTP flow protected with Redis-backed rate limits and runtime dashboards (`/admin/sms/otp`).
 - OTP status endpoint now surfaces Redis health + rate limit thresholds for smoke validation, and consent copy is localized to match Meta-approved WhatsApp templates.
+- Supply chain controls automated: SBOM + license enforcement (`npm run sbom`, `npm run check:licenses`) with provenance artifacts uploaded from CI/deploy workflows.
 
 ## Environment Variables
 - Source of truth: `audit/env-matrix.csv` plus `.env.example` and `backend/.env.example`.
@@ -31,6 +32,7 @@ _Last updated: 2025-10-22 10:50:38Z_
 - Onboarding/AI: `NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN`, `ONBOARDING_API_TOKEN`, `OPENAI_API_KEY`, and `NEXT_PUBLIC_OPENAI_BASE_URL`/`OPENAI_BASE_URL` when overriding the API host.
 - Production-only: Provide at least one of `NEXT_PUBLIC_SENTRY_DSN` or `SENTRY_DSN`, `NEXT_PUBLIC_SITE_URL`, and telemetry/socket overrides when applicable.
 - OTP delivery: configure `OTP_WHATSAPP_TEMPLATE_*`, `OTP_RATE_MAX_*`, `OTP_COOLDOWN_SECONDS`, and baseline blocklists (`OTP_BLOCKED_NUMBERS`, `OTP_BLOCKED_IPS`).
+- Observability & resilience: configure `SUPABASE_REQUEST_TIMEOUT_MS`, `SUPABASE_BREAKER_*`, `OPENAI_REQUEST_TIMEOUT_MS`, `OPENAI_BREAKER_*`, `LOKI_*`, `METRICS_TOKEN` or `METRICS_BASIC_AUTH_*`, and `BACKEND_SENTRY_DSN_*`.
 - Follow the deployment runbook to push these values to staging/production environments (no automated env sync remains in this repo).
 
 ## Deployment Platform Configuration
@@ -44,7 +46,11 @@ _Last updated: 2025-10-22 10:50:38Z_
     2. `npm run -s type-check`
     3. `npm run -s lint`
     4. `node scripts/preflight.mjs`
-    5. Archives `.next` build artifacts for review
+    5. `npm run check:licenses`
+    6. `npm run sbom`
+    7. Archives `.next` build artifacts + SBOM/provenance bundles
+  - `node-ci` mirrors production parity (lint/typecheck/tests) plus mobile coverage and now emits SBOM + supply chain artifacts.
+  - `deploy` workflow installs root deps, enforces license policy, generates SBOMs, builds/pushes containers, uploads supply chain bundles, and attests GHCR digests.
 - Ensure repository secrets for the hosting platform (for example, container registry tokens or SSH deploy keys) are configured before merging.
 
 ## Local Developer Workflow
@@ -60,6 +66,8 @@ _Last updated: 2025-10-22 10:50:38Z_
 - Example env files: `.env.example`, `backend/.env.example`
 - Validation module: `config/validated-env.mjs`
 - CI workflow: `.github/workflows/preview.yml`
+- Supply chain outputs: `report/sbom/`
 - Preflight script: `scripts/preflight.mjs`
 - Backend availability check: `scripts/check-backend-endpoint.mjs`
 - Operational playbooks: `docs/runbooks/incident-response.md`, `docs/runbooks/disaster-recovery.md`, `docs/runbooks/on-call-enablement-checklist.md`, `docs/runbooks/otp-fallbacks.md`
+- Dependency governance: `docs/dependency-review-cadence.md`

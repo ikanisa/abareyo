@@ -1,19 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { applySecurityHeaders as withSecurityHeaders } from './config/security-headers.mjs';
-import { getAllowedHosts } from '@/lib/server/origins';
+import { getAllowedHosts } from './src/lib/server/origins';
 import {
   APP_STORE_URL,
   PLAY_STORE_URL,
   buildNativeUrl,
   isMobileUserAgent,
   shouldAttemptNativeHandoff,
-} from '@/lib/native/links';
+} from './src/lib/native/links';
 
 const LOCALES = ['en', 'fr', 'rw'] as const;
 const LOCALE_RE = new RegExp(`^/(?:${LOCALES.join('|')})(?=/|$)`);
 const LOCALE_SET = new Set(LOCALES);
 const isProduction = process.env.NODE_ENV === 'production';
+const ADMIN_API_PREFIX = '/admin/api';
+const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 const normaliseHost = (host: string | null) => host?.toLowerCase() ?? null;
 
@@ -51,6 +53,7 @@ const shouldAttemptNativeHandoffRequest = (req: NextRequest) =>
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const method = req.method?.toUpperCase() ?? 'GET';
 
   if (isProduction) {
     const proto = req.headers.get('x-forwarded-proto');
@@ -62,6 +65,18 @@ export function middleware(req: NextRequest) {
         url.host = host;
       }
       return withSecurityHeaders(NextResponse.redirect(url, 308));
+    }
+  }
+
+  const isCsrfEndpoint = pathname.startsWith(ADMIN_CSRF_ENDPOINT);
+
+  if (pathname.startsWith(ADMIN_API_PREFIX) && MUTATING_METHODS.has(method) && !isCsrfEndpoint) {
+    const headerToken = req.headers.get(ADMIN_CSRF_HEADER);
+    const cookieToken = req.cookies.get(ADMIN_CSRF_COOKIE)?.value ?? null;
+
+    if (!headerToken || !cookieToken || headerToken !== cookieToken) {
+      const response = NextResponse.json({ error: 'admin_csrf_invalid' }, { status: 403 });
+      return withSecurityHeaders(response);
     }
   }
 

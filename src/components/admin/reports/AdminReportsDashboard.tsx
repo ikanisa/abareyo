@@ -6,6 +6,7 @@ import { AdminInlineMessage, AdminList } from '@/components/admin/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import { adminFetch } from '@/lib/admin/csrf';
 
 type ReportSchedule = {
   id: string;
@@ -35,7 +36,7 @@ export const AdminReportsDashboard = ({ initialSchedules }: AdminReportsDashboar
   const { toast } = useToast();
 
   const refresh = async () => {
-    const data = await fetch('/admin/api/reports/schedules').then((res) => res.json());
+    const data = await adminFetch('/admin/api/reports/schedules').then((res) => res.json());
     setSchedules((data.data?.schedules ?? data.schedules ?? []) as ReportSchedule[]);
   };
 
@@ -50,7 +51,7 @@ export const AdminReportsDashboard = ({ initialSchedules }: AdminReportsDashboar
       if (payload) {
         body.payload = JSON.parse(payload);
       }
-      const response = await fetch('/admin/api/reports/schedules', {
+      const response = await adminFetch('/admin/api/reports/schedules', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(body),

@@ -119,7 +119,7 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
   const { toast } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const { locale, setLocale, loading: localeLoading, t } = useAdminLocale();
+  const { locale, setLocale, loading: localeLoading } = useAdminLocale();
   const activeHref = useMemo(() => {
     if (!pathname) {
       return '/admin';

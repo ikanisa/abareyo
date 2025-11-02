@@ -44,7 +44,7 @@ function formatKickoff(match: TicketMatch) {
       hour: "2-digit",
       minute: "2-digit",
     }).format(date);
-  } catch (error) {
+  } catch (_error) {
     return date.toLocaleString();
   }
 }

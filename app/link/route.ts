@@ -28,7 +28,7 @@ export function GET(request: Request) {
       return NextResponse.redirect(incoming);
     }
     return NextResponse.redirect(new URL('/', url));
-  } catch (error) {
+  } catch (_error) {
     const params = new URLSearchParams(url.searchParams);
     params.delete('target');
     const native = buildNativeUrl(target.startsWith('/') ? target : `/${target}`, params);

@@ -192,7 +192,7 @@ export function fetchCommunityMissions() {
 }
 
 export function fetchCommunityAdminMissions() {
-  return httpClient.data<CommunityAdminMissionsContract>(`/community/admin/missions`, {
+  return httpClient.data<CommunityAdminMissionsContract>(`/admin/community/missions`, {
     admin: true,
   });
 }
@@ -204,7 +204,7 @@ export async function createAdminQuiz(payload: {
   activeFrom?: string;
   activeUntil?: string;
 }) {
-  return httpClient.data<AdminQuizContract>(`/community/admin/quizzes`, {
+  return httpClient.data<AdminQuizContract>(`/admin/community/quizzes`, {
     admin: true,
     method: 'POST',
     body: JSON.stringify(payload),
@@ -213,7 +213,7 @@ export async function createAdminQuiz(payload: {
 
 export async function closeAdminQuiz(quizId: string) {
   return httpClient.data<{ id: string; activeUntil: string }>(
-    `/community/admin/quizzes/${quizId}/close`,
+    `/admin/community/quizzes/${quizId}/close`,
     {
       admin: true,
       method: 'POST',
@@ -227,7 +227,7 @@ export async function createAdminPrediction(payload: {
   rewardPoints?: number;
   deadline: string;
 }) {
-  return httpClient.data<AdminPredictionContract>(`/community/admin/predictions`, {
+  return httpClient.data<AdminPredictionContract>(`/admin/community/predictions`, {
     admin: true,
     method: 'POST',
     body: JSON.stringify(payload),
@@ -236,7 +236,7 @@ export async function createAdminPrediction(payload: {
 
 export async function closeAdminPrediction(predictionId: string) {
   return httpClient.data<{ id: string; deadline: string }>(
-    `/community/admin/predictions/${predictionId}/close`,
+    `/admin/community/predictions/${predictionId}/close`,
     {
       admin: true,
       method: 'POST',
@@ -308,11 +308,11 @@ export async function voteCommunityPoll(payload: VotePollRequest) {
 }
 
 export function fetchFlaggedPosts() {
-  return httpClient.data<CommunityPost[]>(`/community/moderation`, { admin: true });
+  return httpClient.data<CommunityPost[]>(`/admin/community/moderation`, { admin: true });
 }
 
 export async function moderatePost(postId: string, payload: ModeratePostRequest) {
-  return httpClient.data<CommunityPost>(`/community/posts/${postId}/moderate`, {
+  return httpClient.data<CommunityPost>(`/admin/community/posts/${postId}/moderate`, {
     admin: true,
     method: 'POST',
     body: JSON.stringify(payload),
@@ -320,5 +320,5 @@ export async function moderatePost(postId: string, payload: ModeratePostRequest)
 }
 
 export function fetchCommunityAnalytics() {
-  return httpClient.data<PostAnalyticsResponse>(`/community/analytics`, { admin: true });
+  return httpClient.data<PostAnalyticsResponse>(`/admin/community/analytics`, { admin: true });
 }

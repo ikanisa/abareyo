@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Calendar, MapPin, Users, Ticket, PhoneCall, Copy, CheckCircle2, Loader2 } from "lucide-react";
+import { Calendar, MapPin, Users, PhoneCall, Copy, CheckCircle2, Loader2 } from "lucide-react";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import TopAppBar from "@/app/_components/ui/TopAppBar";
@@ -326,7 +326,7 @@ export default function Tickets() {
     try {
       await navigator.clipboard.writeText(ussdDisplay);
       toast({ title: "USSD copied", description: "Paste the code into your dialer if needed." });
-    } catch (error) {
+    } catch (_error) {
       toast({ title: "Unable to copy", description: "Select and copy the code manually.", variant: "destructive" });
     }
   };
@@ -351,7 +351,7 @@ export default function Tickets() {
     try {
       await navigator.clipboard.writeText(receiptDisplay);
       toast({ title: "USSD copied", description: "Paste the code into your dialer if needed." });
-    } catch (error) {
+    } catch (_error) {
       toast({ title: "Unable to copy", description: "Select and copy the code manually.", variant: "destructive" });
     }
   };

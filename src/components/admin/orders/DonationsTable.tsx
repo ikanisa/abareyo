@@ -16,7 +16,6 @@ export const DonationsTable = ({ initial }: DonationsTableProps) => {
   const { toast } = useToast();
   const [data, setData] = useState(initial.data);
   const [meta, setMeta] = useState(initial.meta);
-  const [projectId, setProjectId] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -27,7 +26,7 @@ export const DonationsTable = ({ initial }: DonationsTableProps) => {
         const response = await fetchAdminDonations({
           page: page ?? meta.page,
           pageSize: meta.pageSize,
-          projectId: project ?? projectId,
+          projectId: project,
         });
         setData(response.data);
         setMeta(response.meta);
@@ -38,7 +37,7 @@ export const DonationsTable = ({ initial }: DonationsTableProps) => {
         setIsLoading(false);
       }
     },
-    [meta.page, meta.pageSize, projectId, toast],
+    [meta.page, meta.pageSize, toast],
   );
 
   const handlePageChange = useCallback(

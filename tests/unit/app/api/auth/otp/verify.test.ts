@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { POST as verifyOtp } from "@/app/api/auth/otp/verify/route";
-import { POST as sendOtp } from "@/app/api/auth/otp/send/route";
+import { POST as verifyOtp, __internal as verifyOtpInternal } from "@/app/api/auth/otp/verify/route";
+import { POST as sendOtp, __internal as sendOtpInternal } from "@/app/api/auth/otp/send/route";
 import { createRedisClient } from "@/lib/server/redis-client";
 import { resetOtpStoreForTests } from "@/lib/server/otp";
 
@@ -9,7 +9,7 @@ vi.mock("@/lib/observability/node-observability", () => ({
   setupNodeObservability: vi.fn(),
 }));
 
-const telemetryMock = vi.fn(async () => undefined);
+const telemetryMock = vi.hoisted(() => vi.fn(async () => undefined)) as ReturnType<typeof vi.fn>;
 
 vi.mock("@/lib/observability", async () => {
   const actual = await vi.importActual<typeof import("@/lib/observability")>("@/lib/observability");
@@ -19,7 +19,9 @@ vi.mock("@/lib/observability", async () => {
   };
 });
 
-const whatsappMock = vi.fn(async () => ({ ok: true, status: "mocked" as const }));
+const whatsappMock = vi.hoisted(() => vi.fn(async () => ({ ok: true, status: "mocked" as const }))) as ReturnType<
+  typeof vi.fn
+>;
 
 vi.mock("@/lib/server/otp/whatsapp", async () => {
   const actual = await vi.importActual<typeof import("@/lib/server/otp/whatsapp")>(
@@ -40,7 +42,7 @@ const flushRedis = async () => {
   if (redisClient && redisAvailable) {
     try {
       await redisClient.sendCommand("FLUSHDB");
-    } catch (error) {
+    } catch (_error) {
       // ignore
     }
   }
@@ -56,6 +58,8 @@ beforeEach(async () => {
   process.env.OTP_VERIFY_IP_LIMIT = "5";
   resetOtpStoreForTests();
   await flushRedis();
+  sendOtpInternal.resetRateLimiters();
+  verifyOtpInternal.resetRateLimiters();
 });
 
 afterAll(async () => {
@@ -71,7 +75,7 @@ describe("POST /api/auth/otp/verify", () => {
       try {
         await redisClient.sendCommand("PING");
         redisAvailable = true;
-      } catch (error) {
+      } catch (_error) {
         redisAvailable = false;
       }
     }
@@ -138,6 +142,7 @@ describe("POST /api/auth/otp/verify", () => {
     process.env.OTP_VERIFY_LIMIT = "1";
     resetOtpStoreForTests();
     await flushRedis();
+    verifyOtpInternal.resetRateLimiters();
 
     const payload = { phone: "+250788000003" };
     const sendResponse = await sendOtp(

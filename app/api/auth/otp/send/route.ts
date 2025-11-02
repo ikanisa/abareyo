@@ -21,12 +21,21 @@ const parseEnvInteger = (value: string | undefined, fallback: number) => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 };
 
-const PHONE_LIMIT = parseEnvInteger(process.env.OTP_PHONE_LIMIT, 5);
-const PHONE_WINDOW_MS = parseEnvInteger(process.env.OTP_PHONE_WINDOW_MS, 60 * 60 * 1000);
-const IP_LIMIT = parseEnvInteger(process.env.OTP_IP_LIMIT, 20);
-const IP_WINDOW_MS = parseEnvInteger(process.env.OTP_IP_WINDOW_MS, 60 * 60 * 1000);
-const phoneLimiter = createRateLimiter({ prefix: "otp:phone", limit: PHONE_LIMIT, windowMs: PHONE_WINDOW_MS });
-const ipLimiter = createRateLimiter({ prefix: "otp:ip", limit: IP_LIMIT, windowMs: IP_WINDOW_MS });
+const buildLimiters = () => {
+  const phoneLimit = parseEnvInteger(process.env.OTP_PHONE_LIMIT, 5);
+  const phoneWindowMs = parseEnvInteger(process.env.OTP_PHONE_WINDOW_MS, 60 * 60 * 1000);
+  const ipLimit = parseEnvInteger(process.env.OTP_IP_LIMIT, 20);
+  const ipWindowMs = parseEnvInteger(process.env.OTP_IP_WINDOW_MS, 60 * 60 * 1000);
+  return {
+    phone: createRateLimiter({ prefix: "otp:phone", limit: phoneLimit, windowMs: phoneWindowMs }),
+    ip: createRateLimiter({ prefix: "otp:ip", limit: ipLimit, windowMs: ipWindowMs }),
+  };
+};
+
+let rateLimiters = buildLimiters();
+
+const getPhoneLimiter = () => rateLimiters.phone;
+const getIpLimiter = () => rateLimiters.ip;
 
 const otpStore = getOtpStore();
 
@@ -40,7 +49,7 @@ const sendTelemetry = (payload: Record<string, unknown>) => {
 const parseBody = async (request: NextRequest) => {
   try {
     return (await request.json()) as Record<string, unknown>;
-  } catch (error) {
+  } catch (_error) {
     return null;
   }
 };
@@ -80,7 +89,7 @@ export async function POST(request: NextRequest) {
   const phoneHash = hashPhoneForTelemetry(phone);
 
   if (ip) {
-    const ipResult = await ipLimiter.consume(ip);
+    const ipResult = await getIpLimiter().consume(ip);
     if (!ipResult.success) {
       console.warn({
         event: "otp.send.rate_limited",
@@ -96,7 +105,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const phoneResult = await phoneLimiter.consume(phone);
+  const phoneResult = await getPhoneLimiter().consume(phone);
   if (!phoneResult.success) {
     console.warn({
       event: "otp.send.rate_limited",
@@ -160,3 +169,9 @@ export async function POST(request: NextRequest) {
     expiresInSeconds: Math.floor(DEFAULT_OTP_TTL_MS / 1000),
   });
 }
+
+export const __internal = {
+  resetRateLimiters: () => {
+    rateLimiters = buildLimiters();
+  },
+};

@@ -22,6 +22,7 @@ import {
   Newspaper,
   Users,
   History,
+  Handshake,
 } from "lucide-react";
 
 import PageShell from "@/app/_components/shell/PageShell";
@@ -44,6 +45,7 @@ const useMenuLabels = () => {
     rewards: t("nav.rewards", "Rewards"),
     news: t("nav.news", "News"),
     members: t("nav.members", "Members"),
+    clubs: t("nav.clubs", "Fan Clubs"),
     membership: t("nav.membership", "Membership"),
     fundraising: t("nav.fundraising", "Fundraising"),
     events: t("nav.events", "Events"),
@@ -63,6 +65,7 @@ const baseMenuItems = [
   { icon: Wallet, label: "Wallet", path: "/wallet", color: "primary" },
   { icon: Trophy, label: "Rewards", path: "/rewards", color: "accent" },
   { icon: Users, label: "Members", path: "/members", color: "accent" },
+  { icon: Handshake, label: "Fan Clubs", path: "/clubs", color: "accent" },
   { icon: Newspaper, label: "News", path: "/news", color: "secondary" },
   { icon: CreditCard, label: "Membership", path: "/membership", color: "accent" },
   { icon: Heart, label: "Fundraising", path: "/fundraising", color: "success" },
@@ -117,6 +120,8 @@ export default function More() {
         return { ...item, label: labels.rewards };
       case "/members":
         return { ...item, label: labels.members };
+      case "/clubs":
+        return { ...item, label: labels.clubs };
       case "/news":
         return { ...item, label: labels.news };
       case "/membership":

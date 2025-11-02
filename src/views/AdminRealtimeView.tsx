@@ -34,7 +34,7 @@ const stringifyPayload = (payload: unknown) => {
   }
   try {
     return JSON.stringify(payload, null, 2);
-  } catch (error) {
+  } catch (_error) {
     return String(payload);
   }
 };

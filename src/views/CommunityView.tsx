@@ -38,8 +38,6 @@ import {
   voteCommunityPoll,
   type CommunityPost,
   type PollContract,
-  type LeaderboardEntryContract,
-  type CommunityMissionsContract,
 } from "@/lib/api/community";
 
 type PostCardProps = {
@@ -54,12 +52,6 @@ type PostCardProps = {
   onPollVote?: (pollId: string, optionId: string) => void;
   isPollVoting?: boolean;
   pollSelection?: string;
-};
-
-const reactionLabels: Record<string, string> = {
-  like: 'Like',
-  cheer: 'Cheer',
-  love: 'Love',
 };
 
 const MAX_POLL_OPTIONS = 5;

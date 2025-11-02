@@ -37,15 +37,29 @@ type Props = {
   provider?: Provider;
   onCopied?: () => void;
   className?: string;
+  disabled?: boolean;
+  disabledLabel?: string;
 };
 
 const buildDisplayCode = (href: string) => href.replace(/^tel:/i, "").replace(/%23/gi, "#");
 
-export const UssdPayButton = ({ amount, phone, provider = "mtn", onCopied, className }: Props) => {
+export const UssdPayButton = ({
+  amount,
+  phone,
+  provider = "mtn",
+  onCopied,
+  className,
+  disabled = false,
+  disabledLabel = "Unavailable",
+}: Props) => {
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
   const sanitizedAmount = useMemo(() => Number.parseInt(sanitizeAmount(amount), 10), [amount]);
-  const href = useMemo(() => buildUssd({ amount: sanitizedAmount, phone, provider }), [sanitizedAmount, phone, provider]);
-  const displayCode = useMemo(() => buildDisplayCode(href), [href]);
+  const isDisabled = disabled || !Number.isFinite(sanitizedAmount) || sanitizedAmount <= 0;
+  const href = useMemo(
+    () => (isDisabled ? "" : buildUssd({ amount: sanitizedAmount, phone, provider })),
+    [isDisabled, sanitizedAmount, phone, provider],
+  );
+  const displayCode = useMemo(() => (href ? buildDisplayCode(href) : ""), [href]);
   const ios = isIOS();
 
   const handleCopy = useCallback(async () => {
@@ -59,10 +73,16 @@ export const UssdPayButton = ({ amount, phone, provider = "mtn", onCopied, class
 
   return (
     <div className={className}>
-      <a className="btn-primary w-full" href={href} aria-label="Pay via USSD">
-        Pay via USSD
-      </a>
-      {ios ? (
+      {isDisabled ? (
+        <button type="button" className="btn-primary w-full cursor-not-allowed opacity-60" disabled aria-disabled>
+          {disabledLabel}
+        </button>
+      ) : (
+        <a className="btn-primary w-full" href={href} aria-label="Pay via USSD">
+          Pay via USSD
+        </a>
+      )}
+      {ios && !isDisabled ? (
         <button type="button" className="btn mt-2 w-full" onClick={handleCopy} aria-label="Copy USSD code">
           {copyStatus === "copied" ? "Code copied" : "Copy USSD"}
         </button>

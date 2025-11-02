@@ -50,7 +50,7 @@ export const dispatchTelemetryEvent = async (
         navigator.sendBeacon(endpoint, body);
         return;
       }
-    } catch (error) {
+    } catch (_error) {
       // Ignore beacon errors and fall back to fetch
     }
 
@@ -61,7 +61,7 @@ export const dispatchTelemetryEvent = async (
         headers: { "content-type": "application/json" },
         keepalive: true,
       });
-    } catch (error) {
+    } catch (_error) {
       // Suppress network failures for telemetry
     }
 
@@ -74,7 +74,7 @@ export const dispatchTelemetryEvent = async (
       body,
       headers: { "content-type": "application/json" },
     });
-  } catch (error) {
+  } catch (_error) {
     // Telemetry is best-effort on the server as well
   }
 };

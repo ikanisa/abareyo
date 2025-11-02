@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import {
   fetchCommunityModerationQueue,
   fetchCommunityRateLimits,
@@ -331,11 +332,15 @@ export default function AdminCommunity() {
                               {item.value ?? item.url}
                             </a>
                           ) : item.type === "image" && item.value ? (
-                            <img
-                              src={item.value}
-                              alt={item.label ?? "Evidence"}
-                              className="mt-2 h-32 w-full rounded-lg object-cover"
-                            />
+                            <div className="relative mt-2 h-32 w-full overflow-hidden rounded-lg">
+                              <OptimizedImage
+                                alt={item.label ?? "Evidence"}
+                                src={item.value}
+                                fill
+                                sizes="(max-width: 768px) 100vw, 33vw"
+                                className="object-cover"
+                              />
+                            </div>
                           ) : item.value ? (
                             <p className="mt-2 whitespace-pre-wrap text-slate-300">{item.value}</p>
                           ) : (

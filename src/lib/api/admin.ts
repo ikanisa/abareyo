@@ -71,11 +71,11 @@ export interface SmsRecord {
 }
 
 export async function fetchInboundSms() {
-  return httpClient.data<SmsRecord[]>('/sms/inbound', { admin: true });
+  return httpClient.data<SmsRecord[]>('/admin/sms/inbound', { admin: true });
 }
 
 export async function fetchManualReviewSms() {
-  const data = await httpClient.data<SmsManualReviewItemContract[]>('/sms/manual-review', {
+  const data = await httpClient.data<SmsManualReviewItemContract[]>('/admin/sms/manual', {
     admin: true,
   });
   return data.map((sms) => ({
@@ -90,7 +90,7 @@ export async function fetchManualReviewSms() {
 }
 
 export async function fetchManualReviewPayments() {
-  const data = await httpClient.data<ManualReviewPaymentContract[]>('/payments/manual-review', {
+  const data = await httpClient.data<ManualReviewPaymentContract[]>('/admin/sms/manual/payments', {
     admin: true,
   });
   return data.map((payment) => ({
@@ -105,7 +105,7 @@ export async function fetchManualReviewPayments() {
 }
 
 export async function attachSmsToPayment(payload: SmsManualAttachRequestContract) {
-  return httpClient.request('/sms/manual-review/attach', {
+  return httpClient.request('/admin/sms/manual/attach', {
     admin: true,
     method: 'POST',
     body: JSON.stringify(payload),

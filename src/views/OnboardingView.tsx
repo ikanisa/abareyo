@@ -84,7 +84,7 @@ const formatKey = (key: string) => {
 const formatTime = (iso: string) => {
   try {
     return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  } catch (error) {
+  } catch (_error) {
     return '';
   }
 };

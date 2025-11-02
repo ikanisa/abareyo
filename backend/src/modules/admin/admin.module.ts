@@ -5,6 +5,8 @@ import { PrismaModule } from '../../prisma/prisma.module.js';
 import { SmsModule } from '../sms/sms.module.js';
 import { PaymentsModule } from '../payments/payments.module.js';
 import { RealtimeModule } from '../realtime/realtime.module.js';
+import { TicketsModule } from '../tickets/tickets.module.js';
+import { CommunityModule } from '../community/community.module.js';
 import { AdminAuthController } from './auth/admin-auth.controller.js';
 import { AdminAuthService } from './auth/admin-auth.service.js';
 import { LoginRateLimiterService } from './auth/login-rate-limiter.service.js';
@@ -29,11 +31,23 @@ import { AdminTranslationsController } from './translations/admin-translations.c
 import { AdminTranslationsService } from './translations/admin-translations.service.js';
 import { AdminReportsController } from './reports/admin-reports.controller.js';
 import { AdminReportsService } from './reports/admin-reports.service.js';
+import { AdminTicketsController } from './tickets/admin-tickets.controller.js';
+import { AdminCommunityController } from './community/admin-community.controller.js';
 import { OtpModule } from '../otp/otp.module.js';
 import { AdminOtpController } from './otp/admin-otp.controller.js';
 
 @Module({
-  imports: [PrismaModule, ConfigModule, SmsModule, PaymentsModule, RealtimeModule, AdminMatchModule, OtpModule],
+  imports: [
+    PrismaModule,
+    ConfigModule,
+    SmsModule,
+    PaymentsModule,
+    RealtimeModule,
+    TicketsModule,
+    CommunityModule,
+    AdminMatchModule,
+    OtpModule,
+  ],
   controllers: [
     AdminAuthController,
     AdminOrdersController,
@@ -46,6 +60,8 @@ import { AdminOtpController } from './otp/admin-otp.controller.js';
     AdminFeatureFlagsController,
     AdminTranslationsController,
     AdminReportsController,
+    AdminTicketsController,
+    AdminCommunityController,
   ],
   providers: [
     AdminAuthService,

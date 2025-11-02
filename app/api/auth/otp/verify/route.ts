@@ -21,22 +21,22 @@ const parseEnvInteger = (value: string | undefined, fallback: number) => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 };
 
-const VERIFY_LIMIT = parseEnvInteger(process.env.OTP_VERIFY_LIMIT, 6);
-const VERIFY_WINDOW_MS = parseEnvInteger(process.env.OTP_VERIFY_WINDOW_MS, 15 * 60 * 1000);
-const IP_VERIFY_LIMIT = parseEnvInteger(process.env.OTP_VERIFY_IP_LIMIT, 40);
-const IP_VERIFY_WINDOW_MS = parseEnvInteger(process.env.OTP_VERIFY_IP_WINDOW_MS, 60 * 60 * 1000);
+const buildLimiters = () => {
+  const verifyLimit = parseEnvInteger(process.env.OTP_VERIFY_LIMIT, 6);
+  const verifyWindowMs = parseEnvInteger(process.env.OTP_VERIFY_WINDOW_MS, 15 * 60 * 1000);
+  const ipVerifyLimit = parseEnvInteger(process.env.OTP_VERIFY_IP_LIMIT, 40);
+  const ipVerifyWindowMs = parseEnvInteger(process.env.OTP_VERIFY_IP_WINDOW_MS, 60 * 60 * 1000);
 
-const verificationLimiter = createRateLimiter({
-  prefix: "otp:verify",
-  limit: VERIFY_LIMIT,
-  windowMs: VERIFY_WINDOW_MS,
-});
+  return {
+    verify: createRateLimiter({ prefix: "otp:verify", limit: verifyLimit, windowMs: verifyWindowMs }),
+    verifyIp: createRateLimiter({ prefix: "otp:verify-ip", limit: ipVerifyLimit, windowMs: ipVerifyWindowMs }),
+  };
+};
 
-const verificationIpLimiter = createRateLimiter({
-  prefix: "otp:verify-ip",
-  limit: IP_VERIFY_LIMIT,
-  windowMs: IP_VERIFY_WINDOW_MS,
-});
+let rateLimiters = buildLimiters();
+
+const getVerificationLimiter = () => rateLimiters.verify;
+const getVerificationIpLimiter = () => rateLimiters.verifyIp;
 
 const otpStore = getOtpStore();
 
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (ip) {
-    const ipResult = await verificationIpLimiter.consume(ip);
+    const ipResult = await getVerificationIpLimiter().consume(ip);
     if (!ipResult.success) {
       console.warn({
         event: "otp.verify.rate_limited",
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const limiterResult = await verificationLimiter.consume(phone);
+  const limiterResult = await getVerificationLimiter().consume(phone);
   const maskedPhone = maskMsisdn(phone);
   const phoneHash = hashPhoneForTelemetry(phone);
 
@@ -128,3 +128,9 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ status: "verified" });
 }
+
+export const __internal = {
+  resetRateLimiters: () => {
+    rateLimiters = buildLimiters();
+  },
+};
