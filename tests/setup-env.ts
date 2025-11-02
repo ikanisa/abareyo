@@ -27,3 +27,19 @@ process.env.SUPABASE_SERVICE_ROLE_KEY ??= 'service-role-key';
 process.env.SITE_SUPABASE_URL ??= 'http://localhost:54321';
 process.env.SITE_SUPABASE_SECRET_KEY ??= 'service-secret';
 process.env.ONBOARDING_API_TOKEN ??= 'onboard-token';
+
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  class ResizeObserverPolyfill {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+
+  // @ts-expect-error - jsdom globals allow assignment
+  globalThis.ResizeObserver = ResizeObserverPolyfill;
+}
+
+if (typeof document !== 'undefined' && typeof document.elementFromPoint !== 'function') {
+  // @ts-expect-error - jsdom document allows assignment for testing
+  document.elementFromPoint = () => null;
+}

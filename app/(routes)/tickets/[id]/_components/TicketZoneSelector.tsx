@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { GlassCard } from "@/components/ui/glass-card";
 
@@ -16,7 +16,7 @@ type Zone = {
 
 type TicketZoneSelectorProps = {
   zones: Zone[];
-  renderPay: (amount: number) => ReactNode;
+  renderPay: (amount: number, options: { disabled: boolean }) => ReactNode;
 };
 
 const formatCurrency = (value: number) =>
@@ -34,29 +34,65 @@ const TicketZoneSelector = ({ zones, renderPay }: TicketZoneSelectorProps) => {
     return [...zones].sort((a, b) => a.price - b.price);
   }, [zones]);
 
-  const [selectedZone, setSelectedZone] = useState(orderedZones[0]);
+  const [selectedZone, setSelectedZone] = useState(() => {
+    const firstAvailable = orderedZones.find((zone) => zone.remaining > 0);
+    return firstAvailable ?? orderedZones[0];
+  });
+
+  useEffect(() => {
+    if (orderedZones.length === 0) {
+      return;
+    }
+
+    const matched = orderedZones.find((zone) => zone.zone === selectedZone.zone);
+    if (matched && matched.remaining === selectedZone.remaining) {
+      if (matched.remaining > 0) {
+        return;
+      }
+    }
+
+    const nextPreferred = matched ?? orderedZones[0];
+    if (nextPreferred.remaining > 0) {
+      setSelectedZone(nextPreferred);
+      return;
+    }
+
+    const fallback = orderedZones.find((zone) => zone.remaining > 0) ?? nextPreferred;
+    if (fallback.zone !== selectedZone.zone || fallback.remaining !== selectedZone.remaining) {
+      setSelectedZone(fallback);
+    }
+  }, [orderedZones, selectedZone.zone, selectedZone.remaining]);
+
+  const isSoldOut = (selectedZone?.remaining ?? 0) <= 0;
 
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
         {orderedZones.map((zone) => {
           const isActive = zone.zone === selectedZone.zone;
+          const soldOut = zone.remaining <= 0;
           return (
             <button
               key={zone.zone}
               type="button"
-              onClick={() => setSelectedZone(zone)}
+              onClick={() => {
+                if (!soldOut) {
+                  setSelectedZone(zone);
+                }
+              }}
+              disabled={soldOut}
               className={`rounded-2xl border px-4 py-3 text-left transition ${
                 isActive
                   ? "border-white/60 bg-white/10 text-white"
                   : "border-white/10 bg-white/5 text-white/80 hover:border-white/30"
-              }`}
+              } ${soldOut ? 'pointer-events-none opacity-50' : ''}`}
               aria-pressed={isActive}
+              aria-disabled={soldOut}
             >
               <p className="text-sm font-semibold uppercase tracking-wide">{zone.zone}</p>
               <p className="text-lg font-bold">{formatCurrency(zone.price)}</p>
               <p className="text-[11px] text-white/60">
-                {zone.remaining > 0 ? `${zone.remaining} seats left` : "Limited availability"}
+                {zone.remaining > 0 ? `${zone.remaining} seats left` : "Sold out"}
               </p>
             </button>
           );
@@ -73,9 +109,11 @@ const TicketZoneSelector = ({ zones, renderPay }: TicketZoneSelectorProps) => {
           <span className="text-2xl font-bold text-white">{formatCurrency(selectedZone.price)}</span>
         </div>
         <div className="space-y-2">
-          {typeof renderPay === "function" ? renderPay(selectedZone.price) : null}
+          {typeof renderPay === "function" ? renderPay(selectedZone.price, { disabled: isSoldOut }) : null}
           <p className="text-[11px] text-white/60">
-            Dial the code and approve payment to receive your digital pass via SMS.
+            {isSoldOut
+              ? "No seats remain in this zone. Choose a different section to continue."
+              : "Dial the code and approve payment to receive your digital pass via SMS."}
           </p>
         </div>
       </GlassCard>

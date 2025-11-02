@@ -33,6 +33,7 @@ export class AdminOrdersService {
       const term = params.search.trim();
       where.OR = [
         { id: { contains: term, mode: 'insensitive' } },
+        { user: { is: { email: { contains: term, mode: 'insensitive' } } } },
         { user: { is: { phoneMask: { contains: term, mode: 'insensitive' } } } },
         { ussdCode: { contains: term, mode: 'insensitive' } },
       ];
@@ -46,7 +47,7 @@ export class AdminOrdersService {
         skip: (page - 1) * pageSize,
         take: pageSize,
         include: {
-          user: { select: { id: true, phoneMask: true } },
+          user: { select: { id: true, email: true, phoneMask: true } },
           match: { select: { id: true, opponent: true, kickoff: true, venue: true } },
           payments: true,
         },

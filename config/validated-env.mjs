@@ -49,12 +49,13 @@ const envSchema = z.object({
     .refine(
       (value) => isValidBackendUrl(value),
       'NEXT_PUBLIC_BACKEND_URL must be an absolute URL or start with "/"',
-    ),
-  NEXT_PUBLIC_ENVIRONMENT_LABEL: z.string().min(1),
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
+    )
+    .optional(),
+  NEXT_PUBLIC_ENVIRONMENT_LABEL: z.string().min(1).optional(),
+  NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).optional(),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1).optional(),
-  NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN: z.string().min(1),
+  NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN: z.string().min(1).optional(),
   NEXT_PUBLIC_FEATURE_FLAGS: z.string().default('{}'),
   NEXT_PUBLIC_SOCKET_TRANSPORT: z.string().optional(),
   NEXT_PUBLIC_SOCKET_PATH: z.string().optional(),
@@ -67,16 +68,16 @@ const envSchema = z.object({
 
   // === SERVER-ONLY SECRETS (NEVER use NEXT_PUBLIC_ prefix) ===
   // These must ONLY be accessed in server-side code (API routes, server components, middleware)
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1), // SERVER-ONLY: Full admin access to Supabase
-  SITE_SUPABASE_URL: z.string().url(), // SERVER-ONLY: Server-side Supabase URL
-  SITE_SUPABASE_SECRET_KEY: z.string().min(1), // SERVER-ONLY: Server-side Supabase secret
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(), // SERVER-ONLY: Full admin access to Supabase
+  SITE_SUPABASE_URL: z.string().url().optional(), // SERVER-ONLY: Server-side Supabase URL
+  SITE_SUPABASE_SECRET_KEY: z.string().min(1).optional(), // SERVER-ONLY: Server-side Supabase secret
   SUPABASE_SERVICE_KEY: z.string().optional(), // SERVER-ONLY: Alternative service key
   SUPABASE_URL: z.string().optional(), // SERVER-ONLY: Alternative URL
   SUPABASE_SECRET_KEY: z.string().optional(), // SERVER-ONLY: Alternative secret
   SITE_SUPABASE_PUBLISHABLE_KEY: z.string().optional(),
   SUPABASE_PUBLISHABLE_KEY: z.string().optional(),
   SUPABASE_ANON_KEY: z.string().optional(),
-  ONBOARDING_API_TOKEN: z.string().min(1), // SERVER-ONLY: Onboarding service auth token
+  ONBOARDING_API_TOKEN: z.string().min(1).optional(), // SERVER-ONLY: Onboarding service auth token
   ONBOARDING_ALLOW_MOCK: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(), // SERVER-ONLY: OpenAI API authentication key
   ADMIN_SMS_PARSER_TEST_ENABLED: z.string().optional(),
@@ -86,13 +87,13 @@ const envSchema = z.object({
   WEB_PUSH_CONTACT: z.string().optional(),
   EXPO_PUSH_ACCESS_TOKEN: z.string().optional(),
   META_WABA_BASE_URL: z.string().url().default('https://graph.facebook.com/v21.0'),
-  META_WABA_PHONE_NUMBER_ID: z.string().min(1),
-  META_WABA_ACCESS_TOKEN: z.string().min(1),
-  OTP_TEMPLATE_NAME: z.string().min(1),
-  OTP_TEMPLATE_LANGUAGE: z.string().min(1),
+  META_WABA_PHONE_NUMBER_ID: z.string().min(1).optional(),
+  META_WABA_ACCESS_TOKEN: z.string().min(1).optional(),
+  OTP_TEMPLATE_NAME: z.string().min(1).optional(),
+  OTP_TEMPLATE_LANGUAGE: z.string().min(1).optional(),
   OTP_TTL_SEC: z.coerce.number().int().min(30).default(300),
   RATE_LIMIT_PER_PHONE_PER_HOUR: z.coerce.number().int().min(1).default(5),
-  JWT_SECRET: z.string().min(32),
+  JWT_SECRET: z.string().min(32).optional(),
 
   // === Other Variables ===
   AGENT_ID: z.string().optional(),
@@ -108,8 +109,17 @@ const envSchema = z.object({
 
 const parsed = envSchema.parse(process.env);
 
-const missingCritical = [];
-for (const key of [
+const enforcementProfile = (() => {
+  if (parsed.APP_ENV === 'production' || (!parsed.APP_ENV && parsed.NODE_ENV === 'production')) {
+    return 'production';
+  }
+  if (parsed.APP_ENV === 'staging') {
+    return 'staging';
+  }
+  return 'non-production';
+})();
+
+const requiredKeys = [
   'NEXT_PUBLIC_BACKEND_URL',
   'NEXT_PUBLIC_ENVIRONMENT_LABEL',
   'NEXT_PUBLIC_SUPABASE_URL',
@@ -124,21 +134,36 @@ for (const key of [
   'OTP_TEMPLATE_NAME',
   'OTP_TEMPLATE_LANGUAGE',
   'JWT_SECRET',
-]) {
+];
+
+const missingCritical = [];
+const missingWarnOnly = [];
+
+for (const key of requiredKeys) {
   if (!parsed[key]) {
-    missingCritical.push(key);
+    if (enforcementProfile === 'production' || enforcementProfile === 'staging') {
+      missingCritical.push(key);
+    } else {
+      missingWarnOnly.push(key);
+    }
   }
 }
 
-if (parsed.NODE_ENV === 'production') {
-  if (!parsed.NEXT_PUBLIC_SITE_URL) {
-    missingCritical.push('NEXT_PUBLIC_SITE_URL (required in production)');
-  }
+if (enforcementProfile === 'production' && !parsed.NEXT_PUBLIC_SITE_URL) {
+  missingCritical.push('NEXT_PUBLIC_SITE_URL (required in production)');
 }
 
 if (missingCritical.length > 0) {
   throw new Error(
     `Missing required environment variables:\n  - ${missingCritical.join('\n  - ')}`,
+  );
+}
+
+if (missingWarnOnly.length > 0 && process.env.NODE_ENV !== 'test' && !process.env.CI) {
+  console.warn(
+    `⚠️  Missing recommended environment variables for ${enforcementProfile} profile:\n  - ${missingWarnOnly.join(
+      '\n  - ',
+    )}`,
   );
 }
 
@@ -241,6 +266,7 @@ const clientEnv = {
 const runtimeConfig = Object.freeze({
   appEnv: parsed.APP_ENV,
   port: defaultPort,
+  profile: enforcementProfile,
   server: serverEnv,
   client: clientEnv,
 });
