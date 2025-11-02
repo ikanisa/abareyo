@@ -53,9 +53,12 @@ export async function ensureAdminCsrfToken(): Promise<string> {
     return cookieValue;
   }
 
-  if (cachedToken) {
-    return cachedToken;
-  }
+  // The CSRF cookie may expire or be cleared by the user. If the cookie is
+  // missing we must forget any cached token so that we can request a fresh
+  // one from the server. Otherwise we would return a stale token that no
+  // longer matches an active cookie, resulting in persistent 403 responses
+  // for subsequent mutations.
+  cachedToken = null;
 
   if (!inflight) {
     inflight = requestCsrfToken()
