@@ -3,7 +3,7 @@
 import { useMemo, useRef } from "react";
 import { Video, ResizeMode } from "expo-av";
 import { ScrollView, StyleSheet, View, Text, Pressable } from "react-native";
-import { highlights } from "../../app/(routes)/news/_data/highlights";
+import { highlights } from "@/app/(routes)/news/_data/highlights";
 
 const styles = StyleSheet.create({
   screen: {

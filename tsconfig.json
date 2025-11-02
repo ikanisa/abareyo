@@ -55,9 +55,29 @@
       "@rayon/design-tokens/*": [
         "./packages/design-tokens/src/*.ts"
       ],
+      "@rayon/api": [
+        "./packages/api/src/index.ts"
+      ],
+      "@rayon/api/*": [
+        "./packages/api/src/*"
+      ],
+      "@rayon/api/types/*": [
+        "./packages/api/types/*"
+      ],
+      "@rayon/config": [
+        "./packages/config/env.ts"
+      ],
+      "@rayon/config/*": [
+        "./packages/config/*.ts"
+      ],
+      "@admin/*": [
+        "./app/admin/*"
+      ],
+      "@mobile/*": [
+        "./packages/mobile/src/*"
+      ],
       "@/*": [
-        "./src/*",
-        "*"
+        "./src/*"
       ]
     },
     "incremental": true,
@@ -76,6 +96,8 @@
     "src/**/*.tsx",
     "packages/mobile/**/*.ts",
     "packages/mobile/**/*.tsx",
+    "packages/api/**/*.ts",
+    "packages/config/**/*.ts",
     "tests/**/*.ts",
     "tests/**/*.tsx",
     "**/*.cjs",
