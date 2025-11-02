@@ -43,3 +43,10 @@ infra/cloudflared/config.yml
 infra/cloudflared/credentials/
 k8s-secrets.sh
 ios/.build/
+
+# Generated supply chain artifacts
+report/sbom/*.json
+report/sbom/*.jsonl
+report/sbom/*.tar.gz
+report/sbom/*.sha256
+report/sbom/*.digest

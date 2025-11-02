@@ -2,6 +2,12 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 
+import {
+  CircuitBreaker,
+  CircuitBreakerOpenError,
+  CircuitBreakerTimeoutError,
+} from '../../observability/circuit-breaker.js';
+
 const DEFAULT_BASE_URL = 'https://api.openai.com/v1';
 
 export const OPENAI_FACTORY = Symbol('OPENAI_FACTORY');
@@ -31,6 +37,7 @@ export class OpenAiService {
   private readonly logger = new Logger(OpenAiService.name);
   private readonly client: OpenAI | null;
   private readonly baseUrl: string;
+  private readonly breaker: CircuitBreaker;
 
   constructor(
     private readonly configService: ConfigService,
@@ -39,6 +46,18 @@ export class OpenAiService {
     this.baseUrl = this.normalizeBaseUrl(this.configService.get<string>('openai.baseUrl'));
 
     const apiKey = this.configService.get<string>('openai.apiKey');
+    const timeoutMs = this.configService.get<number>('openai.requestTimeoutMs', 8000);
+    const breakerFailureThreshold = this.configService.get<number>('openai.circuitBreaker.failureThreshold', 3);
+    const breakerResetMs = this.configService.get<number>('openai.circuitBreaker.resetMs', 60000);
+
+    this.breaker = new CircuitBreaker({
+      name: 'openai',
+      timeoutMs,
+      failureThreshold: breakerFailureThreshold,
+      resetMs: breakerResetMs,
+      logger: this.logger,
+    });
+
     if (!apiKey) {
       this.logger.warn('OPENAI_API_KEY missing; AI-powered flows will fall back to static responses.');
       this.client = null;
@@ -59,8 +78,24 @@ export class OpenAiService {
   async responsesCreate<T>(params: Parameters<OpenAI['responses']['create']>[0]): Promise<T> {
     const client = this.requireClient();
     try {
-      return (await client.responses.create(params)) as T;
+      return (await this.breaker.execute(() => client.responses.create(params))) as T;
     } catch (error) {
+      if (error instanceof CircuitBreakerTimeoutError) {
+        this.logger.warn(`OpenAI responses.create timed out after ${error.timeoutMs}ms`);
+        throw new OpenAiRequestError('openai_timeout', {
+          status: 504,
+          detail: error.message,
+          cause: error,
+        });
+      }
+      if (error instanceof CircuitBreakerOpenError) {
+        this.logger.error('OpenAI responses.create circuit breaker is open');
+        throw new OpenAiRequestError('openai_unavailable', {
+          status: 503,
+          detail: error.message,
+          cause: error,
+        });
+      }
       throw this.handleError('responses.create', error);
     }
   }
@@ -68,8 +103,24 @@ export class OpenAiService {
   async responsesParse<T>(params: Parameters<OpenAI['responses']['parse']>[0]): Promise<T> {
     const client = this.requireClient();
     try {
-      return (await client.responses.parse(params)) as T;
+      return (await this.breaker.execute(() => client.responses.parse(params))) as T;
     } catch (error) {
+      if (error instanceof CircuitBreakerTimeoutError) {
+        this.logger.warn(`OpenAI responses.parse timed out after ${error.timeoutMs}ms`);
+        throw new OpenAiRequestError('openai_timeout', {
+          status: 504,
+          detail: error.message,
+          cause: error,
+        });
+      }
+      if (error instanceof CircuitBreakerOpenError) {
+        this.logger.error('OpenAI responses.parse circuit breaker is open');
+        throw new OpenAiRequestError('openai_unavailable', {
+          status: 503,
+          detail: error.message,
+          cause: error,
+        });
+      }
       throw this.handleError('responses.parse', error);
     }
   }

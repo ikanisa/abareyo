@@ -36,6 +36,10 @@ npm run validate:deployment
 npm run lint:pwa
 npm run test:e2e:a11y
 
+# Supply chain + license guardrails
+npm run check:licenses
+npm run sbom
+
 # Expected output: All checks passed or warnings only
 ```
 
@@ -160,6 +164,16 @@ kubectl -n rayon create secret generic backend-secrets \
   --from-literal=ADMIN_SESSION_SECRET=${ADMIN_SESSION_SECRET} \
   --from-literal=FAN_SESSION_SECRET=${FAN_SESSION_SECRET} \
   --from-literal=METRICS_TOKEN=${METRICS_TOKEN} \
+  --from-literal=METRICS_BASIC_AUTH_USER=metrics \
+  --from-literal=METRICS_BASIC_AUTH_PASSWORD=$(openssl rand -hex 24) \
+  --from-literal=SUPABASE_REQUEST_TIMEOUT_MS=4000 \
+  --from-literal=SUPABASE_BREAKER_FAILURE_THRESHOLD=4 \
+  --from-literal=SUPABASE_BREAKER_RESET_MS=30000 \
+  --from-literal=OPENAI_REQUEST_TIMEOUT_MS=8000 \
+  --from-literal=OPENAI_BREAKER_FAILURE_THRESHOLD=3 \
+  --from-literal=OPENAI_BREAKER_RESET_MS=60000 \
+  --from-literal=LOKI_URL=https://loki.yourdomain.com \
+  --from-literal=LOKI_BASIC_AUTH=user:pass \
   --from-literal=CORS_ORIGIN=https://yourdomain.com \
   --dry-run=client -o yaml | kubectl apply -f -
 
@@ -172,6 +186,8 @@ kubectl -n rayon create secret docker-registry ghcr \
 
 echo "Secrets created successfully!"
 ```
+
+> ℹ️ Remove `METRICS_BASIC_AUTH_*`, `SUPABASE_*`, `OPENAI_*`, or `LOKI_*` lines above if you rely solely on tokens or different observability backends.
 
 Update the values in the script, then run:
 
@@ -275,8 +291,11 @@ npm run seed
    - `REDIS_URL`
    - `CORS_ORIGIN`
    - `METRICS_TOKEN`
+   - `METRICS_BASIC_AUTH_USER`
+   - `METRICS_BASIC_AUTH_PASSWORD`
    - `ADMIN_SESSION_SECRET`
    - `FAN_SESSION_SECRET`
+   - `BACKEND_SENTRY_DSN`
    - `KUBE_CONFIG_B64` (base64-encoded kubeconfig)
    - `GHCR_TOKEN` (GitHub PAT with packages:write)
    - `INGRESS_HOST` (your domain)
@@ -301,6 +320,8 @@ npm run seed
    gh run watch
    # or check Actions tab on GitHub
    ```
+
+5. Download SBOM + provenance bundles from the workflow run (`Artifacts` tab ➜ `web-mobile-supply-chain`, `backend-supply-chain`) and attach them to the release ticket for traceability.
 
 ### Option B: Manual Deployment
 
@@ -385,14 +406,16 @@ kubectl -n rayon logs deployment/frontend --tail=50
    - Verify errors are being reported
    - Configure alert rules
    - Set up team notifications
+   - Tune `SENTRY_TRACES_SAMPLE_RATE` / `SENTRY_PROFILES_SAMPLE_RATE` for environment
 
 2. **Prometheus + Grafana** (Metrics):
    ```bash
    # Apply Prometheus alert rules
    kubectl apply -f docs/observability/prometheus-alerts.yaml
-   
+
    # Import Grafana dashboards from docs/grafana/
    ```
+   - Use `METRICS_TOKEN` or basic auth credentials when wiring scrape targets.
 
 ### 8.2 Configure Backups
 
@@ -406,6 +429,7 @@ kubectl -n rayon logs deployment/frontend --tail=50
 - Set up PagerDuty or alerting system
 - Review incident response procedures
 - Conduct team walkthrough of deployment
+- Schedule quarterly dependency review: [docs/dependency-review-cadence.md](./docs/dependency-review-cadence.md)
 
 ---
 

@@ -4,7 +4,7 @@
 > **Status**: Production-Ready - All critical issues resolved  
 > **Last Updated**: 2025-10-29  
 > **Quick Start**: See [DEPLOYMENT_QUICKSTART.md](./DEPLOYMENT_QUICKSTART.md) for first-time deployment  
-> **Related Docs**: [PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md) | [docs/hosting-migration.md](./docs/hosting-migration.md) | [k8s/README.md](./k8s/README.md) | [docs/runbooks/deploy.md](./docs/runbooks/deploy.md)
+> **Related Docs**: [PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md) | [docs/hosting-migration.md](./docs/hosting-migration.md) | [k8s/README.md](./k8s/README.md) | [docs/runbooks/deploy.md](./docs/runbooks/deploy.md) | [docs/dependency-review-cadence.md](./docs/dependency-review-cadence.md)
 
 ## Quick Reference
 
@@ -31,6 +31,8 @@
 - [x] **Preflight Script**: `node scripts/preflight.mjs` validates environment and build
 - [x] **PWA Audit**: `npm run lint:pwa` (Lighthouse + bundle analysis)
 - [x] **A11y Smoke**: `npm run test:e2e:a11y`
+- [x] **License Compliance**: `npm run check:licenses` (enforces `config/compliance/license-policies.json`)
+- [x] **SBOM Generation**: `npm run sbom` (artifacts under `report/sbom/`)
 
 **Validation Command**:
 ```bash
@@ -57,6 +59,9 @@ Create these secrets in your deployment platform or K8s secrets:
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` - Service role key for server operations
 - [ ] `SITE_SUPABASE_URL` - Site-specific Supabase URL
 - [ ] `SITE_SUPABASE_SECRET_KEY` - Site-specific secret key
+- [ ] `SUPABASE_REQUEST_TIMEOUT_MS` - Request timeout (default 4000)
+- [ ] `SUPABASE_BREAKER_FAILURE_THRESHOLD` - Circuit breaker trip threshold (default 4)
+- [ ] `SUPABASE_BREAKER_RESET_MS` - Circuit breaker reset window (default 30000)
 
 **Backend Integration** (Required):
 - [ ] `NEXT_PUBLIC_BACKEND_URL` - Backend API endpoint (absolute HTTPS URL)
@@ -66,6 +71,9 @@ Create these secrets in your deployment platform or K8s secrets:
 - [ ] `NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN` - Public onboarding token
 - [ ] `ONBOARDING_API_TOKEN` - Server-side onboarding API token
 - [ ] `OPENAI_API_KEY` - OpenAI API key for AI features
+- [ ] `OPENAI_REQUEST_TIMEOUT_MS` - OpenAI request timeout (default 8000)
+- [ ] `OPENAI_BREAKER_FAILURE_THRESHOLD` - Circuit breaker trip threshold (default 3)
+- [ ] `OPENAI_BREAKER_RESET_MS` - Circuit breaker reset window (default 60000)
 
 **Mobile Auth (Required for OTP flows)**:
 - [ ] `EXPO_PUBLIC_WEB_URL` - Expo mobile API base (falls back to `NEXT_PUBLIC_SITE_URL`)
@@ -74,8 +82,14 @@ Create these secrets in your deployment platform or K8s secrets:
 **Production Services** (Optional but Recommended):
 - [ ] `NEXT_PUBLIC_SENTRY_DSN` - Error tracking
 - [ ] `SENTRY_DSN` - Server-side error tracking
+- [ ] `BACKEND_SENTRY_DSN` / `_STAGING` / `_PRODUCTION` - Environment-specific backend DSNs
 - [ ] `NEXT_PUBLIC_SITE_URL` - Public site URL
 - [ ] `NEXT_TELEMETRY_DISABLED` - Set to `1` in CI/CD
+- [ ] `LOKI_URL` - Loki endpoint (if shipping logs)
+- [ ] `LOKI_BASIC_AUTH` or `LOKI_USERNAME`/`LOKI_PASSWORD`
+- [ ] `LOKI_TENANT_ID` (optional multi-tenant header)
+- [ ] `LOKI_BATCH_INTERVAL` - Seconds between log batches
+- [ ] `METRICS_BASIC_AUTH_USER` / `METRICS_BASIC_AUTH_PASSWORD` (optional basic auth)
 
 **Validation Commands**:
 ```bash
@@ -98,8 +112,11 @@ Create these secrets for backend deployment:
 **Security** (Required):
 - [ ] `ADMIN_SESSION_SECRET` - Session secret (32+ chars)
 - [ ] `FAN_SESSION_SECRET` - Fan session secret (32+ chars)
-- [ ] `METRICS_TOKEN` - Bearer token for /metrics endpoint
+- [ ] `METRICS_TOKEN` - Bearer token for /metrics endpoint (or configure basic auth below)
 - [ ] `CORS_ORIGIN` - Allowed CORS origins (comma-separated)
+- [ ] `METRICS_BASIC_AUTH_USER` - Optional basic auth username for `/metrics`
+- [ ] `METRICS_BASIC_AUTH_PASSWORD` - Optional basic auth password for `/metrics`
+- [ ] `LOKI_URL` / `LOKI_BASIC_AUTH` / `LOKI_USERNAME` / `LOKI_PASSWORD` - Loki log shipper secrets
 
 **Services** (Optional):
 - [ ] `APP_ENABLE_CSP=1` - Enable Content Security Policy
@@ -179,6 +196,13 @@ kubectl get ingressclass
 - [x] Admin dashboard smoke: `curl -H "x-admin-token: $ADMIN_TOKEN" "$BACKEND_URL/admin/otp/dashboard"` shows recent send/verify activity, blacklist state, and rate-limit counters.
 - [x] Evidence (raw curl output + screenshots for consent copy) attached under [`audit/smoke-tests/otp-smoke.md`](./audit/smoke-tests/otp-smoke.md) and linked to the release ticket.
 
+### 1.6 Supply Chain & Provenance ✅
+
+- [x] Verify `report/sbom/manifest.json`, SBOM files, and provenance documents exist locally.
+- [x] Confirm CI workflow runs (`ci.yml`, `node-ci.yml`, `preview.yml`, `deploy.yml`) upload artifacts to GitHub Actions ➜ **Artifacts** tab.
+- [x] Review license allow/deny policy (`config/compliance/license-policies.json`) for pending exceptions.
+- [x] Create release ticket checklist entry linking to `docs/dependency-review-cadence.md` for next scheduled dependency review.
+
 ---
 
 ## Phase 2: Deployment Preparation
@@ -227,6 +251,16 @@ kubectl -n rayon create secret generic backend-secrets \
   --from-literal=ADMIN_SESSION_SECRET=$(openssl rand -hex 32) \
   --from-literal=FAN_SESSION_SECRET=$(openssl rand -hex 32) \
   --from-literal=METRICS_TOKEN=$(openssl rand -hex 32) \
+  --from-literal=METRICS_BASIC_AUTH_USER=metrics \
+  --from-literal=METRICS_BASIC_AUTH_PASSWORD=$(openssl rand -hex 24) \
+  --from-literal=SUPABASE_REQUEST_TIMEOUT_MS=4000 \
+  --from-literal=SUPABASE_BREAKER_FAILURE_THRESHOLD=4 \
+  --from-literal=SUPABASE_BREAKER_RESET_MS=30000 \
+  --from-literal=OPENAI_REQUEST_TIMEOUT_MS=8000 \
+  --from-literal=OPENAI_BREAKER_FAILURE_THRESHOLD=3 \
+  --from-literal=OPENAI_BREAKER_RESET_MS=60000 \
+  --from-literal=LOKI_URL=https://loki.yourdomain.com \
+  --from-literal=LOKI_BASIC_AUTH=user:pass \
   --from-literal=CORS_ORIGIN=https://yourdomain.com
 ```
 
@@ -335,8 +369,11 @@ Configure these in your repository or environment settings:
 **Security**:
 - [ ] `CORS_ORIGIN`
 - [ ] `METRICS_TOKEN`
+- [ ] `METRICS_BASIC_AUTH_USER`
+- [ ] `METRICS_BASIC_AUTH_PASSWORD`
 - [ ] `ADMIN_SESSION_SECRET`
 - [ ] `FAN_SESSION_SECRET`
+- [ ] `BACKEND_SENTRY_DSN`
 
 **Kubernetes**:
 - [ ] `KUBE_CONFIG_B64` (base64-encoded kubeconfig)
@@ -362,15 +399,15 @@ gh workflow run deploy.yml
 ```
 
 The workflow will:
-1. ✅ Install dependencies
-2. ✅ Validate environment
-3. ✅ Generate Prisma client
-4. ✅ Run database migrations
+1. ✅ Install root dependencies and enforce license policy (`npm run check:licenses`)
+2. ✅ Generate SBOMs and provenance manifest (`npm run sbom` ➜ `report/sbom/`)
+3. ✅ Validate backend environment & run Prisma client generation
+4. ✅ Apply database migrations (if `DATABASE_URL` configured)
 5. ✅ Build Docker images (frontend + backend)
-6. ✅ Push images to GHCR
-7. ✅ Apply Kubernetes manifests (if KUBE_CONFIG_B64 configured)
-8. ✅ Update deployments with new image SHA
-9. ✅ Run health checks
+6. ✅ Push images to GHCR with digests recorded
+7. ✅ Upload container SBOMs, checksums, and provenance bundles
+8. ✅ Apply Kubernetes manifests (if `KUBE_CONFIG_B64` configured)
+9. ✅ Update deployments with new image SHA and wait for health checks
 
 ### 3.2 Manual Deployment (Alternative) 🔄
 
@@ -508,6 +545,9 @@ kubectl -n rayon logs -f deployment/backend
 # Access metrics endpoint (requires METRICS_TOKEN)
 curl -H "Authorization: Bearer ${METRICS_TOKEN}" https://api.yourdomain.com/metrics
 
+# If using basic auth instead of METRICS_TOKEN
+curl -u "${METRICS_BASIC_AUTH_USER}:${METRICS_BASIC_AUTH_PASSWORD}" https://api.yourdomain.com/metrics
+
 # Import Grafana dashboards from docs/grafana/
 ```
 
@@ -515,6 +555,11 @@ curl -H "Authorization: Bearer ${METRICS_TOKEN}" https://api.yourdomain.com/metr
 - [ ] Sentry DSN configured in frontend and backend
 - [ ] Alert rules configured for critical errors
 - [ ] Team notifications enabled
+
+#### Sentry Alert Thresholds
+- [ ] `SENTRY_TRACES_SAMPLE_RATE` tuned for environment (e.g., 0.1 production, 0.3 staging)
+- [ ] `SENTRY_PROFILES_SAMPLE_RATE` enabled for high-touch releases
+- [ ] Escalation path: On-call → Product owner → Founding team (documented in release ticket)
 
 #### Prometheus Alert Rules
 ```bash
@@ -548,6 +593,8 @@ kubectl -n rayon rollout undo deployment/backend
 kubectl -n rayon rollout undo deployment/frontend
 ```
 
+- [ ] Download the latest `backend-supply-chain` artifact from GitHub Actions and confirm digest matches target rollback version before rollout undo.
+
 ### 5.2 Database Rollback ⚠️
 
 If migrations caused issues:
@@ -569,6 +616,7 @@ npx prisma migrate resolve --rolled-back MIGRATION_NAME
 - [ ] Update status page (if applicable)
 - [ ] Document rollback reason and steps taken
 - [ ] Schedule post-mortem meeting
+- [ ] Reference escalation ladder (On-call → Product owner → Founding team) and capture timestamps in incident doc
 
 ---
 
@@ -597,6 +645,9 @@ npx prisma migrate resolve --rolled-back MIGRATION_NAME
 - [x] **Content Security Policy**:
   - [x] CSP headers configured (APP_ENABLE_CSP=1)
   - [ ] CSP tested and validated
+- [x] **Supply Chain**:
+  - [x] SBOM, license scan, and provenance artifacts archived (`report/sbom/` & GitHub Actions artifacts)
+  - [x] Container digests recorded in release ticket
 
 ### 6.2 Compliance Requirements ⚠️
 
@@ -606,6 +657,7 @@ Review compliance checklist: `docs/runbooks/compliance.md`
 - [ ] Audit logging enabled
 - [ ] Data retention policies configured
 - [ ] User consent mechanisms in place
+- [ ] Quarterly dependency review scheduled (`docs/dependency-review-cadence.md`)
 
 ---
 

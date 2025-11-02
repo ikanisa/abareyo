@@ -47,7 +47,9 @@
     "ci:check-env": "node scripts/check-frontend-env.mjs",
     "reports:worker": "tsx scripts/reports/report-schedule-worker.ts",
     "validate:deployment": "node scripts/validate-deployment-readiness.mjs",
-    "ci:verify-mobile-qa": "node tools/ci/verify-mobile-qa.mjs"
+    "ci:verify-mobile-qa": "node tools/ci/verify-mobile-qa.mjs",
+    "sbom": "node scripts/generate-sbom.mjs",
+    "check:licenses": "node scripts/enforce-licenses.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^5.0.8",
@@ -125,6 +127,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",
     "@capacitor/cli": "^5.0.8",
+    "@cyclonedx/cyclonedx-npm": "^4.1.0",
     "@eslint/js": "^8.57.0",
     "@lhci/cli": "^0.14.0",
     "@playwright/test": "^1.50.1",
@@ -139,13 +142,14 @@
     "autoprefixer": "^10.4.21",
     "dotenv": "^16.4.5",
     "eslint": "^8.57.0",
-    "expo-clipboard": "^5.0.1",
     "eslint-config-next": "14.2.5",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
+    "expo-clipboard": "^5.0.1",
     "globals": "^15.15.0",
     "jsdom": "^27.0.0",
+    "license-checker-rseidelsohn": "^4.4.2",
     "pino": "^9.3.2",
     "postcss": "^8.5.6",
     "supertest": "^7.1.4",
