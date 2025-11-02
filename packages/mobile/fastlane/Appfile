@@ -1,4 +1,4 @@
-app_identifier "com.abareyo.mobile"
+app_identifier "com.gikundiro.app"
 apple_id ENV.fetch("IOS_APPLE_ID", "ci@abareyo.com")
 team_id ENV["IOS_TEAM_ID"] if ENV["IOS_TEAM_ID"]
 itc_team_id ENV["IOS_TEAM_ID"] if ENV["IOS_TEAM_ID"]
