@@ -60,6 +60,20 @@ export const appNavigation: AppNavigation = {
       },
     },
     {
+      id: 'events',
+      href: '/events',
+      title: 'Events',
+      labelKey: 'nav.events',
+      description: 'Club meetups, watch parties, and activations.',
+      icon: 'calendar',
+      analyticsId: 'nav-events',
+      surfaces: ['drawer', 'sidebar'],
+      meta: {
+        title: 'Rayon Sports Events',
+        description: 'Club meetups, watch parties, and supporter activations.',
+      },
+    },
+    {
       id: 'tickets',
       href: '/tickets',
       title: 'Tickets',
@@ -99,6 +113,20 @@ export const appNavigation: AppNavigation = {
       meta: {
         title: 'Rayon Sports Community',
         description: 'Polls, missions, and supporter leaderboard.',
+      },
+    },
+    {
+      id: 'clubs',
+      href: '/clubs',
+      title: 'Fan Clubs',
+      labelKey: 'nav.clubs',
+      description: 'Connect with captains and verified supporter groups.',
+      icon: 'users',
+      analyticsId: 'nav-clubs',
+      surfaces: ['drawer', 'sidebar'],
+      meta: {
+        title: 'Rayon Sports Fan Clubs',
+        description: 'Connect with captains and verified supporter groups.',
       },
     },
     {

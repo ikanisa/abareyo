@@ -32,6 +32,18 @@ export default async function MorePage() {
           </span>
           Members Directory
         </Link>
+        <Link className="tile flex h-28 flex-col justify-center gap-2 text-lg font-semibold" href="/clubs">
+          <span aria-hidden className="text-3xl">
+            👥
+          </span>
+          Fan Clubs
+        </Link>
+        <Link className="tile flex h-28 flex-col justify-center gap-2 text-lg font-semibold" href="/events">
+          <span aria-hidden className="text-3xl">
+            📅
+          </span>
+          Club Events
+        </Link>
         <Link className="tile flex h-28 flex-col justify-center gap-2 text-lg font-semibold" href="/services">
           <span aria-hidden className="text-3xl">
             🏦
