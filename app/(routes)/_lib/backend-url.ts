@@ -19,10 +19,10 @@ const resolveBackendBase = () => {
 
   try {
     return new URL(raw).toString().replace(/\/$/, "");
-  } catch (absoluteError) {
+  } catch (_absoluteError) {
     try {
       return new URL(raw, `${fallbackOrigin}/`).toString().replace(/\/$/, "");
-    } catch (relativeError) {
+    } catch (_relativeError) {
       return fallbackOrigin;
     }
   }

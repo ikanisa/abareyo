@@ -55,7 +55,7 @@ export const processTelemetryRequest = async (
   let payload: TelemetryPayload;
   try {
     payload = (await req.json()) as TelemetryPayload;
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: "invalid_json" }, { status: 400, headers: corsHeaders });
   }
 

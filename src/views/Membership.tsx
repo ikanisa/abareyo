@@ -145,7 +145,7 @@ export default function Membership() {
     try {
       await navigator.clipboard.writeText(ussdDisplay);
       toast({ title: "USSD copied", description: "Dial on your phone to confirm membership." });
-    } catch (error) {
+    } catch (_error) {
       toast({ title: "Unable to copy", description: "Copy the code manually.", variant: "destructive" });
     }
   };

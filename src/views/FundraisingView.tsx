@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { HeartHandshake, Flame, PhoneCall, Copy, Loader2, Target } from "lucide-react";
+import { HeartHandshake, PhoneCall, Copy, Loader2, Target } from "lucide-react";
 
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
@@ -137,7 +136,7 @@ export default function Fundraising() {
     try {
       await navigator.clipboard.writeText(ussdDisplay);
       toast({ title: "USSD copied", description: "Dial now to confirm your donation." });
-    } catch (error) {
+    } catch (_error) {
       toast({ title: "Unable to copy", description: "Copy manually from the screen.", variant: "destructive" });
     }
   };

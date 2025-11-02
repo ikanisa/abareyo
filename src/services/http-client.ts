@@ -1,10 +1,10 @@
 import { clientEnv } from '@/config/env';
+import { adminFetch } from '@/lib/admin/csrf';
 
 const FALLBACK_BASE = '/api';
 const rawBaseUrl = clientEnv.NEXT_PUBLIC_BACKEND_URL?.trim() || FALLBACK_BASE;
 const BASE_URL = rawBaseUrl.replace(/\/$/, '') || FALLBACK_BASE;
 const IS_ABSOLUTE_BASE = /^https?:\/\//i.test(BASE_URL);
-const ADMIN_TOKEN = clientEnv.NEXT_PUBLIC_ADMIN_API_TOKEN ?? '';
 
 const buildQuery = (searchParams?: Record<string, string | number | boolean | null | undefined>) => {
   if (!searchParams) return '';
@@ -45,9 +45,6 @@ const applyHeaders = (init?: RequestInit, admin?: boolean) => {
   if (!headers.has('content-type')) {
     headers.set('content-type', 'application/json');
   }
-  if (admin && ADMIN_TOKEN) {
-    headers.set('x-admin-token', ADMIN_TOKEN);
-  }
   return headers;
 };
 
@@ -85,9 +82,10 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   const { searchParams, admin, parseData = false, responseType, ...init } = options;
   const url = buildUrl(path, searchParams);
   const headers = applyHeaders(init, admin);
-  const response = await fetch(url, {
-    credentials: admin ? init.credentials ?? 'include' : init.credentials,
+  const requester = admin ? adminFetch : fetch;
+  const response = await requester(url, {
     ...init,
+    credentials: admin ? init.credentials ?? 'include' : init.credentials,
     headers,
   });
 

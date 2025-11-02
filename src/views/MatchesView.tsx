@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Play, MessageCircle, TrendingUp, Ticket } from "lucide-react";
+import { Play, MessageCircle, Ticket } from "lucide-react";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import TopAppBar from "@/app/_components/ui/TopAppBar";

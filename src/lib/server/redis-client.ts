@@ -167,7 +167,7 @@ export class RedisClient {
     }
     try {
       await this.dispatch(["QUIT"]);
-    } catch (error) {
+    } catch (_error) {
       // Ignore errors when closing
     }
     this.socket.destroy();

@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: read
+  id-token: write
+  attestations: write
 
 jobs:
   build-and-test:
@@ -60,6 +62,9 @@ jobs:
             exit 1
           }
 
+      - name: License policy compliance
+        run: npm run check:licenses
+
       - name: Lint
         run: npm run lint
 
@@ -68,6 +73,9 @@ jobs:
 
       - name: Test
         run: npm test
+
+      - name: Mobile OTP smoke tests
+        run: npm run test:mobile:smoke
 
       - name: Preflight (env + backend + build)
         run: node scripts/preflight.mjs
@@ -108,6 +116,64 @@ jobs:
           E2E_API_MOCKS: '1'
           NEXT_PUBLIC_BACKEND_URL: 'http://localhost:3000/api/e2e'
         run: npm run test:e2e:a11y
+
+      - name: Generate SBOMs
+        run: npm run sbom
+
+      - name: Package build artifacts
+        run: |
+          mkdir -p report/sbom
+          tar -czf report/sbom/web-next-build.tar.gz -C .next .
+          tar -czf report/sbom/mobile-app-source.tar.gz --exclude='packages/mobile/node_modules' packages/mobile
+
+      - name: Generate checksums and provenance
+        run: |
+          node scripts/generate-checksums.mjs report/sbom/web-mobile.sha256 \
+            report/sbom/web-next-build.tar.gz \
+            report/sbom/mobile-app-source.tar.gz \
+            report/sbom/web-app.cdx.json \
+            report/sbom/mobile-app.cdx.json \
+            report/sbom/license-scan.json \
+            report/sbom/license-policy.json \
+            report/sbom/manifest.json
+          node scripts/write-provenance.mjs \
+            --artifact web \
+            --binary report/sbom/web-next-build.tar.gz \
+            --sbom report/sbom/web-app.cdx.json \
+            --checksums report/sbom/web-mobile.sha256 \
+            --output report/sbom/web.provenance.json
+          node scripts/write-provenance.mjs \
+            --artifact mobile \
+            --binary report/sbom/mobile-app-source.tar.gz \
+            --sbom report/sbom/mobile-app.cdx.json \
+            --checksums report/sbom/web-mobile.sha256 \
+            --output report/sbom/mobile.provenance.json
+
+      - name: Upload supply chain bundle (web + mobile)
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-mobile-supply-chain
+          path: |
+            report/sbom/web-app.cdx.json
+            report/sbom/mobile-app.cdx.json
+            report/sbom/license-policy.json
+            report/sbom/license-scan.json
+            report/sbom/manifest.json
+            report/sbom/web-next-build.tar.gz
+            report/sbom/mobile-app-source.tar.gz
+            report/sbom/web-mobile.sha256
+            report/sbom/web.provenance.json
+            report/sbom/mobile.provenance.json
+
+      - name: Attest web build provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: report/sbom/web-next-build.tar.gz
+
+      - name: Attest mobile bundle provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: report/sbom/mobile-app-source.tar.gz
       - name: Upload Playwright artifacts on failure
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4

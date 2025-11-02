@@ -3,7 +3,6 @@ import { FastifyRequest } from 'fastify';
 
 import { TicketsController } from './tickets.controller.js';
 import { TicketsService } from './tickets.service.js';
-import { SmsService } from '../sms/sms.service.js';
 
 const createMockRequest = (userId: string) => ({
   adminUser: { id: userId },
@@ -24,7 +23,6 @@ describe('TicketsController', () => {
       controllers: [TicketsController],
       providers: [
         { provide: TicketsService, useValue: ticketsService },
-        { provide: SmsService, useValue: { validateAdminToken: jest.fn().mockReturnValue(true) } },
       ],
     }).compile();
 

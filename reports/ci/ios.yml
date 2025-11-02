@@ -1,0 +1,31 @@
+name: ios-fastlane
+summary: |
+  iOS delivery flow orchestrated via Fastlane using EAS build profiles. The environment variables listed here mirror
+  packages/mobile/eas.json and the Fastlane lane guards so CI + local release engineers share the same contract.
+lanes:
+  preview:
+    command: bundle exec fastlane preview
+    description: Builds the preview EAS profile then uploads to TestFlight internal testing.
+    env:
+      IOS_APPLE_ID: secrets.IOS_APPLE_ID
+      IOS_ASC_APP_ID: secrets.IOS_ASC_APP_ID
+      IOS_TEAM_ID: secrets.IOS_TEAM_ID
+      IOS_PROVISIONING_PROFILE_PATH: secrets.IOS_PROVISIONING_PROFILE_PATH
+      IOS_SIGNING_CERT_PATH: secrets.IOS_SIGNING_CERT_PATH
+      IOS_SIGNING_CERT_PASSWORD: secrets.IOS_SIGNING_CERT_PASSWORD
+      SUPABASE_URL: secrets.MOBILE_SUPABASE_URL
+      SUPABASE_SERVICE_KEY: secrets.MOBILE_SUPABASE_SERVICE_KEY
+      API_BASE_URL: secrets.MOBILE_API_BASE_URL
+  release:
+    command: bundle exec fastlane release
+    description: Ships the production profile IPA to TestFlight / App Store Connect.
+    env:
+      IOS_APPLE_ID: secrets.IOS_APPLE_ID
+      IOS_ASC_APP_ID: secrets.IOS_ASC_APP_ID
+      IOS_TEAM_ID: secrets.IOS_TEAM_ID
+      IOS_PROVISIONING_PROFILE_PATH: secrets.IOS_PROVISIONING_PROFILE_PATH
+      IOS_SIGNING_CERT_PATH: secrets.IOS_SIGNING_CERT_PATH
+      IOS_SIGNING_CERT_PASSWORD: secrets.IOS_SIGNING_CERT_PASSWORD
+      SUPABASE_URL: secrets.MOBILE_SUPABASE_URL
+      SUPABASE_SERVICE_KEY: secrets.MOBILE_SUPABASE_SERVICE_KEY
+      API_BASE_URL: secrets.MOBILE_API_BASE_URL

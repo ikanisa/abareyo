@@ -3,13 +3,11 @@ import {
   Body,
   Controller,
   Get,
-  Headers,
   HttpCode,
   HttpStatus,
   Param,
   Post,
   Query,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { ParseUUIDPipe } from '@nestjs/common';
 import { TicketsService } from './tickets.service.js';
@@ -19,14 +17,10 @@ import { InitiateTransferDto } from './dto/initiate-transfer.dto.js';
 import { ClaimTransferDto } from './dto/claim-transfer.dto.js';
 import { RotatePassDto } from './dto/rotate-pass.dto.js';
 import { CancelTicketOrderDto } from './dto/cancel-order.dto.js';
-import { SmsService } from '../sms/sms.service.js';
 
 @Controller('tickets')
 export class TicketsController {
-  constructor(
-    private readonly ticketsService: TicketsService,
-    private readonly smsService: SmsService,
-  ) {}
+  constructor(private readonly ticketsService: TicketsService) {}
 
   @Get('catalog')
   async catalog() {
@@ -108,21 +102,4 @@ export class TicketsController {
     return { data };
   }
 
-  @Get('gate/history')
-  async gateHistory(@Headers('x-admin-token') adminToken?: string) {
-    if (!this.smsService.validateAdminToken(adminToken)) {
-      throw new UnauthorizedException('Admin token required');
-    }
-    const data = await this.ticketsService.listGateHistory();
-    return { data };
-  }
-
-  @Get('analytics')
-  async analytics(@Headers('x-admin-token') adminToken?: string) {
-    if (!this.smsService.validateAdminToken(adminToken)) {
-      throw new UnauthorizedException('Admin token required');
-    }
-    const data = await this.ticketsService.analytics();
-    return { data };
-  }
 }

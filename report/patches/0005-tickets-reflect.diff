@@ -1,0 +1,8 @@
+diff --git a/backend/src/modules/tickets/tickets.controller.spec.ts b/backend/src/modules/tickets/tickets.controller.spec.ts
+index c5e49df..75bf6ab 100644
+--- a/backend/src/modules/tickets/tickets.controller.spec.ts
++++ b/backend/src/modules/tickets/tickets.controller.spec.ts
+@@
+-import { Test, TestingModule } from '@nestjs/testing';
++import 'reflect-metadata';
++import { Test, TestingModule } from '@nestjs/testing';

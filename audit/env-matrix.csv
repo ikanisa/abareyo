@@ -26,7 +26,6 @@ SENTRY_TRACES_SAMPLE_RATE,shared,server,optional,"0.1",Override Sentry trace sam
 SENTRY_REPLAYS_SESSION_SAMPLE_RATE,frontend,client,optional,"0.05",Sentry session replay sampling.
 SENTRY_REPLAYS_ERROR_SAMPLE_RATE,frontend,client,optional,"1.0",Sentry error replay sampling.
 NEXT_PUBLIC_ADMIN_SESSION_COOKIE,frontend,client,optional,"admin_session",Aligns with backend admin session cookie.
-NEXT_PUBLIC_ADMIN_API_TOKEN,frontend,client,optional,,Used when calling admin APIs directly from browser.
 NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN,frontend,client,yes,,Public token for onboarding APIs.
 ONBOARDING_API_TOKEN,shared,server,yes,,Private token required by onboarding API routes.
 NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK,frontend,client,optional,,Enable mock onboarding responses when set to `1`.
@@ -62,7 +61,6 @@ SMS_WEBHOOK_TOKEN,backend,server,conditional,,Shared secret validating inbound S
 SMS_PARSE_CONFIDENCE_THRESHOLD,backend,server,optional,"0.65",Threshold for SMS intent parsing.
 MTN_MOMO_PAY_CODE,backend,server,optional,"0700XXXXXX",Display label for MTN MoMo payments.
 AIRTEL_MONEY_PAY_CODE,backend,server,optional,"0700XXXXXX",Display label for Airtel Money payments.
-ADMIN_API_TOKEN,backend,server,conditional,,Server-to-server token gating admin APIs.
 ADMIN_SESSION_COOKIE,backend,server,optional,"admin_session",Cookie name for admin session.
 ADMIN_SESSION_SECRET,backend,server,yes,,Encryption secret for admin session cookies.
 ADMIN_SESSION_TTL_HOURS,backend,server,optional,"24",TTL for admin sessions.

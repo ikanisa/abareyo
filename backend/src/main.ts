@@ -50,23 +50,52 @@ const extractMetricsToken = (request: any): string | undefined => {
   return undefined;
 };
 
-const buildLokiTarget = (environment: string, level: string): TransportTargetOptions | null => {
-  const host = process.env.LOKI_URL ?? process.env.LOKI_HOST ?? '';
+type LokiConfig = {
+  endpoint?: string;
+  basicAuth?: string;
+  username?: string;
+  password?: string;
+  tenantId?: string;
+  batchIntervalSeconds?: number;
+};
+
+const verifyBasicAuthHeader = (authorization: unknown, expectedUser: string, expectedPassword: string) => {
+  if (typeof authorization !== 'string' || !authorization.trim()) {
+    return false;
+  }
+  const [scheme, encoded] = authorization.split(/\s+/);
+  if ((scheme ?? '').toLowerCase() !== 'basic' || !encoded) {
+    return false;
+  }
+  try {
+    const decoded = Buffer.from(encoded, 'base64').toString('utf8');
+    const separatorIndex = decoded.indexOf(':');
+    if (separatorIndex === -1) {
+      return false;
+    }
+    const user = decoded.slice(0, separatorIndex);
+    const password = decoded.slice(separatorIndex + 1);
+    return user === expectedUser && password === expectedPassword;
+  } catch {
+    return false;
+  }
+};
+
+const buildLokiTarget = (config: LokiConfig | undefined, environment: string, level: string): TransportTargetOptions | null => {
+  const host = config?.endpoint?.trim();
   if (!host) {
     return null;
   }
 
   const basicAuth =
-    process.env.LOKI_BASIC_AUTH ??
-    (process.env.LOKI_USERNAME && process.env.LOKI_PASSWORD
-      ? `${process.env.LOKI_USERNAME}:${process.env.LOKI_PASSWORD}`
-      : undefined);
-  const headers = process.env.LOKI_TENANT_ID
+    config?.basicAuth?.trim() ??
+    (config?.username && config?.password ? `${config.username}:${config.password}` : undefined);
+  const headers = config?.tenantId
     ? {
-        'X-Scope-OrgID': process.env.LOKI_TENANT_ID,
+        'X-Scope-OrgID': config.tenantId,
       }
     : undefined;
-  const batchInterval = Number(process.env.LOKI_BATCH_INTERVAL ?? '5');
+  const batchInterval = Number(config?.batchIntervalSeconds ?? 5);
 
   return {
     target: 'pino-loki',
@@ -104,7 +133,8 @@ async function bootstrap() {
     });
   }
 
-  const lokiTarget = buildLokiTarget(env, logLevel);
+  const lokiConfig = configService.get<LokiConfig>('observability.loki');
+  const lokiTarget = buildLokiTarget(lokiConfig, env, logLevel);
   if (lokiTarget) {
     targets.push(lokiTarget);
   }
@@ -262,9 +292,20 @@ async function bootstrap() {
   });
 
   const metricsService = app.get(MetricsService);
-  const metricsToken = config.get<string>('metrics.token', '');
-  if (env === 'production' && !metricsToken) {
-    throw new Error('METRICS_TOKEN must be set to protect /metrics in production.');
+  const prometheusConfig = config.get<{
+    token?: string;
+    basicAuthUser?: string;
+    basicAuthPassword?: string;
+  }>('observability.prometheus', { token: '', basicAuthUser: '', basicAuthPassword: '' });
+  const metricsToken = prometheusConfig.token ?? config.get<string>('metrics.token', '');
+  const metricsBasicAuthUser = prometheusConfig.basicAuthUser ?? '';
+  const metricsBasicAuthPassword = prometheusConfig.basicAuthPassword ?? '';
+  const requiresBasicAuth = metricsBasicAuthUser.length > 0 && metricsBasicAuthPassword.length > 0;
+
+  if (env === 'production' && !metricsToken && !requiresBasicAuth) {
+    throw new Error(
+      'Configure METRICS_TOKEN or METRICS_BASIC_AUTH_USER/METRICS_BASIC_AUTH_PASSWORD to protect /metrics in production.',
+    );
   }
 
   app.useGlobalPipes(
@@ -300,9 +341,17 @@ async function bootstrap() {
       const providedToken = extractMetricsToken(request);
       if (providedToken !== metricsToken) {
         reply
-          .header('www-authenticate', 'Bearer realm="metrics"')
+          .header('www-authenticate', requiresBasicAuth ? 'Bearer realm="metrics", Basic realm="metrics"' : 'Bearer realm="metrics"')
           .status(401)
           .send('Unauthorized');
+        return;
+      }
+    }
+
+    if (requiresBasicAuth) {
+      const authorized = verifyBasicAuthHeader(request?.headers?.authorization, metricsBasicAuthUser, metricsBasicAuthPassword);
+      if (!authorized) {
+        reply.header('www-authenticate', 'Basic realm="metrics"').status(401).send('Unauthorized');
         return;
       }
     }

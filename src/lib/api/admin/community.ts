@@ -68,6 +68,8 @@ const parseEvidence = (value: unknown): CommunityModerationEvidence[] => {
   });
 };
 
+import { adminFetch } from '@/lib/admin/csrf';
+
 const parseModerationPost = (row: Record<string, unknown>): CommunityModerationPost => ({
   id: String(row.id ?? ''),
   userId: typeof row.user_id === 'string' ? row.user_id : null,
@@ -80,7 +82,10 @@ const parseModerationPost = (row: Record<string, unknown>): CommunityModerationP
 });
 
 const fetchJson = async (input: RequestInfo, init?: RequestInit) => {
-  const response = await fetch(input, init);
+  const response = await adminFetch(input, {
+    credentials: 'include',
+    ...init,
+  });
   const json = await response.json().catch(() => ({}));
   if (!response.ok) {
     const errorMessage =

@@ -253,7 +253,7 @@ const TemplateForm = ({
         if (variables.trim()) {
           try {
             parsedVariables = JSON.parse(variables);
-          } catch (error) {
+          } catch (_error) {
             window.alert('Variables must be valid JSON');
             return;
           }

@@ -1,0 +1,70 @@
+{
+  "metadata": {
+    "generatedAt": "2025-11-01T21:10:00Z",
+    "tool": "manual-audit",
+    "notes": "Verify licenses via package manifests before release."
+  },
+  "components": [
+    {
+      "name": "client-pwa",
+      "packageJson": "package.json",
+      "dependencies": [
+        { "name": "next", "version": "14.2.33", "license": "MIT", "status": "allow" },
+        { "name": "react", "version": "18.3.1", "license": "MIT", "status": "allow" },
+        { "name": "@supabase/supabase-js", "version": "2.74.0", "license": "Apache-2.0", "status": "allow" },
+        { "name": "@sentry/react", "version": "10.22.0", "license": "BSD-3-Clause", "status": "review" },
+        { "name": "workbox-sw", "version": "7.3.0", "license": "Apache-2.0", "status": "allow" }
+      ]
+    },
+    {
+      "name": "admin-pwa",
+      "packageJson": "package.json",
+      "dependencies": [
+        { "name": "@tanstack/react-table", "version": "8.15.2", "license": "MIT", "status": "allow" },
+        { "name": "@radix-ui/react-dialog", "version": "1.1.14", "license": "MIT", "status": "allow" },
+        { "name": "socket.io-client", "version": "4.8.1", "license": "MIT", "status": "allow" }
+      ]
+    },
+    {
+      "name": "backend",
+      "packageJson": "backend/package.json",
+      "dependencies": [
+        { "name": "@nestjs/core", "version": "11.0.0", "license": "MIT", "status": "allow" },
+        { "name": "fastify", "version": "5.4.0", "license": "MIT", "status": "allow" },
+        { "name": "@prisma/client", "version": "6.1.0", "license": "Apache-2.0", "status": "allow" },
+        { "name": "@aws-sdk/client-s3", "version": "3.744.0", "license": "Apache-2.0", "status": "allow" },
+        { "name": "bullmq", "version": "5.13.0", "license": "MIT", "status": "allow" },
+        { "name": "openai", "version": "4.52.0", "license": "MIT", "status": "review" }
+      ]
+    },
+    {
+      "name": "mobile-expo",
+      "packageJson": "packages/mobile/package.json",
+      "dependencies": [
+        { "name": "expo", "version": "51.0.0", "license": "MIT", "status": "allow" },
+        { "name": "expo-router", "version": "3.5.16", "license": "MIT", "status": "allow" },
+        { "name": "@rayon/design-tokens", "version": "workspace", "license": "Proprietary", "status": "allow" },
+        { "name": "lottie-react-native", "version": "6.7.0", "license": "Apache-2.0", "status": "allow" }
+      ]
+    },
+    {
+      "name": "android-native",
+      "gradle": "android/app/build.gradle.kts",
+      "dependencies": [
+        { "name": "androidx.compose:compose-bom", "version": "2024.10.01", "license": "Apache-2.0", "status": "allow" },
+        { "name": "com.squareup.retrofit2:retrofit", "version": "2.11.0", "license": "Apache-2.0", "status": "allow" },
+        { "name": "io.mockk:mockk", "version": "1.13.9", "license": "Apache-2.0", "status": "allow" }
+      ]
+    },
+    {
+      "name": "ios-swift-package",
+      "package": "ios/Package.swift",
+      "dependencies": []
+    }
+  ],
+  "policy": {
+    "allow": ["MIT", "Apache-2.0", "BSD-3-Clause", "ISC"],
+    "review": ["BSD-3-Clause", "Proprietary"],
+    "deny": ["GPL-3.0", "AGPL-3.0"]
+  }
+}

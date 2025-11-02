@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
+import { adminFetch } from '@/lib/admin/csrf';
 
 export type AdminContentDashboardProps = {
   initialItems: Array<{
@@ -27,13 +28,13 @@ export const AdminContentDashboard = ({ initialItems }: AdminContentDashboardPro
   const { toast } = useToast();
 
   const refresh = async () => {
-    const data = await fetch('/admin/api/content/library').then((res) => res.json());
+    const data = await adminFetch('/admin/api/content/library').then((res) => res.json());
     setItems(data.data?.items ?? data.items ?? []);
   };
 
   const save = async () => {
     try {
-      const response = await fetch('/admin/api/content/library', {
+      const response = await adminFetch('/admin/api/content/library', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ title, slug, body: { markdown: body } }),
