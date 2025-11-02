@@ -48,6 +48,10 @@ export type RequireAdminResult =
   | { context: AdminContext; response?: undefined }
   | { context?: undefined; response: NextResponse };
 
+export const adminSessionInternals = {
+  fetchContext: fetchAdminContextForToken,
+};
+
 type RequireAdminOptions = {
   permission?: string;
   anyOf?: string[];
@@ -75,9 +79,7 @@ const normalizePermissions = (permissionLinks: PermissionLink[]) => {
   return Array.from(keys);
 };
 
-export const fetchAdminContextForToken = async (
-  token: string,
-): Promise<AdminContext | null> => {
+export async function fetchAdminContextForToken(token: string): Promise<AdminContext | null> {
   const client = getServiceClient();
   const hashed = hashToken(token);
 
@@ -141,7 +143,7 @@ export const fetchAdminContextForToken = async (
     permissions,
     session: { id: session.id, expiresAt: session.expires_at ?? null },
   };
-};
+}
 
 export const requireAdmin = async (
   req: Request,
@@ -165,7 +167,7 @@ export const requireAdmin = async (
   }
 
   try {
-    const context = await fetchAdminContextForToken(token);
+    const context = await adminSessionInternals.fetchContext(token);
     if (!context) {
       return { response: NextResponse.json({ message: 'Unauthorized' }, { status: 401 }) };
     }
