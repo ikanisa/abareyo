@@ -46,17 +46,6 @@ const findNearestLevel = (levels: Hls["levels"], desiredHeight: number) => {
   return candidate;
 };
 
-const mimeFromType = (type: StreamSource["type"]) => {
-  switch (type) {
-    case "mp4":
-      return "video/mp4";
-    case "dash":
-      return "application/dash+xml";
-    default:
-      return "application/x-mpegURL";
-  }
-};
-
 const pickSource = (
   sources: StreamSource[],
   quality: 360 | 480 | 720,

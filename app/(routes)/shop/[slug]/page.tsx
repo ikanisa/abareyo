@@ -1,7 +1,7 @@
 import PageShell from '@/app/_components/shell/PageShell';
 import UssdPayButton from '@/app/_components/payments/UssdPayButton';
 
-export default async function PDP({ params }:{ params:{ slug:string } }){
+export default async function PDP({ params: _params }: { params: { slug: string } }) {
   // Load product by slug here (server-side). For MVP, static example:
   const price = 25000;
   return (

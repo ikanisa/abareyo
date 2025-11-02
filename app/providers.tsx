@@ -15,29 +15,16 @@ import { I18nProvider } from "@/providers/i18n-provider";
 import { MotionProvider } from "@/providers/motion-provider";
 import { RealtimeProvider } from "@/providers/realtime-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
+import {
+  NFC_TAP_EVENT,
+  NFC_TRANSACTION_EVENT,
+  type NfcTapDetail,
+  type NfcTransactionDetail,
+} from "@/lib/nfc";
+import { registerCapacitorEvent, type CapacitorEventPayload } from "@/lib/mobile/capacitor-events";
 import { toast } from "sonner";
 
 const hasWindow = () => typeof window !== 'undefined';
-
-const queryClientConfig: QueryClientConfig = {
-  defaultOptions: {
-    queries: {
-      staleTime: 90_000,
-      gcTime: 15 * 60_000,
-      refetchOnReconnect: 'always',
-      refetchOnWindowFocus: false,
-      retry(failureCount, error) {
-        if (failureCount >= 2) {
-          return false;
-        }
-        return !(error instanceof Error && /404|403/.test(error.message));
-      },
-    },
-    mutations: {
-      retry: 1,
-    },
-  },
-};
 
 let serviceWorkerRegistered = false;
 const registerServiceWorker = async () => {
@@ -86,6 +73,50 @@ export const Providers = ({ children }: { children: ReactNode }) => {
     window.addEventListener(PWA_OPT_IN_EVENT, onOptIn);
     return () => {
       window.removeEventListener(PWA_OPT_IN_EVENT, onOptIn);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hasWindow() || !('serviceWorker' in navigator)) {
+      return;
+    }
+
+    const handleMessage = (event: MessageEvent) => {
+      const data = event.data as
+        | { source?: string; type?: string; phase?: string; detail?: unknown }
+        | undefined;
+      if (!data || data.source !== 'rayon-service-worker' || data.type !== 'sw:lifecycle') {
+        return;
+      }
+
+      switch (data.phase) {
+        case 'installing':
+          toast.info('Preparing offline experience…', { id: 'sw-installing' });
+          break;
+        case 'installed':
+          toast.success('Offline caching ready. Activating service worker…', {
+            id: 'sw-installed',
+          });
+          break;
+        case 'activated':
+          toast.success('Offline support activated. Your latest updates will stay synced.', {
+            id: 'sw-activated',
+          });
+          break;
+        case 'offline-fallback-served':
+          toast.warning('You are viewing the offline version. We will resync once you reconnect.', {
+            id: 'sw-offline-fallback',
+            duration: 6000,
+          });
+          break;
+        default:
+          break;
+      }
+    };
+
+    navigator.serviceWorker.addEventListener('message', handleMessage as EventListener);
+    return () => {
+      navigator.serviceWorker.removeEventListener('message', handleMessage as EventListener);
     };
   }, []);
 
@@ -222,7 +253,7 @@ export const Providers = ({ children }: { children: ReactNode }) => {
     })();
 
     cleanupFns.push(
-      registerCapacitorEvent('readerMode:success', (payload) => {
+      registerCapacitorEvent('readerMode:success', (payload: CapacitorEventPayload) => {
         toast.success('Card scanned', {
           description: `Transaction ${payload.transactionId as string} ready for submission.`,
         });
@@ -230,7 +261,7 @@ export const Providers = ({ children }: { children: ReactNode }) => {
     );
 
     cleanupFns.push(
-      registerCapacitorEvent('readerMode:error', (payload) => {
+      registerCapacitorEvent('readerMode:error', (payload: CapacitorEventPayload) => {
         toast.error('Reader mode error', {
           description: String(payload.message ?? 'Unable to process card.'),
         });
@@ -238,7 +269,7 @@ export const Providers = ({ children }: { children: ReactNode }) => {
     );
 
     cleanupFns.push(
-      registerCapacitorEvent('ussd:error', (payload) => {
+      registerCapacitorEvent('ussd:error', (payload: CapacitorEventPayload) => {
         toast.error('Payment failure', {
           description: String(payload.message ?? 'USSD session failed.'),
         });
@@ -246,7 +277,7 @@ export const Providers = ({ children }: { children: ReactNode }) => {
     );
 
     cleanupFns.push(
-      registerCapacitorEvent('ussd:success', (payload) => {
+      registerCapacitorEvent('ussd:success', (payload: CapacitorEventPayload) => {
         toast.success('Payment session completed', {
           description: String(payload.response ?? 'USSD response captured.'),
         });
