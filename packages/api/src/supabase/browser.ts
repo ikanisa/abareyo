@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-import { clientEnv, supabaseConfig } from "@rayon/config/env";
+import { clientEnv, supabaseClientConfig } from "@rayon/config/env";
 
 import type { Database } from "../../types/database";
 import { SupabaseConfigurationError } from "./errors";
@@ -22,8 +22,8 @@ const resolveStorage = (explicit?: Storage): Storage | undefined => {
 export const createBrowserClient = (
   { storage }: BrowserClientOptions = {},
 ): SupabaseClient<Database> => {
-  const url = supabaseConfig.url ?? clientEnv.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = supabaseConfig.anonKey ?? clientEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = supabaseClientConfig.url ?? clientEnv.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = supabaseClientConfig.anonKey ?? clientEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url) {
     throw new SupabaseConfigurationError(
