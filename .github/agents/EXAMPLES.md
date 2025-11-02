@@ -4,7 +4,7 @@ This document provides example scenarios demonstrating the capabilities of the c
 
 ## Example 1: Security Vulnerability Detection
 
-### Code with Issues
+### Code with Issues (Vulnerable to SQL Injection)
 
 ```typescript
 // app/api/user/route.ts
@@ -41,7 +41,7 @@ const result = await db.query(
 
 ## Example 2: Performance Optimization
 
-### Code with Issues
+### Code with Issues (N+1 Query Problem)
 
 ```typescript
 // src/components/UserList.tsx
@@ -107,7 +107,7 @@ export async function UserList({ users }: { users: User[] }) {
 
 ## Example 3: Code Quality Improvements
 
-### Code with Issues
+### Code with Issues (Intentionally Poor Code for Demonstration)
 
 ```typescript
 // src/lib/utils.ts
@@ -178,7 +178,7 @@ export function processData(data: InputData | null): ProcessedItem[] {
 
 ## Example 4: Architecture & Design Patterns
 
-### Code with Issues
+### Code with Issues (Demonstrates Common Anti-Patterns)
 
 ```typescript
 // app/admin/users/page.tsx
@@ -261,7 +261,7 @@ function useUsers() {
 
 ## Example 5: Testing & Documentation
 
-### Code with Issues
+### Code with Issues (Missing Types and Documentation)
 
 ```typescript
 // src/lib/calculateDiscount.ts
