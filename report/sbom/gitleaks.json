@@ -1,0 +1,3 @@
+{
+  "error": "gitleaks CLI unavailable in container; install gitleaks>=8 in CI and rerun"
+}

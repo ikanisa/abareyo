@@ -1,0 +1,20 @@
+diff --git a/config/validated-env.mjs b/config/validated-env.mjs
+index 7c9f2f2..b3c9fd4 100644
+--- a/config/validated-env.mjs
++++ b/config/validated-env.mjs
+@@
+-  if (missingCritical.length > 0) {
+-    throw new Error(
+-      `Missing required environment variables:\n  - ${missingCritical.join('\n  - ')}`,
+-    );
+-  }
++  if (missingCritical.length > 0) {
++    const shouldThrow = parsed.NODE_ENV === 'production' || parsed.APP_ENV === 'production';
++    const message = `Missing required environment variables:\n  - ${missingCritical.join('\n  - ')}`;
++
++    if (shouldThrow) {
++      throw new Error(message);
++    }
++
++    console.warn(`[env] ${message}`);
++  }
