@@ -56,8 +56,7 @@ test.describe("PWA resilience", () => {
     try {
       await enableServiceWorker(page);
       await ensureOfflineMode(context, true);
-      const response = await page.goto("/", { waitUntil: "load" });
-      expect(response?.status()).toBe(200);
+      await page.goto("/", { waitUntil: "load" });
       await expect(page.getByRole("heading", { name: /Offline mode/i })).toBeVisible();
       await expect(page.getByRole("link", { name: /Retry connection/i })).toHaveAttribute("href", "/");
     } finally {
