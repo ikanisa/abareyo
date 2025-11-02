@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Text, TextInput, Switch, Button, StyleSheet, ActivityIndicator } from "react-native";
 
 import type { OnboardingPreferences } from "./api";
@@ -96,8 +96,13 @@ export function OnboardingStack({ onCompleted }: Props) {
     return `Resend available in ${resendSeconds}s`;
   }, [canResend, resendSeconds]);
 
-  const goBack = () => setStep((current) => Math.max(0, (current - 1) as Step));
-  const goNext = () => setStep((current) => Math.min(3, (current + 1) as Step));
+  const clampToStep = useCallback((value: number): Step => {
+    const clamped = Math.max(0, Math.min(3, value));
+    return clamped as Step;
+  }, []);
+
+  const goBack = () => setStep((current) => clampToStep(current - 1));
+  const goNext = () => setStep((current) => clampToStep(current + 1));
 
   const hydrateSession = (response: VerificationSession, message?: string) => {
     setSession(response);

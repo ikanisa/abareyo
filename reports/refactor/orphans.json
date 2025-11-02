@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2025-11-02T09:40:46.627Z",
+  "directories": {
+    "app": [],
+    "src": [],
+    "packages": [
+      "mobile/fastlane"
+    ],
+    "supabase": [
+      ".temp",
+      "supabase",
+      "supabase/.temp"
+    ]
+  }
+}

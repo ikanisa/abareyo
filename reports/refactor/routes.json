@@ -1,0 +1,1505 @@
+{
+  "generatedAt": "2025-11-02T09:40:46.627Z",
+  "totalRoutes": 211,
+  "routes": [
+    {
+      "path": "/",
+      "segmentType": "static",
+      "files": [
+        "layout.tsx",
+        "loading.tsx",
+        "not-found.tsx",
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin",
+      "segmentType": "static",
+      "files": [
+        "layout.tsx",
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/api/admin/audit",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/admin/rbac",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/auth/csrf",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/community/moderation",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/community/rate-limits",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/content/library",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/content/publish",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/matches",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/reports/schedules",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/rewards/events",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/rewards/rules",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/services/insurance",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/services/sacco",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/shop/orders",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/shop/products",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/shop/promotions",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/sms/attach",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/sms/candidates",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/sms/parsed",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/tickets/analytics",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/tickets/gate-history",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/tickets/matches",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/tickets/orders",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/tickets/passes",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/tickets/scan-stats",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/upload",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/api/users/directory",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/community",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/community/missions",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/content",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/fundraising",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/health",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/admin/login",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/match-ops",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/membership",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/orders",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/realtime",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/reports",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/rewards",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/services",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/settings",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/shop",
+      "segmentType": "static",
+      "files": [
+        "layout.tsx",
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/shop/orders",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/shop/products",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/shop/promos",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/shop/promotions",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/sms",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/sms/otp",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/tickets",
+      "segmentType": "static",
+      "files": [
+        "layout.tsx",
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/tickets/orders",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/tickets/passes",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/tickets/scan",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/translations",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/users",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/admin/ussd",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/api/[...path]",
+      "segmentType": "catchall",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/auth/supabase",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/dashboard",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/match-ops/matches",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/match-ops/matches/[matchId]",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/match-ops/matches/[matchId]/gates",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/match-ops/matches/[matchId]/gates/[gateId]",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/match-ops/matches/[matchId]/zones",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/match-ops/matches/[matchId]/zones/[zoneId]",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/me",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/shop-orders",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/sms/inbound",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/sms/manual",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/sms/manual/[smsId]/dismiss",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/sms/manual/[smsId]/retry",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/sms/manual/attach",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/sms/manual/payments",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/sms/parser/prompts",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/sms/parser/prompts/[promptId]/activate",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/sms/parser/prompts/active",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/sms/parser/test",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/sms/queue",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/ticket-orders",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/ticket-orders/[orderId]/refund",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/translations",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/translations/dictionary",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/admin/translations/languages",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/auth/otp/send",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/auth/otp/verify",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/auth/whatsapp/start",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/auth/whatsapp/verify",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/backend/[...path]",
+      "segmentType": "catchall",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/cast",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/chat",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/clubs",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/community/posts",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/community/posts/[id]/report",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/content",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/content/[slug]",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/e2e/[...path]",
+      "segmentType": "catchall",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/events",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/events/[id]/rsvp",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/fan/feed",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/feed",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/flags",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/health",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/home",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/insurance/policy",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/insurance/quote",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/live/match/[id]",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/live/scoreboard",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/matches",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/matches/[id]",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/matches/events",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/matches/tickets",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/me",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/me/favorites",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/me/onboarding",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/me/prefs",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/media/highlights/[matchId]",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/members",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/members/[id]",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/members/count",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/merchant/tapmomo/payload",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/merchants/[merchantId]/nfc/issue",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/notifications/subscription",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/nps",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/onboarding/message",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/onboarding/sessions",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/orders/[id]",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/partners/[slug]",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/passes",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/payments/checkout",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/payments/mobile-money",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/payments/pending",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/polls/vote",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/rewards/claimTicket",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/rewards/events",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/rewards/summary",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/sacco/deposit",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/shop/orders",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/shop/products",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/sms/process",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/telemetry/app-state",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/tickets",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/tickets/orders",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/tickets/orders/[orderId]/cancel",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/tickets/orders/[orderId]/receipt",
+      "segmentType": "dynamic",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/tickets/passes",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/tickets/passes/rotate",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/transactions/nfc",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/users",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/wallet",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/wallet/summary",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/wallet/transactions",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/api/webhook/whatsapp",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/auth/login",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/auth/whatsapp",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/cart",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/clubs",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/clubs/[id]",
+      "segmentType": "dynamic",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/community",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/community/missions",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/community/polls/[slug]",
+      "segmentType": "dynamic",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/community/predict",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/community/stories/[slug]",
+      "segmentType": "dynamic",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/events",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/events/[id]",
+      "segmentType": "dynamic",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/fundraising",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/fundraising/[slug]",
+      "segmentType": "dynamic",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/gate",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/home",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/legal/privacy",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/legal/terms",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/link",
+      "segmentType": "static",
+      "files": [
+        "route.ts"
+      ]
+    },
+    {
+      "path": "/matchday",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/matches",
+      "segmentType": "static",
+      "files": [
+        "error.tsx",
+        "loading.tsx",
+        "not-found.tsx",
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/matches/live",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/media",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/media/[slug]",
+      "segmentType": "dynamic",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/members",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/members/[id]",
+      "segmentType": "dynamic",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/membership",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/membership/upgrade",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/more",
+      "segmentType": "static",
+      "files": [
+        "loading.tsx",
+        "not-found.tsx",
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/more/rewards",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/more/settings",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/more/wallet",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/mytickets",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/news",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/news/[slug]",
+      "segmentType": "dynamic",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/news/highlights",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/news/highlights/[slug]",
+      "segmentType": "dynamic",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/onboarding",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/orders",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/partners/[slug]",
+      "segmentType": "dynamic",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/payments",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/profile",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/rewards",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/services",
+      "segmentType": "static",
+      "files": [
+        "error.tsx",
+        "loading.tsx",
+        "not-found.tsx",
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/services/insurance",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/services/savings",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/settings",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/settings/about",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/shop",
+      "segmentType": "static",
+      "files": [
+        "error.tsx",
+        "loading.tsx",
+        "not-found.tsx",
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/shop/[slug]",
+      "segmentType": "dynamic",
+      "files": [
+        "loading.tsx",
+        "not-found.tsx",
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/support",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/tickets",
+      "segmentType": "static",
+      "files": [
+        "error.tsx",
+        "loading.tsx",
+        "not-found.tsx",
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/tickets/[id]",
+      "segmentType": "dynamic",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/tickets/scan",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/tickets/transfer",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/wallet",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/wallet/history",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    },
+    {
+      "path": "/wallet/top-up",
+      "segmentType": "static",
+      "files": [
+        "page.tsx"
+      ]
+    }
+  ]
+}

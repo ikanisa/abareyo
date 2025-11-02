@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
+import { buildRouteMetadata } from "@/app/_lib/navigation";
 import { ff } from "@/lib/flags";
 
 const ServiceTile = ({
@@ -23,6 +24,10 @@ const ServiceTile = ({
     <span>{label}</span>
   </Link>
 );
+
+export const metadata = buildRouteMetadata("/services", {
+  description: "Access partner insurance, savings, and financial services tailored to Rayon supporters.",
+});
 
 export default function Services() {
   if (!ff("services.webviews", true)) {

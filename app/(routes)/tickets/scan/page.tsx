@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
+import { buildRouteMetadata } from "@/app/_lib/navigation";
 import { tryGetSupabaseServerAnonClient } from "@/lib/db";
 
 import { TicketScannerGate } from "./_components/TicketScannerGate";
@@ -11,6 +12,11 @@ const TICKET_SCANNER_FLAG = "features.ticketScanner";
 const TICKET_SCANNER_ROLLOUT = "rollouts.ticketScanner";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = buildRouteMetadata("/tickets/scan", {
+  title: "Ticket scanner",
+  description: "Validate supporter QR codes for Rayon Sports match entry when the rollout is active.",
+});
 
 type TicketScannerMeta = {
   enabled: boolean;
