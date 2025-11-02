@@ -13,8 +13,6 @@ vi.mock('@/app/api/live/match/_providers/supabase', () => ({
   fetchLiveMatchSnapshot: fetchLiveMatchSnapshotMock,
 }));
 
-import { ff } from '@/lib/flags';
-import { fetchLiveMatchSnapshot } from '@/app/api/live/match/_providers/supabase';
 import { GET } from '@/app/api/live/match/[id]/route';
 
 const createRequest = () => new Request('https://rayon.example/api/live/match/test');

@@ -1,6 +1,7 @@
 "use client";
 
-import type { FundraisingCampaignWithProgress, HomeSurfaceData, Sponsor } from "@/lib/api/home";
+import type { Sponsor } from "@/app/_config/home";
+import type { FundraisingCampaignWithProgress } from "@/lib/api/home";
 
 export type PartnerSpotlightProps = {
   campaigns: FundraisingCampaignWithProgress[];

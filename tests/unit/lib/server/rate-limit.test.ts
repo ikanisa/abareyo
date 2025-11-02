@@ -14,7 +14,7 @@ const flushRedis = async () => {
   }
   try {
     await redisClient.sendCommand("FLUSHDB");
-  } catch (error) {
+  } catch (_error) {
     // ignore
   }
 };
@@ -24,7 +24,7 @@ beforeAll(async () => {
     try {
       await redisClient.sendCommand("PING");
       redisAvailable = true;
-    } catch (error) {
+    } catch (_error) {
       redisAvailable = false;
     }
   }

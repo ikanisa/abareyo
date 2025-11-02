@@ -61,13 +61,12 @@ const resolveWindow = (windowRef?: Window) =>
 const resolveNavigator = (navigatorRef?: Navigator) =>
   navigatorRef ?? (typeof navigator !== "undefined" ? navigator : undefined);
 
-const openTelUri = (href: string, documentRef?: Document, windowRef?: Window) => {
+const openTelUri = (href: string, documentRef?: Document, _windowRef?: Window) => {
   if (!href) {
     return false;
   }
 
   const doc = resolveDocument(documentRef);
-  const win = resolveWindow(windowRef);
   if (!doc || !doc.body) {
     return false;
   }

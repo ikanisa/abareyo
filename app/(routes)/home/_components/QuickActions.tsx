@@ -10,6 +10,16 @@ const toneClassMap: Record<"neutral" | "positive" | "warning", string> = {
   warning: "text-rwanda-green",
 };
 
+const quickActionDescription: Record<QuickActionTileWithStat["id"], string> = {
+  tickets: "Purchase match tickets and manage your passes.",
+  membership: "Renew or upgrade your Gikundiro membership plan.",
+  shop: "Browse the latest Rayon Sports merchandise drops.",
+  donate: "Support fundraising projects that power the club.",
+  "services-insurance": "Access partner insurance benefits for members.",
+  "services-sacco": "Save or borrow through trusted SACCO partners.",
+  "services-bank": "Open banking offers tailored for supporters.",
+};
+
 export type QuickActionsProps = {
   actions: QuickActionTileWithStat[];
 };
@@ -36,7 +46,7 @@ export function QuickActions({ actions }: QuickActionsProps) {
                   <span>{action.label}</span>
                   <span aria-hidden>→</span>
                 </div>
-                <p className="text-xs text-white/60">{action.description}</p>
+                <p className="text-xs text-white/60">{quickActionDescription[action.id]}</p>
               </div>
               {action.stat ? (
                 <div className={`text-xs font-semibold ${toneClassMap[tone]}`}>{action.stat.value}</div>
