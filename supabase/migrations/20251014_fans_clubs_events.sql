@@ -186,6 +186,23 @@ create policy if not exists p_fan_club_event_registrations_staff_manage on publi
   );
 
 -- Public, read-only projection safe for anonymous consumers.
+-- Expose attendee totals without leaking individual registration rows (bypasses RLS via security definer).
+drop function if exists public.fan_club_event_public_attendee_count(uuid);
+create or replace function public.fan_club_event_public_attendee_count(p_event_id uuid)
+returns integer
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select count(*)
+  from public.fan_club_event_registrations
+  where event_id = p_event_id
+    and rsvp_status in ('registered', 'attended');
+$$;
+
+grant execute on function public.fan_club_event_public_attendee_count(uuid) to anon, authenticated;
+
 drop view if exists public.fan_club_events_public;
 create view public.fan_club_events_public as
 select
@@ -205,15 +222,7 @@ select
   e.requires_approval,
   e.created_at,
   e.updated_at,
-  coalesce(
-    (
-      select count(*)
-      from public.fan_club_event_registrations r
-      where r.event_id = e.id
-        and r.rsvp_status in ('registered', 'attended')
-    ),
-    0
-  )::int as attendee_count
+  public.fan_club_event_public_attendee_count(e.id)::int as attendee_count
 from public.fan_club_events e
 join public.fan_clubs fc on fc.id = e.fan_club_id
 where e.status in ('scheduled', 'completed')
