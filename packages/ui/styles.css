@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --border: 215 20% 20%;
+  --input: 215 16% 24%;
+  --ring: 213 94% 68%;
+  --background: 220 47% 4%;
+  --foreground: 210 40% 98%;
+  --primary: 212 100% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 217 92% 60%;
+  --secondary-foreground: 210 40% 98%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --muted: 220 25% 16%;
+  --muted-foreground: 213 24% 72%;
+  --accent: 198 93% 60%;
+  --accent-foreground: 210 40% 98%;
+  --success: 158 80% 45%;
+  --success-foreground: 210 40% 98%;
+  --popover: 225 32% 8%;
+  --popover-foreground: 210 40% 98%;
+  --card: 225 32% 10%;
+  --card-foreground: 210 40% 98%;
+  --radius: 1rem;
+  --glass-blur: 18px;
+  --shadow-glass: 0 10px 50px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 12px 40px rgba(15, 110, 255, 0.35);
+  --shadow-glow-accent: 0 12px 40px rgba(0, 209, 190, 0.35);
+  --rayon-blue: 213 94% 46%;
+  --deep-blue: 225 72% 24%;
+  --rwanda-azure: 196 100% 50%;
+  --rwanda-yellow: 45 97% 63%;
+  --rwanda-green: 150 71% 28%;
+  --gold: 45 95% 60%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply border border-border/40 bg-background/50 backdrop-blur-2xl shadow-lg shadow-black/20;
+  }
+}

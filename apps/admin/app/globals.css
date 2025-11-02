@@ -1,0 +1,11 @@
+@import "@rayon/ui/styles.css";
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  min-height: 100vh;
+  background-image: radial-gradient(circle at top left, rgba(0, 163, 255, 0.18), transparent 45%),
+    radial-gradient(circle at bottom right, rgba(253, 215, 73, 0.18), transparent 45%);
+}

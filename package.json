@@ -3,7 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "packageManager": "npm@11.4.2",
   "type": "module",
@@ -13,11 +14,13 @@
   "scripts": {
     "predev": "node scripts/preflight-dev.mjs",
     "dev": "npm run predev && next dev",
+    "dev:admin": "npm run dev --prefix apps/admin",
     "prebuild": "npm run build:packages",
     "build": "next build",
-    "build:packages": "npm run build:contracts && npm run build:mobile-widgets",
+    "build:packages": "npm run build:contracts && npm run build:mobile-widgets && npm run build:ui",
     "build:contracts": "npm run build --prefix packages/contracts",
     "build:mobile-widgets": "npm run build --prefix packages/mobile/widgets",
+    "build:ui": "tsc -p packages/ui/tsconfig.json",
     "lint": "eslint app src tests/unit",
     "lint:a11y": "eslint \"app/(routes)\" src/components/admin --max-warnings=0",
     "lint:fix": "eslint app src tests/unit --fix",
