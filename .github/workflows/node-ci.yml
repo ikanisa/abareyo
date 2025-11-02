@@ -48,6 +48,9 @@ jobs:
           TEST_REDIS_URL: redis://127.0.0.1:6379/15
         run: npm run test:unit
 
+      - name: Install backend dependencies
+        run: npm ci --prefix backend
+
       - name: Backend unit tests
         run: npm run --prefix backend test
 
