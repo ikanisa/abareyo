@@ -1,14 +1,3 @@
-import baseConfig from '../../eslint.config.js';
-import globals from 'globals';
+import eslintConfig from '@abareyo/config/eslint';
 
-export default [
-  ...baseConfig,
-  {
-    files: ['**/*.{ts,tsx}'],
-    languageOptions: {
-      globals: {
-        ...globals['react-native'],
-      },
-    },
-  },
-];
+export default eslintConfig.mobile;

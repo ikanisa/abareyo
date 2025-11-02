@@ -52,7 +52,15 @@
     "validate:deployment": "node scripts/validate-deployment-readiness.mjs",
     "ci:verify-mobile-qa": "node tools/ci/verify-mobile-qa.mjs",
     "sbom": "node scripts/generate-sbom.mjs",
-    "check:licenses": "node scripts/enforce-licenses.mjs"
+    "check:licenses": "node scripts/enforce-licenses.mjs",
+    "prepare": "husky",
+    "lint-staged": "lint-staged",
+    "ci:lint": "npm run lint",
+    "ci:typecheck": "npm run type-check",
+    "ci:test": "npm run test:unit",
+    "ci:e2e": "npm run test:e2e",
+    "ci:lh": "npm run lint:lh",
+    "ci:host-agnostic": "tsx scripts/host_agnostic_guard.ts"
   },
   "dependencies": {
     "@capacitor/app": "^5.0.8",
@@ -128,8 +136,11 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@abareyo/config": "file:packages/config",
     "@axe-core/playwright": "^4.10.2",
     "@capacitor/cli": "^5.0.8",
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0",
     "@cyclonedx/cyclonedx-npm": "^4.1.0",
     "@eslint/js": "^8.57.0",
     "@lhci/cli": "^0.14.0",
@@ -153,10 +164,13 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "expo-clipboard": "^5.0.1",
     "globals": "^15.15.0",
+    "husky": "^9.1.7",
     "jsdom": "^27.0.0",
     "license-checker-rseidelsohn": "^4.4.2",
+    "lint-staged": "^15.3.0",
     "pino": "^9.3.2",
     "postcss": "^8.5.6",
+    "prettier": "^3.3.3",
     "supertest": "^7.1.4",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.20.6",

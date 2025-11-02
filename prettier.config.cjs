@@ -1,6 +1,1 @@
-module.exports = {
-  arrowParens: 'always',
-  singleQuote: true,
-  trailingComma: 'all',
-  printWidth: 100,
-};
+module.exports = require('./packages/config/prettier/index.cjs');

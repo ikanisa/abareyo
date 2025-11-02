@@ -1,0 +1,69 @@
+{
+  "name": "@abareyo/config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./eslint": {
+      "import": "./eslint/index.cjs",
+      "default": "./eslint/index.cjs"
+    },
+    "./eslint/mobile": {
+      "import": "./eslint/mobile.cjs",
+      "default": "./eslint/mobile.cjs"
+    },
+    "./prettier": {
+      "import": "./prettier/index.cjs",
+      "default": "./prettier/index.cjs"
+    },
+    "./commitlint": {
+      "import": "./commitlint/index.cjs",
+      "default": "./commitlint/index.cjs"
+    }
+  },
+  "files": [
+    "eslint",
+    "prettier",
+    "commitlint"
+  ],
+  "peerDependencies": {
+    "@commitlint/config-conventional": "^19.6.0",
+    "@eslint/js": "^8.57.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^15.15.0",
+    "prettier": "^3.3.3",
+    "typescript-eslint": "^8.38.0"
+  },
+  "peerDependenciesMeta": {
+    "@commitlint/config-conventional": {
+      "optional": true
+    },
+    "@eslint/js": {
+      "optional": true
+    },
+    "eslint": {
+      "optional": true
+    },
+    "eslint-plugin-jsx-a11y": {
+      "optional": true
+    },
+    "eslint-plugin-react-hooks": {
+      "optional": true
+    },
+    "eslint-plugin-react-refresh": {
+      "optional": true
+    },
+    "globals": {
+      "optional": true
+    },
+    "prettier": {
+      "optional": true
+    },
+    "typescript-eslint": {
+      "optional": true
+    }
+  }
+}

@@ -38,15 +38,29 @@ jobs:
         run: npm ci
 
       - name: Lint
-        run: npm run lint
+        run: npm run ci:lint
 
-      - name: License policy compliance
-        run: pnpm check:licenses
+      - name: Type check
+        run: npm run ci:typecheck
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
 
       - name: Unit tests (web + OTP)
         env:
           TEST_REDIS_URL: redis://127.0.0.1:6379/15
-        run: npm run test:unit
+        run: npm run ci:test
+
+      - name: End-to-end smoke tests
+        env:
+          E2E_API_MOCKS: '1'
+        run: npm run ci:e2e -- tests/e2e/admin-smokes.spec.ts
+
+      - name: Lighthouse audit
+        run: npm run ci:lh
+
+      - name: License policy compliance
+        run: npm run check:licenses
 
       - name: Backend unit tests
         run: npm run --prefix backend test

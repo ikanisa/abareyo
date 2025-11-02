@@ -1,1 +1,1 @@
-module.exports = require('../../prettier.config.cjs');
+module.exports = require('@abareyo/config/prettier');
