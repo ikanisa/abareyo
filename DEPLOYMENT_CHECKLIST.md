@@ -27,6 +27,7 @@
 - [x] **Unit Tests**: 94/94 tests passing
 - [x] **Build**: `npm run build` succeeds
 - [x] **Security Scan**: CodeQL clean, 8 low-severity in dev-only tool accepted
+- [x] **Secret History Scan**: `reports/sbom/gitleaks.json` clean (CI gitleaks workflow passes with zero findings)
 - [x] **Preflight Script**: `node scripts/preflight.mjs` validates environment and build
 - [x] **PWA Audit**: `npm run lint:pwa` (Lighthouse + bundle analysis)
 - [x] **A11y Smoke**: `npm run test:e2e:a11y`

@@ -20,7 +20,6 @@ const serverEnvMock = vi.hoisted(() => ({
   NEXT_PUBLIC_SENTRY_DSN: undefined,
   NEXT_PUBLIC_OPENAI_BASE_URL: undefined,
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE: 'admin_session',
-  NEXT_PUBLIC_ADMIN_API_TOKEN: 'admin-token',
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK: undefined,
   NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY: undefined,
   PORT: '3000',
@@ -76,7 +75,6 @@ const clientEnvMock = vi.hoisted(() => ({
   NEXT_PUBLIC_SENTRY_DSN: undefined,
   NEXT_PUBLIC_OPENAI_BASE_URL: undefined,
   NEXT_PUBLIC_ADMIN_SESSION_COOKIE: 'admin_session',
-  NEXT_PUBLIC_ADMIN_API_TOKEN: 'admin-token',
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK: undefined,
   NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY: undefined,
 })) as Record<string, unknown>;

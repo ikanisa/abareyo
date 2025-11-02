@@ -7,7 +7,6 @@ describe('SmsService', () => {
     const configService = {
       get: jest.fn((key: string) => {
         if (key === 'sms.webhookToken') return 'hook-token';
-        if (key === 'admin.apiToken') return 'admin-token';
         if (key === 'redis.url') return undefined;
         return undefined;
       }),

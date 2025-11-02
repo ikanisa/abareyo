@@ -36,7 +36,6 @@ export default () => ({
     airtelPayCode: process.env.AIRTEL_MONEY_PAY_CODE ?? '0700XXXXXX',
   },
   admin: {
-    apiToken: process.env.ADMIN_API_TOKEN,
     session: {
       cookieName: process.env.ADMIN_SESSION_COOKIE ?? 'admin_session',
       secret: process.env.ADMIN_SESSION_SECRET ?? 'change-me-admin-session',

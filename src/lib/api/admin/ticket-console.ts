@@ -1,3 +1,5 @@
+import { adminFetch } from '@/lib/admin/csrf';
+
 export type AdminTicketMatch = {
   id: string;
   title: string;
@@ -71,7 +73,7 @@ export async function listAdminTicketMatches(upcoming = false) {
     params.set('upcoming', 'true');
   }
   const query = params.toString();
-  const response = await fetch(`/admin/api/tickets/matches${query ? `?${query}` : ''}`, { cache: 'no-store' });
+  const response = await adminFetch(`/admin/api/tickets/matches${query ? `?${query}` : ''}`, { cache: 'no-store' });
   const payload = await handleResponse<{ matches: AdminTicketMatch[] }>(response);
   return payload.matches;
 }
@@ -83,13 +85,13 @@ export async function listAdminTicketOrders(params: { status?: string; matchId?:
   if (params.q) search.set('q', params.q);
   const query = search.toString();
 
-  const response = await fetch(`/admin/api/tickets/orders${query ? `?${query}` : ''}`, { cache: 'no-store' });
+  const response = await adminFetch(`/admin/api/tickets/orders${query ? `?${query}` : ''}`, { cache: 'no-store' });
   const payload = await handleResponse<{ orders: AdminTicketOrder[] }>(response);
   return payload.orders;
 }
 
 export async function updateAdminTicketOrder(payload: { id: string; status?: string; momo_ref?: string | null }) {
-  const response = await fetch('/admin/api/tickets/orders', {
+  const response = await adminFetch('/admin/api/tickets/orders', {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -106,13 +108,13 @@ export async function listAdminTicketPasses(params: { matchId?: string; orderId?
   if (params.q) search.set('q', params.q);
 
   const query = search.toString();
-  const response = await fetch(`/admin/api/tickets/passes${query ? `?${query}` : ''}`, { cache: 'no-store' });
+  const response = await adminFetch(`/admin/api/tickets/passes${query ? `?${query}` : ''}`, { cache: 'no-store' });
   const payload = await handleResponse<{ passes: AdminTicketPass[] }>(response);
   return payload.passes;
 }
 
 export async function createAdminTicketPass(payload: { order_id: string; zone?: string; gate?: string; state?: string }) {
-  const response = await fetch('/admin/api/tickets/passes', {
+  const response = await adminFetch('/admin/api/tickets/passes', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -122,7 +124,7 @@ export async function createAdminTicketPass(payload: { order_id: string; zone?: 
 }
 
 export async function fetchTicketScanStats() {
-  const response = await fetch('/admin/api/tickets/scan-stats', { cache: 'no-store' });
+  const response = await adminFetch('/admin/api/tickets/scan-stats', { cache: 'no-store' });
   return handleResponse<TicketScanStats>(response);
 }
 
@@ -130,13 +132,13 @@ export async function searchParsedSms(query: string) {
   const params = new URLSearchParams();
   if (query) params.set('q', query);
   const qs = params.toString();
-  const response = await fetch(`/admin/api/sms/parsed${qs ? `?${qs}` : ''}`, { cache: 'no-store' });
+  const response = await adminFetch(`/admin/api/sms/parsed${qs ? `?${qs}` : ''}`, { cache: 'no-store' });
   const payload = await handleResponse<{ sms: Array<{ id: string; ref: string | null; amount: number; payer_mask: string | null; created_at: string }> }>(response);
   return payload.sms;
 }
 
 export async function attachSmsToEntity(payload: { sms_id: string; entity: { kind: 'ticket' | 'order' | 'quote' | 'deposit'; id: string } }) {
-  const response = await fetch('/admin/api/sms/attach', {
+  const response = await adminFetch('/admin/api/sms/attach', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),

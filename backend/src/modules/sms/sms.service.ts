@@ -13,7 +13,6 @@ import type { Prisma } from '@prisma/client';
 export class SmsService {
   private readonly logger = new Logger(SmsService.name);
   private readonly webhookToken?: string;
-  private readonly adminToken?: string;
 
   constructor(
     private readonly configService: ConfigService,
@@ -23,15 +22,10 @@ export class SmsService {
     private readonly payments: PaymentsService,
   ) {
     this.webhookToken = this.configService.get<string>('sms.webhookToken');
-    this.adminToken = this.configService.get<string>('admin.apiToken');
   }
 
   validateWebhookToken(token?: string) {
     return Boolean(token && this.webhookToken && token === this.webhookToken);
-  }
-
-  validateAdminToken(token?: string) {
-    return Boolean(token && this.adminToken && token === this.adminToken);
   }
 
   async handleInboundSms(payload: SmsWebhookDto, meta: SmsWebhookMeta) {

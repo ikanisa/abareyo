@@ -6,6 +6,7 @@ import { AdminInlineMessage, AdminList } from '@/components/admin/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import { adminFetch } from '@/lib/admin/csrf';
 
 export type AdminRewardsDashboardProps = {
   initialEvents: Array<{
@@ -27,7 +28,7 @@ export const AdminRewardsDashboard = ({ initialEvents }: AdminRewardsDashboardPr
   const { toast } = useToast();
 
   const refresh = async () => {
-    const data = await fetch('/admin/api/rewards/events').then((res) => res.json());
+    const data = await adminFetch('/admin/api/rewards/events').then((res) => res.json());
     setEvents(data.data?.events ?? data.events ?? []);
   };
 
@@ -38,7 +39,7 @@ export const AdminRewardsDashboard = ({ initialEvents }: AdminRewardsDashboardPr
       if (matchId) payload.match_id = matchId;
       if (reason) payload.reason = reason;
 
-      const response = await fetch('/admin/api/rewards/events', {
+      const response = await adminFetch('/admin/api/rewards/events', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(payload),
