@@ -92,6 +92,6 @@ const styles = StyleSheet.create({
     fontFamily: typographyTokens.fontFamily.display,
     fontSize: 15,
     fontWeight: "600",
-    letterSpacing: typographyTokens.letterSpacing.tight,
+    letterSpacing: parseFloat(typographyTokens.letterSpacing.tight),
   },
 });

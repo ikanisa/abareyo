@@ -1,0 +1,70 @@
+{
+  "extends": "../../packages/config/tsconfig/base.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES2020"
+    ],
+    "module": "esnext",
+    "jsx": "preserve",
+    "baseUrl": "../../",
+    "exactOptionalPropertyTypes": false,
+    "paths": {
+      "@/app/_lib/*": [
+        "app/_lib/*"
+      ],
+      "@/app/*": [
+        "app/*"
+      ],
+      "@/components/*": [
+        "src/components/*"
+      ],
+      "@/hooks/*": [
+        "src/hooks/*"
+      ],
+      "@/lib/*": [
+        "src/lib/*"
+      ],
+      "@/providers/*": [
+        "src/providers/*"
+      ],
+      "@/views/*": [
+        "src/views/*"
+      ],
+      "@/config/*": [
+        "src/config/*"
+      ],
+      "@rayon/contracts": [
+        "packages/contracts/src/index.ts"
+      ],
+      "@rayon/contracts/*": [
+        "packages/contracts/src/*.ts"
+      ],
+      "@rayon/design-tokens": [
+        "packages/design-tokens/src/index.ts"
+      ],
+      "@rayon/design-tokens/*": [
+        "packages/design-tokens/src/*.ts"
+      ],
+      "@/*": [
+        "src/*",
+        "*"
+      ]
+    },
+    "noEmit": true,
+    "incremental": true,
+    "tsBuildInfoFile": "../../node_modules/.cache/web-routes.tsbuildinfo"
+  },
+  "include": [
+    "../../next-env.d.ts",
+    "./**/*.ts",
+    "./**/*.tsx",
+    "../_components/**/*.ts",
+    "../_components/**/*.tsx",
+    "../_lib/**/*.ts",
+    "../_lib/**/*.tsx",
+    "../../src/**/*.ts",
+    "../../src/**/*.tsx"
+  ]
+}
