@@ -16,45 +16,14 @@ const PACKAGE = "com.gikundiro.app";
 const ASSOCIATED_DOMAINS = HOSTS.map((host) => `applinks:${host}`);
 
 export default (): ExpoConfig => ({
-  name: "Gikundiro",
-  slug: "gikundiro",
-  version: "1.0.0",
-  orientation: "portrait",
-  userInterfaceStyle: "automatic",
-  scheme: "gikundiro",
-  icon: ICON,
-  jsEngine: "hermes",
-  experiments: {
-    typedRoutes: true,
-  },
-  platforms: ["ios", "android"],
-  plugins: [
-    ["expo-router", { origin: "https://gikundiro.com", linking }],
-    [
-      "expo-build-properties",
-      {
-        ios: {
-          useFrameworks: "static",
-        },
-        android: {
-          enableProguardInReleaseBuilds: true,
-          enableShrinkResourcesInReleaseBuilds: true,
-        },
-      },
-    ],
-    [
-      "expo-splash-screen",
-      {
-        backgroundColor: "#0b1220",
-        image: SPLASH,
-        imageResizeMode: "contain",
-        dark: {
-          backgroundColor: "#050a18",
-          image: SPLASH,
-        },
-      },
-    ],
-  ],
+  name: 'GIKUNDIRO',
+  slug: 'gikundiro-mobile',
+  version: '1.0.0',
+  orientation: 'portrait',
+  userInterfaceStyle: 'automatic',
+  scheme: 'gikundiro',
+  jsEngine: 'hermes',
+  platforms: ['ios', 'android'],
   updates: {
     enabled: true,
     checkAutomatically: "ON_LOAD",
@@ -69,18 +38,34 @@ export default (): ExpoConfig => ({
     bundleIdentifier: BUNDLE_ID,
     buildNumber: "1.0.0",
     supportsTablet: false,
-    associatedDomains: ASSOCIATED_DOMAINS,
+    bundleIdentifier: 'com.gikundiro.app',
+    buildNumber: '1.0.0',
+    associatedDomains: ['applinks:gikundiro.app'],
     infoPlist: {
+      NSAppTransportSecurity: {
+        NSAllowsArbitraryLoads: false,
+        NSExceptionDomains: {
+          'gikundiro.app': {
+            NSTemporaryExceptionAllowsInsecureHTTPLoads: false,
+            NSIncludesSubdomains: true,
+            NSTemporaryExceptionMinimumTLSVersion: 'TLSv1.2',
+          },
+          'supabase.co': {
+            NSTemporaryExceptionAllowsInsecureHTTPLoads: false,
+            NSIncludesSubdomains: true,
+            NSTemporaryExceptionMinimumTLSVersion: 'TLSv1.2',
+          },
+        },
+      },
       ITSAppUsesNonExemptEncryption: false,
       LSApplicationQueriesSchemes: ["tel"],
     },
   },
   android: {
-    package: PACKAGE,
+    package: 'com.gikundiro.app',
     versionCode: 1,
     adaptiveIcon: {
-      foregroundImage: ADAPTIVE_ICON,
-      backgroundColor: "#0f172a",
+      backgroundColor: '#040F2A',
     },
     allowBackup: false,
     softwareKeyboardLayoutMode: "pan",
@@ -88,16 +73,14 @@ export default (): ExpoConfig => ({
       {
         action: "VIEW",
         autoVerify: true,
-        data: HOSTS.map((host) => ({
-          scheme: "https",
-          host,
-        })),
-        category: ["BROWSABLE", "DEFAULT"],
-      },
-      {
-        action: "VIEW",
-        data: [{ scheme: "gikundiro" }],
-        category: ["BROWSABLE", "DEFAULT"],
+        data: [
+          {
+            scheme: 'https',
+            host: 'gikundiro.app',
+            pathPrefix: '/'
+          },
+        ],
+        category: ['BROWSABLE', 'DEFAULT'],
       },
     ],
   },

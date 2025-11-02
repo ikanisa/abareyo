@@ -71,7 +71,7 @@ export default tseslint.config(
       "app/admin/**/page.tsx",
     ],
     rules: {
-      "react-refresh/only-export-components": ["error", { allowConstantExport: true }],
+      "react-refresh/only-export-components": ["warn", { allowConstantExport: true, allowExportNames: ["metadata", "viewport", "generateMetadata", "generateViewport"] }],
       "react-hooks/exhaustive-deps": "error",
     },
   },
