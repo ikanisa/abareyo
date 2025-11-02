@@ -1,19 +1,39 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../config/tsconfig/base.json",
   "compilerOptions": {
     "jsx": "react-jsx",
     "moduleResolution": "node",
-    "baseUrl": "./src",
+    "baseUrl": ".",
+    "exactOptionalPropertyTypes": false,
     "paths": {
       "@/api/*": ["./src/api/*"],
-      "@/providers/*": ["./src/providers/*"],
+      "@/providers/*": ["./src/providers/*", "../../src/providers/*"],
       "@/theme/*": ["./src/theme/*"],
-      "@/ui/*": ["./src/ui/*"]
-    }
+      "@/ui/*": ["./src/ui/*"],
+      "@/config/*": ["../../src/config/*"],
+      "@/lib/*": ["../../src/lib/*"],
+      "@/app/_components/*": ["../../app/_components/*"],
+      "@/app/_lib/*": ["../../app/_lib/*"],
+      "@/app/_config/*": ["../../app/_config/*"],
+      "@/app/_data/*": ["../../app/_data/*"],
+      "@rayon/contracts": ["../contracts/src/index.ts"],
+      "@rayon/contracts/*": ["../contracts/src/*.ts"],
+      "@rayon/design-tokens": ["../design-tokens/src/index.ts"],
+      "@rayon/design-tokens/*": ["../design-tokens/src/*.ts"],
+      "@/*": ["./src/*", "../../src/*"]
+    },
+    "noEmit": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./node_modules/.cache/mobile.tsbuildinfo"
   },
   "include": [
     "expo-env.d.ts",
     "./src/**/*",
-    "./app/**/*"
+    "./app/**/*",
+    "../../app/_config/**/*",
+    "../../app/_data/**/*",
+    "../../src/config/env.ts",
+    "../../src/lib/api/home.ts",
+    "../../src/lib/home/**/*"
   ]
 }

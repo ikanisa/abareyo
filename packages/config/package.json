@@ -1,0 +1,18 @@
+{
+  "name": "@rayon/config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "env.ts",
+  "types": "env.ts",
+  "exports": {
+    "./env": {
+      "types": "./env.ts",
+      "default": "./env.ts"
+    },
+    ".": {
+      "types": "./env.ts",
+      "default": "./env.ts"
+    }
+  }
+}

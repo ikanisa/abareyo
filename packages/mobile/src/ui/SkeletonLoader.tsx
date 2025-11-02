@@ -7,7 +7,7 @@ import { useMotionPreference } from "@/providers/MotionProvider";
 
 type SkeletonLoaderProps = {
   height?: number;
-  width?: number | string;
+  width?: number | `${number}%` | "auto";
   radius?: number;
 };
 

@@ -2,6 +2,11 @@ import Link from "next/link";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
+import { buildRouteMetadata } from "@/app/_lib/navigation";
+
+export const metadata = buildRouteMetadata("/more", {
+  description: "Access wallet, membership, ticketing, and club resources from one control centre.",
+});
 
 export default async function MorePage() {
   return (

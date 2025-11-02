@@ -2,9 +2,12 @@
 // Body: { sms_id: uuid }
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
+import { z } from "../_shared/schema.ts";
+
 import { getOpenAiApiKey, requireEnv } from "../_shared/env.ts";
 import { getServiceRoleClient } from "../_shared/client.ts";
-import { json, jsonError, parseJsonBody, requireMethod } from "../_shared/http.ts";
+import { json, jsonError, requireMethod, validateJsonBody } from "../_shared/http.ts";
+import { logError, logInfo, logWarn } from "../_shared/log.ts";
 
 const supabase = getServiceRoleClient();
 const OPENAI_API_KEY = requireEnv(getOpenAiApiKey(), "OPENAI_API_KEY");
@@ -18,7 +21,9 @@ type ParsedSMS = {
   confidence?: number;
 };
 
-type Payload = { sms_id?: string };
+const payloadSchema = z.object({
+  sms_id: z.string().uuid(),
+});
 
 function redactForModel(text: string) {
   return text.replace(/\b(\+?\d[\d\s-]{6,})\b/g, (match) => {
@@ -88,15 +93,14 @@ serve(async (req) => {
     return methodError;
   }
 
-  const parsed = await parseJsonBody<Payload>(req);
-  if (parsed.error) {
-    return parsed.error;
+  const validation = await validateJsonBody(req, payloadSchema);
+  if (validation.error || !validation.data) {
+    logWarn("parse_sms_invalid_payload", { endpoint: "parse-sms" });
+    return validation.error ?? jsonError("invalid_payload", 400);
   }
 
-  const smsId = parsed.data?.sms_id;
-  if (!smsId) {
-    return jsonError("missing_sms_id", 400);
-  }
+  const { sms_id: smsId } = validation.data;
+  logInfo("parse_sms_request", { smsId });
 
   const { data: sms, error: smsError } = await supabase
     .from("sms_raw")
@@ -105,6 +109,7 @@ serve(async (req) => {
     .single();
 
   if (smsError || !sms) {
+    logWarn("parse_sms_not_found", { smsId, error: smsError?.message });
     return jsonError("sms_not_found", 404);
   }
 
@@ -112,6 +117,10 @@ serve(async (req) => {
   try {
     parsedSms = await callOpenAI(sms.text);
   } catch (err) {
+    logError("parse_sms_openai_failed", {
+      smsId,
+      error: (err as Error).message,
+    });
     return jsonError((err as Error).message, 502);
   }
 
@@ -129,6 +138,7 @@ serve(async (req) => {
     .single();
 
   if (error || !row) {
+    logError("parse_sms_insert_failed", { smsId, error: error?.message });
     return jsonError(error?.message ?? "insert_failed", 500);
   }
 
@@ -141,8 +151,9 @@ serve(async (req) => {
       body: JSON.stringify({ sms_parsed_id: row.id }),
     });
   } catch (_err) {
-    // swallow; matching can be retried manually.
+    logWarn("parse_sms_match_trigger_failed", { smsParsedId: row.id, smsId });
   }
 
+  logInfo("parse_sms_completed", { smsId, smsParsedId: row.id });
   return json({ ok: true, sms_parsed_id: row.id });
 });

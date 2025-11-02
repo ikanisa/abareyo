@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     fontFamily: typographyTokens.fontFamily.display,
     fontSize: 16,
     fontWeight: "600",
-    letterSpacing: typographyTokens.letterSpacing.tight,
+    letterSpacing: parseFloat(typographyTokens.letterSpacing.tight),
   },
   description: {
     marginTop: remToPx(spacingTokens.xs),

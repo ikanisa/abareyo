@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { cache } from "react";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
 import { findContent } from "@/lib/content";
 import { ff } from "@/lib/flags";
+import { buildRouteMetadata } from "@/app/_lib/navigation";
 import type { ArticleBlock, Article } from "../_data/articles";
 import { articles as staticArticles } from "../_data/articles";
 import { OptimizedImage } from "@/components/ui/optimized-image";
@@ -133,7 +136,9 @@ const renderStaticArticle = (article: Article) => (
   </PageShell>
 );
 
-const renderDynamicArticle = (article: NonNullable<Awaited<ReturnType<typeof findContent>>>) => (
+const getContent = cache(findContent);
+
+const renderDynamicArticle = (article: NonNullable<Awaited<ReturnType<typeof getContent>>>) => (
   <PageShell>
     <SubpageHeader
       title={article.title}
@@ -180,11 +185,11 @@ export default async function NewsArticle({ params }: { params: { slug: string }
   const { slug } = params;
 
   const contentEnabled = ff("features.curatedContent", true);
-  let dynamicArticle: Awaited<ReturnType<typeof findContent>> | null = null;
+  let dynamicArticle: Awaited<ReturnType<typeof getContent>> | null = null;
 
   if (contentEnabled) {
     try {
-      dynamicArticle = await findContent(slug);
+      dynamicArticle = await getContent(slug);
     } catch (error) {
       console.error("Failed to load curated content", error);
     }
@@ -205,4 +210,36 @@ export default async function NewsArticle({ params }: { params: { slug: string }
   }
 
   notFound();
+}
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const { slug } = params;
+  const contentEnabled = ff("features.curatedContent", true);
+
+  if (contentEnabled) {
+    try {
+      const dynamicArticle = await getContent(slug);
+      if (dynamicArticle) {
+        return buildRouteMetadata(`/news/${dynamicArticle.slug ?? slug}`, {
+          title: dynamicArticle.title ?? "Rayon Sports news",
+          description: dynamicArticle.summary ?? undefined,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to resolve article metadata", error);
+    }
+  }
+
+  const staticArticle = staticArticles.find((entry) => entry.slug === slug);
+  if (staticArticle) {
+    return buildRouteMetadata(`/news/${staticArticle.slug}`, {
+      title: `${staticArticle.title} — Rayon Sports news`,
+      description: staticArticle.summary,
+    });
+  }
+
+  return buildRouteMetadata("/news", {
+    title: "Rayon Sports news",
+    description: "Stay up to date with Rayon Sports stories, match reports, and community coverage.",
+  });
 }

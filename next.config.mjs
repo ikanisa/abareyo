@@ -6,7 +6,7 @@ const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
   // Ensure local packages are transpiled in the Next.js build
-  transpilePackages: ['@rayon/contracts', '@rayon/mobile-widgets'],
+  transpilePackages: ['@rayon/contracts', '@rayon/mobile-widgets', '@rayon/api', '@rayon/config'],
   images: {
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60 * 60 * 24,
