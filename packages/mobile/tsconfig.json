@@ -8,12 +8,18 @@
       "@/api/*": ["./src/api/*"],
       "@/providers/*": ["./src/providers/*"],
       "@/theme/*": ["./src/theme/*"],
-      "@/ui/*": ["./src/ui/*"]
+      "@/ui/*": ["./src/ui/*"],
+      "@/linking": ["./src/linking"],
+      "@/storage/*": ["./src/storage/*"],
+      "@/features/*": ["./src/features/*"],
+      "@/screens/*": ["./src/screens/*"],
+      "@/hooks/*": ["./src/hooks/*"]
     }
   },
   "include": [
     "expo-env.d.ts",
     "./src/**/*",
-    "./app/**/*"
+    "./app/**/*",
+    "./tools/**/*"
   ]
 }
