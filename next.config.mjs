@@ -1,5 +1,16 @@
 import './config/validated-env.mjs';
+import createNextPWA from 'next-pwa';
 import { buildSecurityHeaders } from './config/security-headers.mjs';
+
+const withPWA = createNextPWA({
+  dest: 'public',
+  sw: 'service-worker.js',
+  customWorkerDir: 'workers',
+  disable: process.env.NODE_ENV === 'development',
+  register: false,
+  skipWaiting: false,
+  buildExcludes: [/middleware-manifest\.json$/],
+});
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -36,4 +47,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPWA(nextConfig);

@@ -72,6 +72,7 @@
     "next-env.d.ts",
     "app/**/*.ts",
     "app/**/*.tsx",
+    "workers/**/*.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "packages/mobile/**/*.ts",

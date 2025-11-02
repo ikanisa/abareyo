@@ -19,7 +19,7 @@ export const buildRouteMetadata = (
   const fallbackTitle = fallback.title ?? item?.meta.title ?? item?.title;
   const description = fallback.description ?? item?.meta.description ?? item?.description;
   const canonical = fallback.canonical ?? item?.href ?? href;
-  const title = fallbackTitle ?? 'Rayon Sports';
+  const title = fallbackTitle ?? 'GIKUNDIRO';
 
   return {
     title,

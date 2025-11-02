@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
+import { Suspense } from "react";
 import "@/index.css";
 import "./globals.css";
 import ClientErrorBoundary from "./_components/telemetry/ClientErrorBoundary";
@@ -7,10 +9,10 @@ import { InstallPrompt, OfflineBanner } from "./_components/pwa/PwaHelpers";
 import BottomNavContainer from "./_components/BottomNavContainer";
 import NativeAppHandoff from "./_components/pwa/NativeAppHandoff";
 import WebPushGate from "./_components/pwa/WebPushGate";
-import { Suspense } from "react";
 import PageViewTracker from "./_components/telemetry/PageViewTracker";
 import SkipNavLink from "@/components/a11y/SkipNavLink";
 import { clientEnv } from "@/config/env";
+import AppBridgeBanner from "./_components/pwa/AppBridgeBanner";
 
 const siteUrl = clientEnv.NEXT_PUBLIC_SITE_URL;
 const metadataBase = (() => {
@@ -27,12 +29,12 @@ const metadataBase = (() => {
 
 export const metadata: Metadata = {
   metadataBase,
-  title: "Rayon Sports - Fan App",
-  description: "Official Rayon Sports fan experience.",
-  applicationName: "Rayon Sports",
+  title: "GIKUNDIRO Fan HQ",
+  description: "Fixtures, tickets, rewards, and live match coverage for Rayon Sports supporters.",
+  applicationName: "GIKUNDIRO Fan HQ",
   appleWebApp: {
     capable: true,
-    title: "Rayon Sports",
+    title: "GIKUNDIRO",
     statusBarStyle: "black-translucent",
   },
   icons: {
@@ -47,12 +49,12 @@ export const metadata: Metadata = {
   appLinks: {
     ios: {
       app_store_id: "0000000000",
-      app_name: "Rayon Sports",
+      app_name: "GIKUNDIRO",
       url: "gikundiro://home",
     },
     android: {
       package: "com.rayonsports.fanapp",
-      app_name: "Rayon Sports",
+      app_name: "GIKUNDIRO",
       url: "gikundiro://home",
     },
     web: {
@@ -66,10 +68,10 @@ export const metadata: Metadata = {
     "google-play-app": "app-id=com.rayonsports.fanapp",
     "al:ios:url": "gikundiro://home",
     "al:ios:app_store_id": "0000000000",
-    "al:ios:app_name": "Rayon Sports",
+    "al:ios:app_name": "GIKUNDIRO",
     "al:android:url": "gikundiro://home",
     "al:android:package": "com.rayonsports.fanapp",
-    "al:android:app_name": "Rayon Sports",
+    "al:android:app_name": "GIKUNDIRO",
   },
 };
 
@@ -78,29 +80,36 @@ export const viewport: Viewport = {
   minimumScale: 1,
 };
 
-const RootLayout = ({ children }: { children: React.ReactNode }) => (
-  <html lang="en" suppressHydrationWarning>
-    <body className="bg-background text-foreground">
-      <SkipNavLink />
-      <OfflineBanner />
-      <ClientErrorBoundary>
-        <Providers>
-          <div className="flex min-h-screen flex-col">
-            <div id="main-content" tabIndex={-1} className="flex-1 focus:outline-none focus-visible:outline-none">
-              {children}
+const RootLayout = ({ children }: { children: React.ReactNode }) => {
+  const headerList = headers();
+  const appBridgeTarget = headerList.get('x-app-bridge-target');
+  const appBridgeFallback = headerList.get('x-app-bridge-fallback');
+
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body className="bg-background text-foreground">
+        <SkipNavLink />
+        <AppBridgeBanner target={appBridgeTarget} fallback={appBridgeFallback} />
+        <OfflineBanner />
+        <ClientErrorBoundary>
+          <Providers>
+            <div className="flex min-h-screen flex-col">
+              <div id="main-content" tabIndex={-1} className="flex-1 focus:outline-none focus-visible:outline-none">
+                {children}
+              </div>
+              <BottomNavContainer />
+              <Suspense fallback={null}>
+                <PageViewTracker />
+                <NativeAppHandoff />
+                <WebPushGate />
+              </Suspense>
             </div>
-            <BottomNavContainer />
-            <Suspense fallback={null}>
-              <PageViewTracker />
-              <NativeAppHandoff />
-              <WebPushGate />
-            </Suspense>
-          </div>
-        </Providers>
-      </ClientErrorBoundary>
-      <InstallPrompt />
-    </body>
-  </html>
-);
+          </Providers>
+        </ClientErrorBoundary>
+        <InstallPrompt />
+      </body>
+    </html>
+  );
+};
 
 export default RootLayout;

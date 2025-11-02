@@ -85,7 +85,7 @@ export const Providers = ({ children }: { children: ReactNode }) => {
       const data = event.data as
         | { source?: string; type?: string; phase?: string; detail?: unknown }
         | undefined;
-      if (!data || data.source !== 'rayon-service-worker' || data.type !== 'sw:lifecycle') {
+      if (!data || data.source !== 'gikundiro-service-worker' || data.type !== 'sw:lifecycle') {
         return;
       }
 

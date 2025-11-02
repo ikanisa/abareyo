@@ -1,0 +1,64 @@
+import { NextResponse } from 'next/server';
+
+const manifest = {
+  name: 'GIKUNDIRO Fan HQ',
+  short_name: 'GIKUNDIRO',
+  id: '/?source=pwa',
+  start_url: '/?source=pwa',
+  scope: '/',
+  display: 'standalone',
+  display_override: ['window-controls-overlay', 'standalone'],
+  background_color: '#040F2A',
+  theme_color: '#0033FF',
+  description: 'Official Rayon Sports experience for fixtures, tickets, rewards, and match alerts.',
+  categories: ['sports', 'entertainment', 'lifestyle'],
+  icons: [
+    { src: '/icon-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+    { src: '/icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+    { src: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+  ],
+  shortcuts: [
+    {
+      name: 'Match Centre',
+      short_name: 'Match',
+      description: 'Jump straight into live coverage and stats.',
+      url: '/matchday?openNative=1',
+      icons: [{ src: '/icon-192x192.png', sizes: '192x192' }],
+    },
+    {
+      name: 'Buy Tickets',
+      short_name: 'Tickets',
+      description: 'Secure your seat before kickoff.',
+      url: '/tickets?openNative=1',
+      icons: [{ src: '/tickets/qr-active.svg', sizes: '96x96', type: 'image/svg+xml' }],
+    },
+    {
+      name: 'Club Shop',
+      short_name: 'Shop',
+      description: 'Browse and order the latest kits.',
+      url: '/shop?openNative=1',
+      icons: [{ src: '/shop/home-front.svg', sizes: '144x144', type: 'image/svg+xml' }],
+    },
+  ],
+  screenshots: [
+    {
+      src: '/media/behind-the-scenes.jpg',
+      sizes: '1200x675',
+      type: 'image/jpeg',
+      form_factor: 'wide',
+    },
+    {
+      src: '/media/goal-clip.jpg',
+      sizes: '1200x675',
+      type: 'image/jpeg',
+      form_factor: 'wide',
+    },
+  ],
+  protocol_handlers: [{ protocol: 'web+gikundiro', url: '/link?target=%s' }],
+  related_applications: [
+    { platform: 'play', id: 'com.rayonsports.fanapp' },
+    { platform: 'itunes', id: '0000000000' },
+  ],
+};
+
+export const GET = () => NextResponse.json(manifest);

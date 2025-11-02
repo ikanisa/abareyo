@@ -6,6 +6,7 @@ import {
   APP_STORE_URL,
   PLAY_STORE_URL,
   buildNativeUrl,
+  getStoreFallback,
   isMobileUserAgent,
   shouldAttemptNativeHandoff,
 } from './src/lib/native/links';
@@ -54,6 +55,24 @@ const shouldAttemptNativeHandoffRequest = (req: NextRequest) =>
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const method = req.method?.toUpperCase() ?? 'GET';
+  const userAgent = req.headers.get('user-agent');
+  const acceptsHTML = req.headers.get('accept')?.includes('text/html');
+  const isHtmlNavigation = acceptsHTML && method === 'GET';
+  const bridgeTarget =
+    isHtmlNavigation && isMobileUserAgent(userAgent)
+      ? buildNativeUrl(pathname, req.nextUrl.searchParams)
+      : null;
+  const bridgeFallback = bridgeTarget ? getStoreFallback(userAgent) : null;
+
+  const applyResponseHeaders = (response: NextResponse) => {
+    if (bridgeTarget) {
+      response.headers.set('x-app-bridge-target', bridgeTarget);
+      if (bridgeFallback) {
+        response.headers.set('x-app-bridge-fallback', bridgeFallback);
+      }
+    }
+    return withSecurityHeaders(response);
+  };
 
   if (isProduction) {
     const proto = req.headers.get('x-forwarded-proto');
@@ -64,7 +83,7 @@ export function middleware(req: NextRequest) {
       if (host) {
         url.host = host;
       }
-      return withSecurityHeaders(NextResponse.redirect(url, 308));
+      return applyResponseHeaders(NextResponse.redirect(url, 308));
     }
   }
 
@@ -93,17 +112,16 @@ export function middleware(req: NextRequest) {
     pathname === '/apple-touch-icon.png' ||
     /\.[\w-]+$/.test(pathname)
   ) {
-    return withSecurityHeaders(NextResponse.next());
+    return applyResponseHeaders(NextResponse.next());
   }
 
-  const userAgent = req.headers.get('user-agent');
   if (shouldAttemptNativeHandoffRequest(req) && isMobileUserAgent(userAgent)) {
     const nativeUrl = buildNativeUrl(pathname, req.nextUrl.searchParams);
     if (nativeUrl) {
       const response = NextResponse.redirect(nativeUrl, 307);
       response.headers.set('x-native-fallback-android', PLAY_STORE_URL);
       response.headers.set('x-native-fallback-ios', APP_STORE_URL);
-      return withSecurityHeaders(response);
+      return applyResponseHeaders(response);
     }
   }
 
@@ -115,17 +133,17 @@ export function middleware(req: NextRequest) {
   // If URL has a locale prefix, rewrite to the bare path for routing
   if (hasPrefix) {
     const bare = pathname.replace(LOCALE_RE, '') || '/';
-    return withSecurityHeaders(NextResponse.rewrite(new URL(bare, req.url)));
+    return applyResponseHeaders(NextResponse.rewrite(new URL(bare, req.url)));
   }
 
   // If no prefix, but referer carried one, keep the user's locale in the URL
   if (refLocale && isTrustedLocaleRedirect(req, refLocale)) {
     const target = pathname === '/' ? `/${refLocale}` : `/${refLocale}${pathname}`;
-    return withSecurityHeaders(NextResponse.redirect(new URL(target, req.url)));
+    return applyResponseHeaders(NextResponse.redirect(new URL(target, req.url)));
   }
 
   // Default (English) without prefix
-  return withSecurityHeaders(NextResponse.next());
+  return applyResponseHeaders(NextResponse.next());
 }
 
 export const config = {
