@@ -12,7 +12,14 @@ const appProject = defineProject({
     environment: 'jsdom',
     globals: true,
     include: ['tests/unit/**/*.test.{ts,tsx}'],
-    exclude: ['tests/e2e/**', 'backend/**', 'node_modules/**'],
+    exclude: [
+      'tests/e2e/**',
+      'tests/**/*.spec.ts',
+      'tests/**/*.spec.tsx',
+      'backend/**',
+      'backend/**/*.spec.ts',
+      'node_modules/**',
+    ],
     setupFiles: ['tests/setup-app.ts'],
     testTimeout: 15000,
     coverage: {
@@ -39,10 +46,15 @@ const packagesProject = defineProject({
     environment: 'node',
     globals: true,
     include: [
-      'packages/**/*.{test,spec}.{ts,tsx}',
-      'packages/**/__tests__/**/*.{test,spec}.{ts,tsx}',
+      'packages/**/*.test.{ts,tsx}',
+      'packages/**/__tests__/**/*.test.{ts,tsx}',
     ],
-    exclude: ['**/node_modules/**', 'packages/mobile/e2e/**'],
+    exclude: [
+      '**/node_modules/**',
+      'packages/mobile/e2e/**',
+      '**/*.spec.{ts,tsx}',
+      'backend/**',
+    ],
     setupFiles: ['tests/setup-env.ts'],
     testTimeout: 15000,
     coverage: {
@@ -59,10 +71,6 @@ export default defineConfig({
   esbuild: {
     jsx: 'automatic',
     jsxImportSource: 'react',
-  },
-  test: {
-    globals: true,
-    include: [],
   },
   projects: [appProject, packagesProject],
 });
