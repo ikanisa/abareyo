@@ -1,5 +1,54 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig, defineProject } from 'vitest/config';
 import tsconfigPaths from 'vite-tsconfig-paths';
+
+const appProject = defineProject({
+  plugins: [tsconfigPaths()],
+  esbuild: {
+    jsx: 'automatic',
+    jsxImportSource: 'react',
+  },
+  test: {
+    name: 'app',
+    environment: 'jsdom',
+    globals: true,
+    include: ['tests/unit/**/*.test.{ts,tsx}'],
+    exclude: ['tests/e2e/**', 'backend/**', 'node_modules/**'],
+    setupFiles: ['tests/setup-app.ts'],
+    testTimeout: 15000,
+    coverage: {
+      provider: 'v8',
+      reportsDirectory: 'reports/refactor/coverage/app',
+      reporter: ['text', 'text-summary', 'lcov'],
+      thresholds: { lines: 60 },
+    },
+  },
+});
+
+const packagesProject = defineProject({
+  plugins: [tsconfigPaths()],
+  esbuild: {
+    jsx: 'automatic',
+    jsxImportSource: 'react',
+  },
+  test: {
+    name: 'packages',
+    environment: 'node',
+    globals: true,
+    include: [
+      'packages/**/*.{test,spec}.{ts,tsx}',
+      'packages/**/__tests__/**/*.{test,spec}.{ts,tsx}',
+    ],
+    exclude: ['**/node_modules/**', 'packages/mobile/e2e/**'],
+    setupFiles: ['tests/setup-env.ts'],
+    testTimeout: 15000,
+    coverage: {
+      provider: 'v8',
+      reportsDirectory: 'reports/refactor/coverage/packages',
+      reporter: ['text', 'text-summary', 'lcov'],
+      thresholds: { lines: 60 },
+    },
+  },
+});
 
 export default defineConfig({
   plugins: [tsconfigPaths()],
@@ -8,15 +57,8 @@ export default defineConfig({
     jsxImportSource: 'react',
   },
   test: {
-    environment: 'jsdom',
     globals: true,
-    include: ['tests/unit/**/*.test.{ts,tsx}'],
-    exclude: ['tests/e2e/**', 'backend/**', 'node_modules/**'],
-    setupFiles: ['tests/setup-env.ts'],
-    coverage: {
-      provider: 'v8',
-      reportsDirectory: 'coverage/unit',
-    },
-    testTimeout: 15000,
+    include: [],
   },
+  projects: [appProject, packagesProject],
 });

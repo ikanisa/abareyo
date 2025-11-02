@@ -1,14 +1,16 @@
 import { Agent } from "undici";
 
+import { serverEnv } from "@/config/env";
+
 const resolveUpstreamBase = () => {
   const candidates = [
     process.env.INTERNAL_BACKEND_BASE_URL,
     process.env.BACKEND_BASE_URL,
-    process.env.NEXT_PUBLIC_BACKEND_URL,
+    serverEnv.NEXT_PUBLIC_BACKEND_URL,
   ].filter((value): value is string => Boolean(value && value.trim().length > 0));
 
   if (candidates.length === 0) {
-    if (process.env.NODE_ENV !== "production") {
+    if (serverEnv.NODE_ENV !== "production") {
       return "http://localhost:5000/api";
     }
     throw new Error("INTERNAL_BACKEND_BASE_URL must be configured for the backend proxy.");
@@ -17,8 +19,8 @@ const resolveUpstreamBase = () => {
   let base = candidates[0]!.trim();
   if (!/^https?:\/\//iu.test(base)) {
     const origin =
-      typeof process.env.NEXT_PUBLIC_SITE_URL === "string" && process.env.NEXT_PUBLIC_SITE_URL
-        ? process.env.NEXT_PUBLIC_SITE_URL
+      typeof serverEnv.NEXT_PUBLIC_SITE_URL === "string" && serverEnv.NEXT_PUBLIC_SITE_URL
+        ? serverEnv.NEXT_PUBLIC_SITE_URL
         : "http://localhost:3000";
     base = base.startsWith("/") ? `${origin}${base}` : `https://${base}`;
   }

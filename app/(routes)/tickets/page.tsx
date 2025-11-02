@@ -1,8 +1,13 @@
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
+import { buildRouteMetadata } from "@/app/_lib/navigation";
 import TicketsGrid from "./_components/TicketsGrid";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = buildRouteMetadata("/tickets", {
+  description: "Secure Rayon Sports match tickets, choose your zone, and complete mobile money checkout.",
+});
 
 export default async function Tickets() {
   const res = await fetch(
