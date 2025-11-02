@@ -64,6 +64,15 @@ export function middleware(req: NextRequest) {
       : null;
   const bridgeFallback = bridgeTarget ? getStoreFallback(userAgent) : null;
 
+  const forwardedRequestHeaders = new Headers(req.headers);
+
+  if (bridgeTarget) {
+    forwardedRequestHeaders.set('x-app-bridge-target', bridgeTarget);
+    if (bridgeFallback) {
+      forwardedRequestHeaders.set('x-app-bridge-fallback', bridgeFallback);
+    }
+  }
+
   const applyResponseHeaders = (response: NextResponse) => {
     if (bridgeTarget) {
       response.headers.set('x-app-bridge-target', bridgeTarget);
@@ -73,6 +82,24 @@ export function middleware(req: NextRequest) {
     }
     return withSecurityHeaders(response);
   };
+
+  const nextWithForwardedHeaders = () =>
+    applyResponseHeaders(
+      NextResponse.next({
+        request: {
+          headers: forwardedRequestHeaders,
+        },
+      }),
+    );
+
+  const rewriteWithForwardedHeaders = (url: URL) =>
+    applyResponseHeaders(
+      NextResponse.rewrite(url, {
+        request: {
+          headers: forwardedRequestHeaders,
+        },
+      }),
+    );
 
   if (isProduction) {
     const proto = req.headers.get('x-forwarded-proto');
@@ -112,7 +139,7 @@ export function middleware(req: NextRequest) {
     pathname === '/apple-touch-icon.png' ||
     /\.[\w-]+$/.test(pathname)
   ) {
-    return applyResponseHeaders(NextResponse.next());
+    return nextWithForwardedHeaders();
   }
 
   if (shouldAttemptNativeHandoffRequest(req) && isMobileUserAgent(userAgent)) {
@@ -133,7 +160,7 @@ export function middleware(req: NextRequest) {
   // If URL has a locale prefix, rewrite to the bare path for routing
   if (hasPrefix) {
     const bare = pathname.replace(LOCALE_RE, '') || '/';
-    return applyResponseHeaders(NextResponse.rewrite(new URL(bare, req.url)));
+    return rewriteWithForwardedHeaders(new URL(bare, req.url));
   }
 
   // If no prefix, but referer carried one, keep the user's locale in the URL
@@ -143,7 +170,7 @@ export function middleware(req: NextRequest) {
   }
 
   // Default (English) without prefix
-  return applyResponseHeaders(NextResponse.next());
+  return nextWithForwardedHeaders();
 }
 
 export const config = {
