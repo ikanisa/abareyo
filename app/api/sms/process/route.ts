@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabase } from '@/app/_lib/supabase';
+import { serverEnv } from '@/config/env';
 
 /**
  * POST /api/sms/process
@@ -60,8 +61,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Call parse-sms edge function to parse the SMS using OpenAI
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseUrl =
+      serverEnv.SITE_SUPABASE_URL ||
+      serverEnv.SUPABASE_URL ||
+      serverEnv.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey =
+      serverEnv.SITE_SUPABASE_SECRET_KEY ||
+      serverEnv.SUPABASE_SERVICE_ROLE_KEY ||
+      serverEnv.SUPABASE_SERVICE_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
       console.error('Missing Supabase configuration');

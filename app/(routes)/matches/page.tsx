@@ -1,12 +1,17 @@
 import { matches as fallbackMatches } from "@/app/_data/matches";
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
+import { buildRouteMetadata } from "@/app/_lib/navigation";
 import { buildBackendUrl } from "@/app/(routes)/_lib/backend-url";
 
 import MatchesList from "./_components/MatchesList";
 import LiveTicker from "./_components/LiveTicker";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = buildRouteMetadata("/matches", {
+  description: "Check upcoming fixtures, live matches, and final scores for Rayon Sports.",
+});
 
 type MatchesResponse = {
   matches?: unknown;

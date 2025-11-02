@@ -3,11 +3,16 @@ import Link from "next/link";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
+import { buildRouteMetadata } from "@/app/_lib/navigation";
 import NewsClient from "./_components/NewsClient";
 import { articles } from "./_data/articles";
 import { highlights } from "./_data/highlights";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = buildRouteMetadata("/news", {
+  description: "Read Rayon Sports news, academy updates, and match analysis with highlight reels in one feed.",
+});
 
 const CATEGORY_COLORS: Record<(typeof articles)[number]["category"], string> = {
   "Club News": "from-sky-500/40 via-blue-500/40 to-indigo-500/40",

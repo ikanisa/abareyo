@@ -1,13 +1,15 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../config/tsconfig/base.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "composite": false,
+    "moduleResolution": "node",
     "declaration": false,
     "emitDeclarationOnly": false,
     "declarationMap": false,
-    "noEmit": true
+    "noEmit": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./node_modules/.cache/mobile-widgets.tsbuildinfo"
   },
   "include": ["src/**/*"],
   "exclude": ["dist", "node_modules"]

@@ -11,11 +11,17 @@ import {
   reportAdminAvailabilityException,
   reportAdminAvailabilityIssue,
 } from '@/lib/observability/admin';
+import { buildAdminRouteMetadata } from '../_lib/metadata';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
+
+export const metadata = buildAdminRouteMetadata('/admin', {
+  title: 'Admin operations dashboard',
+  description: 'Access moderation, ticketing, membership, and real-time analytics for Rayon Sports.',
+});
 
 const BACKEND_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
 const ADMIN_COOKIE_NAME = process.env.NEXT_PUBLIC_ADMIN_SESSION_COOKIE ?? 'admin_session';
