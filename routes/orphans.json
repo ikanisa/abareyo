@@ -1,0 +1,370 @@
+{
+  "generatedAt": "2025-11-02T09:52:02.818Z",
+  "summary": {
+    "totalRoutes": 213,
+    "covered": 141,
+    "uncovered": 72
+  },
+  "orphans": [
+    {
+      "type": "route-handler",
+      "path": "/admin/api/admin/audit",
+      "file": "app/admin/api/admin/audit/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/admin/rbac",
+      "file": "app/admin/api/admin/rbac/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/auth/csrf",
+      "file": "app/admin/api/auth/csrf/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/community/moderation",
+      "file": "app/admin/api/community/moderation/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/community/rate-limits",
+      "file": "app/admin/api/community/rate-limits/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/content/library",
+      "file": "app/admin/api/content/library/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/content/publish",
+      "file": "app/admin/api/content/publish/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/matches",
+      "file": "app/admin/api/matches/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/reports/schedules",
+      "file": "app/admin/api/reports/schedules/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/rewards/events",
+      "file": "app/admin/api/rewards/events/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/rewards/rules",
+      "file": "app/admin/api/rewards/rules/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/services/insurance",
+      "file": "app/admin/api/services/insurance/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/services/sacco",
+      "file": "app/admin/api/services/sacco/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/shop/orders",
+      "file": "app/admin/api/shop/orders/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/shop/products",
+      "file": "app/admin/api/shop/products/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/shop/promotions",
+      "file": "app/admin/api/shop/promotions/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/sms/attach",
+      "file": "app/admin/api/sms/attach/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/sms/candidates",
+      "file": "app/admin/api/sms/candidates/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/sms/parsed",
+      "file": "app/admin/api/sms/parsed/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/tickets/analytics",
+      "file": "app/admin/api/tickets/analytics/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/tickets/gate-history",
+      "file": "app/admin/api/tickets/gate-history/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/tickets/matches",
+      "file": "app/admin/api/tickets/matches/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/tickets/orders",
+      "file": "app/admin/api/tickets/orders/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/tickets/passes",
+      "file": "app/admin/api/tickets/passes/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/tickets/scan-stats",
+      "file": "app/admin/api/tickets/scan-stats/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/upload",
+      "file": "app/admin/api/upload/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/users/directory",
+      "file": "app/admin/api/users/directory/route.ts"
+    },
+    {
+      "type": "page",
+      "path": "/admin/content",
+      "file": "app/admin/(dashboard)/content/page.tsx"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/health",
+      "file": "app/admin/health/route.ts"
+    },
+    {
+      "type": "page",
+      "path": "/admin/reports",
+      "file": "app/admin/(dashboard)/reports/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/rewards",
+      "file": "app/admin/(dashboard)/rewards/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/services",
+      "file": "app/admin/(dashboard)/services/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/shop/orders",
+      "file": "app/admin/(dashboard)/shop/orders/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/shop/products",
+      "file": "app/admin/(dashboard)/shop/products/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/shop/promos",
+      "file": "app/admin/(dashboard)/shop/promos/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/shop/promotions",
+      "file": "app/admin/(dashboard)/shop/promotions/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/sms/otp",
+      "file": "app/admin/(dashboard)/sms/otp/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/tickets/orders",
+      "file": "app/admin/(dashboard)/tickets/orders/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/tickets/passes",
+      "file": "app/admin/(dashboard)/tickets/passes/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/tickets/scan",
+      "file": "app/admin/(dashboard)/tickets/scan/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/users",
+      "file": "app/admin/(dashboard)/users/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/auth/login",
+      "file": "app/(routes)/auth/login/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/auth/whatsapp",
+      "file": "app/(routes)/auth/whatsapp/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/clubs",
+      "file": "app/(routes)/clubs/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/clubs/[id]",
+      "file": "app/(routes)/clubs/[id]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/community/missions",
+      "file": "app/community/missions/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/community/polls/[slug]",
+      "file": "app/community/polls/[slug]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/community/predict",
+      "file": "app/community/predict/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/community/stories/[slug]",
+      "file": "app/community/stories/[slug]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/events/[id]",
+      "file": "app/(routes)/events/[id]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/fundraising/[slug]",
+      "file": "app/(routes)/fundraising/[slug]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/home",
+      "file": "app/(routes)/home/page.tsx"
+    },
+    {
+      "type": "route-handler",
+      "path": "/link",
+      "file": "app/link/route.ts"
+    },
+    {
+      "type": "page",
+      "path": "/matches/live",
+      "file": "app/(routes)/matches/live/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/media",
+      "file": "app/(routes)/media/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/media/[slug]",
+      "file": "app/(routes)/media/[slug]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/members",
+      "file": "app/(routes)/members/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/members",
+      "file": "app/members/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/members/[id]",
+      "file": "app/members/[id]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/more/settings",
+      "file": "app/more/settings/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/more/wallet",
+      "file": "app/more/wallet/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/news",
+      "file": "app/(routes)/news/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/news/[slug]",
+      "file": "app/(routes)/news/[slug]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/news/highlights",
+      "file": "app/(routes)/news/highlights/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/news/highlights/[slug]",
+      "file": "app/(routes)/news/highlights/[slug]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/partners/[slug]",
+      "file": "app/(routes)/partners/[slug]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/payments",
+      "file": "app/(routes)/payments/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/rewards",
+      "file": "app/(routes)/rewards/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/services/insurance",
+      "file": "app/(routes)/services/insurance/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/services/savings",
+      "file": "app/(routes)/services/savings/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/tickets/[id]",
+      "file": "app/(routes)/tickets/[id]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/tickets/scan",
+      "file": "app/(routes)/tickets/scan/page.tsx"
+    }
+  ]
+}
