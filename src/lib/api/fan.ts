@@ -1,60 +1,85 @@
-export type FanSession = {
-  user: {
-    id: string;
-    status: string;
-    locale: string;
-    whatsappNumber?: string | null;
-    momoNumber?: string | null;
-  };
-  session: {
-    id: string;
-    expiresAt: string | null;
-  };
-  onboardingStatus: string;
+import { z } from "zod";
+
+import { ApiError, createApiFetcher } from "@rayon/api/http";
+
+const fanSessionSchema = z.object({
+  user: z.object({
+    id: z.string(),
+    status: z.string(),
+    locale: z.string(),
+    whatsappNumber: z.string().nullable().optional(),
+    momoNumber: z.string().nullable().optional(),
+  }),
+  session: z.object({
+    id: z.string(),
+    expiresAt: z.string().nullable(),
+  }),
+  onboardingStatus: z.string(),
+});
+
+const fanSessionResponseSchema = z.object({ data: fanSessionSchema });
+const statusResponseSchema = z.object({ data: z.object({ status: z.string() }) });
+
+const finalizePayloadSchema = z.object({ sessionId: z.string().min(1) });
+const supabaseLoginSchema = z.object({ accessToken: z.string().min(1) });
+
+const fetcher = createApiFetcher();
+
+export type FanSession = z.infer<typeof fanSessionSchema>;
+export type FinalizeFanOnboardingPayload = z.infer<typeof finalizePayloadSchema>;
+export type LoginWithSupabasePayload = z.infer<typeof supabaseLoginSchema>;
+
+const unwrapData = <T>(result: { data: T }): T => result.data;
+
+const handleUnauthorized = <T>(error: unknown, fallback: T): T => {
+  if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+    return fallback;
+  }
+  throw error;
 };
 
-// Default to Next.js local API (/api). In production, set NEXT_PUBLIC_BACKEND_URL
-// to your external API base (e.g., https://api.example.com/api).
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? '/api';
-
-const request = async <T>(path: string, init?: RequestInit) => {
-  const response = await fetch(`${BASE_URL.replace(/\/$/, '')}${path}`, {
-    credentials: 'include',
-    ...init,
-    headers: {
-      'content-type': 'application/json',
-      ...(init?.headers ?? {}),
-    },
-  });
-
-  if (response.status === 401 || response.status === 403) {
-    return null;
+export const fetchFanSession = async (): Promise<FanSession | null> => {
+  try {
+    const payload = await fetcher("/auth/fan/me", fanSessionResponseSchema, { cache: "no-store" });
+    return unwrapData(payload);
+  } catch (error) {
+    return handleUnauthorized(error, null);
   }
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `Request failed (${response.status})`);
-  }
-
-  const payload = (await response.json()) as { data: T };
-  return payload.data;
 };
 
-export const fetchFanSession = () => request<FanSession>('/auth/fan/me');
+export const finalizeFanOnboarding = async (
+  payload: FinalizeFanOnboardingPayload,
+): Promise<FanSession | null> => {
+  try {
+    const response = await fetcher("/auth/fan/from-onboarding", fanSessionResponseSchema, {
+      method: "POST",
+      body: payload,
+      inputSchema: finalizePayloadSchema,
+    });
+    return unwrapData(response);
+  } catch (error) {
+    return handleUnauthorized(error, null);
+  }
+};
 
-export const finalizeFanOnboarding = (payload: { sessionId: string }) =>
-  request<FanSession>('/auth/fan/from-onboarding', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
+export const loginWithSupabaseToken = async (
+  payload: LoginWithSupabasePayload,
+): Promise<FanSession | null> => {
+  try {
+    const response = await fetcher("/auth/fan/supabase", fanSessionResponseSchema, {
+      method: "POST",
+      body: payload,
+      inputSchema: supabaseLoginSchema,
+    });
+    return unwrapData(response);
+  } catch (error) {
+    return handleUnauthorized(error, null);
+  }
+};
 
-export const loginWithSupabaseToken = (payload: { accessToken: string }) =>
-  request<FanSession>('/auth/fan/supabase', {
-    method: 'POST',
-    body: JSON.stringify(payload),
+export const logoutFan = async (): Promise<{ status: string }> => {
+  const response = await fetcher("/auth/fan/logout", statusResponseSchema, {
+    method: "POST",
   });
-
-export const logoutFan = () =>
-  request<{ status: string }>('/auth/fan/logout', {
-    method: 'POST',
-  });
+  return unwrapData(response);
+};

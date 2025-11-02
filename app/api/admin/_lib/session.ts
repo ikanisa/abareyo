@@ -4,10 +4,11 @@ import { NextResponse } from 'next/server';
 import type { Tables } from '@/integrations/supabase/types';
 
 import { ADMIN_CSRF_COOKIE, ADMIN_CSRF_HEADER } from '@/lib/admin/csrf';
+import { serverEnv } from '@/config/env';
 
 import { getServiceClient } from './db';
 
-const ADMIN_COOKIE_NAME = process.env.NEXT_PUBLIC_ADMIN_SESSION_COOKIE ?? 'admin_session';
+const ADMIN_COOKIE_NAME = serverEnv.NEXT_PUBLIC_ADMIN_SESSION_COOKIE ?? 'admin_session';
 const DEFAULT_SESSION_TTL_HOURS = 12;
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 

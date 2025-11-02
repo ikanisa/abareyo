@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
 import { highlights } from "../../_data/highlights";
+import { buildRouteMetadata } from "@/app/_lib/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -69,4 +71,20 @@ export default function HighlightDetail({ params }: { params: { slug: string } }
       </article>
     </PageShell>
   );
+}
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const highlight = highlights.find((item) => item.slug === params.slug);
+
+  if (!highlight) {
+    return buildRouteMetadata("/news/highlights", {
+      title: "Video highlight",
+      description: "Watch Rayon Sports match highlights and supporter features.",
+    });
+  }
+
+  return buildRouteMetadata(`/news/highlights/${highlight.slug}`, {
+    title: `${highlight.title} — Video highlight`,
+    description: highlight.summary,
+  });
 }

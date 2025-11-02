@@ -27,7 +27,6 @@ export default function TabsLayout() {
           borderTopColor: "rgba(255,255,255,0.08)",
         },
         tabBarHideOnKeyboard: true,
-        animation: reducedMotion ? "none" : "shift",
       }}
     >
       {routes.map((route) => (

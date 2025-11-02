@@ -1,3 +1,5 @@
+import { z } from "./schema.ts";
+
 export const json = (body: unknown, init?: ResponseInit): Response => {
   const status = init?.status ?? 200;
   const headers = new Headers(init?.headers);
@@ -34,4 +36,24 @@ export const parseJsonBody = async <T>(req: Request): Promise<{ data: T | null; 
   } catch {
     return { data: null, error: jsonError("invalid_json", 400) };
   }
+};
+
+export const validateJsonBody = async <Schema extends z.ZodTypeAny>(
+  req: Request,
+  schema: Schema,
+): Promise<{ data: z.infer<Schema> | null; error: Response | null }> => {
+  const parsed = await parseJsonBody<unknown>(req);
+  if (parsed.error) {
+    return { data: null, error: parsed.error };
+  }
+
+  const result = schema.safeParse(parsed.data ?? {});
+  if (!result.success) {
+    return {
+      data: null,
+      error: jsonError("invalid_payload", 400, { issues: result.error.issues }),
+    };
+  }
+
+  return { data: result.data, error: null };
 };

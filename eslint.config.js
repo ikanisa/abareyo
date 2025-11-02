@@ -32,6 +32,25 @@ export default tseslint.config(
       "jsx-a11y/no-noninteractive-tabindex": "error",
       "jsx-a11y/no-distracting-elements": "error",
       "jsx-a11y/no-aria-hidden-on-focusable": "error",
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "../app/**",
+                "../**/app/**",
+                "../admin/**",
+                "../**/admin/**",
+                "../packages/mobile/**",
+                "../**/packages/mobile/**",
+              ],
+              message:
+                "Use the configured path aliases (@/*, @admin/*, @mobile/*) instead of relative imports that cross app boundaries.",
+            },
+          ],
+        },
+      ],
     },
   },
   {
