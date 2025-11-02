@@ -1,12 +1,18 @@
+import {
+  buildUssd,
+  buildUssdString,
+  createUssdCopyEvent,
+  createUssdLaunchEvent,
+  formatTelUri,
+  formatUssdDisplay,
+  isIOS,
+  sanitizeAmount,
+  sanitizePhoneNumber,
+  type Provider,
+  type BuildUssdOptions,
+} from "@rayon/api/payments/ussd";
+
 import { recordAppStateEvent } from "@/lib/observability";
-
-export type Provider = "mtn" | "airtel";
-
-export type BuildUssdOptions = {
-  amount: number;
-  phone?: string;
-  provider?: Provider;
-};
 
 export type UssdDialerOptions = {
   onFallback?: () => void;
@@ -28,29 +34,7 @@ export type ClipboardHandoffResult = {
   fallbackExpected: boolean;
 };
 
-const DEFAULT_PHONE_PLACEHOLDER = "07xxxxxxx";
 const IOS_FALLBACK_DELAY_MS = 700;
-
-export const sanitizeAmount = (amount: number): string => {
-  if (!Number.isFinite(amount)) {
-    return "0";
-  }
-
-  const normalized = Math.max(0, Math.round(amount));
-  return String(normalized);
-};
-
-export const sanitizePhoneNumber = (phone?: string): string | null => {
-  if (!phone) {
-    return null;
-  }
-
-  const digits = phone.replace(/\D/g, "");
-  return digits.length > 0 ? digits : null;
-};
-
-const encodeUssdPayload = (payload: string) => payload.replace(/#/g, "%23");
-const decodeUssdPayload = (payload: string) => payload.replace(/%23/gi, "#");
 
 const resolveDocument = (documentRef?: Document) =>
   documentRef ?? (typeof document !== "undefined" ? document : undefined);
@@ -83,59 +67,6 @@ const openTelUri = (href: string, documentRef?: Document, _windowRef?: Window) =
   return true;
 };
 
-export const formatUssdDisplay = (value: string): string => {
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return "";
-  }
-
-  const withoutScheme = trimmed.startsWith("tel:") ? trimmed.slice(4) : trimmed;
-  return decodeUssdPayload(withoutScheme);
-};
-
-export const formatTelUri = (value: string): string => {
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return "";
-  }
-
-  if (trimmed.startsWith("tel:")) {
-    const payload = trimmed.slice(4);
-    return `tel:${encodeUssdPayload(decodeUssdPayload(payload))}`;
-  }
-
-  return `tel:${encodeUssdPayload(trimmed)}`;
-};
-
-const providerPrefix: Record<Provider, string> = {
-  mtn: '*182*1*1*',
-  airtel: '*500*1*',
-};
-
-export const buildUssd = ({ amount, phone, provider = 'mtn' }: BuildUssdOptions): string => {
-  const sanitizedAmount = sanitizeAmount(amount);
-  const sanitizedPhone = sanitizePhoneNumber(phone) ?? DEFAULT_PHONE_PLACEHOLDER;
-  const prefix = providerPrefix[provider] ?? providerPrefix.mtn;
-  const code = `${prefix}${sanitizedPhone}*${sanitizedAmount}#`;
-  return formatTelUri(code);
-};
-
-export const isIOS = (
-  navigatorOverride?: Navigator,
-): boolean => {
-  const nav = navigatorOverride ?? (typeof navigator !== "undefined" ? navigator : undefined);
-  if (!nav) {
-    return false;
-  }
-
-  const userAgent = nav.userAgent ?? "";
-  if (/iPad|iPhone|iPod/i.test(userAgent)) {
-    return true;
-  }
-
-  const maybeMaxTouchPoints = (nav as Navigator & { maxTouchPoints?: number }).maxTouchPoints;
-  return /Macintosh/.test(userAgent) && typeof maybeMaxTouchPoints === "number" && maybeMaxTouchPoints > 1;
-};
 
 export const launchUssdDialer = (ussd: string, options?: UssdDialerOptions) => {
   if (!ussd) {
@@ -159,12 +90,11 @@ export const launchUssdDialer = (ussd: string, options?: UssdDialerOptions) => {
   }
 
   void recordAppStateEvent(
-    {
-      type: "ussd-launch",
+    createUssdLaunchEvent({
       href,
       original: ussd,
       fallbackConfigured: Boolean(options?.onFallback),
-    },
+    }),
     options?.telemetryEndpoint,
   );
 };
@@ -213,3 +143,17 @@ export const startClipboardFirstUssdHandoff = async (
     fallbackExpected: ios,
   };
 };
+
+export {
+  buildUssd,
+  buildUssdString,
+  createUssdCopyEvent,
+  createUssdLaunchEvent,
+  formatTelUri,
+  formatUssdDisplay,
+  isIOS,
+  sanitizeAmount,
+  sanitizePhoneNumber,
+};
+
+export type { BuildUssdOptions, Provider };

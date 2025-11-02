@@ -43,6 +43,9 @@
       "@/config/*": [
         "./src/config/*"
       ],
+      "@rayon/api/*": [
+        "./packages/api/*"
+      ],
       "@rayon/contracts": [
         "./packages/contracts/src/index.ts"
       ],
@@ -54,6 +57,12 @@
       ],
       "@rayon/design-tokens/*": [
         "./packages/design-tokens/src/*.ts"
+      ],
+      "@mobile/*": [
+        "./apps/mobile/*"
+      ],
+      "@web/*": [
+        "./apps/web/*"
       ],
       "@/*": [
         "./src/*",
@@ -72,6 +81,8 @@
     "next-env.d.ts",
     "app/**/*.ts",
     "app/**/*.tsx",
+    "apps/**/*.ts",
+    "apps/**/*.tsx",
     "src/**/*.ts",
     "src/**/*.tsx",
     "packages/mobile/**/*.ts",

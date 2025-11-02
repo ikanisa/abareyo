@@ -1,0 +1,12 @@
+{
+  "name": "@rayon/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./payments/ussd": {
+      "types": "./payments/ussd.ts",
+      "default": "./payments/ussd.ts"
+    }
+  }
+}
