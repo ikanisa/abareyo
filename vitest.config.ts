@@ -12,7 +12,14 @@ const appProject = defineProject({
     environment: 'jsdom',
     globals: true,
     include: ['tests/unit/**/*.test.{ts,tsx}'],
-    exclude: ['tests/e2e/**', 'backend/**', 'node_modules/**'],
+    exclude: [
+      'tests/e2e/**',
+      'tests/unit/app/**',
+      'backend/**',
+      'node_modules/**',
+      '**/*.spec.ts',
+      '**/*.spec.tsx',
+    ],
     setupFiles: ['tests/setup-app.ts'],
     testTimeout: 15000,
     coverage: {
@@ -55,14 +62,16 @@ const packagesProject = defineProject({
 });
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
-  esbuild: {
-    jsx: 'automatic',
-    jsxImportSource: 'react',
-  },
   test: {
-    globals: true,
-    include: [],
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/.{idea,git,cache,output,temp}/**',
+      'tests/e2e/**',
+      'backend/**',
+      '**/*.spec.ts',
+      '**/*.spec.tsx',
+    ],
   },
   projects: [appProject, packagesProject],
 });

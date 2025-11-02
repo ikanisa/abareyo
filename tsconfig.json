@@ -33,13 +33,21 @@
         "./src/views/*"
       ],
       "@/config/*": [
-        "./src/config/*"
+        "./src/config/*",
+        "./config/*"
       ],
       "@rayon/contracts": [
         "./packages/contracts/src/index.ts"
       ],
       "@rayon/contracts/*": [
         "./packages/contracts/src/*.ts"
+      ],
+      "@rayon/api/*": [
+        "./packages/api/src/*",
+        "./packages/api/types/*"
+      ],
+      "@rayon/config/*": [
+        "./packages/config/*"
       ],
       "@rayon/design-tokens": [
         "./packages/design-tokens/src/index.ts"

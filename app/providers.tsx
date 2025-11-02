@@ -1,6 +1,7 @@
 "use client";
+import type { ReactNode } from "react";
 
-import { ReactNode, useEffect } from "react";
+import { useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
 
 import { PWA_OPT_IN_EVENT, getStoredPwaOptIn } from "@/app/_lib/pwa";

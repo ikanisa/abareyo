@@ -1,7 +1,7 @@
 "use client";
+import type { ReactNode } from "react";
 
 import { ThemeProvider as NextThemeProvider } from "next-themes";
-import { ReactNode } from "react";
 
 type ThemeProviderProps = {
   children: ReactNode;

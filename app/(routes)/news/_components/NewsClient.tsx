@@ -1,6 +1,7 @@
 'use client';
+import type { FormEvent } from "react";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import useFlags from '@/app/_components/flags/useFlags';
 
