@@ -135,16 +135,21 @@ const serverEnv = {
 
 const runtimeEnv = parsedRuntimeEnv;
 
-const supabaseConfig = Object.freeze({
+const supabaseClientConfig = Object.freeze({
   url: serverEnv.SITE_SUPABASE_URL,
   anonKey: resolveAnonKey(parsedClientEnv.data, parsedServerEnv.data),
-  serviceRoleKey: resolveServiceRoleKey(parsedServerEnv.data),
   publishableKey: parsedServerEnv.data.SITE_SUPABASE_PUBLISHABLE_KEY ?? null,
+});
+
+const supabaseServerConfig = Object.freeze({
+  url: supabaseClientConfig.url,
+  serviceRoleKey: resolveServiceRoleKey(parsedServerEnv.data),
 });
 
 export type ClientEnv = typeof clientEnv;
 export type ServerEnv = typeof serverEnv;
 export type RuntimeEnv = typeof parsedRuntimeEnv;
-export type SupabaseConfig = typeof supabaseConfig;
+export type SupabaseClientConfig = typeof supabaseClientConfig;
+export type SupabaseServerConfig = typeof supabaseServerConfig;
 
-export { clientEnv, resolveAnonKey, resolveServiceRoleKey, resolveUrl, runtimeEnv, serverEnv, supabaseConfig };
+export { clientEnv, resolveAnonKey, resolveUrl, runtimeEnv, serverEnv, supabaseClientConfig, supabaseServerConfig };

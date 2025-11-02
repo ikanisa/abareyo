@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-import { clientEnv, serverEnv, supabaseConfig } from "@rayon/config/env";
+import { clientEnv, serverEnv, supabaseClientConfig, supabaseServerConfig } from "@rayon/config/env";
 
 import type { Database } from "../../types/database";
 import { SupabaseConfigurationError } from "./errors";
@@ -12,7 +12,7 @@ export type ServerClientOptions = {
 };
 
 const resolveUrl = (): string => {
-  const url = supabaseConfig.url ?? clientEnv.NEXT_PUBLIC_SUPABASE_URL;
+  const url = supabaseClientConfig.url ?? clientEnv.NEXT_PUBLIC_SUPABASE_URL;
   if (!url) {
     throw new SupabaseConfigurationError(
       "Supabase URL is not configured. Set SITE_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL.",
@@ -23,7 +23,7 @@ const resolveUrl = (): string => {
 
 const resolveKey = (accessType: ServerClientAccess): string => {
   if (accessType === "service_role") {
-    const key = supabaseConfig.serviceRoleKey;
+    const key = supabaseServerConfig.serviceRoleKey;
     if (!key) {
       throw new SupabaseConfigurationError(
         "Supabase service role key is not configured. Set SUPABASE_SERVICE_ROLE_KEY or SITE_SUPABASE_SECRET_KEY.",
@@ -32,7 +32,7 @@ const resolveKey = (accessType: ServerClientAccess): string => {
     return key;
   }
 
-  const anonKey = supabaseConfig.anonKey ?? serverEnv.SITE_SUPABASE_PUBLISHABLE_KEY ?? null;
+  const anonKey = supabaseClientConfig.anonKey ?? serverEnv.SITE_SUPABASE_PUBLISHABLE_KEY ?? null;
   if (!anonKey) {
     throw new SupabaseConfigurationError(
       "Supabase anon key is not configured. Set SITE_SUPABASE_PUBLISHABLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY.",
