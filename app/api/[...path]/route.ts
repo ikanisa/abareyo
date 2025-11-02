@@ -1,6 +1,8 @@
 import { randomUUID } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
+import { serverEnv } from '@/config/env';
+
 // Type definitions inlined from contracts
 export type OnboardingMessageRole = 'user' | 'assistant' | 'tool';
 export type OnboardingMessageKind = 'text' | 'tool_call' | 'tool_result';
@@ -26,7 +28,11 @@ export interface OnboardingSessionDto {
   messages: OnboardingMessageDto[];
 }
 
-const BACKEND_BASE = (process.env.BACKEND_BASE_URL || '').replace(/\/$/, '');
+const BACKEND_BASE = (
+  process.env.BACKEND_BASE_URL ??
+  serverEnv.NEXT_PUBLIC_BACKEND_URL ??
+  ''
+).replace(/\/$/, '');
 
 type MockContext = { params: { path?: string[] } };
 
@@ -391,8 +397,8 @@ async function onboardingGateway(req: NextRequest, ctx: MockContext) {
   const segments = ctx.params.path ?? [];
   const method = req.method.toUpperCase();
   const bearer = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
-  const validA = process.env.ONBOARDING_API_TOKEN || '';
-  const validB = process.env.NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN || '';
+  const validA = serverEnv.ONBOARDING_API_TOKEN || '';
+  const validB = serverEnv.NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN || '';
 
   // /api/onboarding/sessions
   if (segments[1] === 'sessions' && segments.length === 2) {
@@ -402,12 +408,11 @@ async function onboardingGateway(req: NextRequest, ctx: MockContext) {
     if (!bearer || (bearer !== validA && bearer !== validB)) {
       return NextResponse.json({ error: 'unauthorized', message: 'Missing or invalid token.' }, { status: 401 });
     }
-    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-    const AGENT_ID = process.env.AGENT_ID || 'gikundiro-onboarding';
-    const ALLOW_MOCK = (
-      process.env.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK === '1' ||
-      process.env.ONBOARDING_ALLOW_MOCK === '1'
-    );
+    const OPENAI_API_KEY = serverEnv.OPENAI_API_KEY;
+    const AGENT_ID = serverEnv.AGENT_ID || 'gikundiro-onboarding';
+    const ALLOW_MOCK =
+      serverEnv.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK === '1' ||
+      serverEnv.ONBOARDING_ALLOW_MOCK === '1';
     if (!OPENAI_API_KEY || !AGENT_ID) {
       if (ALLOW_MOCK) {
         const session = { sessionId: randomUUID(), agentId: AGENT_ID, createdAt: new Date().toISOString(), mock: true } as const;
@@ -432,12 +437,11 @@ async function onboardingGateway(req: NextRequest, ctx: MockContext) {
     if (!bearer || (bearer !== validA && bearer !== validB)) {
       return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
     }
-    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-    const AGENT_ID = process.env.AGENT_ID || 'gikundiro-onboarding';
-    const ALLOW_MOCK = (
-      process.env.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK === '1' ||
-      process.env.ONBOARDING_ALLOW_MOCK === '1'
-    );
+    const OPENAI_API_KEY = serverEnv.OPENAI_API_KEY;
+    const AGENT_ID = serverEnv.AGENT_ID || 'gikundiro-onboarding';
+    const ALLOW_MOCK =
+      serverEnv.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK === '1' ||
+      serverEnv.ONBOARDING_ALLOW_MOCK === '1';
     if (ALLOW_MOCK) {
       const res = NextResponse.json({ ok: true, reply: "(mock) Hello! Let’s get your fan profile set up." }, { status: 200 });
       res.headers.set('x-onboarding-mock', '1');

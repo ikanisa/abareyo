@@ -2,8 +2,11 @@
 // Body: { sms_parsed_id: uuid }
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
+import { z } from "../_shared/schema.ts";
+
 import { getServiceRoleClient } from "../_shared/client.ts";
-import { json, jsonError, parseJsonBody, requireMethod } from "../_shared/http.ts";
+import { json, jsonError, requireMethod, validateJsonBody } from "../_shared/http.ts";
+import { logError, logInfo, logWarn } from "../_shared/log.ts";
 
 const supabase = getServiceRoleClient();
 
@@ -14,7 +17,9 @@ type TicketOrder = {
   status: string;
 };
 
-type Payload = { sms_parsed_id?: string };
+const payloadSchema = z.object({
+  sms_parsed_id: z.string().uuid(),
+});
 
 serve(async (req) => {
   const methodError = requireMethod(req, "POST");
@@ -22,16 +27,14 @@ serve(async (req) => {
     return methodError;
   }
 
-  const parsed = await parseJsonBody<Payload>(req);
-  if (parsed.error) {
-    return parsed.error;
+  const validation = await validateJsonBody(req, payloadSchema);
+  if (validation.error || !validation.data) {
+    logWarn("match_payment_invalid_payload", { endpoint: "match-payment" });
+    return validation.error ?? jsonError("invalid_payload", 400);
   }
 
-  const payload = parsed.data ?? {};
-  const smsParsedId = payload.sms_parsed_id;
-  if (!smsParsedId) {
-    return jsonError("missing_sms_parsed_id", 400);
-  }
+  const { sms_parsed_id: smsParsedId } = validation.data;
+  logInfo("match_payment_request", { smsParsedId });
 
   const { data: sp, error: spError } = await supabase
     .from("sms_parsed")
@@ -40,6 +43,7 @@ serve(async (req) => {
     .single();
 
   if (spError || !sp) {
+    logWarn("match_payment_parsed_missing", { smsParsedId, error: spError?.message });
     return jsonError("parsed_not_found", 404);
   }
 
@@ -57,6 +61,7 @@ serve(async (req) => {
 
   const existingPayment = existingPayments?.[0];
   if (existingPayment) {
+    logInfo("match_payment_reuse", { smsParsedId, existingPayment: existingPayment.id });
     return json({
       ok: true,
       kind: existingPayment.kind,
@@ -131,12 +136,13 @@ serve(async (req) => {
   });
 
   if (paymentError) {
+    logError("match_payment_insert_failed", { smsParsedId, error: paymentError.message });
     return jsonError(paymentError.message, 500);
   }
 
   // Create mobile_money_payments record if user_id is available
   if (userId) {
-    await supabase.from("mobile_money_payments").insert({
+    const { error: momoError } = await supabase.from("mobile_money_payments").insert({
       sms_parsed_id: sp.id,
       user_id: userId,
       amount,
@@ -147,6 +153,10 @@ serve(async (req) => {
       allocated_id: allocatedId,
       allocated_at: momoStatus === "allocated" ? new Date().toISOString() : null,
     });
+
+    if (momoError) {
+      logWarn("match_payment_momo_insert_failed", { smsParsedId, error: momoError.message });
+    }
   }
 
   try {
@@ -161,9 +171,10 @@ serve(async (req) => {
       }),
     });
   } catch {
-    // Realtime fanout is best-effort.
+    logWarn("match_payment_realtime_notify_failed", { smsParsedId, orderId });
   }
 
+  logInfo("match_payment_completed", { smsParsedId, orderId, kind });
   return json({
     ok: true,
     kind,
