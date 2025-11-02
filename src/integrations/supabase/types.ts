@@ -7,31 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       _prisma_migrations: {
@@ -69,111 +44,18 @@ export type Database = {
       }
       admin_roles: {
         Row: {
-          created_at: string
-          description: string | null
           id: string
           name: string
         }
         Insert: {
-          created_at?: string
-          description?: string | null
           id?: string
           name: string
         }
         Update: {
-          created_at?: string
-          description?: string | null
           id?: string
           name?: string
         }
         Relationships: []
-      }
-      admin_permissions: {
-        Row: {
-          code: string
-          created_at: string
-          description: string | null
-          id: string
-        }
-        Insert: {
-          code: string
-          created_at?: string
-          description?: string | null
-          id?: string
-        }
-        Update: {
-          code?: string
-          created_at?: string
-          description?: string | null
-          id?: string
-        }
-        Relationships: []
-      }
-      admin_role_permissions: {
-        Row: {
-          created_at: string
-          permission_id: string
-          role_id: string
-        }
-        Insert: {
-          created_at?: string
-          permission_id: string
-          role_id: string
-        }
-        Update: {
-          created_at?: string
-          permission_id?: string
-          role_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "admin_role_permissions_permission_id_fkey"
-            columns: ["permission_id"]
-            isOneToOne: false
-            referencedRelation: "admin_permissions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "admin_role_permissions_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "admin_roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      admin_user_roles: {
-        Row: {
-          admin_user_id: string
-          assigned_at: string | null
-          role_id: string
-        }
-        Insert: {
-          admin_user_id: string
-          assigned_at?: string | null
-          role_id: string
-        }
-        Update: {
-          admin_user_id?: string
-          assigned_at?: string | null
-          role_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "admin_user_roles_admin_user_id_fkey"
-            columns: ["admin_user_id"]
-            isOneToOne: false
-            referencedRelation: "admin_users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "admin_user_roles_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "admin_roles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       admin_sessions: {
         Row: {
@@ -207,7 +89,6 @@ export type Database = {
           {
             foreignKeyName: "admin_sessions_admin_user_id_fkey"
             columns: ["admin_user_id"]
-            isOneToOne: false
             referencedRelation: "admin_users"
             referencedColumns: ["id"]
           },
@@ -243,31 +124,26 @@ export type Database = {
       admin_users_roles: {
         Row: {
           admin_user_id: string
-          assigned_at: string | null
           role_id: string
         }
         Insert: {
           admin_user_id: string
-          assigned_at?: string | null
           role_id: string
         }
         Update: {
           admin_user_id?: string
-          assigned_at?: string | null
           role_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "admin_users_roles_admin_user_id_fkey"
             columns: ["admin_user_id"]
-            isOneToOne: false
             referencedRelation: "admin_users"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "admin_users_roles_role_id_fkey"
             columns: ["role_id"]
-            isOneToOne: false
             referencedRelation: "admin_roles"
             referencedColumns: ["id"]
           },
@@ -305,7 +181,6 @@ export type Database = {
           {
             foreignKeyName: "AdminAction_actorId_fkey"
             columns: ["actorId"]
-            isOneToOne: false
             referencedRelation: "User"
             referencedColumns: ["id"]
           },
@@ -367,7 +242,6 @@ export type Database = {
           {
             foreignKeyName: "AdminSession_adminUserId_fkey"
             columns: ["adminUserId"]
-            isOneToOne: false
             referencedRelation: "AdminUser"
             referencedColumns: ["id"]
           },
@@ -426,14 +300,12 @@ export type Database = {
           {
             foreignKeyName: "AdminUsersOnRoles_adminUserId_fkey"
             columns: ["adminUserId"]
-            isOneToOne: false
             referencedRelation: "AdminUser"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "AdminUsersOnRoles_roleId_fkey"
             columns: ["roleId"]
-            isOneToOne: false
             referencedRelation: "AdminRole"
             referencedColumns: ["id"]
           },
@@ -444,7 +316,6 @@ export type Database = {
           action: string | null
           admin_user_id: string | null
           after: Json | null
-          context: Json | null
           at: string | null
           before: Json | null
           entity_id: string | null
@@ -457,7 +328,6 @@ export type Database = {
           action?: string | null
           admin_user_id?: string | null
           after?: Json | null
-          context?: Json | null
           at?: string | null
           before?: Json | null
           entity_id?: string | null
@@ -470,7 +340,6 @@ export type Database = {
           action?: string | null
           admin_user_id?: string | null
           after?: Json | null
-          context?: Json | null
           at?: string | null
           before?: Json | null
           entity_id?: string | null
@@ -483,7 +352,6 @@ export type Database = {
           {
             foreignKeyName: "audit_logs_admin_user_id_fkey"
             columns: ["admin_user_id"]
-            isOneToOne: false
             referencedRelation: "admin_users"
             referencedColumns: ["id"]
           },
@@ -530,11 +398,117 @@ export type Database = {
           {
             foreignKeyName: "AuditLog_adminUserId_fkey"
             columns: ["adminUserId"]
-            isOneToOne: false
             referencedRelation: "AdminUser"
             referencedColumns: ["id"]
           },
         ]
+      }
+      community_posts: {
+        Row: {
+          created_at: string | null
+          id: string
+          media_url: string | null
+          status: string | null
+          text: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          media_url?: string | null
+          status?: string | null
+          text?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          media_url?: string | null
+          status?: string | null
+          text?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_posts_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "public_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_posts_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_reports: {
+        Row: {
+          created_at: string | null
+          id: string
+          post_id: string | null
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          post_id?: string | null
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          post_id?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_reports_post_id_fkey"
+            columns: ["post_id"]
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_items: {
+        Row: {
+          body: string | null
+          created_at: string | null
+          id: string
+          kind: string
+          media_url: string | null
+          published_at: string | null
+          slug: string | null
+          summary: string | null
+          tags: string[] | null
+          title: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string | null
+          id?: string
+          kind: string
+          media_url?: string | null
+          published_at?: string | null
+          slug?: string | null
+          summary?: string | null
+          tags?: string[] | null
+          title: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string | null
+          id?: string
+          kind?: string
+          media_url?: string | null
+          published_at?: string | null
+          slug?: string | null
+          summary?: string | null
+          tags?: string[] | null
+          title?: string
+        }
+        Relationships: []
       }
       fan_clubs: {
         Row: {
@@ -589,14 +563,12 @@ export type Database = {
           {
             foreignKeyName: "fan_posts_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "public_members"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "fan_posts_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -649,14 +621,12 @@ export type Database = {
           {
             foreignKeyName: "FanClubMember_fanClubId_fkey"
             columns: ["fanClubId"]
-            isOneToOne: false
             referencedRelation: "FanClub"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "FanClubMember_userId_fkey"
             columns: ["userId"]
-            isOneToOne: false
             referencedRelation: "User"
             referencedColumns: ["id"]
           },
@@ -694,7 +664,6 @@ export type Database = {
           {
             foreignKeyName: "FanSession_userId_fkey"
             columns: ["userId"]
-            isOneToOne: false
             referencedRelation: "User"
             referencedColumns: ["id"]
           },
@@ -723,91 +692,10 @@ export type Database = {
           {
             foreignKeyName: "feature_flags_updated_by_fkey"
             columns: ["updated_by"]
-            isOneToOne: false
             referencedRelation: "admin_users"
             referencedColumns: ["id"]
           },
         ]
-      }
-      community_posts: {
-        Row: {
-          body: string
-          created_at: string
-          evidence: Json | null
-          id: string
-          media: Json | null
-          moderator_notes: string | null
-          status: string
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          body: string
-          created_at?: string
-          evidence?: Json | null
-          id?: string
-          media?: Json | null
-          moderator_notes?: string | null
-          status?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          body?: string
-          created_at?: string
-          evidence?: Json | null
-          id?: string
-          media?: Json | null
-          moderator_notes?: string | null
-          status?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "community_posts_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      content_items: {
-        Row: {
-          body: Json | null
-          created_at: string
-          id: string
-          published_at: string | null
-          slug: string | null
-          status: string
-          title: string
-          type: string
-          updated_at: string
-        }
-        Insert: {
-          body?: Json | null
-          created_at?: string
-          id?: string
-          published_at?: string | null
-          slug?: string | null
-          status?: string
-          title: string
-          type?: string
-          updated_at?: string
-        }
-        Update: {
-          body?: Json | null
-          created_at?: string
-          id?: string
-          published_at?: string | null
-          slug?: string | null
-          status?: string
-          title?: string
-          type?: string
-          updated_at?: string
-        }
-        Relationships: []
       }
       FeatureFlag: {
         Row: {
@@ -835,7 +723,6 @@ export type Database = {
           {
             foreignKeyName: "FeatureFlag_updatedById_fkey"
             columns: ["updatedById"]
-            isOneToOne: false
             referencedRelation: "AdminUser"
             referencedColumns: ["id"]
           },
@@ -861,62 +748,6 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
-      }
-      report_schedules: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          cron: string
-          destination: string
-          id: string
-          delivery_metadata: Json | null
-          last_delivered_at: string | null
-          last_delivery_error: string | null
-          last_delivery_status: string | null
-          last_run_at: string | null
-          name: string
-          next_run_at: string | null
-          payload: Json | null
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          cron: string
-          destination: string
-          id?: string
-          delivery_metadata?: Json | null
-          last_delivered_at?: string | null
-          last_delivery_error?: string | null
-          last_delivery_status?: string | null
-          last_run_at?: string | null
-          name: string
-          next_run_at?: string | null
-          payload?: Json | null
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          cron?: string
-          destination?: string
-          id?: string
-          delivery_metadata?: Json | null
-          last_delivered_at?: string | null
-          last_delivery_error?: string | null
-          last_delivery_status?: string | null
-          last_run_at?: string | null
-          name?: string
-          next_run_at?: string | null
-          payload?: Json | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "report_schedules_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "admin_users"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       fund_projects: {
         Row: {
@@ -968,14 +799,12 @@ export type Database = {
           {
             foreignKeyName: "FundDonation_projectId_fkey"
             columns: ["projectId"]
-            isOneToOne: false
             referencedRelation: "FundProject"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "FundDonation_userId_fkey"
             columns: ["userId"]
-            isOneToOne: false
             referencedRelation: "User"
             referencedColumns: ["id"]
           },
@@ -1070,7 +899,6 @@ export type Database = {
           {
             foreignKeyName: "GamificationEvent_userId_fkey"
             columns: ["userId"]
-            isOneToOne: false
             referencedRelation: "User"
             referencedColumns: ["id"]
           },
@@ -1102,7 +930,6 @@ export type Database = {
           {
             foreignKeyName: "GateScan_passId_fkey"
             columns: ["passId"]
-            isOneToOne: false
             referencedRelation: "TicketPass"
             referencedColumns: ["id"]
           },
@@ -1146,14 +973,12 @@ export type Database = {
           {
             foreignKeyName: "insurance_quotes_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "public_members"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "insurance_quotes_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -1185,7 +1010,6 @@ export type Database = {
           {
             foreignKeyName: "Leaderboard_userId_fkey"
             columns: ["userId"]
-            isOneToOne: false
             referencedRelation: "User"
             referencedColumns: ["id"]
           },
@@ -1268,90 +1092,6 @@ export type Database = {
           {
             foreignKeyName: "match_gates_match_id_fkey"
             columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "matches"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      match_events: {
-        Row: {
-          created_at: string
-          event_type: 'kickoff' | 'goal' | 'full_time'
-          id: string
-          match_id: string | null
-          payload: Json | null
-        }
-        Insert: {
-          created_at?: string
-          event_type: 'kickoff' | 'goal' | 'full_time'
-          id?: string
-          match_id?: string | null
-          payload?: Json | null
-        }
-        Update: {
-          created_at?: string
-          event_type?: 'kickoff' | 'goal' | 'full_time'
-          id?: string
-          match_id?: string | null
-          payload?: Json | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "match_events_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "matches"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      match_notification_jobs: {
-        Row: {
-          created_at: string
-          error: string | null
-          event_id: string | null
-          event_type: 'kickoff' | 'goal' | 'full_time'
-          id: string
-          match_id: string | null
-          payload: Json | null
-          processed_at: string | null
-          status: 'pending' | 'sent' | 'error' | 'skipped'
-        }
-        Insert: {
-          created_at?: string
-          error?: string | null
-          event_id?: string | null
-          event_type: 'kickoff' | 'goal' | 'full_time'
-          id?: string
-          match_id?: string | null
-          payload?: Json | null
-          processed_at?: string | null
-          status?: 'pending' | 'sent' | 'error' | 'skipped'
-        }
-        Update: {
-          created_at?: string
-          error?: string | null
-          event_id?: string | null
-          event_type?: 'kickoff' | 'goal' | 'full_time'
-          id?: string
-          match_id?: string | null
-          payload?: Json | null
-          processed_at?: string | null
-          status?: 'pending' | 'sent' | 'error' | 'skipped'
-        }
-        Relationships: [
-          {
-            foreignKeyName: "match_notification_jobs_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "match_events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "match_notification_jobs_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
             referencedRelation: "matches"
             referencedColumns: ["id"]
           },
@@ -1389,7 +1129,6 @@ export type Database = {
           {
             foreignKeyName: "match_zones_match_id_fkey"
             columns: ["match_id"]
-            isOneToOne: false
             referencedRelation: "matches"
             referencedColumns: ["id"]
           },
@@ -1469,7 +1208,6 @@ export type Database = {
           {
             foreignKeyName: "MatchGate_matchId_fkey"
             columns: ["matchId"]
-            isOneToOne: false
             referencedRelation: "Match"
             referencedColumns: ["id"]
           },
@@ -1510,14 +1248,12 @@ export type Database = {
           {
             foreignKeyName: "Membership_planId_fkey"
             columns: ["planId"]
-            isOneToOne: false
             referencedRelation: "MembershipPlan"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "Membership_userId_fkey"
             columns: ["userId"]
-            isOneToOne: false
             referencedRelation: "User"
             referencedColumns: ["id"]
           },
@@ -1600,61 +1336,7 @@ export type Database = {
           {
             foreignKeyName: "memberships_plan_id_fkey"
             columns: ["plan_id"]
-            isOneToOne: false
             referencedRelation: "membership_plans"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      notification_devices: {
-        Row: {
-          build: string | null
-          created_at: string
-          device_id: string | null
-          enabled: boolean | null
-          expo_token: string | null
-          id: string
-          last_seen_at: string | null
-          platform: 'expo' | 'web'
-          subscription: Json | null
-          updated_at: string
-          user_id: string | null
-          web_endpoint: string | null
-        }
-        Insert: {
-          build?: string | null
-          created_at?: string
-          device_id?: string | null
-          enabled?: boolean | null
-          expo_token?: string | null
-          id?: string
-          last_seen_at?: string | null
-          platform: 'expo' | 'web'
-          subscription?: Json | null
-          updated_at?: string
-          user_id?: string | null
-          web_endpoint?: string | null
-        }
-        Update: {
-          build?: string | null
-          created_at?: string
-          device_id?: string | null
-          enabled?: boolean | null
-          expo_token?: string | null
-          id?: string
-          last_seen_at?: string | null
-          platform?: 'expo' | 'web'
-          subscription?: Json | null
-          updated_at?: string
-          user_id?: string | null
-          web_endpoint?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "notification_devices_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -1697,7 +1379,6 @@ export type Database = {
           {
             foreignKeyName: "Order_userId_fkey"
             columns: ["userId"]
-            isOneToOne: false
             referencedRelation: "User"
             referencedColumns: ["id"]
           },
@@ -1729,14 +1410,12 @@ export type Database = {
           {
             foreignKeyName: "order_items_order_id_fkey"
             columns: ["order_id"]
-            isOneToOne: false
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "order_items_product_id_fkey"
             columns: ["product_id"]
-            isOneToOne: false
             referencedRelation: "shop_products"
             referencedColumns: ["id"]
           },
@@ -1768,14 +1447,12 @@ export type Database = {
           {
             foreignKeyName: "OrderItem_orderId_fkey"
             columns: ["orderId"]
-            isOneToOne: false
             referencedRelation: "Order"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "OrderItem_productId_fkey"
             columns: ["productId"]
-            isOneToOne: false
             referencedRelation: "Product"
             referencedColumns: ["id"]
           },
@@ -1810,14 +1487,12 @@ export type Database = {
           {
             foreignKeyName: "orders_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "public_members"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "orders_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -1870,28 +1545,24 @@ export type Database = {
           {
             foreignKeyName: "Payment_donationId_fkey"
             columns: ["donationId"]
-            isOneToOne: false
             referencedRelation: "FundDonation"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "Payment_membershipId_fkey"
             columns: ["membershipId"]
-            isOneToOne: false
             referencedRelation: "Membership"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "Payment_orderId_fkey"
             columns: ["orderId"]
-            isOneToOne: false
             referencedRelation: "TicketOrder"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "Payment_smsParsedId_fkey"
             columns: ["smsParsedId"]
-            isOneToOne: false
             referencedRelation: "SmsParsed"
             referencedColumns: ["id"]
           },
@@ -1941,21 +1612,18 @@ export type Database = {
           {
             foreignKeyName: "payments_order_id_fkey"
             columns: ["order_id"]
-            isOneToOne: false
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "payments_sms_parsed_id_fkey"
             columns: ["sms_parsed_id"]
-            isOneToOne: false
             referencedRelation: "sms_parsed"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "payments_ticket_order_id_fkey"
             columns: ["ticket_order_id"]
-            isOneToOne: false
             referencedRelation: "ticket_orders"
             referencedColumns: ["id"]
           },
@@ -2029,7 +1697,6 @@ export type Database = {
           {
             foreignKeyName: "policies_quote_id_fkey"
             columns: ["quote_id"]
-            isOneToOne: false
             referencedRelation: "insurance_quotes"
             referencedColumns: ["id"]
           },
@@ -2061,14 +1728,12 @@ export type Database = {
           {
             foreignKeyName: "Poll_authorId_fkey"
             columns: ["authorId"]
-            isOneToOne: false
             referencedRelation: "User"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "Poll_postId_fkey"
             columns: ["postId"]
-            isOneToOne: false
             referencedRelation: "Post"
             referencedColumns: ["id"]
           },
@@ -2094,7 +1759,6 @@ export type Database = {
           {
             foreignKeyName: "PollOption_pollId_fkey"
             columns: ["pollId"]
-            isOneToOne: false
             referencedRelation: "Poll"
             referencedColumns: ["id"]
           },
@@ -2150,21 +1814,18 @@ export type Database = {
           {
             foreignKeyName: "PollVote_optionId_fkey"
             columns: ["optionId"]
-            isOneToOne: false
             referencedRelation: "PollOption"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "PollVote_pollId_fkey"
             columns: ["pollId"]
-            isOneToOne: false
             referencedRelation: "Poll"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "PollVote_userId_fkey"
             columns: ["userId"]
-            isOneToOne: false
             referencedRelation: "User"
             referencedColumns: ["id"]
           },
@@ -2202,7 +1863,6 @@ export type Database = {
           {
             foreignKeyName: "Post_authorId_fkey"
             columns: ["authorId"]
-            isOneToOne: false
             referencedRelation: "User"
             referencedColumns: ["id"]
           },
@@ -2231,14 +1891,12 @@ export type Database = {
           {
             foreignKeyName: "PostReaction_postId_fkey"
             columns: ["postId"]
-            isOneToOne: false
             referencedRelation: "Post"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "PostReaction_userId_fkey"
             columns: ["userId"]
-            isOneToOne: false
             referencedRelation: "User"
             referencedColumns: ["id"]
           },
@@ -2273,7 +1931,6 @@ export type Database = {
           {
             foreignKeyName: "PredictionFixture_matchId_fkey"
             columns: ["matchId"]
-            isOneToOne: false
             referencedRelation: "Match"
             referencedColumns: ["id"]
           },
@@ -2393,6 +2050,43 @@ export type Database = {
         }
         Relationships: []
       }
+      report_schedules: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          cron: string
+          destination: string
+          id: string
+          name: string
+          payload: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          cron: string
+          destination: string
+          id?: string
+          name: string
+          payload?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          cron?: string
+          destination?: string
+          id?: string
+          name?: string
+          payload?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_schedules_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rewards_events: {
         Row: {
           created_at: string | null
@@ -2425,14 +2119,12 @@ export type Database = {
           {
             foreignKeyName: "rewards_events_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "public_members"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "rewards_events_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -2458,14 +2150,12 @@ export type Database = {
           {
             foreignKeyName: "RolePermission_permissionId_fkey"
             columns: ["permissionId"]
-            isOneToOne: false
             referencedRelation: "Permission"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "RolePermission_roleId_fkey"
             columns: ["roleId"]
-            isOneToOne: false
             referencedRelation: "AdminRole"
             referencedColumns: ["id"]
           },
@@ -2488,14 +2178,12 @@ export type Database = {
           {
             foreignKeyName: "roles_permissions_permission_id_fkey"
             columns: ["permission_id"]
-            isOneToOne: false
             referencedRelation: "permissions"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "roles_permissions_role_id_fkey"
             columns: ["role_id"]
-            isOneToOne: false
             referencedRelation: "admin_roles"
             referencedColumns: ["id"]
           },
@@ -2533,14 +2221,12 @@ export type Database = {
           {
             foreignKeyName: "sacco_deposits_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "public_members"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "sacco_deposits_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -2653,7 +2339,6 @@ export type Database = {
           {
             foreignKeyName: "sms_parsed_sms_id_fkey"
             columns: ["sms_id"]
-            isOneToOne: false
             referencedRelation: "sms_raw"
             referencedColumns: ["id"]
           },
@@ -2727,7 +2412,6 @@ export type Database = {
           {
             foreignKeyName: "SmsParsed_smsId_fkey"
             columns: ["smsId"]
-            isOneToOne: true
             referencedRelation: "SmsRaw"
             referencedColumns: ["id"]
           },
@@ -2765,7 +2449,6 @@ export type Database = {
           {
             foreignKeyName: "SmsParserPrompt_createdById_fkey"
             columns: ["createdById"]
-            isOneToOne: false
             referencedRelation: "AdminUser"
             referencedColumns: ["id"]
           },
@@ -2827,7 +2510,6 @@ export type Database = {
           {
             foreignKeyName: "ticket_order_items_order_id_fkey"
             columns: ["order_id"]
-            isOneToOne: false
             referencedRelation: "ticket_orders"
             referencedColumns: ["id"]
           },
@@ -2901,7 +2583,6 @@ export type Database = {
           {
             foreignKeyName: "ticket_passes_order_id_fkey"
             columns: ["order_id"]
-            isOneToOne: false
             referencedRelation: "ticket_orders"
             referencedColumns: ["id"]
           },
@@ -2945,14 +2626,12 @@ export type Database = {
           {
             foreignKeyName: "TicketOrder_matchId_fkey"
             columns: ["matchId"]
-            isOneToOne: false
             referencedRelation: "Match"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "TicketOrder_userId_fkey"
             columns: ["userId"]
-            isOneToOne: false
             referencedRelation: "User"
             referencedColumns: ["id"]
           },
@@ -2987,7 +2666,6 @@ export type Database = {
           {
             foreignKeyName: "TicketOrderItem_orderId_fkey"
             columns: ["orderId"]
-            isOneToOne: false
             referencedRelation: "TicketOrder"
             referencedColumns: ["id"]
           },
@@ -3040,14 +2718,12 @@ export type Database = {
           {
             foreignKeyName: "TicketPass_orderId_fkey"
             columns: ["orderId"]
-            isOneToOne: false
             referencedRelation: "TicketOrder"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "TicketPass_transferredToUserId_fkey"
             columns: ["transferredToUserId"]
-            isOneToOne: false
             referencedRelation: "User"
             referencedColumns: ["id"]
           },
@@ -3088,21 +2764,18 @@ export type Database = {
           {
             foreignKeyName: "tickets_match_id_fkey1"
             columns: ["match_id"]
-            isOneToOne: false
             referencedRelation: "matches"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "tickets_user_id_fkey1"
             columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "public_members"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "tickets_user_id_fkey1"
             columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -3158,28 +2831,24 @@ export type Database = {
           {
             foreignKeyName: "tickets_match_id_fkey"
             columns: ["match_id"]
-            isOneToOne: false
             referencedRelation: "matches"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "tickets_order_id_fkey"
             columns: ["order_id"]
-            isOneToOne: false
             referencedRelation: "ticket_orders"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "tickets_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "public_members"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "tickets_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -3220,7 +2889,6 @@ export type Database = {
           {
             foreignKeyName: "TicketZone_matchId_fkey"
             columns: ["matchId"]
-            isOneToOne: false
             referencedRelation: "Match"
             referencedColumns: ["id"]
           },
@@ -3255,14 +2923,12 @@ export type Database = {
           {
             foreignKeyName: "transactions_user_id_fkey1"
             columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "public_members"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "transactions_user_id_fkey1"
             columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -3300,58 +2966,12 @@ export type Database = {
           {
             foreignKeyName: "transactions_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "public_members"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "transactions_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      tapmomo_merchants: {
-        Row: {
-          id: string
-          user_id: string | null
-          merchant_account: string
-          merchant_label: string | null
-          aid: string
-          signing_key: string
-          nonce_ttl_seconds: number | null
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          user_id?: string | null
-          merchant_account: string
-          merchant_label?: string | null
-          aid: string
-          signing_key: string
-          nonce_ttl_seconds?: number | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          user_id?: string | null
-          merchant_account?: string
-          merchant_label?: string | null
-          aid?: string
-          signing_key?: string
-          nonce_ttl_seconds?: number | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "tapmomo_merchants_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -3383,7 +3003,6 @@ export type Database = {
           {
             foreignKeyName: "Translation_updatedById_fkey"
             columns: ["updatedById"]
-            isOneToOne: false
             referencedRelation: "AdminUser"
             referencedColumns: ["id"]
           },
@@ -3415,7 +3034,6 @@ export type Database = {
           {
             foreignKeyName: "translations_updated_by_fkey"
             columns: ["updated_by"]
-            isOneToOne: false
             referencedRelation: "admin_users"
             referencedColumns: ["id"]
           },
@@ -3451,6 +3069,77 @@ export type Database = {
         }
         Relationships: []
       }
+      user_favorites: {
+        Row: {
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorites_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "public_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_favorites_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_prefs: {
+        Row: {
+          created_at: string | null
+          language: string | null
+          notifications: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          language?: string | null
+          notifications?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          language?: string | null
+          notifications?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_prefs_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "public_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_prefs_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           avatar_url: string | null
@@ -3466,8 +3155,8 @@ export type Database = {
           points: number
           public_profile: boolean | null
           region: string | null
-          user_code: string | null
           tier: Database["public"]["Enums"]["user_tier"]
+          user_code: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -3483,8 +3172,8 @@ export type Database = {
           points?: number
           public_profile?: boolean | null
           region?: string | null
-          user_code?: string | null
           tier?: Database["public"]["Enums"]["user_tier"]
+          user_code?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -3500,8 +3189,8 @@ export type Database = {
           points?: number
           public_profile?: boolean | null
           region?: string | null
-          user_code?: string | null
           tier?: Database["public"]["Enums"]["user_tier"]
+          user_code?: string | null
         }
         Relationships: []
       }
@@ -3543,7 +3232,6 @@ export type Database = {
           {
             foreignKeyName: "UssdTemplate_updatedById_fkey"
             columns: ["updatedById"]
-            isOneToOne: false
             referencedRelation: "AdminUser"
             referencedColumns: ["id"]
           },
@@ -3572,14 +3260,12 @@ export type Database = {
           {
             foreignKeyName: "wallet_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: true
             referencedRelation: "public_members"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "wallet_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: true
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -3608,14 +3294,12 @@ export type Database = {
           {
             foreignKeyName: "wallets_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: true
             referencedRelation: "public_members"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "wallets_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: true
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -3623,25 +3307,6 @@ export type Database = {
       }
     }
     Views: {
-      admin_community_rate_limits: {
-        Row: {
-          avatar_url: string | null
-          bans_total: number | null
-          display_name: string | null
-          flagged_total: number | null
-          last_post_at: string | null
-          limit_15m: number | null
-          limit_1h: number | null
-          limit_24h: number | null
-          posts_15m: number | null
-          posts_1h: number | null
-          posts_24h: number | null
-          rate_limited: boolean | null
-          user_id: string | null
-          warns_total: number | null
-        }
-        Relationships: []
-      }
       admin_dashboard_gate_throughput: {
         Row: {
           gate: string | null
@@ -3683,10 +3348,7 @@ export type Database = {
           fan_club: string | null
           id: string | null
           joined_at: string | null
-          momo_number: string | null
-          phone: string | null
           region: string | null
-          user_code: string | null
         }
         Insert: {
           avatar_url?: never
@@ -3694,10 +3356,7 @@ export type Database = {
           fan_club?: never
           id?: string | null
           joined_at?: string | null
-          momo_number?: never
-          phone?: never
           region?: never
-          user_code?: never
         }
         Update: {
           avatar_url?: never
@@ -3705,10 +3364,7 @@ export type Database = {
           fan_club?: never
           id?: string | null
           joined_at?: string | null
-          momo_number?: never
-          phone?: never
           region?: never
-          user_code?: never
         }
         Relationships: []
       }
@@ -3717,14 +3373,6 @@ export type Database = {
       increment_user_points: {
         Args: { p_points_delta: number; p_user_id: string }
         Returns: undefined
-      }
-      retro_issue_points: {
-        Args: { target_user: string; points: number; reason: string; meta?: Json }
-        Returns: Json
-      }
-      retro_issue_ticket_perk: {
-        Args: { target_user: string; match: string; note: string }
-        Returns: Json
       }
       rewards_points_for: {
         Args: { amount: number; kind: string }
@@ -3878,9 +3526,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       GamificationKind: ["prediction", "checkin", "quiz", "donation_bonus"],
