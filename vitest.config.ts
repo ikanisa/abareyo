@@ -16,6 +16,12 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reportsDirectory: 'coverage/unit',
+      thresholds: {
+        lines: 0.9,
+        statements: 0.9,
+        branches: 0.9,
+        functions: 0.9,
+      },
     },
     testTimeout: 15000,
   },

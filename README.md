@@ -10,19 +10,7 @@ This monorepo powers the Rayon Sports fan experience across web, mobile, and mat
 
 ## MacBook Setup
 
-Local contributors primarily develop on Apple Silicon MacBooks. The following steps align with our supported toolchain:
-
-1. Install [Homebrew](https://brew.sh/) and bootstrap the required binaries:
-   ```bash
-   brew install corepack supabase/tap/supabase
-   corepack enable
-   corepack prepare pnpm@9.12.2 --activate
-   ```
-   We ship an `npm@11` lockfile for compatibility with CI, but `pnpm` is the preferred local package manager because it matches the workspace layout and keeps the dependency graph deterministic.
-2. Install Node.js 20 via `nvm`, `fnm`, or `asdf` (our `.nvmrc` pins `20.12.x`). Rosetta is not required.
-3. Authenticate the Supabase CLI once (`supabase login`) so migrations and function deploys can execute without prompts.
-
-Developers who rely on corporate VPNs should export `SUPABASE_DOCKER_IMAGE_REGISTRY=supabase` before running CLI commands to avoid registry resolution issues.
+Local contributors primarily develop on Apple Silicon MacBooks. The streamlined setup lives in [`docs/env.md`](docs/env.md) and is summarised under [Developer Environment](#developer-environment). Apple Silicon users should install Homebrew, enable Corepack, and follow the Supabase CLI login steps documented there. Developers who rely on corporate VPNs should export `SUPABASE_DOCKER_IMAGE_REGISTRY=supabase` before running CLI commands to avoid registry resolution issues.
 
 ## Supabase Configuration
 
@@ -45,6 +33,39 @@ NEXT_PUBLIC_ENVIRONMENT_LABEL=local
 `.env.local` is gitignored and takes precedence when you need to experiment with staging Supabase references, alternate webhook tokens, or forthcoming Cloudflare Tunnel hostnames.
 
 > Supabase reserves the `SUPABASE_*` prefix for its own managed secrets when using the CLI/Vault. When setting project secrets via `supabase secrets set`, use the `SITE_SUPABASE_URL`, `SITE_SUPABASE_PUBLISHABLE_KEY`, and `SITE_SUPABASE_SECRET_KEY` aliases (they are automatically picked up by the codebase).
+
+## Workspace Layout
+
+The repository is a polyglot workspace that keeps application code, infrastructure automation, and operational tooling side-by-side. The high-level directory map is below—refer to [`docs/architecture.md`](docs/architecture.md) for a visual overview of how these pieces interact.
+
+| Path | Purpose |
+| ---- | ------- |
+| `app/` | Next.js App Router surface (mobile-first navigation, admin surfaces, and API routes). |
+| `src/` | Shared React components, hooks, providers, and utilities imported via path aliases (`@/lib/*`, `@/components/*`). |
+| `backend/` | Historical NestJS services retained for reference and data migrations. |
+| `packages/` | Publishable packages such as `packages/contracts` that provide DTOs/enums for the web and tooling layers. |
+| `supabase/` | SQL migrations, seed data, and Edge Functions that orchestrate payments and realtime events. |
+| `docs/` | Runbooks, release guides, and policy documents. Notable additions: [`docs/env.md`](docs/env.md), [`docs/security.md`](docs/security.md), and [`docs/payments-policy.md`](docs/payments-policy.md). |
+| `docs/runbooks/` | Operational runbooks including the new [`mobile.md`](docs/runbooks/mobile.md) and [`web.md`](docs/runbooks/web.md) quickstarts. |
+| `scripts/` & `tools/` | Automation helpers (preflight checks, GSM SMS emulator, Supabase deployment scripts). |
+| `k8s/` & `infra/` | Kubernetes manifests, Dockerfiles, and deployment scaffolding. |
+
+## Developer Environment
+
+Local contributors primarily develop on Apple Silicon MacBooks. The consolidated environment guide lives in [`docs/env.md`](docs/env.md); the quick checklist is below:
+
+1. Install [Homebrew](https://brew.sh/) and bootstrap the required binaries:
+   ```bash
+   brew install corepack supabase/tap/supabase
+   corepack enable
+   corepack prepare pnpm@9.12.2 --activate
+   ```
+   We ship an `npm@11` lockfile for compatibility with CI, but `pnpm` is the preferred local package manager because it matches the workspace layout and keeps the dependency graph deterministic.
+2. Install Node.js 20 via `nvm`, `fnm`, or `asdf` (our `.nvmrc` pins `20.12.x`). Rosetta is not required.
+3. Authenticate the Supabase CLI once (`supabase login`) so migrations and function deploys can execute without prompts.
+4. Copy `.env.example` to `.env.local`, then follow the staged environment matrix in [`docs/env.md`](docs/env.md#environment-matrix).
+
+Developers who rely on corporate VPNs should export `SUPABASE_DOCKER_IMAGE_REGISTRY=supabase` before running CLI commands to avoid registry resolution issues.
 
 ## Local Setup
 1. Install dependencies with `pnpm`:
@@ -78,7 +99,7 @@ NEXT_PUBLIC_ENVIRONMENT_LABEL=local
    ```bash
    pnpm dev
    ```
-Visit <http://localhost:3000> to explore the mobile-first PWA.
+Visit <http://localhost:3000> to explore the mobile-first PWA. The full troubleshooting guide—including how to reset local Supabase data and rerun migrations—lives in [`docs/runbooks/web.md`](docs/runbooks/web.md#local-development-loop).
 
 👉 Check out [`docs/local-hosting.md`](docs/local-hosting.md) for a consolidated Mac-first runbook covering `.env.local` usage, build/start commands, and reverse proxy considerations.
 
@@ -112,12 +133,13 @@ If you attempt to reuse the same OTP or submit the wrong code more than five tim
 
 ## Run Commands
 
-`package.json` exposes the same script names across npm and pnpm. We standardise on the following pnpm invocations during local development and CI smoke tests:
+`package.json` exposes the same script names across npm and pnpm. A deeper explanation of each command—including when to run it during feature development or release prep—is available in [`docs/runbooks/web.md`](docs/runbooks/web.md#core-commands). The canonical pnpm entry points are:
 
 - `pnpm dev` – Next.js dev server with HMR.
 - `pnpm build` – Production build (runs `next build`).
 - `pnpm start` – Serve the production bundle (`next start`).
 - `pnpm lint` / `pnpm type-check` / `pnpm test` – Static analysis and unit coverage gates.
+- `pnpm coverage` – Generates the Vitest coverage report; CI enforces the thresholds defined in [`docs/release.md`](docs/release.md#quality-gates).
 - `pnpm cap:sync`, `pnpm cap:android`, `pnpm cap:ios` – Capacitor workflows (requires native toolchains).
 - `pnpm supabase:functions` (see `package.json`) – Convenience wrappers for function deploys.
 - `node scripts/preflight.mjs` – Combined env + backend availability check followed by `npm run build`.
@@ -148,6 +170,17 @@ Upcoming production hardening includes a reverse proxy in front of the Next.js r
 - Admin console → `/admin/sms` lists inbound traffic and a manual review queue for low-confidence parses; link SMS to payments directly from the UI.
 - Realtime dashboard → `/admin/realtime` visualises websocket events (ticket confirmations, gate scans, manual review, donations) for match-day ops.
 - Community feed now supports reactions, quick comments, media attachments, and highlights flagged keywords for moderators.
+
+## Deployment Entry Points
+
+Deployment processes are orchestrated via Make targets and GitHub Actions. Consult [`docs/release.md`](docs/release.md) for the full checklist; the quick reference is below:
+
+- `make deploy-staging` / `make deploy-production` – Triggers the web deployment workflow with the current commit.
+- `make deploy:rollback ENV=<staging|production>` – Restores the last known good artifact (see [`docs/release.md`](docs/release.md#rollback-procedures)).
+- `pnpm supabase:functions deploy` – Deploys updated Edge Functions; details live in [`docs/runbooks/web.md`](docs/runbooks/web.md#deployment-steps).
+- `pnpm cap:android --prod` / `pnpm cap:ios --prod` – Entry points for mobile release builds (see [`docs/runbooks/mobile.md`](docs/runbooks/mobile.md#release-pipeline)).
+
+CI expectations, coverage thresholds, and rollback playbooks are formalised in [`docs/release.md`](docs/release.md#quality-gates) and [`docs/runbooks/rollback.md`](docs/runbooks/rollback.md).
 
 ## Repository Layout
 - `app/` – Next.js route tree (`/(routes)` encloses mobile navigation, `/admin/*` hosts internal consoles).
@@ -208,7 +241,7 @@ Upcoming production hardening includes a reverse proxy in front of the Next.js r
   - Promote SQL via `supabase db push` in CI/CD or run `supabase migration up` + `supabase db seed` in production environments.
 
 - Envs & Secrets
-  - Confirm required envs in `docs/production-env.md`. Validate with `make env-check`.
+  - Confirm required envs in `docs/production-env.md` and [`docs/env.md`](docs/env.md). Validate with `make env-check`.
   - Ensure Supabase service role keys are stored as repo/infra secrets, never shipped to the browser.
   - Admin SMS parser test endpoint (staging only): set `OPENAI_API_KEY` and `ADMIN_SMS_PARSER_TEST_ENABLED=1`. Optional rate config: `ADMIN_SMS_PARSER_TEST_RATE_LIMIT` (default 10), `ADMIN_SMS_PARSER_TEST_WINDOW_MS` (default 60000).
 
@@ -216,15 +249,16 @@ Upcoming production hardening includes a reverse proxy in front of the Next.js r
   - `make e2e` runs Playwright smokes with mocked API (guarded by `E2E_API_MOCKS=1`).
 
 - CI/CD
-  - CI runs lint/unit/build. Preview deploys now rely on the internal GitHub Actions workflow paired with Supabase (the legacy managed-host flow has been retired). Edge Functions ship via `.github/workflows/supabase-functions-deploy.yml`.
+  - CI runs lint/unit/build, enforces Vitest coverage thresholds, and publishes artifacts described in [`docs/release.md`](docs/release.md#ci-pipeline).
+  - Preview deploys now rely on the internal GitHub Actions workflow paired with Supabase (the legacy managed-host flow has been retired). Edge Functions ship via `.github/workflows/supabase-functions-deploy.yml`.
   - Optional `HEALTH_URL` secret enables post-deploy health check loop.
 
 - Observability & Security
   - Prometheus rules: `docs/observability/prometheus-rules.yml`; Grafana dashboard: `docs/grafana/backend-overview.json`.
-  - Security hardening notes: `docs/security.md`; enable CSP via `APP_ENABLE_CSP=1` in production.
+  - Security hardening notes: [`docs/security.md`](docs/security.md); enable CSP via `APP_ENABLE_CSP=1` in production.
 
 - Runbooks & Manifests
-  - Deploy: `docs/runbooks/deploy.md`; Rollback: `docs/runbooks/rollback.md`; Cutover: `docs/cutover-readiness.md`.
+  - Deploy: `docs/runbooks/deploy.md`; Rollback: `docs/runbooks/rollback.md`; Cutover: `docs/cutover-readiness.md`; Web & mobile operations: [`docs/runbooks/web.md`](docs/runbooks/web.md) and [`docs/runbooks/mobile.md`](docs/runbooks/mobile.md).
   - **Operations**: `docs/runbooks/operations.md` covers daily checks, telemetry smokes, and the new offline/empty-state playbook.
   - K8s examples under `k8s/` and `docs/k8s/README.md`.
 
