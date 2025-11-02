@@ -111,7 +111,7 @@ const NewsIndexPage = () => (
         </span>
       }
     />
-    {highlights.length ? (
+    {highlights.length > 0 && highlights[0] ? (
       <section className="space-y-4">
         <div className="rounded-3xl border border-white/15 bg-white/5 p-6 text-white shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
           <p className="text-xs uppercase tracking-[0.26em] text-white/60">Featured highlight</p>

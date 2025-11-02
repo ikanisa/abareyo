@@ -1,4 +1,5 @@
-import { ReactNode } from "react";
+import { } from "react";
+import type { ReactNode } from "react";
 
 export default function Empty({
   title,

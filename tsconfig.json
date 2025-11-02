@@ -46,6 +46,9 @@
         "./packages/api/src/*",
         "./packages/api/types/*"
       ],
+      "@rayon/config/*": [
+        "./packages/config/*"
+      ],
       "@rayon/design-tokens": [
         "./packages/design-tokens/src/index.ts"
       ],

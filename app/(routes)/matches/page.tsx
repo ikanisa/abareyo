@@ -99,7 +99,7 @@ export default async function MatchesPage() {
         description="Pick a game to jump into the live centre or secure your seat."
         backHref="/"
       />
-      {normalized.length ? <LiveTicker id={normalized[0].id} /> : null}
+      {normalized.length && normalized[0] ? <LiveTicker id={normalized[0].id} /> : null}
       <MatchesList matches={normalized} />
     </PageShell>
   );
