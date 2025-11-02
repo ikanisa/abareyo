@@ -8,7 +8,8 @@
       "@/api/*": ["./src/api/*"],
       "@/providers/*": ["./src/providers/*"],
       "@/theme/*": ["./src/theme/*"],
-      "@/ui/*": ["./src/ui/*"]
+      "@/ui/*": ["./src/ui/*"],
+      "@rayon/api/*": ["../../api/*"]
     }
   },
   "include": [
