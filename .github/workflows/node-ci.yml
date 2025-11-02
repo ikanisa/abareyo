@@ -62,3 +62,6 @@ jobs:
 
       - name: Verify mobile QA documentation
         run: pnpm ci:verify-mobile-qa
+
+      - name: Mobile OTP smoke tests
+        run: pnpm test:mobile:smoke
