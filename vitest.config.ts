@@ -14,11 +14,11 @@ const appProject = defineProject({
     include: ['tests/unit/**/*.test.{ts,tsx}'],
     exclude: [
       'tests/e2e/**',
-      'tests/**/*.spec.ts',
-      'tests/**/*.spec.tsx',
+      'tests/unit/app/**',
       'backend/**',
-      'backend/**/*.spec.ts',
       'node_modules/**',
+      '**/*.spec.ts',
+      '**/*.spec.tsx',
     ],
     setupFiles: ['tests/setup-app.ts'],
     testTimeout: 15000,
@@ -46,15 +46,10 @@ const packagesProject = defineProject({
     environment: 'node',
     globals: true,
     include: [
-      'packages/**/*.test.{ts,tsx}',
-      'packages/**/__tests__/**/*.test.{ts,tsx}',
+      'packages/**/*.{test,spec}.{ts,tsx}',
+      'packages/**/__tests__/**/*.{test,spec}.{ts,tsx}',
     ],
-    exclude: [
-      '**/node_modules/**',
-      'packages/mobile/e2e/**',
-      '**/*.spec.{ts,tsx}',
-      'backend/**',
-    ],
+    exclude: ['**/node_modules/**', 'packages/mobile/e2e/**'],
     setupFiles: ['tests/setup-env.ts'],
     testTimeout: 15000,
     coverage: {
@@ -67,10 +62,16 @@ const packagesProject = defineProject({
 });
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
-  esbuild: {
-    jsx: 'automatic',
-    jsxImportSource: 'react',
+  test: {
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/.{idea,git,cache,output,temp}/**',
+      'tests/e2e/**',
+      'backend/**',
+      '**/*.spec.ts',
+      '**/*.spec.tsx',
+    ],
   },
   projects: [appProject, packagesProject],
 });

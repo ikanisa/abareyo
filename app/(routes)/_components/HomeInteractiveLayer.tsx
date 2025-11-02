@@ -1,6 +1,7 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import OnboardingModal from "@/app/_components/onboarding/OnboardingModal";

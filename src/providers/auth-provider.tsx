@@ -1,6 +1,7 @@
 "use client";
+import type { ReactNode } from "react";
 
-import { createContext, ReactNode, useContext, useEffect, useMemo } from "react";
+import { createContext, useContext, useEffect, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { fetchFanSession, finalizeFanOnboarding, loginWithSupabaseToken, logoutFan } from "@/lib/api/fan";

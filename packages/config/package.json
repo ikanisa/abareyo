@@ -1,7 +1,9 @@
 {
-  "name": "@abareyo/config",
+  "name": "@rayon/config",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": {}
+  "exports": {
+    "./env": "./env.ts"
+  }
 }
