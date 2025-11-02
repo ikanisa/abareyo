@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { cache } from "react";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
@@ -27,7 +26,7 @@ type MatchDetail = {
   zones?: MatchZone[];
 };
 
-const fetchMatch = cache(async (id: string): Promise<MatchDetail | null> => {
+const fetchMatch = async (id: string): Promise<MatchDetail | null> => {
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? ""}/api/matches/${id}`, {
       cache: "no-store",
@@ -41,7 +40,7 @@ const fetchMatch = cache(async (id: string): Promise<MatchDetail | null> => {
     console.warn("Failed to load match", error);
     return null;
   }
-});
+};
 
 export default async function TicketPDP({ params }: { params: { id: string } }) {
   const match = await fetchMatch(params.id);
