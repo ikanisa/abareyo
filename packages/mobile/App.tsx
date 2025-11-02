@@ -8,6 +8,8 @@ import type {
   WalletAccountContract,
 } from '@rayon/contracts';
 
+import { useHermesStartupTrace } from './src/profiling/useHermesStartupTrace';
+
 const sampleCatalog: TicketCatalogResponseContract = {
   matches: [
     {
@@ -38,6 +40,7 @@ function formatMatch(match: TicketCatalogMatchContract) {
 }
 
 export default function App() {
+  useHermesStartupTrace({ label: 'app-startup', flushDelayMs: 8000 });
   const nextMatch = useMemo(() => sampleCatalog.matches[0], []);
 
   return (

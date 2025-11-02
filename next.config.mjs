@@ -1,5 +1,13 @@
 import './config/validated-env.mjs';
+import bundleAnalyzer from '@next/bundle-analyzer';
 import { buildSecurityHeaders } from './config/security-headers.mjs';
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.NEXT_ANALYZE === '1' || process.env.NEXT_ANALYZE === 'true',
+  openAnalyzer: false,
+  analyzerMode: 'static',
+  reportFilename: 'reports/refactor/perf/bundle/client.html',
+});
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -36,4 +44,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

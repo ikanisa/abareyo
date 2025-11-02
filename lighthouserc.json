@@ -7,18 +7,21 @@
       ],
       "numberOfRuns": 2,
       "settings": {
-        "onlyCategories": ["pwa", "accessibility"]
+        "onlyCategories": ["performance", "accessibility", "pwa", "seo"],
+        "budgetPath": "./lighthouse-budgets.json"
       }
     },
     "upload": {
       "target": "filesystem",
-      "outputDir": ".lighthouseci"
+      "outputDir": "reports/refactor/perf/lighthouse"
     },
     "assert": {
       "assertions": {
-        "categories:performance": ["warn", { "minScore": 0.85 }],
-        "categories:pwa": ["warn", { "minScore": 0.9 }],
-        "categories:accessibility": ["error", { "minScore": 0.96 }],
+        "categories:performance": ["error", { "minScore": 0.85 }],
+        "categories:pwa": ["error", { "minScore": 0.9 }],
+        "categories:accessibility": ["error", { "minScore": 0.95 }],
+        "categories:seo": ["error", { "minScore": 0.9 }],
+        "performance-budget": "error",
         "service-worker": "error",
         "installable-manifest": "error"
       }
