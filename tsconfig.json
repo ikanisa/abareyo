@@ -55,6 +55,12 @@
       "@rayon/design-tokens/*": [
         "./packages/design-tokens/src/*.ts"
       ],
+      "@rayon/ui": [
+        "./packages/ui/src/index.ts"
+      ],
+      "@rayon/ui/*": [
+        "./packages/ui/src/*"
+      ],
       "@/*": [
         "./src/*",
         "*"
@@ -76,6 +82,8 @@
     "src/**/*.tsx",
     "packages/mobile/**/*.ts",
     "packages/mobile/**/*.tsx",
+    "packages/ui/**/*.ts",
+    "packages/ui/**/*.tsx",
     "tests/**/*.ts",
     "tests/**/*.tsx",
     "**/*.cjs",
