@@ -98,7 +98,7 @@ serve(async (req) => {
     return jsonError("token_already_used", 409);
   }
 
-  const { data: checkin, error } = await supabase
+  const { data: checkin, error: checkinError } = await supabase
     .from("event_checkins")
     .insert({
       event_id,
@@ -107,8 +107,24 @@ serve(async (req) => {
     .select("id")
     .single();
 
-  if (error) {
-    return jsonError(error.message, 500);
+  if (checkinError) {
+    const { error: rollbackError } = await supabase
+      .from("ticket_passes")
+      .update({ state: "active", qr_token_hash: parsedToken.signature })
+      .eq("id", parsedToken.passId)
+      .eq("state", "used")
+      .is("qr_token_hash", null)
+      .select("id")
+      .maybeSingle();
+
+    if (rollbackError) {
+      console.error("failed_to_restore_pass_after_checkin_error", {
+        passId: parsedToken.passId,
+        rollbackError: rollbackError.message,
+      });
+    }
+
+    return jsonError(checkinError.message, 500);
   }
 
   return json({ ok: true, checkin_id: checkin?.id ?? null });
