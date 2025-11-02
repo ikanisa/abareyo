@@ -1,9 +1,14 @@
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
+import { buildRouteMetadata } from "@/app/_lib/navigation";
 
 import { SettingsClient } from "./_components/SettingsClient";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = buildRouteMetadata("/settings", {
+  description: "Manage preferences, privacy settings, and alerts for your Rayon Sports account.",
+});
 
 const SettingsPage = () => (
   <PageShell>

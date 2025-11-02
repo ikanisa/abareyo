@@ -3,9 +3,14 @@ import Link from "next/link";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
+import { buildRouteMetadata } from "@/app/_lib/navigation";
 import { highlights } from "../_data/highlights";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = buildRouteMetadata("/news/highlights", {
+  description: "Watch Rayon Sports match highlights, behind-the-scenes clips, and community stories on demand.",
+});
 
 const HighlightsPage = () => (
   <PageShell>

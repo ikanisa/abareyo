@@ -1,0 +1,1076 @@
+{
+  "generatedAt": "2025-11-02T09:52:02.818Z",
+  "totals": {
+    "totalRoutes": 213,
+    "pages": 88,
+    "apis": 125,
+    "routeHandlers": 29
+  },
+  "routes": [
+    {
+      "type": "page",
+      "path": "/",
+      "file": "app/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin",
+      "file": "app/admin/(dashboard)/page.tsx"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/admin/audit",
+      "file": "app/admin/api/admin/audit/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/admin/rbac",
+      "file": "app/admin/api/admin/rbac/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/auth/csrf",
+      "file": "app/admin/api/auth/csrf/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/community/moderation",
+      "file": "app/admin/api/community/moderation/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/community/rate-limits",
+      "file": "app/admin/api/community/rate-limits/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/content/library",
+      "file": "app/admin/api/content/library/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/content/publish",
+      "file": "app/admin/api/content/publish/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/matches",
+      "file": "app/admin/api/matches/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/reports/schedules",
+      "file": "app/admin/api/reports/schedules/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/rewards/events",
+      "file": "app/admin/api/rewards/events/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/rewards/rules",
+      "file": "app/admin/api/rewards/rules/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/services/insurance",
+      "file": "app/admin/api/services/insurance/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/services/sacco",
+      "file": "app/admin/api/services/sacco/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/shop/orders",
+      "file": "app/admin/api/shop/orders/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/shop/products",
+      "file": "app/admin/api/shop/products/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/shop/promotions",
+      "file": "app/admin/api/shop/promotions/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/sms/attach",
+      "file": "app/admin/api/sms/attach/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/sms/candidates",
+      "file": "app/admin/api/sms/candidates/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/sms/parsed",
+      "file": "app/admin/api/sms/parsed/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/tickets/analytics",
+      "file": "app/admin/api/tickets/analytics/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/tickets/gate-history",
+      "file": "app/admin/api/tickets/gate-history/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/tickets/matches",
+      "file": "app/admin/api/tickets/matches/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/tickets/orders",
+      "file": "app/admin/api/tickets/orders/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/tickets/passes",
+      "file": "app/admin/api/tickets/passes/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/tickets/scan-stats",
+      "file": "app/admin/api/tickets/scan-stats/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/upload",
+      "file": "app/admin/api/upload/route.ts"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/api/users/directory",
+      "file": "app/admin/api/users/directory/route.ts"
+    },
+    {
+      "type": "page",
+      "path": "/admin/community",
+      "file": "app/admin/(dashboard)/community/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/community/missions",
+      "file": "app/admin/(dashboard)/community/missions/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/content",
+      "file": "app/admin/(dashboard)/content/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/fundraising",
+      "file": "app/admin/(dashboard)/fundraising/page.tsx"
+    },
+    {
+      "type": "route-handler",
+      "path": "/admin/health",
+      "file": "app/admin/health/route.ts"
+    },
+    {
+      "type": "page",
+      "path": "/admin/login",
+      "file": "app/admin/(auth)/login/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/match-ops",
+      "file": "app/admin/(dashboard)/match-ops/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/membership",
+      "file": "app/admin/(dashboard)/membership/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/orders",
+      "file": "app/admin/(dashboard)/orders/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/realtime",
+      "file": "app/admin/(dashboard)/realtime/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/reports",
+      "file": "app/admin/(dashboard)/reports/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/rewards",
+      "file": "app/admin/(dashboard)/rewards/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/services",
+      "file": "app/admin/(dashboard)/services/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/settings",
+      "file": "app/admin/(dashboard)/settings/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/shop",
+      "file": "app/admin/(dashboard)/shop/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/shop/orders",
+      "file": "app/admin/(dashboard)/shop/orders/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/shop/products",
+      "file": "app/admin/(dashboard)/shop/products/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/shop/promos",
+      "file": "app/admin/(dashboard)/shop/promos/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/shop/promotions",
+      "file": "app/admin/(dashboard)/shop/promotions/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/sms",
+      "file": "app/admin/(dashboard)/sms/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/sms/otp",
+      "file": "app/admin/(dashboard)/sms/otp/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/tickets",
+      "file": "app/admin/(dashboard)/tickets/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/tickets/orders",
+      "file": "app/admin/(dashboard)/tickets/orders/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/tickets/passes",
+      "file": "app/admin/(dashboard)/tickets/passes/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/tickets/scan",
+      "file": "app/admin/(dashboard)/tickets/scan/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/translations",
+      "file": "app/admin/(dashboard)/translations/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/users",
+      "file": "app/admin/(dashboard)/users/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/admin/ussd",
+      "file": "app/admin/(dashboard)/ussd/page.tsx"
+    },
+    {
+      "type": "api",
+      "path": "/api/[...path]",
+      "file": "app/api/[...path]/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/auth/supabase",
+      "file": "app/api/admin/auth/supabase/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/dashboard",
+      "file": "app/api/admin/dashboard/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/match-ops/matches",
+      "file": "app/api/admin/match-ops/matches/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/match-ops/matches/[matchId]",
+      "file": "app/api/admin/match-ops/matches/[matchId]/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/match-ops/matches/[matchId]/gates",
+      "file": "app/api/admin/match-ops/matches/[matchId]/gates/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/match-ops/matches/[matchId]/gates/[gateId]",
+      "file": "app/api/admin/match-ops/matches/[matchId]/gates/[gateId]/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/match-ops/matches/[matchId]/zones",
+      "file": "app/api/admin/match-ops/matches/[matchId]/zones/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/match-ops/matches/[matchId]/zones/[zoneId]",
+      "file": "app/api/admin/match-ops/matches/[matchId]/zones/[zoneId]/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/me",
+      "file": "app/api/admin/me/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/shop-orders",
+      "file": "app/api/admin/shop-orders/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/sms/inbound",
+      "file": "app/api/admin/sms/inbound/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/sms/manual",
+      "file": "app/api/admin/sms/manual/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/sms/manual/[smsId]/dismiss",
+      "file": "app/api/admin/sms/manual/[smsId]/dismiss/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/sms/manual/[smsId]/retry",
+      "file": "app/api/admin/sms/manual/[smsId]/retry/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/sms/manual/attach",
+      "file": "app/api/admin/sms/manual/attach/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/sms/manual/payments",
+      "file": "app/api/admin/sms/manual/payments/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/sms/parser/prompts",
+      "file": "app/api/admin/sms/parser/prompts/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/sms/parser/prompts/[promptId]/activate",
+      "file": "app/api/admin/sms/parser/prompts/[promptId]/activate/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/sms/parser/prompts/active",
+      "file": "app/api/admin/sms/parser/prompts/active/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/sms/parser/test",
+      "file": "app/api/admin/sms/parser/test/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/sms/queue",
+      "file": "app/api/admin/sms/queue/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/ticket-orders",
+      "file": "app/api/admin/ticket-orders/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/ticket-orders/[orderId]/refund",
+      "file": "app/api/admin/ticket-orders/[orderId]/refund/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/translations",
+      "file": "app/api/admin/translations/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/translations/dictionary",
+      "file": "app/api/admin/translations/dictionary/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/admin/translations/languages",
+      "file": "app/api/admin/translations/languages/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/auth/otp/send",
+      "file": "app/api/auth/otp/send/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/auth/otp/verify",
+      "file": "app/api/auth/otp/verify/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/auth/whatsapp/start",
+      "file": "app/api/auth/whatsapp/start/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/auth/whatsapp/verify",
+      "file": "app/api/auth/whatsapp/verify/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/backend/[...path]",
+      "file": "app/api/backend/[...path]/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/cast",
+      "file": "app/api/cast/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/chat",
+      "file": "app/api/chat/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/clubs",
+      "file": "app/api/clubs/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/community/posts",
+      "file": "app/api/community/posts/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/community/posts/[id]/report",
+      "file": "app/api/community/posts/[id]/report/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/content",
+      "file": "app/api/content/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/content/[slug]",
+      "file": "app/api/content/[slug]/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/e2e/[...path]",
+      "file": "app/api/e2e/[...path]/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/events",
+      "file": "app/api/events/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/events/[id]/rsvp",
+      "file": "app/api/events/[id]/rsvp/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/fan/feed",
+      "file": "app/api/fan/feed/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/feed",
+      "file": "app/api/feed/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/flags",
+      "file": "app/api/flags/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/health",
+      "file": "app/api/health/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/home",
+      "file": "app/api/home/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/insurance/policy",
+      "file": "app/api/insurance/policy/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/insurance/quote",
+      "file": "app/api/insurance/quote/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/live/match/[id]",
+      "file": "app/api/live/match/[id]/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/live/scoreboard",
+      "file": "app/api/live/scoreboard/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/matches",
+      "file": "app/api/matches/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/matches/[id]",
+      "file": "app/api/matches/[id]/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/matches/events",
+      "file": "app/api/matches/events/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/matches/tickets",
+      "file": "app/api/matches/tickets/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/me",
+      "file": "app/api/me/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/me/favorites",
+      "file": "app/api/me/favorites/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/me/onboarding",
+      "file": "app/api/me/onboarding/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/me/prefs",
+      "file": "app/api/me/prefs/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/media/highlights/[matchId]",
+      "file": "app/api/media/highlights/[matchId]/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/members",
+      "file": "app/api/members/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/members/[id]",
+      "file": "app/api/members/[id]/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/members/count",
+      "file": "app/api/members/count/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/merchant/tapmomo/payload",
+      "file": "app/api/merchant/tapmomo/payload/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/merchants/[merchantId]/nfc/issue",
+      "file": "app/api/merchants/[merchantId]/nfc/issue/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/notifications/subscription",
+      "file": "app/api/notifications/subscription/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/nps",
+      "file": "app/api/nps/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/onboarding/message",
+      "file": "app/api/onboarding/message/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/onboarding/sessions",
+      "file": "app/api/onboarding/sessions/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/orders/[id]",
+      "file": "app/api/orders/[id]/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/partners/[slug]",
+      "file": "app/api/partners/[slug]/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/passes",
+      "file": "app/api/passes/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/payments/checkout",
+      "file": "app/api/payments/checkout/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/payments/mobile-money",
+      "file": "app/api/payments/mobile-money/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/payments/pending",
+      "file": "app/api/payments/pending/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/polls/vote",
+      "file": "app/api/polls/vote/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/rewards/claimTicket",
+      "file": "app/api/rewards/claimTicket/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/rewards/events",
+      "file": "app/api/rewards/events/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/rewards/summary",
+      "file": "app/api/rewards/summary/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/sacco/deposit",
+      "file": "app/api/sacco/deposit/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/shop/orders",
+      "file": "app/api/shop/orders/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/shop/products",
+      "file": "app/api/shop/products/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/sms/process",
+      "file": "app/api/sms/process/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/telemetry/app-state",
+      "file": "app/api/telemetry/app-state/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/tickets",
+      "file": "app/api/tickets/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/tickets/orders",
+      "file": "app/api/tickets/orders/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/tickets/orders/[orderId]/cancel",
+      "file": "app/api/tickets/orders/[orderId]/cancel/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/tickets/orders/[orderId]/receipt",
+      "file": "app/api/tickets/orders/[orderId]/receipt/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/tickets/passes",
+      "file": "app/api/tickets/passes/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/tickets/passes/rotate",
+      "file": "app/api/tickets/passes/rotate/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/transactions/nfc",
+      "file": "app/api/transactions/nfc/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/users",
+      "file": "app/api/users/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/wallet",
+      "file": "app/api/wallet/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/wallet/summary",
+      "file": "app/api/wallet/summary/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/wallet/transactions",
+      "file": "app/api/wallet/transactions/route.ts"
+    },
+    {
+      "type": "api",
+      "path": "/api/webhook/whatsapp",
+      "file": "app/api/webhook/whatsapp/route.ts"
+    },
+    {
+      "type": "page",
+      "path": "/auth/login",
+      "file": "app/(routes)/auth/login/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/auth/whatsapp",
+      "file": "app/(routes)/auth/whatsapp/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/cart",
+      "file": "app/(routes)/cart/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/clubs",
+      "file": "app/(routes)/clubs/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/clubs/[id]",
+      "file": "app/(routes)/clubs/[id]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/community",
+      "file": "app/community/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/community/missions",
+      "file": "app/community/missions/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/community/polls/[slug]",
+      "file": "app/community/polls/[slug]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/community/predict",
+      "file": "app/community/predict/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/community/stories/[slug]",
+      "file": "app/community/stories/[slug]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/events",
+      "file": "app/(routes)/events/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/events/[id]",
+      "file": "app/(routes)/events/[id]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/fundraising",
+      "file": "app/(routes)/fundraising/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/fundraising/[slug]",
+      "file": "app/(routes)/fundraising/[slug]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/gate",
+      "file": "app/gate/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/home",
+      "file": "app/(routes)/home/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/legal/privacy",
+      "file": "app/legal/privacy/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/legal/terms",
+      "file": "app/legal/terms/page.tsx"
+    },
+    {
+      "type": "route-handler",
+      "path": "/link",
+      "file": "app/link/route.ts"
+    },
+    {
+      "type": "page",
+      "path": "/matchday",
+      "file": "app/matchday/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/matches",
+      "file": "app/(routes)/matches/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/matches/live",
+      "file": "app/(routes)/matches/live/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/media",
+      "file": "app/(routes)/media/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/media/[slug]",
+      "file": "app/(routes)/media/[slug]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/members",
+      "file": "app/(routes)/members/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/members",
+      "file": "app/members/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/members/[id]",
+      "file": "app/members/[id]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/membership",
+      "file": "app/(routes)/membership/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/membership/upgrade",
+      "file": "app/membership/upgrade/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/more",
+      "file": "app/(routes)/more/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/more/rewards",
+      "file": "app/more/rewards/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/more/settings",
+      "file": "app/more/settings/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/more/wallet",
+      "file": "app/more/wallet/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/mytickets",
+      "file": "app/mytickets/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/news",
+      "file": "app/(routes)/news/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/news/[slug]",
+      "file": "app/(routes)/news/[slug]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/news/highlights",
+      "file": "app/(routes)/news/highlights/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/news/highlights/[slug]",
+      "file": "app/(routes)/news/highlights/[slug]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/onboarding",
+      "file": "app/(routes)/onboarding/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/orders",
+      "file": "app/orders/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/partners/[slug]",
+      "file": "app/(routes)/partners/[slug]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/payments",
+      "file": "app/(routes)/payments/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/profile",
+      "file": "app/profile/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/rewards",
+      "file": "app/(routes)/rewards/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/services",
+      "file": "app/(routes)/services/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/services/insurance",
+      "file": "app/(routes)/services/insurance/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/services/savings",
+      "file": "app/(routes)/services/savings/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/settings",
+      "file": "app/(routes)/settings/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/settings",
+      "file": "app/settings/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/settings/about",
+      "file": "app/settings/about/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/shop",
+      "file": "app/(routes)/shop/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/shop/[slug]",
+      "file": "app/(routes)/shop/[slug]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/support",
+      "file": "app/support/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/tickets",
+      "file": "app/(routes)/tickets/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/tickets/[id]",
+      "file": "app/(routes)/tickets/[id]/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/tickets/scan",
+      "file": "app/(routes)/tickets/scan/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/tickets/transfer",
+      "file": "app/(routes)/tickets/transfer/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/wallet",
+      "file": "app/(routes)/wallet/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/wallet/history",
+      "file": "app/wallet/history/page.tsx"
+    },
+    {
+      "type": "page",
+      "path": "/wallet/top-up",
+      "file": "app/wallet/top-up/page.tsx"
+    }
+  ]
+}

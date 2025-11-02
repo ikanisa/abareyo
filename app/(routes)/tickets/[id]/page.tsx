@@ -1,6 +1,10 @@
+import type { Metadata } from "next";
+import { cache } from "react";
+
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
 import UssdPayButton from "@/app/_components/payments/UssdPayButton";
+import { buildRouteMetadata } from "@/app/_lib/navigation";
 
 import TicketZoneSelector from "./_components/TicketZoneSelector";
 
@@ -23,7 +27,7 @@ type MatchDetail = {
   zones?: MatchZone[];
 };
 
-async function fetchMatch(id: string): Promise<MatchDetail | null> {
+const fetchMatch = cache(async (id: string): Promise<MatchDetail | null> => {
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? ""}/api/matches/${id}`, {
       cache: "no-store",
@@ -37,7 +41,7 @@ async function fetchMatch(id: string): Promise<MatchDetail | null> {
     console.warn("Failed to load match", error);
     return null;
   }
-}
+});
 
 export default async function TicketPDP({ params }: { params: { id: string } }) {
   const match = await fetchMatch(params.id);
@@ -81,4 +85,24 @@ export default async function TicketPDP({ params }: { params: { id: string } }) 
       </section>
     </PageShell>
   );
+}
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const match = await fetchMatch(params.id);
+
+  if (!match) {
+    return buildRouteMetadata("/tickets", {
+      title: "Match ticket",
+      description: "Choose your Rayon Sports match zone and purchase tickets via mobile money.",
+    });
+  }
+
+  const home = match.home ?? "Rayon Sports";
+  const away = match.away ?? match.opponent ?? "Opponent";
+  const title = `${home} vs ${away}`;
+
+  return buildRouteMetadata(`/tickets/${params.id}`, {
+    title: `${title} — Match ticket`,
+    description: match.venue ? `Secure your seat for ${title} at ${match.venue}.` : `Secure your seat for ${title}.`,
+  });
 }

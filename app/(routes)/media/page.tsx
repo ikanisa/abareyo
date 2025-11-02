@@ -2,11 +2,16 @@ import Link from "next/link";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
+import { buildRouteMetadata } from "@/app/_lib/navigation";
 import MediaClient from "./_components/MediaClient";
 import { mediaFeatures } from "./_data/videos";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = buildRouteMetadata("/media", {
+  description: "Stream Rayon Sports highlights, behind-the-scenes stories, and player features in one hub.",
+});
 
 const formatter = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",

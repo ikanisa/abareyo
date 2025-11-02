@@ -1,9 +1,15 @@
 import PageShell from "@/app/_components/shell/PageShell";
 import SubpageHeader from "@/app/_components/shell/SubpageHeader";
+import { buildRouteMetadata } from "@/app/_lib/navigation";
 
 import ExternalLauncher from "../_components/ExternalLauncher";
 
 const USSD_CODE = "tel:*182*1*1*0788767816%23";
+
+export const metadata = buildRouteMetadata("/services/savings", {
+  title: "Savings streak",
+  description: "Quickly dial the Rayon SACCO USSD code to maintain your supporter savings streak.",
+});
 
 export default function SavingsRedirectPage() {
   return (
