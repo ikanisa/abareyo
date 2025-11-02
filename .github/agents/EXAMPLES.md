@@ -75,7 +75,10 @@ export function UserList({ users }: { users: User[] }) {
 export async function UserList({ users }: { users: User[] }) {
   const userIds = users.map(u => u.id);
   const details = await fetchUserDetailsBatch(userIds);
-  
+  const detailsById = Object.fromEntries(
+    details.map(detail => [detail.id, detail])
+  );
+
   return (
     <div>
       {users.map(user => (
@@ -87,7 +90,7 @@ export async function UserList({ users }: { users: User[] }) {
             height={100}
             loading="lazy"
           />
-          <span>{details[user.id]?.bio}</span>
+          <span>{detailsById[user.id]?.bio}</span>
         </div>
       ))}
     </div>
@@ -219,12 +222,23 @@ import { UsersList } from './UsersList';
 
 export default async function UsersPage() {
   const supabase = createServerClient();
-  
-  const [{ data: users }, { data: roles }] = await Promise.all([
+
+  const [
+    { data: users, error: usersError },
+    { data: roles, error: rolesError }
+  ] = await Promise.all([
     supabase.from('users').select('*'),
     supabase.from('roles').select('*')
   ]);
-  
+
+  if (usersError || rolesError) {
+    throw new Error(
+      usersError?.message ??
+        rolesError?.message ??
+        'Failed to load users page data'
+    );
+  }
+
   return <UsersList users={users} roles={roles} />;
 }
 ```
