@@ -1,7 +1,12 @@
 {
-  "name": "@abareyo/api",
+  "name": "@rayon/api",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": {}
+  "exports": {
+    "./http": "./src/http/index.ts",
+    "./supabase": "./src/supabase/index.ts",
+    "./query": "./src/query/index.ts",
+    "./types/database": "./types/database.ts"
+  }
 }

@@ -66,6 +66,10 @@ export default tseslint.config(
       "src/components/ui/sonner.tsx",
       "src/components/ui/form.tsx",
     ],
+    ignores: [
+      "app/admin/**/layout.tsx",
+      "app/admin/**/page.tsx",
+    ],
     rules: {
       "react-refresh/only-export-components": ["error", { allowConstantExport: true }],
       "react-hooks/exhaustive-deps": "error",
