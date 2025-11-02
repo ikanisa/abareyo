@@ -17,9 +17,13 @@ const appProject = defineProject({
     testTimeout: 15000,
     coverage: {
       provider: 'v8',
-      reportsDirectory: 'reports/refactor/coverage/app',
-      reporter: ['text', 'text-summary', 'lcov'],
-      thresholds: { lines: 60 },
+      reportsDirectory: 'coverage/unit',
+      thresholds: {
+        lines: 0.9,
+        statements: 0.9,
+        branches: 0.9,
+        functions: 0.9,
+      },
     },
   },
 });
