@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { applySecurityHeaders as withSecurityHeaders } from './config/security-headers.mjs';
+import { applySecurityHeaders as withSecurityHeaders } from './src/config/security-headers';
 import { ADMIN_CSRF_COOKIE, ADMIN_CSRF_ENDPOINT, ADMIN_CSRF_HEADER } from './src/lib/admin/csrf';
-import { buildCorsHeaders, getAllowedHosts } from './src/lib/server/origins';
-import { consumeRateLimit } from './src/lib/server/rate-limit';
+import { getAllowedHosts } from './src/lib/server/origins';
 import {
   APP_STORE_URL,
   PLAY_STORE_URL,
@@ -109,7 +108,8 @@ const isTrustedLocaleRedirect = (req: NextRequest, locale: string | null) => {
       trustedHosts.add(host);
     }
 
-    return trustedHosts.has(normaliseHost(refererUrl.host));
+    const refererHost = normaliseHost(refererUrl.host);
+    return refererHost ? trustedHosts.has(refererHost) : false;
   } catch (error) {
     return false;
   }

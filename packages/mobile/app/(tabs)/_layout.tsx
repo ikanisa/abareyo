@@ -5,11 +5,11 @@ import { useMotionPreference } from "@/providers/MotionProvider";
 import { useTheme } from "@/providers/ThemeProvider";
 
 const routes = [
-  { name: "index", title: "Home" },
-  { name: "matches", title: "Matches" },
-  { name: "tickets", title: "Tickets" },
-  { name: "shop", title: "Shop" },
-  { name: "more", title: "More" },
+  { name: "home", title: "Home", testID: "tab-home" },
+  { name: "matches", title: "Matches", testID: "tab-matches" },
+  { name: "tickets", title: "Tickets", testID: "tab-tickets" },
+  { name: "shop", title: "Shop", testID: "tab-shop" },
+  { name: "more", title: "More", testID: "tab-more" },
 ] as const;
 
 export default function TabsLayout() {
@@ -23,8 +23,9 @@ export default function TabsLayout() {
         tabBarActiveTintColor: theme.colors.accent,
         tabBarInactiveTintColor: theme.colors.subtext,
         tabBarStyle: {
-          backgroundColor: "rgba(12, 16, 32, 0.82)",
+          backgroundColor: "rgba(12, 16, 32, 0.9)",
           borderTopColor: "rgba(255,255,255,0.08)",
+          height: 64,
         },
         tabBarHideOnKeyboard: true,
       }}
@@ -35,7 +36,10 @@ export default function TabsLayout() {
           name={route.name}
           options={{
             title: route.title,
-            tabBarLabel: ({ color }) => <Text style={{ color, fontSize: 12 }}>{route.title}</Text>,
+            tabBarTestID: route.testID,
+            tabBarLabel: ({ color }) => (
+              <Text style={{ color, fontSize: 12, fontWeight: "600" }}>{route.title}</Text>
+            ),
           }}
         />
       ))}

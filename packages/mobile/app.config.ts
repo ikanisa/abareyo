@@ -1,4 +1,19 @@
-import type { ExpoConfig } from '@expo/config';
+import type { ExpoConfig } from "@expo/config";
+
+import { HOSTS, linking } from "./src/linking";
+import { ensureBrandAssets } from "./tools/brand-assets";
+
+const projectId = "00000000-0000-0000-0000-000000000000";
+
+const brandAssets = ensureBrandAssets();
+
+const ICON = brandAssets.icon;
+const ADAPTIVE_ICON = brandAssets.adaptiveIcon;
+const SPLASH = brandAssets.splash;
+
+const BUNDLE_ID = "com.gikundiro.app";
+const PACKAGE = "com.gikundiro.app";
+const ASSOCIATED_DOMAINS = HOSTS.map((host) => `applinks:${host}`);
 
 export default (): ExpoConfig => ({
   name: 'GIKUNDIRO',
@@ -11,10 +26,17 @@ export default (): ExpoConfig => ({
   platforms: ['ios', 'android'],
   updates: {
     enabled: true,
-    checkAutomatically: 'ON_LOAD',
+    checkAutomatically: "ON_LOAD",
     fallbackToCacheTimeout: 0,
   },
+  splash: {
+    image: SPLASH,
+    backgroundColor: "#0b1220",
+    resizeMode: "contain",
+  },
   ios: {
+    bundleIdentifier: BUNDLE_ID,
+    buildNumber: "1.0.0",
     supportsTablet: false,
     bundleIdentifier: 'com.gikundiro.app',
     buildNumber: '1.0.0',
@@ -36,9 +58,7 @@ export default (): ExpoConfig => ({
         },
       },
       ITSAppUsesNonExemptEncryption: false,
-    },
-    entitlements: {
-      'aps-environment': 'production',
+      LSApplicationQueriesSchemes: ["tel"],
     },
   },
   android: {
@@ -47,11 +67,11 @@ export default (): ExpoConfig => ({
     adaptiveIcon: {
       backgroundColor: '#040F2A',
     },
-    softwareKeyboardLayoutMode: 'pan',
     allowBackup: false,
+    softwareKeyboardLayoutMode: "pan",
     intentFilters: [
       {
-        action: 'VIEW',
+        action: "VIEW",
         autoVerify: true,
         data: [
           {
@@ -66,12 +86,13 @@ export default (): ExpoConfig => ({
   },
   extra: {
     eas: {
-      projectId: '00000000-0000-0000-0000-000000000000',
+      projectId,
     },
-    signing: {
-      androidKeystorePath: process.env.ANDROID_KEYSTORE_PATH ?? '',
-      iosProvisioningProfile: process.env.IOS_PROVISIONING_PROFILE_PATH ?? '',
-      iosDistributionCertificate: process.env.IOS_SIGNING_CERT_PATH ?? '',
+    logging: {
+      suppressConsoleInRelease: true,
+    },
+    router: {
+      origin: "https://gikundiro.com",
     },
   },
 });

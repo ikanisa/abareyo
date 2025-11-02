@@ -10,30 +10,17 @@
       "@/providers/*": ["./src/providers/*", "../../src/providers/*"],
       "@/theme/*": ["./src/theme/*"],
       "@/ui/*": ["./src/ui/*"],
-      "@/config/*": ["../../src/config/*"],
-      "@/lib/*": ["../../src/lib/*"],
-      "@/app/_components/*": ["../../app/_components/*"],
-      "@/app/_lib/*": ["../../app/_lib/*"],
-      "@/app/_config/*": ["../../app/_config/*"],
-      "@/app/_data/*": ["../../app/_data/*"],
-      "@rayon/contracts": ["../contracts/src/index.ts"],
-      "@rayon/contracts/*": ["../contracts/src/*.ts"],
-      "@rayon/design-tokens": ["../design-tokens/src/index.ts"],
-      "@rayon/design-tokens/*": ["../design-tokens/src/*.ts"],
-      "@/*": ["./src/*", "../../src/*"]
-    },
-    "noEmit": true,
-    "incremental": true,
-    "tsBuildInfoFile": "./node_modules/.cache/mobile.tsbuildinfo"
+      "@/linking": ["./src/linking"],
+      "@/storage/*": ["./src/storage/*"],
+      "@/features/*": ["./src/features/*"],
+      "@/screens/*": ["./src/screens/*"],
+      "@/hooks/*": ["./src/hooks/*"]
+    }
   },
   "include": [
     "expo-env.d.ts",
     "./src/**/*",
     "./app/**/*",
-    "../../app/_config/**/*",
-    "../../app/_data/**/*",
-    "../../src/config/env.ts",
-    "../../src/lib/api/home.ts",
-    "../../src/lib/home/**/*"
+    "./tools/**/*"
   ]
 }

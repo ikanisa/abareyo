@@ -20,7 +20,7 @@ type SkiaModule = typeof import("@shopify/react-native-skia");
 
 const skiaModule: SkiaModule | undefined = (() => {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require("@shopify/react-native-skia") as SkiaModule;
   } catch (error) {
     console.info("[ui] Skia not available; falling back to gradients.");

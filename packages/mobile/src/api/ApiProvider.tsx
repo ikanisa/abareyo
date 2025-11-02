@@ -1,7 +1,12 @@
 import { type ReactNode } from "react";
 
+import { SupabaseProvider } from "@/api/SupabaseProvider";
 import { QueryProvider } from "@/api/query-provider";
 
 export const ApiProvider = ({ children }: { children: ReactNode }) => {
-  return <QueryProvider>{children}</QueryProvider>;
+  return (
+    <SupabaseProvider>
+      <QueryProvider>{children}</QueryProvider>
+    </SupabaseProvider>
+  );
 };

@@ -1,10 +1,24 @@
-import { Slot, Stack } from "expo-router";
+import { useMemo } from "react";
 import { StatusBar } from "expo-status-bar";
+import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { ApiProvider } from "@/api/ApiProvider";
-import { MotionProvider } from "@/providers/MotionProvider";
+import { MotionProvider, useMotionPreference } from "@/providers/MotionProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
+
+const RootNavigator = () => {
+  const { reducedMotion } = useMotionPreference();
+  const screenOptions = useMemo(
+    () => ({
+      headerShown: false,
+      animation: reducedMotion ? "none" : "fade",
+    }),
+    [reducedMotion],
+  );
+
+  return <Stack screenOptions={screenOptions} />;
+};
 
 export default function RootLayout() {
   return (
@@ -13,8 +27,7 @@ export default function RootLayout() {
         <MotionProvider>
           <ApiProvider>
             <StatusBar style="light" translucent />
-            <Stack screenOptions={{ headerShown: false, animation: "fade" }} />
-            <Slot />
+            <RootNavigator />
           </ApiProvider>
         </MotionProvider>
       </ThemeProvider>
