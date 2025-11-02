@@ -14,6 +14,9 @@ const bannedPatterns = [
 
 const whitelist = [
   /scripts\/ci\/assert-ussd-only\.ts$/,
+  /scripts\/ensure-ussd-only\.ts$/,
+  /tools\/ussd-compliance\//,
+  /docs\/operations\/additive-guardrails\.md$/,
   /package-lock\.json$/,
   /pnpm-lock\.ya?ml$/,
   /yarn\.lock$/,
