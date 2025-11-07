@@ -9,10 +9,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 console.log('📱 Building Android APK...\n');
 
+// Note: This script is optimized for Unix-like environments (Linux/macOS)
+// For Windows, use WSL or Git Bash, or adapt commands for PowerShell
+const isWindows = process.platform === 'win32';
+const gradlewCmd = isWindows ? 'gradlew.bat' : './gradlew';
+
 const steps = [
   {
     name: 'Clean previous builds',
-    command: 'rm -rf dist && rm -rf android/app/build',
+    command: isWindows 
+      ? 'rmdir /s /q dist 2>nul & rmdir /s /q android\\app\\build 2>nul'
+      : 'rm -rf dist && rm -rf android/app/build',
   },
   {
     name: 'Build Next.js for Capacitor',
@@ -24,7 +31,7 @@ const steps = [
   },
   {
     name: 'Build Android APK',
-    command: 'cd android && ./gradlew assembleRelease',
+    command: `cd android && ${gradlewCmd} assembleRelease`,
   },
 ];
 

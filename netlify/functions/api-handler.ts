@@ -1,11 +1,16 @@
 import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import { createClient } from '@supabase/supabase-js';
 
+// Validate required environment variables
+const SITE_SUPABASE_URL = process.env.SITE_SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SITE_SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error('Missing required environment variables: SITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
+}
+
 // Initialize Supabase client
-const supabase = createClient(
-  process.env.SITE_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const supabase = createClient(SITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 export const handler: Handler = async (
   event: HandlerEvent,
@@ -14,6 +19,7 @@ export const handler: Handler = async (
   const { path, httpMethod, headers, body } = event;
 
   // CORS headers
+  // NOTE: In production, replace '*' with specific allowed origins for better security
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
