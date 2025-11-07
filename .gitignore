@@ -37,12 +37,14 @@ supabase/supabase/.temp/
 test-results
 playwright-report
 
-# Cloudflare/Caddy local runtime
+# Deployment platforms
 .logs/
-infra/cloudflared/config.yml
-infra/cloudflared/credentials/
 k8s-secrets.sh
 ios/.build/
+
+# Netlify
+.netlify
+netlify/functions/node_modules
 
 # Generated supply chain artifacts
 report/sbom/*.json
