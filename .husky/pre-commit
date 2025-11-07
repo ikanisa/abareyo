@@ -1,0 +1,15 @@
+#!/bin/sh
+set -e
+
+echo "Running pre-commit checks..."
+echo ""
+
+# Linting
+echo "→ Linting..."
+npm run lint
+
+echo ""
+echo "✓ Pre-commit checks passed!"
+echo ""
+echo "Note: Type-check and unit tests are run in CI."
+echo "To run them locally: npm run type-check && npm run test:unit"
