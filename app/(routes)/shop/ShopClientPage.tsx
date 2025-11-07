@@ -84,11 +84,13 @@ const ShopClientPageContent = () => {
   const clearCopy = t("chip.clear");
 
   const filterSummary = useMemo(() => {
-    if (!activeFilters.length) {
+    const first = activeFilters?.[0];
+    if (!first) {
       return null;
     }
-    const formatted = formatActiveFilterCopy(activeFilters[0], t);
-    const remainder = activeFilters.length > 1 ? ` +${activeFilters.length - 1}` : "";
+    const formatted = formatActiveFilterCopy(first, t);
+    const restCount = Math.max((activeFilters?.length ?? 0) - 1, 0);
+    const remainder = restCount ? ` +${restCount}` : "";
     return {
       primary: `${formatted.primary}${remainder}`,
       secondary: `${formatted.secondary}${remainder}`,
