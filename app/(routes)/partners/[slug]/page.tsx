@@ -90,7 +90,7 @@ export default async function PartnerWebview({ params }: { params: { slug: strin
         <h1>Partner experience</h1>
         <p className="muted">Explore exclusive services right inside GIKUNDIRO.</p>
       </section>
-      <PartnerFrame partner={partner} />
+      <PartnerFrame partner={{ ...partner, category: partner.category ?? '', url: partner.url ?? '' }} />
     </PageShell>
   );
 }
