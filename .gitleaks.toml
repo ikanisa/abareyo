@@ -1,0 +1,45 @@
+# Gitleaks configuration for Rayon Sports Platform
+# This configuration allows certain files to contain example secrets and test data
+
+[allowlist]
+  description = "Allowlisted files that can contain example/test secrets"
+  paths = [
+    '''.env.example''',
+    '''.env.local.example''',
+    '''.env.template''',
+    '''.env.production.example''',
+    '''.*\.test\.ts$''',
+    '''.*\.test\.tsx$''',
+    '''.*\.spec\.ts$''',
+    '''.*\.spec\.tsx$''',
+    '''tests/.*''',
+    '''__tests__/.*''',
+    '''test-fixtures/.*''',
+    '''mocks/.*''',
+  ]
+
+  # Allow common test/example values
+  regexes = [
+    '''ci-.*-key''',
+    '''test-.*-token''',
+    '''example\.com''',
+    '''localhost''',
+    '''127\.0\.0\.1''',
+    '''<.*>''',  # Placeholder values in brackets
+    '''your-.*-key''',
+    '''replace-with-''',
+  ]
+
+[allowlist.commits]
+  description = "Allow commits with example configurations"
+
+[allowlist.stopwords]
+  description = "Exclude common false positives"
+  stopwords = [
+    '''example''',
+    '''sample''',
+    '''test''',
+    '''mock''',
+    '''placeholder''',
+    '''template''',
+  ]
