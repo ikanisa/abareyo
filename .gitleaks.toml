@@ -25,7 +25,7 @@
     '''example\.com''',
     '''localhost''',
     '''127\.0\.0\.1''',
-    '''<.*>''',  # Placeholder values in brackets
+    '''<[A-Z_][A-Z0-9_-]*>''',  # Uppercase placeholder values
     '''your-.*-key''',
     '''replace-with-''',
   ]

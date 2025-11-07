@@ -1,14 +1,12 @@
 #!/bin/sh
+set -e
 
 echo "Running pre-commit checks..."
 echo ""
 
 # Linting
 echo "→ Linting..."
-npm run lint || {
-  echo "✗ Lint failed"
-  exit 1
-}
+npm run lint
 
 echo ""
 echo "✓ Pre-commit checks passed!"
