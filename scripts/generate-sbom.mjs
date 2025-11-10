@@ -11,7 +11,6 @@ const policyPath = resolve(repoRoot, 'config/compliance/license-policies.json');
 const targets = [
   { name: 'web', cwd: repoRoot, output: resolve(outputDir, 'web-app.cdx.json') },
   { name: 'backend', cwd: resolve(repoRoot, 'backend'), output: resolve(outputDir, 'backend-service.cdx.json') },
-  { name: 'mobile', cwd: resolve(repoRoot, 'packages/mobile'), output: resolve(outputDir, 'mobile-app.cdx.json') },
 ];
 
 const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';

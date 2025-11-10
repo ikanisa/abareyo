@@ -2,7 +2,6 @@
 import type { ReactNode } from "react";
 
 import { useEffect } from "react";
-import { Capacitor } from "@capacitor/core";
 
 import { PWA_OPT_IN_EVENT, getStoredPwaOptIn } from "@/app/_lib/pwa";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,7 +21,6 @@ import {
   type NfcTapDetail,
   type NfcTransactionDetail,
 } from "@/lib/nfc";
-import { registerCapacitorEvent, type CapacitorEventPayload } from "@/lib/mobile/capacitor-events";
 import { toast } from "sonner";
 
 const hasWindow = () => typeof window !== 'undefined';
@@ -229,74 +227,6 @@ export const Providers = ({ children }: { children: ReactNode }) => {
     } else if (Notification.permission === 'denied') {
       console.info('Notification permission denied; push features disabled.');
     }
-  }, []);
-
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform()) {
-      return;
-    }
-
-    let removeListener: (() => void) | undefined;
-    const cleanupFns: Array<() => void> = [];
-
-    (async () => {
-      try {
-        const { App } = await import('@capacitor/app');
-        const handle = await App.addListener('appStateChange', ({ isActive }) => {
-          void recordAppStateEvent({ type: 'app-state', isActive }, telemetryEndpoint);
-        });
-        removeListener = () => {
-          handle.remove();
-        };
-      } catch (error) {
-        console.warn('Capacitor App listener unavailable', error);
-      }
-    })();
-
-    cleanupFns.push(
-      registerCapacitorEvent('readerMode:success', (payload: CapacitorEventPayload) => {
-        toast.success('Card scanned', {
-          description: `Transaction ${payload.transactionId as string} ready for submission.`,
-        });
-      }),
-    );
-
-    cleanupFns.push(
-      registerCapacitorEvent('readerMode:error', (payload: CapacitorEventPayload) => {
-        toast.error('Reader mode error', {
-          description: String(payload.message ?? 'Unable to process card.'),
-        });
-      }),
-    );
-
-    cleanupFns.push(
-      registerCapacitorEvent('ussd:error', (payload: CapacitorEventPayload) => {
-        toast.error('Payment failure', {
-          description: String(payload.message ?? 'USSD session failed.'),
-        });
-      }),
-    );
-
-    cleanupFns.push(
-      registerCapacitorEvent('ussd:success', (payload: CapacitorEventPayload) => {
-        toast.success('Payment session completed', {
-          description: String(payload.response ?? 'USSD response captured.'),
-        });
-      }),
-    );
-
-    cleanupFns.push(
-      registerCapacitorEvent('ussd:fallback', () => {
-        toast('Dialer opened', {
-          description: 'Continue the USSD flow in the system dialer.',
-        });
-      }),
-    );
-
-    return () => {
-      removeListener?.();
-      cleanupFns.forEach((cleanup) => cleanup());
-    };
   }, []);
 
   return (

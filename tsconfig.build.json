@@ -6,9 +6,6 @@
     },
     {
       "path": "./packages/contracts/tsconfig.build.json"
-    },
-    {
-      "path": "./packages/mobile/tsconfig.build.json"
     }
   ]
 }

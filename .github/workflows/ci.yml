@@ -74,9 +74,6 @@ jobs:
       - name: Test
         run: npm test
 
-      - name: Mobile OTP smoke tests
-        run: npm run test:mobile:smoke
-
       - name: Preflight (env + backend + build)
         run: node scripts/preflight.mjs
         env:
@@ -118,21 +115,21 @@ jobs:
         run: npm run test:e2e:a11y
 
       - name: Generate SBOMs
+        # Guidance: CI pipeline SBOM/license flow is documented in CI_PIPELINE_FIXES.md
         run: npm run sbom
 
       - name: Package build artifacts
         run: |
           mkdir -p report/sbom
           tar -czf report/sbom/web-next-build.tar.gz -C .next .
-          tar -czf report/sbom/mobile-app-source.tar.gz --exclude='packages/mobile/node_modules' packages/mobile
 
       - name: Generate checksums and provenance
+        # Guidance: Maintains the attestable bundle described in CI_PIPELINE_FIXES.md
         run: |
-          node scripts/generate-checksums.mjs report/sbom/web-mobile.sha256 \
+          node scripts/generate-checksums.mjs report/sbom/web.sha256 \
             report/sbom/web-next-build.tar.gz \
-            report/sbom/mobile-app-source.tar.gz \
             report/sbom/web-app.cdx.json \
-            report/sbom/mobile-app.cdx.json \
+            report/sbom/backend-service.cdx.json \
             report/sbom/license-scan.json \
             report/sbom/license-policy.json \
             report/sbom/manifest.json
@@ -140,40 +137,27 @@ jobs:
             --artifact web \
             --binary report/sbom/web-next-build.tar.gz \
             --sbom report/sbom/web-app.cdx.json \
-            --checksums report/sbom/web-mobile.sha256 \
+            --checksums report/sbom/web.sha256 \
             --output report/sbom/web.provenance.json
-          node scripts/write-provenance.mjs \
-            --artifact mobile \
-            --binary report/sbom/mobile-app-source.tar.gz \
-            --sbom report/sbom/mobile-app.cdx.json \
-            --checksums report/sbom/web-mobile.sha256 \
-            --output report/sbom/mobile.provenance.json
 
-      - name: Upload supply chain bundle (web + mobile)
+      - name: Upload supply chain bundle
         uses: actions/upload-artifact@v4
         with:
-          name: web-mobile-supply-chain
+          name: web-supply-chain
           path: |
             report/sbom/web-app.cdx.json
-            report/sbom/mobile-app.cdx.json
+            report/sbom/backend-service.cdx.json
             report/sbom/license-policy.json
             report/sbom/license-scan.json
             report/sbom/manifest.json
             report/sbom/web-next-build.tar.gz
-            report/sbom/mobile-app-source.tar.gz
-            report/sbom/web-mobile.sha256
+            report/sbom/web.sha256
             report/sbom/web.provenance.json
-            report/sbom/mobile.provenance.json
 
       - name: Attest web build provenance
         uses: actions/attest-build-provenance@v1
         with:
           subject-path: report/sbom/web-next-build.tar.gz
-
-      - name: Attest mobile bundle provenance
-        uses: actions/attest-build-provenance@v1
-        with:
-          subject-path: report/sbom/mobile-app-source.tar.gz
       - name: Upload Playwright artifacts on failure
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4

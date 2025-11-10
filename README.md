@@ -140,7 +140,7 @@ If you attempt to reuse the same OTP or submit the wrong code more than five tim
 - `pnpm start` – Serve the production bundle (`next start`).
 - `pnpm lint` / `pnpm type-check` / `pnpm test` – Static analysis and unit coverage gates.
 - `pnpm coverage` – Generates the Vitest coverage report; CI enforces the thresholds defined in [`docs/release.md`](docs/release.md#quality-gates).
-- `pnpm cap:sync`, `pnpm cap:android`, `pnpm cap:ios` – Capacitor workflows (requires native toolchains).
+- Legacy Capacitor build tooling has been removed; the PWA is now the only supported client.
 - `pnpm supabase:functions` (see `package.json`) – Convenience wrappers for function deploys.
 - `node scripts/preflight.mjs` – Combined env + backend availability check followed by `npm run build`.
 
@@ -162,8 +162,7 @@ Upcoming production hardening includes a reverse proxy in front of the Next.js r
 
 ## Useful Scripts
 - `pnpm lint` / `pnpm type-check` / `pnpm build` – CI parity checks.
-- `pnpm cap:sync`, `pnpm cap:android`, `pnpm cap:ios` – entry points for Capacitor shells (install `@capacitor/cli` and related platform toolchains locally when you run them).
-- Use `npx cordova-res` and `npx @bubblewrap/cli` on demand for mobile asset generation and TWA packaging; they are no longer pinned in `devDependencies` to avoid shipping known vulnerabilities.
+- Mobile packaging scripts were removed with the native bridges; reference the historical notes in `docs/mobile` if you need the archived steps.
 - `docker compose up web` – build and run the production web image locally.
 - `node tools/gsm-emulator/send-sms.js "…"` – simulate inbound MoMo/Airtel confirmation messages during flows.
 - `npm run lint:ussd` – shared keyword audit for the web and React Native clients (guards against non-USSD payment SDKs).
@@ -178,7 +177,7 @@ Deployment processes are orchestrated via Make targets and GitHub Actions. Consu
 - `make deploy-staging` / `make deploy-production` – Triggers the web deployment workflow with the current commit.
 - `make deploy:rollback ENV=<staging|production>` – Restores the last known good artifact (see [`docs/release.md`](docs/release.md#rollback-procedures)).
 - `pnpm supabase:functions deploy` – Deploys updated Edge Functions; details live in [`docs/runbooks/web.md`](docs/runbooks/web.md#deployment-steps).
-- `pnpm cap:android --prod` / `pnpm cap:ios --prod` – Entry points for mobile release builds (see [`docs/runbooks/mobile.md`](docs/runbooks/mobile.md#release-pipeline)).
+- Native release targets are no longer built from this repo; coordinate with Product if a dedicated mobile shell is reintroduced.
 
 CI expectations, coverage thresholds, and rollback playbooks are formalised in [`docs/release.md`](docs/release.md#quality-gates) and [`docs/runbooks/rollback.md`](docs/runbooks/rollback.md).
 
@@ -188,7 +187,7 @@ CI expectations, coverage thresholds, and rollback playbooks are formalised in [
 - `src/providers/` – Global context providers (auth façade, i18n scaffold, theme provider, React Query).
 - `backend/` – Legacy NestJS application retained for reference. The Supabase-backed flows now live in `app/api` and `supabase/`.
 - `packages/contracts/` – Shared DTOs and enums consumed by frontend utilities and any remaining backend tooling.
-- `docs/` – Architecture decisions, local runbooks, and mobile packaging guides.
+- `docs/` – Architecture decisions, local runbooks, and historical mobile packaging guides.
 
 ## Next Steps (Production Readiness)
 

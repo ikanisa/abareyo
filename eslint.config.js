@@ -42,8 +42,6 @@ export default tseslint.config(
                 "../**/app/**",
                 "../admin/**",
                 "../**/admin/**",
-                "../packages/mobile/**",
-                "../**/packages/mobile/**",
               ],
               message:
                 "Use the configured path aliases (@/*, @admin/*, @mobile/*) instead of relative imports that cross app boundaries.",

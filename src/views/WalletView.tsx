@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CreditCard, Clock, CheckCircle2, Search, RefreshCw, Ticket, Nfc } from "lucide-react";
-import { Capacitor } from "@capacitor/core";
 import { QRCodeCanvas } from "qrcode.react";
 
 import WhatsAppLoginNotice from "@/app/_components/auth/WhatsAppLoginNotice";
@@ -79,14 +78,6 @@ const Wallet = () => {
   const [armedUntil, setArmedUntil] = useState<number | null>(null);
   const [tapCountdown, setTapCountdown] = useState<number>(0);
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (Capacitor.isNativePlatform()) {
-      setTapStatus("idle");
-    } else {
-      setTapStatus("unsupported");
-    }
-  }, []);
 
   useEffect(() => {
     if (armedUntil === null) {
@@ -198,10 +189,10 @@ const Wallet = () => {
   const isNativeReady = tapStatus !== "unsupported";
 
   const handleArmTapMoMo = async () => {
-    if (!Capacitor.isNativePlatform()) {
+    if (tapStatus === "unsupported") {
       toast({
         title: "TapMoMo unavailable",
-        description: "Install the Android build to use tap-to-pay.",
+        description: "Install the legacy Android build to use tap-to-pay or process payments on the web dashboard.",
         variant: "destructive",
       });
       return;
@@ -456,7 +447,7 @@ const Wallet = () => {
             ) : (
               <>
                 <Badge variant="outline">Android native only</Badge>
-                <span>Install the Android app to enable TapMoMo acceptance.</span>
+                <span>Tap-to-pay currently requires the retired Android shell.</span>
               </>
             )}
           </div>

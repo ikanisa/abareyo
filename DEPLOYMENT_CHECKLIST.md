@@ -75,9 +75,8 @@ Create these secrets in your deployment platform or K8s secrets:
 - [ ] `OPENAI_BREAKER_FAILURE_THRESHOLD` - Circuit breaker trip threshold (default 3)
 - [ ] `OPENAI_BREAKER_RESET_MS` - Circuit breaker reset window (default 60000)
 
-**Mobile Auth (Required for OTP flows)**:
-- [ ] `EXPO_PUBLIC_WEB_URL` - Expo mobile API base (falls back to `NEXT_PUBLIC_SITE_URL`)
-- [ ] `API_BASE_URL` - Native mobile API base for Compose/SwiftUI builds
+**Mobile Auth** *(Archived)*:
+- Native shell environment variables are no longer required. If a mobile wrapper resurfaces, resurrect `EXPO_PUBLIC_WEB_URL` and `API_BASE_URL` from the historical mobile runbooks.
 
 **Production Services** (Optional but Recommended):
 - [ ] `NEXT_PUBLIC_SENTRY_DSN` - Error tracking
