@@ -47,12 +47,12 @@ export const metadata: Metadata = {
   appLinks: {
     ios: {
       app_store_id: "0000000000",
-      app_name: "Rayon Sports",
+      app_name: "GIKUNDIRO",
       url: "gikundiro://home",
     },
     android: {
-      package: "com.rayonsports.fanapp",
-      app_name: "Rayon Sports",
+      package: "com.gikundiro.app",
+      app_name: "GIKUNDIRO",
       url: "gikundiro://home",
     },
     web: {
@@ -63,13 +63,13 @@ export const metadata: Metadata = {
   other: {
     "theme-color": "#0033FF",
     "apple-itunes-app": "app-id=0000000000, app-argument=gikundiro://home",
-    "google-play-app": "app-id=com.rayonsports.fanapp",
+    "google-play-app": "app-id=com.gikundiro.app",
     "al:ios:url": "gikundiro://home",
     "al:ios:app_store_id": "0000000000",
-    "al:ios:app_name": "Rayon Sports",
+    "al:ios:app_name": "GIKUNDIRO",
     "al:android:url": "gikundiro://home",
-    "al:android:package": "com.rayonsports.fanapp",
-    "al:android:app_name": "Rayon Sports",
+    "al:android:package": "com.gikundiro.app",
+    "al:android:app_name": "GIKUNDIRO",
   },
 };
 

@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { PNG } from "pngjs";
 
@@ -12,10 +13,11 @@ type Rgba = {
   r: number;
   g: number;
   b: number;
-  a?: number;
+  a: number;
 };
+const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 
-const ASSET_DIR = path.join(__dirname, "..", "assets");
+const ASSET_DIR = path.join(moduleDir, "..", "assets");
 
 const BRAND_ASSET_FILES = {
   icon: "icon.png",
@@ -69,8 +71,14 @@ function mixColors(from: Rgba, to: Rgba, t: number): Rgba {
 }
 
 function sampleGradient(stops: GradientStop[], t: number): Rgba {
+  if (stops.length === 0) {
+    throw new Error("Cannot sample gradient with no stops");
+  }
+
   const clamped = Math.max(0, Math.min(1, t));
-  const [first, last] = [stops[0], stops[stops.length - 1]];
+  const first = stops[0]!;
+  const last = stops[stops.length - 1]!;
+
   if (clamped <= first.offset) {
     return hexToRgba(first.color);
   }
@@ -80,8 +88,8 @@ function sampleGradient(stops: GradientStop[], t: number): Rgba {
 
   const nextIndex = stops.findIndex((stop) => stop.offset >= clamped);
   const prevIndex = nextIndex <= 0 ? 0 : nextIndex - 1;
-  const prevStop = stops[prevIndex];
-  const nextStop = stops[nextIndex];
+  const prevStop = stops[prevIndex]!;
+  const nextStop = stops[nextIndex] ?? prevStop;
   const span = nextStop.offset - prevStop.offset || 1;
   const spanT = (clamped - prevStop.offset) / span;
 

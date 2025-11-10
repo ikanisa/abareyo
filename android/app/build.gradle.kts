@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.rayonsports.fanapp"
+    namespace = "com.gikundiro.app"
     compileSdk = 34
 
     fun resolveSecret(property: String, env: String? = null): String? {
@@ -19,7 +19,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.rayonsports.fanapp"
+        applicationId = "com.gikundiro.app"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
@@ -33,6 +33,9 @@ android {
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
         buildConfigField("String", "SUPABASE_SERVICE_KEY", "\"$supabaseServiceKey\"")
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        resValue("string", "supabase_url", supabaseUrl)
+        resValue("string", "supabase_service_key", supabaseServiceKey)
+        resValue("string", "api_base_url", apiBaseUrl)
     }
 
     val releaseSigning = signingConfigs.create("release") {

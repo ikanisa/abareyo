@@ -1,0 +1,7 @@
+#include? "Config.local.xcconfig"
+
+// User-defined build settings for injecting secrets at build time.
+SUPABASE_URL = $(SUPABASE_URL_ENV)
+SUPABASE_ANON_KEY = $(SUPABASE_ANON_KEY_ENV)
+SUPABASE_SERVICE_KEY = $(SUPABASE_SERVICE_KEY_ENV)
+API_BASE_URL = $(API_BASE_URL_ENV)

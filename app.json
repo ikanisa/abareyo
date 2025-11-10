@@ -46,14 +46,14 @@
       ]
     ],
     "ios": {
-      "bundleIdentifier": "com.rayonsports.fanapp",
+      "bundleIdentifier": "com.gikundiro.app",
       "associatedDomains": [
         "applinks:gikundiro.com",
         "applinks:www.gikundiro.com"
       ]
     },
     "android": {
-      "package": "com.rayonsports.fanapp",
+      "package": "com.gikundiro.app",
       "intentFilters": [
         {
           "action": "VIEW",

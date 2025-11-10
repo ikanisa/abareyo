@@ -55,7 +55,7 @@
     { "protocol": "web+gikundiro", "url": "/link?target=%s" }
   ],
   "related_applications": [
-    { "platform": "play", "id": "com.rayonsports.fanapp" },
+    { "platform": "play", "id": "com.gikundiro.app" },
     { "platform": "itunes", "id": "0000000000" }
   ]
 }

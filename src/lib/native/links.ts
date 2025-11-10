@@ -2,7 +2,7 @@ export const NATIVE_SCHEME = 'gikundiro://';
 export const DEFAULT_NATIVE_ROUTE = 'home';
 export const NATIVE_HANDOFF_PARAMS = new Set(['openNative', 'handoff', 'appLink']);
 export const PLAY_STORE_URL =
-  'https://play.google.com/store/apps/details?id=com.rayonsports.fanapp';
+  'https://play.google.com/store/apps/details?id=com.gikundiro.app';
 export const APP_STORE_URL = 'https://apps.apple.com/app/id0000000000';
 
 const pathFromSegments = (segments: string[], fallback: string) =>

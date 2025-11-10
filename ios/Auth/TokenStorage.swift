@@ -11,7 +11,7 @@ public protocol TokenStorage {
 
 #if canImport(Security)
 public final class KeychainTokenStorage: TokenStorage {
-    private let service = "com.rayonsports.auth"
+    private let service = "com.gikundiro.auth"
     private let account = "jwt"
 
     public init() {}

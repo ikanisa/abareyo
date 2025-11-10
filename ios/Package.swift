@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "RayonMobileAuth",
+    name: "GikundiroMobileAuth",
     platforms: [
         .iOS(.v15)
     ],
