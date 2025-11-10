@@ -15,8 +15,10 @@ export class SupabaseFanAuthService {
   private readonly breaker: CircuitBreaker;
 
   constructor(private readonly configService: ConfigService) {
+    this.client = null;
     const url = this.configService.get<string>('supabase.url');
     const serviceRoleKey = this.configService.get<string>('supabase.serviceRoleKey');
+    const publishableKey = this.configService.get<string>('supabase.publishableKey');
     const requestTimeoutMs = this.configService.get<number>('supabase.requestTimeoutMs', 4000);
     const breakerFailureThreshold = this.configService.get<number>('supabase.circuitBreaker.failureThreshold', 4);
     const breakerResetMs = this.configService.get<number>('supabase.circuitBreaker.resetMs', 30000);
@@ -30,11 +32,16 @@ export class SupabaseFanAuthService {
     });
 
     if (!url || !serviceRoleKey) {
-      this.client = null;
-      if (process.env.NODE_ENV !== 'production') {
-        this.logger.warn('Supabase fan authentication is not fully configured.');
+      const message = 'Supabase fan authentication requires a configured URL and service role key.';
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error(message);
       }
+      this.logger.warn(message);
       return;
+    }
+
+    if (publishableKey && publishableKey === serviceRoleKey) {
+      throw new Error('Supabase service role key must not reuse the publishable key.');
     }
 
     this.client = createClient(url, serviceRoleKey, {

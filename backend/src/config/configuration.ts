@@ -1,9 +1,58 @@
+const environment = process.env.NODE_ENV ?? 'development';
+const isProduction = environment === 'production';
+
 const normaliseEnvironmentKey = (value: string) =>
   value
     .trim()
     .replace(/[^a-z0-9]+/gi, '_')
     .replace(/^_+|_+$/g, '')
     .toUpperCase();
+
+const normaliseSecret = (value: string | undefined | null) => {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const ensureSecret = (
+  value: string | undefined,
+  {
+    envVar,
+    fallback,
+    minLength = 1,
+    allowFallback = true,
+  }: { envVar: string; fallback?: string; minLength?: number; allowFallback?: boolean },
+) => {
+  const resolved = normaliseSecret(value);
+  if (resolved) {
+    if (resolved.length < minLength) {
+      throw new Error(`${envVar} must be at least ${minLength} characters long.`);
+    }
+    return resolved;
+  }
+  if (isProduction) {
+    throw new Error(`${envVar} must be configured in production.`);
+  }
+  if (allowFallback && typeof fallback === 'string') {
+    return fallback;
+  }
+  return undefined;
+};
+
+const ensureDistinctSecret = (
+  secret: string | undefined,
+  publicKey: string | undefined,
+  {
+    secretLabel,
+    publicLabel,
+  }: { secretLabel: string; publicLabel: string },
+) => {
+  if (secret && publicKey && secret === publicKey) {
+    throw new Error(`${secretLabel} must not reuse the ${publicLabel}.`);
+  }
+};
 
 const collectSentryDsns = (prefix: string) => {
   const entries: Record<string, string> = {};
@@ -21,6 +70,49 @@ const collectSentryDsns = (prefix: string) => {
   }
   return entries;
 };
+
+const adminSessionSecret = ensureSecret(process.env.ADMIN_SESSION_SECRET, {
+  envVar: 'ADMIN_SESSION_SECRET',
+  fallback: 'change-me-admin-session',
+  minLength: 16,
+});
+
+const fanSessionSecret = ensureSecret(process.env.FAN_SESSION_SECRET, {
+  envVar: 'FAN_SESSION_SECRET',
+  fallback: 'change-me-fan-session',
+  minLength: 16,
+});
+
+const supabaseUrl = normaliseSecret(process.env.SITE_SUPABASE_URL ?? process.env.SUPABASE_URL);
+const supabaseServiceRoleKey = ensureSecret(
+  normaliseSecret(
+    process.env.SITE_SUPABASE_SECRET_KEY ??
+      process.env.SUPABASE_SECRET_KEY ??
+      process.env.SUPABASE_SERVICE_ROLE_KEY ??
+      process.env.SUPABASE_SERVICE_KEY,
+  ),
+  {
+    envVar: 'SITE_SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY',
+    allowFallback: false,
+  },
+);
+
+const supabasePublishableKey = normaliseSecret(
+  process.env.SITE_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.SUPABASE_PUBLISHABLE_KEY ??
+    process.env.SUPABASE_ANON_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+);
+
+if (isProduction && !supabaseUrl) {
+  throw new Error('SITE_SUPABASE_URL or SUPABASE_URL must be configured in production.');
+}
+
+ensureDistinctSecret(supabaseServiceRoleKey, supabasePublishableKey, {
+  secretLabel: 'Supabase service role key',
+  publicLabel: 'publishable key',
+});
 
 export default () => ({
   app: {
@@ -67,7 +159,7 @@ export default () => ({
   admin: {
     session: {
       cookieName: process.env.ADMIN_SESSION_COOKIE ?? 'admin_session',
-      secret: process.env.ADMIN_SESSION_SECRET ?? 'change-me-admin-session',
+      secret: adminSessionSecret ?? 'change-me-admin-session',
       ttlHours: Number(process.env.ADMIN_SESSION_TTL_HOURS ?? 24),
       cookieDomain: process.env.ADMIN_SESSION_COOKIE_DOMAIN ?? undefined,
     },
@@ -78,11 +170,9 @@ export default () => ({
     },
   },
   supabase: {
-    url: process.env.SITE_SUPABASE_URL ?? process.env.SUPABASE_URL,
-    serviceRoleKey:
-      process.env.SITE_SUPABASE_SECRET_KEY ??
-      process.env.SUPABASE_SECRET_KEY ??
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
+    url: supabaseUrl,
+    serviceRoleKey: supabaseServiceRoleKey,
+    publishableKey: supabasePublishableKey,
     requestTimeoutMs: Number(process.env.SUPABASE_REQUEST_TIMEOUT_MS ?? 4000),
     circuitBreaker: {
       failureThreshold: Number(process.env.SUPABASE_BREAKER_FAILURE_THRESHOLD ?? 4),
@@ -92,7 +182,7 @@ export default () => ({
   fan: {
     session: {
       cookieName: process.env.FAN_SESSION_COOKIE ?? 'fan_session',
-      secret: process.env.FAN_SESSION_SECRET ?? 'change-me-fan-session',
+      secret: fanSessionSecret ?? 'change-me-fan-session',
       ttlHours: Number(process.env.FAN_SESSION_TTL_HOURS ?? 24 * 30),
       cookieDomain: process.env.FAN_SESSION_COOKIE_DOMAIN ?? undefined,
     },

@@ -489,8 +489,8 @@ drwxrwxr-x  2 runner runner 4096 Nov  2 12:09 web
 - packages/mobile - Mobile app components (already exists)
 
 ### Apps
+- app/admin - Next.js admin surface (currently active)
 - apps/web - Next.js PWA (to be linked from root app/)
-- apps/admin - Next.js Admin (to be enhanced)
 - apps/mobile - Expo RN app (already exists as packages/mobile)
 
 ### Backend
@@ -508,7 +508,7 @@ drwxrwxr-x  2 runner runner 4096 Nov  2 12:09 web
 - packages/contracts
 - packages/design-tokens
 - packages/mobile
-- apps/admin (skeleton)
+- app/admin (shipping)
 - apps/web (skeleton)
 
 ### Needs Enhancement 🔧
