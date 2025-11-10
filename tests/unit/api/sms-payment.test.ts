@@ -5,6 +5,16 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 vi.mock('@/app/_lib/supabase', () => ({
   getSupabase: vi.fn(),
 }));
+vi.mock('@/config/env', () => ({
+  serverEnv: {
+    SITE_SUPABASE_URL: 'http://localhost:54321',
+    SUPABASE_URL: 'http://localhost:54321',
+    NEXT_PUBLIC_SUPABASE_URL: 'http://localhost:54321',
+    SITE_SUPABASE_SECRET_KEY: 'service-secret',
+    SUPABASE_SERVICE_ROLE_KEY: 'service-role-key',
+    SUPABASE_SERVICE_KEY: 'service-role-key',
+  },
+}));
 
 type MockSupabaseClient = {
   auth: {
@@ -30,7 +40,7 @@ describe('SMS Process API', () => {
     };
     vi.mocked(getSupabase).mockReturnValue(mockSupabase as unknown as SupabaseClient);
 
-    const { POST } = await import('@/app/api/sms/process/route');
+    const { POST } = await import('../../../app/api/sms/process/route');
     const request = new Request('http://localhost:3000/api/sms/process', {
       method: 'POST',
       body: JSON.stringify({ text: 'Test SMS' }),
@@ -55,7 +65,7 @@ describe('SMS Process API', () => {
     };
     vi.mocked(getSupabase).mockReturnValue(mockSupabase as unknown as SupabaseClient);
 
-    const { POST } = await import('@/app/api/sms/process/route');
+    const { POST } = await import('../../../app/api/sms/process/route');
     const request = new Request('http://localhost:3000/api/sms/process', {
       method: 'POST',
       body: JSON.stringify({}),
@@ -72,7 +82,7 @@ describe('SMS Process API', () => {
     const { getSupabase } = await import('@/app/_lib/supabase');
     vi.mocked(getSupabase).mockReturnValue(null);
 
-    const { POST } = await import('@/app/api/sms/process/route');
+    const { POST } = await import('../../../app/api/sms/process/route');
     const request = new Request('http://localhost:3000/api/sms/process', {
       method: 'POST',
       body: JSON.stringify({ text: 'Test SMS' }),
@@ -103,7 +113,7 @@ describe('Mobile Money Payments API', () => {
     };
     vi.mocked(getSupabase).mockReturnValue(mockSupabase as unknown as SupabaseClient);
 
-    const { GET } = await import('@/app/api/payments/mobile-money/route');
+    const { GET } = await import('../../../app/api/payments/mobile-money/route');
     const request = new Request('http://localhost:3000/api/payments/mobile-money', {
       method: 'GET',
     });
@@ -119,7 +129,7 @@ describe('Mobile Money Payments API', () => {
     const { getSupabase } = await import('@/app/_lib/supabase');
     vi.mocked(getSupabase).mockReturnValue(null);
 
-    const { GET } = await import('@/app/api/payments/mobile-money/route');
+    const { GET } = await import('../../../app/api/payments/mobile-money/route');
     const request = new Request('http://localhost:3000/api/payments/mobile-money', {
       method: 'GET',
     });

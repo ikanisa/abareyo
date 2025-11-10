@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { buildAdminRouteMetadata } from "../_lib/metadata";
+import { buildAdminRouteMetadata } from "@admin/_lib/metadata";
 
 export const metadata = buildAdminRouteMetadata("/admin/login", {
   title: "Admin login",
