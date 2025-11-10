@@ -34,6 +34,12 @@ export function FooterBrand() {
           Privacy
         </Link>
         <Link
+          href="/legal/cookies"
+          className="underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+        >
+          Cookies
+        </Link>
+        <Link
           href="/legal/terms"
           className="underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
         >

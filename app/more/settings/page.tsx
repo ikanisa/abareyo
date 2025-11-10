@@ -21,6 +21,17 @@ export default function Settings() {
             <GlassTile title="Notifications" description="Control match alerts and ticket reminders." />
             <GlassTile title="Privacy" description="Manage data sharing and personalization." />
           </div>
+          <div className="flex flex-wrap gap-4 text-sm text-white/70">
+            <Link className="underline-offset-4 hover:underline" href="/legal/terms">
+              Terms of service
+            </Link>
+            <Link className="underline-offset-4 hover:underline" href="/legal/privacy">
+              Privacy policy
+            </Link>
+            <Link className="underline-offset-4 hover:underline" href="/legal/cookies">
+              Cookie policy
+            </Link>
+          </div>
           <MotionToggle />
           <Link href="/support" className="block">
             <GlassButton tone="ghost" className="w-full">
