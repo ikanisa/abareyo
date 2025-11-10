@@ -19,6 +19,9 @@ spec:
         - name: frontend
           image: ghcr.io/ikanisa/abareyo-frontend:latest
           imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: supabase-secrets
           ports:
             - containerPort: 3000
           env:
@@ -38,16 +41,6 @@ spec:
                 secretKeyRef:
                   name: frontend-secrets
                   key: NEXT_PUBLIC_ENVIRONMENT_LABEL
-            - name: NEXT_PUBLIC_SUPABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: frontend-secrets
-                  key: NEXT_PUBLIC_SUPABASE_URL
-            - name: NEXT_PUBLIC_SUPABASE_ANON_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: frontend-secrets
-                  key: NEXT_PUBLIC_SUPABASE_ANON_KEY
             - name: NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -59,21 +52,6 @@ spec:
                   name: sentry-secrets
                   key: NEXT_PUBLIC_SENTRY_DSN
             # Server-only secrets
-            - name: SUPABASE_SERVICE_ROLE_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: frontend-secrets
-                  key: SUPABASE_SERVICE_ROLE_KEY
-            - name: SITE_SUPABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: frontend-secrets
-                  key: SITE_SUPABASE_URL
-            - name: SITE_SUPABASE_SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: frontend-secrets
-                  key: SITE_SUPABASE_SECRET_KEY
             - name: ONBOARDING_API_TOKEN
               valueFrom:
                 secretKeyRef:
