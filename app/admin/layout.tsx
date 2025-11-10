@@ -1,4 +1,4 @@
-import { buildAdminRouteMetadata } from "./_lib/metadata";
+import { buildAdminRouteMetadata } from "@admin/_lib/metadata";
 
 export const metadata = buildAdminRouteMetadata("/admin", {
   title: "Rayon Sports Admin console",

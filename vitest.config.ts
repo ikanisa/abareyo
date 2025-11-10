@@ -1,8 +1,44 @@
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
 import { defineConfig, defineProject } from 'vitest/config';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
+const fromRoot = (...segments: string[]) =>
+  resolve(dirname(fileURLToPath(new URL('./', import.meta.url))), ...segments);
+
+const alias = {
+  '@/app': fromRoot('app'),
+  '@/app/': `${fromRoot('app')}/`,
+  '@admin': fromRoot('app/admin'),
+  '@admin/': `${fromRoot('app/admin')}/`,
+  '@': fromRoot('src'),
+  '@/': `${fromRoot('src')}/`,
+};
+
+const aliasEntries = Object.entries(alias);
+
+const createAliasPlugin = () => ({
+  name: 'workspace-alias-resolver',
+  enforce: 'pre' as const,
+  resolveId(source: string) {
+    for (const [key, target] of aliasEntries) {
+      if (source === key) {
+        return target;
+      }
+
+      if (key.endsWith('/') && source.startsWith(key)) {
+        return `${target}${source.slice(key.length)}`;
+      }
+    }
+
+    return null;
+  },
+});
+
 const appProject = defineProject({
-  plugins: [tsconfigPaths()],
+  plugins: [createAliasPlugin(), tsconfigPaths({ extensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs'] })],
+  resolve: { alias },
   esbuild: {
     jsx: 'automatic',
     jsxImportSource: 'react',
@@ -20,6 +56,11 @@ const appProject = defineProject({
       '**/*.spec.ts',
       '**/*.spec.tsx',
     ],
+    alias: {
+      '@/app': fromRoot('app'),
+      '@admin': fromRoot('app/admin'),
+      '@': fromRoot('src'),
+    },
     setupFiles: ['tests/setup-app.ts'],
     testTimeout: 15000,
     coverage: {
@@ -36,7 +77,8 @@ const appProject = defineProject({
 });
 
 const packagesProject = defineProject({
-  plugins: [tsconfigPaths()],
+  plugins: [createAliasPlugin(), tsconfigPaths({ extensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs'] })],
+  resolve: { alias },
   esbuild: {
     jsx: 'automatic',
     jsxImportSource: 'react',
@@ -50,6 +92,11 @@ const packagesProject = defineProject({
       'packages/**/__tests__/**/*.{test,spec}.{ts,tsx}',
     ],
     exclude: ['**/node_modules/**'],
+    alias: {
+      '@/app': fromRoot('app'),
+      '@admin': fromRoot('app/admin'),
+      '@': fromRoot('src'),
+    },
     setupFiles: ['tests/setup-env.ts'],
     testTimeout: 15000,
     coverage: {
@@ -62,7 +109,10 @@ const packagesProject = defineProject({
 });
 
 export default defineConfig({
+  plugins: [createAliasPlugin()],
+  resolve: { alias },
   test: {
+    tsconfig: 'tsconfig.json',
     exclude: [
       '**/node_modules/**',
       '**/dist/**',

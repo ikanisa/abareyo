@@ -22,4 +22,5 @@ This directory centralises the cross-platform launch artefacts for the GIKUNDIRO
 - **WCAG audit**: 2025-02-14
 - **Performance profiling**: 2025-02-14
 - **Store copy**: 2025-02-14
+- **Admin compliance captures**: 2025-03-10
 
