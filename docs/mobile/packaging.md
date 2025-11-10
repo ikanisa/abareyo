@@ -60,6 +60,11 @@ npx cap open ios
 - Notification permission is requested on first launch. If the user denies it, push-only features remain disabled and are logged to the console for support teams.
 - Push notifications can be added later via Capacitor Push plugin once backend support exists.
 
+## Legal & policy surfaces
+- In-app Settings → Help & legal now links directly to `/legal/privacy`, `/legal/terms`, and `/legal/cookies`, matching App Store and Play Console policy URLs.
+- Footer surfaces inside the More menu and support screens re-use these URLs so native wrappers, the standalone PWA, and desktop web stay consistent.
+- Update `app/legal/*` pages whenever legal counsel ships new copy; the mobile shells will pick up changes on the next web deploy.
+
 ## Scripts
 Recommended additions (run after installing dependencies):
 - `npm run cap:sync` → `npm run build:capacitor && npx cap sync`

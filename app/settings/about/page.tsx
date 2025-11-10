@@ -16,7 +16,11 @@ const SettingsAboutPage = () => (
       </header>
       <section className="card break-words whitespace-normal break-words whitespace-normal space-y-3 text-sm text-white/80">
         <p>Questions or feedback? Reach the digital team at <a className="underline" href="mailto:support@gikundiro.rw">support@gikundiro.rw</a>.</p>
-        <p>For privacy details review our <Link className="underline" href="/legal/privacy">privacy policy</Link> and <Link className="underline" href="/legal/terms">terms</Link>.</p>
+        <p>
+          For privacy details review our <Link className="underline" href="/legal/privacy">privacy policy</Link>,
+          <Link className="underline" href="/legal/cookies"> cookie policy</Link>, and
+          <Link className="underline" href="/legal/terms"> terms of service</Link>.
+        </p>
       </section>
       <footer className="text-sm text-white/60 text-center">
         Dial *651# to connect to the Rayon Sports hotline for ticketing or shop assistance.
