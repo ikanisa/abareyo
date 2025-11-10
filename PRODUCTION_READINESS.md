@@ -1,7 +1,8 @@
 # Production Deployment Readiness Checklist
 
 > **Status**: ⚠️ Blocked — staging validation and production launch tasks pending external access
-> **Last Updated**: 2025-11-10T08:00:28Z
+> **Owner**: Release Management — ChatGPT (sandbox operator)
+> **Last Updated**: 2025-11-10T15:13:49Z
 > **Build Status**: ✅ Passing
 > **Tests**: ✅ 94/94 passing
 > **Security**: ✅ Critical issues resolved
@@ -58,7 +59,7 @@
 - [ ] **RECOMMENDED**: Set up Prometheus scraping
 - [ ] **RECOMMENDED**: Import Grafana dashboards from `docs/grafana/`
 - [ ] **RECOMMENDED**: Apply Prometheus alert rules from `docs/observability/`
-- [ ] **BLOCKED 2025-11-10**: Validate dashboards and alert streams — requires access to production Prometheus/Grafana + Sentry tenancy
+- [ ] **BLOCKED 2025-11-10T15:13Z**: Validate dashboards and alert streams — requires access to production Prometheus/Grafana + Sentry tenancy
 
 ### 7. OTP Delivery ✅
 - [x] WhatsApp OTP template approved and documented (`OTP_WHATSAPP_TEMPLATE_APPROVED=1`) with consent copy matched to the approved Meta template across web, mobile, and chatbot flows.
@@ -82,9 +83,9 @@
 - [x] Cutover readiness checklist exists
 - [x] Rollback procedures documented
 - [x] Operations runbook available
-- [ ] **BLOCKED 2025-11-10**: Capture stakeholder go/no-go sign-offs and attach evidence bundle in `reports/`
+- [ ] **BLOCKED 2025-11-10T15:13Z**: Capture stakeholder go/no-go sign-offs and attach evidence bundle in `reports/`
 
-> **2025-11-10 validation summary**: Requested full regression, load/performance testing, observability review, stakeholder go/no-go, and production rollout could not be executed inside this sandbox. The tasks require staging/production credentials, mobile binaries, and access to vendor dashboards. See [`reports/operations-log.md`](./reports/operations-log.md) for the recorded operator note and follow-up recommendations.
+> **2025-11-10T15:13Z validation summary**: Requested full regression, load/performance testing, observability review, stakeholder go/no-go, and production rollout could not be executed inside this sandbox. The tasks require staging/production credentials, mobile binaries, and access to vendor dashboards. See [`reports/operations-log.md`](./reports/operations-log.md) for the recorded operator note and [`reports/2025-11-10-go-no-go.md`](./reports/2025-11-10-go-no-go.md) for the documented go/no-go placeholder and follow-up recommendations.
 
 ## Critical Fixes Applied in This PR
 
