@@ -40,6 +40,12 @@ import {
   testSmsParser,
 } from '@/lib/api/admin/sms';
 import { fetchAdminReportsOverview } from '@/lib/api/admin/reports';
+import {
+  fetchOtpDashboard,
+  fetchOtpBlacklist,
+  addOtpBlacklistEntry,
+  removeOtpBlacklistEntry,
+} from '@/lib/api/admin/otp';
 
 const originalFetch = global.fetch;
 
@@ -528,5 +534,89 @@ describe('admin API helpers', () => {
     const init = (lastCall?.[1] ?? {}) as RequestInit;
     const headers = new Headers(init.headers);
     expect(headers.get('content-type')).toBe('application/json');
+  });
+
+  it('fetches the OTP blacklist entries for both sources', async () => {
+    const payload = { data: { phone: [{ value: '+250788888888', masked: '***8888', source: 'config' as const }], ip: [] } };
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: async () => payload,
+    });
+
+    const blacklist = await fetchOtpBlacklist();
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/admin/otp/blacklist'),
+      expect.objectContaining({ credentials: 'include' }),
+    );
+    expect(blacklist.phone[0]?.source).toBe('config');
+  });
+
+  it('fetches OTP dashboard metrics with admin credentials', async () => {
+    const payload = {
+      data: {
+        summary: { sent: 10, delivered: 9, blocked: 1, rateLimited: 1, verified: 8, failed: 0 },
+        redis: { healthy: true, mode: 'redis' as const, lastError: null },
+        template: { name: 'fan_otp', namespace: 'prod', locale: 'en', approved: true },
+        rateLimits: {
+          windowSeconds: 900,
+          maxPerPhone: 5,
+          maxPerIp: 10,
+          cooldownSeconds: 60,
+          verifyWindowSeconds: 900,
+          maxVerifyAttempts: 3,
+        },
+        events: [],
+        blacklist: { phone: [], ip: [] },
+      },
+    };
+
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: async () => payload,
+    });
+
+    const result = await fetchOtpDashboard();
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/admin/otp/dashboard'),
+      expect.objectContaining({ credentials: 'include' }),
+    );
+    expect(result.summary.sent).toBe(10);
+  });
+
+  it('adds an OTP blacklist entry via POST', async () => {
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: { value: '+250700000001', masked: '***0001', source: 'runtime' as const } }),
+    });
+
+    await addOtpBlacklistEntry({ type: 'phone', value: '+250700000001', note: 'Abuse case' });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/admin/otp/blacklist'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ type: 'phone', value: '+250700000001', note: 'Abuse case' }),
+      }),
+    );
+  });
+
+  it('removes an OTP blacklist entry without parsing a body', async () => {
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      status: 204,
+      text: async () => '',
+    });
+
+    await removeOtpBlacklistEntry({ type: 'ip', value: '192.0.2.10' });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/admin/otp/blacklist'),
+      expect.objectContaining({
+        method: 'DELETE',
+        body: JSON.stringify({ type: 'ip', value: '192.0.2.10' }),
+      }),
+    );
   });
 });
