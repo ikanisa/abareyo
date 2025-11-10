@@ -92,38 +92,33 @@ vi.mock('@/config/env', () => ({
   runtimeConfig: runtimeConfigMock,
 }));
 
-vi.mock('@/lib/whatsapp', () => {
-  class LocalRecoverableError extends Error {
-    status?: number;
-    detail?: unknown;
-
-    constructor(message: string, options: { status?: number; detail?: unknown } = {}) {
-      super(message);
-      this.name = 'MockWhatsappRecoverableError';
-      this.status = options.status;
-      this.detail = options.detail;
-    }
-  }
-
+vi.mock('@/lib/server/otp/whatsapp', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/server/otp/whatsapp')>(
+    '@/lib/server/otp/whatsapp',
+  );
   return {
-    sendWhatsappOTP: sendWhatsappMock,
-    WhatsappRecoverableError: LocalRecoverableError,
+    ...actual,
+    sendWhatsAppOtp: sendWhatsappMock,
   };
 });
 
 import { POST as startHandler } from '@/app/api/auth/whatsapp/start/route';
 import { POST as verifyHandler } from '@/app/api/auth/whatsapp/verify/route';
-import { otpRepository, __internal as redisInternal } from '@/lib/redis';
+import { POST as resendHandler } from '@/app/api/auth/whatsapp/resend/route';
+import { __internal as redisInternal } from '@/lib/redis';
+import { __internal as whatsappStoreInternal } from '@/lib/server/whatsapp-auth/store';
 
 describe('WhatsApp OTP flow', () => {
   let lastOtp: string | null = null;
 
   beforeEach(() => {
     redisInternal.clearAll();
+    whatsappStoreInternal.reset();
     lastOtp = null;
     sendWhatsappMock.mockReset();
-    sendWhatsappMock.mockImplementation(async ({ otp }: { otp: string }) => {
-      lastOtp = otp;
+    sendWhatsappMock.mockImplementation(async ({ code }: { code: string }) => {
+      lastOtp = code;
+      return { ok: true, status: 'mocked' as const };
     });
     (serverEnvMock as Record<string, unknown>).OTP_TTL_SEC = 300;
     (serverEnvMock as Record<string, unknown>).RATE_LIMIT_PER_PHONE_PER_HOUR = 5;
@@ -139,9 +134,12 @@ describe('WhatsApp OTP flow', () => {
     );
 
     expect(startResponse.status).toBe(200);
-    const startBody = (await startResponse.json()) as { ok: boolean; expiresAt: string };
-    expect(startBody.ok).toBe(true);
-    expect(typeof startBody.expiresAt).toBe('string');
+    const startBody = (await startResponse.json()) as {
+      data: { requestId: string; expiresIn: number; resendAfter: number };
+    };
+    expect(startBody.data.requestId).toMatch(/[0-9a-f-]{36}/i);
+    expect(startBody.data.expiresIn).toBeGreaterThan(0);
+    expect(startBody.data.resendAfter).toBeGreaterThanOrEqual(0);
     expect(sendWhatsappMock).toHaveBeenCalledTimes(1);
     expect(lastOtp).toMatch(/^[0-9]{6}$/);
     if (!lastOtp) {
@@ -152,14 +150,17 @@ describe('WhatsApp OTP flow', () => {
       new Request('http://localhost/api/auth/whatsapp/verify', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ phone: '+250788888888', otp: lastOtp }),
+        body: JSON.stringify({ requestId: startBody.data.requestId, code: lastOtp }),
       }),
     );
 
     expect(verifyResponse.status).toBe(200);
-    const verifyBody = (await verifyResponse.json()) as { ok: boolean; token: string };
-    expect(verifyBody.ok).toBe(true);
-    expect(verifyBody.token.split('.')).toHaveLength(3);
+    const verifyBody = (await verifyResponse.json()) as {
+      data: { accessToken: string; refreshToken: string; userId: string };
+    };
+    expect(verifyBody.data.accessToken.split('.')).toHaveLength(3);
+    expect(verifyBody.data.refreshToken).toBe(verifyBody.data.accessToken);
+    expect(verifyBody.data.userId).toMatch(/^[0-9a-f]+$/);
   });
 
   it('returns otp_expired when the stored entry has lapsed', async () => {
@@ -171,20 +172,20 @@ describe('WhatsApp OTP flow', () => {
       }),
     );
 
-    const record = await otpRepository.load('+250788888888');
-    expect(record).not.toBeNull();
-    if (!record) {
+    const dump = whatsappStoreInternal.dump();
+    const [entry] = Array.from(dump.values());
+    expect(entry).toBeDefined();
+    if (!entry) {
       throw new Error('expected OTP record');
     }
-
-    const expiredRecord = { ...record, exp: Date.now() - 1 };
-    await otpRepository.persist('+250788888888', expiredRecord, 120);
+    entry.expiresAt = Date.now() - 1;
+    whatsappStoreInternal.upsert(entry);
 
     const verifyResponse = await verifyHandler(
       new Request('http://localhost/api/auth/whatsapp/verify', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ phone: '+250788888888', otp: lastOtp ?? '000000' }),
+        body: JSON.stringify({ requestId: entry.id, code: lastOtp ?? '000000' }),
       }),
     );
 
@@ -217,5 +218,51 @@ describe('WhatsApp OTP flow', () => {
     const body = (await second.json()) as { error: string; retryAt: string };
     expect(body.error).toBe('rate_limited');
     expect(new Date(body.retryAt).getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it('enforces resend cooldown before issuing a new OTP', async () => {
+    const startResponse = await startHandler(
+      new Request('http://localhost/api/auth/whatsapp/start', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ phone: '+250788888888' }),
+      }),
+    );
+
+    const startBody = (await startResponse.json()) as {
+      data: { requestId: string; resendAfter: number };
+    };
+
+    const cooldownResponse = await resendHandler(
+      new Request('http://localhost/api/auth/whatsapp/resend', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ requestId: startBody.data.requestId }),
+      }),
+    );
+
+    expect(cooldownResponse.status).toBe(429);
+
+    const storeDump = whatsappStoreInternal.dump();
+    const record = storeDump.get(startBody.data.requestId);
+    if (!record) {
+      throw new Error('expected OTP record');
+    }
+
+    record.resendAvailableAt = Date.now() - 1;
+    whatsappStoreInternal.upsert(record);
+
+    const resendResponse = await resendHandler(
+      new Request('http://localhost/api/auth/whatsapp/resend', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ requestId: startBody.data.requestId }),
+      }),
+    );
+
+    expect(resendResponse.status).toBe(200);
+    const resendBody = (await resendResponse.json()) as { data: { resendAfter: number } };
+    expect(resendBody.data.resendAfter).toBeGreaterThan(0);
+    expect(sendWhatsappMock).toHaveBeenCalledTimes(2);
   });
 });
