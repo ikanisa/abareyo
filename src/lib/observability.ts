@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 
 import { clientEnv, serverEnv } from "@/config/env";
+import { getCorrelationId } from "@/lib/observability/correlation";
 
 type TelemetryEvent = {
   type: string;
@@ -35,6 +36,15 @@ const captureWithSentry = (error: unknown, context?: Record<string, unknown>) =>
   if (!client) {
     return false;
   }
+
+  const correlationId = getCorrelationId();
+
+  Sentry.configureScope((scope) => {
+    scope.setTag("correlation_id", correlationId);
+    if (context && Object.keys(context).length > 0) {
+      scope.setContext("extra", context as Record<string, unknown>);
+    }
+  });
 
   if (context && Object.keys(context).length > 0) {
     Sentry.captureException(error, { extra: context });
