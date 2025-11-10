@@ -9,41 +9,15 @@
 
 ## Required Secrets
 
-Before deploying, create the required Kubernetes secrets:
+Secrets are provided as manifests so they can be managed via GitOps or your preferred secrets controller. Update placeholder
+values before applying:
 
-### Frontend Secrets
+- `k8s/secrets.yaml` – application credentials (`frontend-secrets`, `backend-secrets`, `supabase-secrets`, `sentry-secrets`,
+  and `metrics-basic-auth`).
+- `k8s/postgres.yaml` – database StatefulSet and the `postgres-credentials` secret.
+- `k8s/redis.yaml` – Redis StatefulSet and the `redis-credentials` secret.
 
-```bash
-kubectl create secret generic frontend-secrets \
-  --namespace=rayon \
-  --from-literal=NEXT_PUBLIC_SUPABASE_URL='https://your-project.supabase.co' \
-  --from-literal=NEXT_PUBLIC_SUPABASE_ANON_KEY='your-anon-key' \
-  --from-literal=NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN='your-onboarding-token' \
-  --from-literal=SUPABASE_SERVICE_ROLE_KEY='your-service-role-key' \
-  --from-literal=SITE_SUPABASE_URL='https://your-project.supabase.co' \
-  --from-literal=SITE_SUPABASE_SECRET_KEY='your-secret-key' \
-  --from-literal=ONBOARDING_API_TOKEN='your-onboarding-api-token' \
-  --from-literal=OPENAI_API_KEY='your-openai-key'
-```
-
-### Backend Secrets
-
-```bash
-kubectl create secret generic backend-secrets \
-  --namespace=rayon \
-  --from-literal=CORS_ORIGIN='https://your-domain.com' \
-  --from-literal=DATABASE_URL='postgresql://user:password@host:5432/database' \
-  --from-literal=DATABASE_SHADOW_URL='postgresql://user:password@host:5432/database_shadow' \
-  --from-literal=REDIS_URL='redis://host:6379' \
-  --from-literal=METRICS_TOKEN='random-secure-token' \
-  --from-literal=ADMIN_SESSION_SECRET='random-secure-secret-32-chars-min' \
-  --from-literal=FAN_SESSION_SECRET='another-secure-secret-32-chars-min' \
-  --from-literal=SUPABASE_URL='https://your-project.supabase.co' \
-  --from-literal=SUPABASE_SECRET_KEY='your-secret-key' \
-  --from-literal=OPENAI_API_KEY='your-openai-key'
-```
-
-### GHCR Image Pull Secret
+Apply them with `kubectl apply -f <file> --namespace=rayon`. For the GHCR image pull credentials, create the `ghcr` secret via:
 
 ```bash
 kubectl create secret docker-registry ghcr \
@@ -60,31 +34,55 @@ kubectl create secret docker-registry ghcr \
    kubectl apply -f k8s/namespace.yaml
    ```
 
-2. **Apply deployments:**
+2. **Apply stateful services:**
+   ```bash
+   kubectl apply -f k8s/postgres.yaml
+   kubectl apply -f k8s/redis.yaml
+   ```
+
+3. **Apply deployments:**
    ```bash
    kubectl apply -f k8s/backend-deployment.yaml
    kubectl apply -f k8s/frontend-deployment.yaml
    ```
 
-3. **Configure ingress (update placeholders first):**
+4. **Configure ingress:**
    ```bash
-   # Edit ingress.yaml and replace:
-   # - __INGRESS_HOST__ with your domain (e.g., app.example.com)
-   # - __TLS_SECRET__ with your TLS secret name (e.g., app-tls)
-   
    kubectl apply -f k8s/ingress.yaml
    ```
 
-4. **Install cert-manager (if needed):**
+5. **Install cert-manager (if needed):**
    ```bash
    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.15.1/cert-manager.yaml
    ```
 
-5. **Apply cluster issuer (update email first):**
+6. **Apply cluster issuer (update email first):**
    ```bash
    # Edit cert-issuer.yaml and replace __LETSENCRYPT_EMAIL__ with your email
    kubectl apply -f k8s/cert-issuer.yaml
    ```
+
+7. **Run Prisma migrations:**
+   ```bash
+   kubectl apply -f k8s/backend-migrate-job.yaml
+   ```
+   The job is idempotent; delete it after a successful run to avoid re-executions on subsequent syncs.
+
+## Validating manifests locally
+
+Before committing or applying, run a dry-run validation to catch schema errors:
+
+```bash
+kubectl apply --dry-run=client -f k8s/postgres.yaml
+kubectl apply --dry-run=client -f k8s/redis.yaml
+kubectl apply --dry-run=client -f k8s/secrets.yaml
+kubectl apply --dry-run=client -f k8s/backend-deployment.yaml
+kubectl apply --dry-run=client -f k8s/frontend-deployment.yaml
+kubectl apply --dry-run=client -f k8s/backend-migrate-job.yaml
+kubectl apply --dry-run=client -f k8s/ingress.yaml
+```
+
+Any failures indicate malformed YAML or missing fields that must be corrected before deployment.
 
 ## Health Checks
 

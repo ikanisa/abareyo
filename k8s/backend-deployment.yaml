@@ -12,7 +12,14 @@ spec:
     metadata:
       labels:
         app: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "5000"
+        prometheus.io/scheme: "http"
     spec:
+      imagePullSecrets:
+        - name: ghcr
       containers:
         - name: backend
           image: ghcr.io/ikanisa/abareyo-backend:latest
@@ -52,6 +59,19 @@ spec:
                 secretKeyRef:
                   name: backend-secrets
                   key: METRICS_TOKEN
+                  optional: true
+            - name: METRICS_BASIC_AUTH_USER
+              valueFrom:
+                secretKeyRef:
+                  name: metrics-basic-auth
+                  key: METRICS_BASIC_AUTH_USER
+                  optional: true
+            - name: METRICS_BASIC_AUTH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: metrics-basic-auth
+                  key: METRICS_BASIC_AUTH_PASSWORD
+                  optional: true
             - name: ADMIN_SESSION_SECRET
               valueFrom:
                 secretKeyRef:
@@ -72,11 +92,41 @@ spec:
                 secretKeyRef:
                   name: backend-secrets
                   key: SUPABASE_SECRET_KEY
+            - name: SUPABASE_SERVICE_ROLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: SUPABASE_SERVICE_ROLE_KEY
+                  optional: true
+            - name: SITE_SUPABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: SITE_SUPABASE_URL
+                  optional: true
+            - name: SITE_SUPABASE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: SITE_SUPABASE_SECRET_KEY
+                  optional: true
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: backend-secrets
                   key: OPENAI_API_KEY
+                  optional: true
+            - name: SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: sentry-secrets
+                  key: SENTRY_DSN
+                  optional: true
+            - name: BACKEND_SENTRY_DSN_PRODUCTION
+              valueFrom:
+                secretKeyRef:
+                  name: sentry-secrets
+                  key: BACKEND_SENTRY_DSN_PRODUCTION
                   optional: true
             - name: OPENAI_BASE_URL
               value: https://api.openai.com/v1
@@ -107,6 +157,10 @@ kind: Service
 metadata:
   name: backend
   namespace: rayon
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "5000"
 spec:
   selector:
     app: backend

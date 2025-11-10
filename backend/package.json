@@ -14,6 +14,7 @@
     "test:e2e": "jest --config test/e2e/jest.e2e.config.ts --runInBand",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
+    "prisma:migrate:status": "prisma migrate status --schema prisma/schema.prisma",
     "prisma:dev": "prisma migrate dev --name init",
     "seed": "ts-node --swc prisma/seed.ts",
     "env:check": "ts-node --swc tools/validate-env.ts"

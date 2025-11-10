@@ -13,6 +13,8 @@ spec:
       labels:
         app: frontend
     spec:
+      imagePullSecrets:
+        - name: ghcr
       containers:
         - name: frontend
           image: ghcr.io/ikanisa/abareyo-frontend:latest
@@ -22,11 +24,20 @@ spec:
           env:
             # Public client-side variables
             - name: NEXT_PUBLIC_SITE_URL
-              value: https://__INGRESS_HOST__
+              valueFrom:
+                secretKeyRef:
+                  name: frontend-secrets
+                  key: NEXT_PUBLIC_SITE_URL
             - name: NEXT_PUBLIC_BACKEND_URL
-              value: /api
+              valueFrom:
+                secretKeyRef:
+                  name: frontend-secrets
+                  key: NEXT_PUBLIC_BACKEND_URL
             - name: NEXT_PUBLIC_ENVIRONMENT_LABEL
-              value: production
+              valueFrom:
+                secretKeyRef:
+                  name: frontend-secrets
+                  key: NEXT_PUBLIC_ENVIRONMENT_LABEL
             - name: NEXT_PUBLIC_SUPABASE_URL
               valueFrom:
                 secretKeyRef:
@@ -42,6 +53,11 @@ spec:
                 secretKeyRef:
                   name: frontend-secrets
                   key: NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN
+            - name: NEXT_PUBLIC_SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: sentry-secrets
+                  key: NEXT_PUBLIC_SENTRY_DSN
             # Server-only secrets
             - name: SUPABASE_SERVICE_ROLE_KEY
               valueFrom:
@@ -68,6 +84,12 @@ spec:
                 secretKeyRef:
                   name: frontend-secrets
                   key: OPENAI_API_KEY
+                  optional: true
+            - name: SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: sentry-secrets
+                  key: SENTRY_DSN
                   optional: true
             - name: NODE_ENV
               value: production

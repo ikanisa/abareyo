@@ -55,6 +55,19 @@ ADMIN_SEED_NAME=System Admin
 - `npm run start:dev` – Run backend in watch mode (ts-node + SWC).
 - `npm run prisma:dev` – Apply migrations locally.
 - `npm run seed` – Seed canonical fixtures.
+- `npm run prisma:migrate` – Apply production migrations (`prisma migrate deploy`).
+- `npm run prisma:migrate:status` – Confirm the target database is up-to-date.
+
+### Running migrations in Kubernetes
+
+The repository ships with `k8s/backend-migrate-job.yaml`, a one-shot job that reuses the production container image to execute
+`npm run prisma:migrate`. Trigger it via:
+
+```bash
+kubectl apply -f k8s/backend-migrate-job.yaml --namespace=rayon
+```
+
+When using GitOps, ensure the job runs after the PostgreSQL StatefulSet reports ready so the schema is applied before backend pods roll out.
 
 ## Testing SMS Pipeline
 Use the emulator at `tools/gsm-emulator` until the physical modem bridge is operational.

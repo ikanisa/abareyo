@@ -1,3 +1,5 @@
+import * as Sentry from "@sentry/nextjs";
+
 import { clientEnv, serverEnv } from "@/config/env";
 
 type TelemetryEvent = {
@@ -14,12 +16,33 @@ const isBrowser = typeof window !== "undefined";
 let sentryWarningLogged = false;
 
 const logWarningOnce = () => {
-  if (HAS_SENTRY_CONFIGURATION && !sentryWarningLogged) {
+  if (!sentryWarningLogged) {
     sentryWarningLogged = true;
     console.warn(
-      "[observability] Sentry DSN variables detected but the Sentry SDK has been removed. Errors will be logged locally and dispatched to the telemetry endpoint instead.",
+      "[observability] Sentry DSN not configured. Exceptions will only be logged locally and forwarded to telemetry endpoints.",
     );
   }
+};
+
+const captureWithSentry = (error: unknown, context?: Record<string, unknown>) => {
+  if (!HAS_SENTRY_CONFIGURATION) {
+    return false;
+  }
+
+  const hub = Sentry.getCurrentHub?.();
+  const client = hub?.getClient?.();
+
+  if (!client) {
+    return false;
+  }
+
+  if (context && Object.keys(context).length > 0) {
+    Sentry.captureException(error, { extra: context });
+  } else {
+    Sentry.captureException(error);
+  }
+
+  return true;
 };
 
 const createPayload = (event: TelemetryEvent) => {
@@ -28,14 +51,16 @@ const createPayload = (event: TelemetryEvent) => {
 };
 
 export const captureException = (error: unknown, context?: Record<string, unknown>) => {
-  logWarningOnce();
+  if (!captureWithSentry(error, context)) {
+    logWarningOnce();
 
-  if (context && Object.keys(context).length > 0) {
-    console.error("[observability] exception", { context, error });
-    return;
+    if (context && Object.keys(context).length > 0) {
+      console.error("[observability] exception", { context, error });
+      return;
+    }
+
+    console.error("[observability] exception", error);
   }
-
-  console.error("[observability] exception", error);
 };
 
 export const dispatchTelemetryEvent = async (

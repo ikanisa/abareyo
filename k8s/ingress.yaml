@@ -14,10 +14,10 @@ metadata:
 spec:
   tls:
     - hosts:
-        - __INGRESS_HOST__
-      secretName: __TLS_SECRET__
+        - app.rayon-sports.com
+      secretName: rayon-app-tls
   rules:
-    - host: __INGRESS_HOST__
+    - host: app.rayon-sports.com
       http:
         paths:
           - path: /api(/|$)(.*)
