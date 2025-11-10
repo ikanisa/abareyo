@@ -2,6 +2,8 @@ import { z } from "zod";
 
 import { ApiError, createApiFetcher } from "@rayon/api/http";
 
+import { getCorrelationId } from "@/lib/observability/correlation";
+
 const fanSessionSchema = z.object({
   user: z.object({
     id: z.string(),
@@ -23,7 +25,9 @@ const statusResponseSchema = z.object({ data: z.object({ status: z.string() }) }
 const finalizePayloadSchema = z.object({ sessionId: z.string().min(1) });
 const supabaseLoginSchema = z.object({ accessToken: z.string().min(1) });
 
-const fetcher = createApiFetcher();
+const fetcher = createApiFetcher({
+  getCorrelationId,
+});
 
 export type FanSession = z.infer<typeof fanSessionSchema>;
 export type FinalizeFanOnboardingPayload = z.infer<typeof finalizePayloadSchema>;

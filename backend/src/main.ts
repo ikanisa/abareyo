@@ -1,4 +1,4 @@
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { Logger, type LoggerService, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import {
@@ -8,6 +8,8 @@ import {
 import fastifyCookie from '@fastify/cookie';
 import fastifyHelmet, { type FastifyHelmetOptions } from '@fastify/helmet';
 import fastifyCors, { type FastifyCorsOptions } from '@fastify/cors';
+import { randomUUID } from 'node:crypto';
+import type { FastifyRequest } from 'fastify';
 import pino, { type TransportTargetOptions } from 'pino';
 import pinoHttp from 'pino-http';
 
@@ -27,7 +29,9 @@ const addSocketOrigins = (target: Set<string>, origin: string) => {
   }
 };
 
-const extractMetricsToken = (request: any): string | undefined => {
+type MetricsRequest = Pick<FastifyRequest, 'headers' | 'query'>;
+
+const extractMetricsToken = (request: MetricsRequest): string | undefined => {
   const headerToken = request?.headers?.['x-metrics-token'];
   if (typeof headerToken === 'string' && headerToken.trim().length) {
     return headerToken.trim();
@@ -41,8 +45,8 @@ const extractMetricsToken = (request: any): string | undefined => {
     }
   }
 
-  const query = request?.query as Record<string, unknown> | undefined;
-  const queryToken = typeof query?.token === 'string' ? query.token.trim() : undefined;
+  const rawQuery = request?.query as Record<string, unknown> | undefined;
+  const queryToken = typeof rawQuery?.token === 'string' ? rawQuery.token.trim() : undefined;
   if (queryToken) {
     return queryToken;
   }
@@ -57,6 +61,32 @@ type LokiConfig = {
   password?: string;
   tenantId?: string;
   batchIntervalSeconds?: number;
+};
+
+const extractHeaderValue = (value: unknown): string | null => {
+  if (typeof value === 'string' && value.trim().length > 0) {
+    return value.trim();
+  }
+
+  if (Array.isArray(value)) {
+    const [first] = value;
+    if (typeof first === 'string' && first.trim().length > 0) {
+      return first.trim();
+    }
+  }
+
+  return null;
+};
+
+const resolveCorrelationId = (headers: Record<string, unknown>) => {
+  const candidates = [headers['x-correlation-id'], headers['x-request-id']];
+  for (const candidate of candidates) {
+    const value = extractHeaderValue(candidate);
+    if (value) {
+      return value;
+    }
+  }
+  return randomUUID();
 };
 
 const verifyBasicAuthHeader = (authorization: unknown, expectedUser: string, expectedPassword: string) => {
@@ -161,6 +191,15 @@ async function bootstrap() {
   fastifyAdapter.register(pinoHttp, {
     logger: baseLogger,
     autoLogging: false,
+    genReqId(request) {
+      const correlationId = resolveCorrelationId(request.headers ?? {});
+      request.headers['x-correlation-id'] = correlationId;
+      request.headers['x-request-id'] = correlationId;
+      return correlationId;
+    },
+    customProps(req) {
+      return { correlationId: req.id };
+    },
     serializers: {
       req(request) {
         return {
@@ -182,12 +221,25 @@ async function bootstrap() {
     logger: false,
   });
 
-  app.useLogger(baseLogger as unknown as any);
+  app.useLogger(baseLogger as unknown as LoggerService);
 
   const fastifyInstance = fastifyAdapter.getInstance();
   fastifyInstance.addHook('onRequest', async (request) => {
     request.metricsStart = Date.now();
-    request.log.info({ msg: 'request.start', method: request.method, url: request.url, id: request.id });
+    request.log.info({
+      msg: 'request.start',
+      method: request.method,
+      url: request.url,
+      id: request.id,
+      correlationId: request.id,
+    });
+  });
+
+  fastifyInstance.addHook('preHandler', async (request, reply) => {
+    if (request.id) {
+      reply.header('x-correlation-id', request.id);
+      reply.header('x-request-id', request.id);
+    }
   });
 
   fastifyInstance.addHook('onResponse', async (request, reply) => {
@@ -199,6 +251,7 @@ async function bootstrap() {
       statusCode: reply.statusCode,
       responseTime: duration,
       id: request.id,
+      correlationId: request.id,
     });
   });
 
