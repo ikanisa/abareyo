@@ -7,7 +7,7 @@ declare module 'fastify' {
     metricsStart?: number;
     adminUser?: { id: string } | null;
     adminSession?: unknown;
-    adminPermissions?: Set<string> | string[] | null;
+    adminPermissions?: ReadonlySet<string> | Iterable<string> | null;
     cookies?: Record<string, string>;
   }
 }

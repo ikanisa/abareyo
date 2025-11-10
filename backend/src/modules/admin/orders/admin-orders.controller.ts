@@ -11,7 +11,7 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { FastifyRequest } from 'fastify';
+import type { FastifyRequest } from 'fastify';
 import { Logger } from '@nestjs/common';
 
 import { TicketOrderStatus } from '@prisma/client';

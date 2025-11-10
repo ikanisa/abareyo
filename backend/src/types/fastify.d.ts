@@ -7,7 +7,7 @@ declare module 'fastify' {
       status: string;
       roles: string[];
     };
-    adminPermissions?: Set<string>;
+    adminPermissions?: ReadonlySet<string>;
     adminSession?: {
       id: string;
       expiresAt: string | null;
