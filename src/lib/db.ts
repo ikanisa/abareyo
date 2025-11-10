@@ -3,6 +3,8 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import type { Database } from '@rayon/api/types/database';
+
 import { createServerClient, SupabaseConfigurationError } from '@rayon/api/supabase';
 
 import { SupabaseClientAccessError, SupabaseClientUnavailableError } from './db-errors';
@@ -16,13 +18,13 @@ const ensureServerEnvironment = () => {
 // Re-export error classes for backward compatibility
 export { SupabaseClientAccessError, SupabaseClientUnavailableError };
 
-let serviceRoleClient: SupabaseClient<any> | null = null;
-let serverAnonClient: SupabaseClient<any> | null = null;
+let serviceRoleClient: SupabaseClient<Database> | null = null;
+let serverAnonClient: SupabaseClient<Database> | null = null;
 
-export const createSupabaseServiceRoleClient = <Schema = any>(): SupabaseClient<Schema> | null => {
+export const createSupabaseServiceRoleClient = (): SupabaseClient<Database> | null => {
   ensureServerEnvironment();
   try {
-    return createServerClient({ accessType: 'service_role' }) as SupabaseClient<Schema>;
+    return createServerClient({ accessType: 'service_role' }) as SupabaseClient<Database>;
   } catch (error) {
     if (error instanceof SupabaseConfigurationError) {
       return null;
@@ -31,10 +33,10 @@ export const createSupabaseServiceRoleClient = <Schema = any>(): SupabaseClient<
   }
 };
 
-export const createSupabaseServerAnonClient = <Schema = any>(): SupabaseClient<Schema> | null => {
+export const createSupabaseServerAnonClient = (): SupabaseClient<Database> | null => {
   ensureServerEnvironment();
   try {
-    return createServerClient({ accessType: 'anon' }) as SupabaseClient<Schema>;
+    return createServerClient({ accessType: 'anon' }) as SupabaseClient<Database>;
   } catch (error) {
     if (error instanceof SupabaseConfigurationError) {
       return null;
@@ -43,33 +45,33 @@ export const createSupabaseServerAnonClient = <Schema = any>(): SupabaseClient<S
   }
 };
 
-export const getSupabaseServiceRoleClient = <Schema = any>(): SupabaseClient<Schema> => {
+export const getSupabaseServiceRoleClient = (): SupabaseClient<Database> => {
   if (serviceRoleClient) {
-    return serviceRoleClient as SupabaseClient<Schema>;
+    return serviceRoleClient;
   }
-  const client = createSupabaseServiceRoleClient<Schema>();
+  const client = createSupabaseServiceRoleClient();
   if (!client) {
     throw new SupabaseClientUnavailableError('Supabase service role credentials are not configured');
   }
-  serviceRoleClient = client as SupabaseClient<any>;
+  serviceRoleClient = client;
   return client;
 };
 
-export const getSupabaseServerAnonClient = <Schema = any>(): SupabaseClient<Schema> => {
+export const getSupabaseServerAnonClient = (): SupabaseClient<Database> => {
   if (serverAnonClient) {
-    return serverAnonClient as SupabaseClient<Schema>;
+    return serverAnonClient;
   }
-  const client = createSupabaseServerAnonClient<Schema>();
+  const client = createSupabaseServerAnonClient();
   if (!client) {
     throw new SupabaseClientUnavailableError('Supabase anon credentials are not configured');
   }
-  serverAnonClient = client as SupabaseClient<any>;
+  serverAnonClient = client;
   return client;
 };
 
-export const tryGetSupabaseServiceRoleClient = <Schema = any>(): SupabaseClient<Schema> | null => {
+export const tryGetSupabaseServiceRoleClient = (): SupabaseClient<Database> | null => {
   try {
-    return getSupabaseServiceRoleClient<Schema>();
+    return getSupabaseServiceRoleClient();
   } catch (error) {
     if (error instanceof SupabaseClientUnavailableError) {
       return null;
@@ -78,9 +80,9 @@ export const tryGetSupabaseServiceRoleClient = <Schema = any>(): SupabaseClient<
   }
 };
 
-export const tryGetSupabaseServerAnonClient = <Schema = any>(): SupabaseClient<Schema> | null => {
+export const tryGetSupabaseServerAnonClient = (): SupabaseClient<Database> | null => {
   try {
-    return getSupabaseServerAnonClient<Schema>();
+    return getSupabaseServerAnonClient();
   } catch (error) {
     if (error instanceof SupabaseClientUnavailableError) {
       return null;

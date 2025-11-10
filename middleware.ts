@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { applySecurityHeaders as withSecurityHeaders } from './config/security-headers.mjs';
 import { ADMIN_CSRF_COOKIE, ADMIN_CSRF_ENDPOINT, ADMIN_CSRF_HEADER } from './src/lib/admin/csrf';
-import { getAllowedHosts } from './src/lib/server/origins';
+import { buildCorsHeaders, getAllowedHosts } from './src/lib/server/origins';
 import {
   APP_STORE_URL,
   PLAY_STORE_URL,
