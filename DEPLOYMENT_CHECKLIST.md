@@ -1,8 +1,8 @@
 # Deployment Checklist
 
 > **Purpose**: Comprehensive pre-deployment validation and go-live checklist  
-> **Status**: Production-Ready - All critical issues resolved  
-> **Last Updated**: 2025-10-29  
+> **Status**: ⚠️ Blocked — regression, load, and deployment validation require staging access
+> **Last Updated**: 2025-11-10T08:00:28Z
 > **Quick Start**: See [DEPLOYMENT_QUICKSTART.md](./DEPLOYMENT_QUICKSTART.md) for first-time deployment  
 > **Related Docs**: [PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md) | [docs/hosting-migration.md](./docs/hosting-migration.md) | [k8s/README.md](./k8s/README.md) | [docs/runbooks/deploy.md](./docs/runbooks/deploy.md) | [docs/dependency-review-cadence.md](./docs/dependency-review-cadence.md)
 
@@ -13,8 +13,10 @@
 | **Pre-Deployment** | ⚠️ Needs Review | Environment setup, infrastructure provisioning, secrets configuration |
 | **Code Quality** | ✅ Complete | All builds, tests, lints, and security scans passing |
 | **Infrastructure** | ⚠️ Manual Setup | K8s cluster, databases, and services require provisioning |
-| **Deployment** | 🔄 Ready | Automated workflow configured, manual steps documented |
-| **Post-Deployment** | 📋 Prepared | Monitoring, validation, and rollback procedures ready |
+| **Deployment** | ⏸️ Blocked | Awaiting access to staging + production tenants for final rehearsal |
+| **Post-Deployment** | ⏸️ Blocked | Pending verification of observability dashboards with real telemetry |
+
+> **2025-11-10 validation summary**: Unable to execute requested full regression, load testing, and production rehearsal in this sandbox. Required staging credentials, mobile build artifacts, and observability access (Sentry, Prometheus/Grafana) are not available in the current environment. A detailed operations note is recorded in [`reports/operations-log.md`](./reports/operations-log.md).
 
 ---
 
