@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { clientConfig } from "@/config/client";
 import { recordAppStateEvent } from "@/lib/observability";
+import "@/lib/observability/install-client-fetch";
 import { QueryProvider } from "@/lib/api";
 import { AuthProvider } from "@/providers/auth-provider";
 import { I18nProvider } from "@/providers/i18n-provider";

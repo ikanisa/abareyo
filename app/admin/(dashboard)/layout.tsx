@@ -11,7 +11,7 @@ import {
   reportAdminAvailabilityException,
   reportAdminAvailabilityIssue,
 } from '@/lib/observability/admin';
-import { buildAdminRouteMetadata } from '../_lib/metadata';
+import { buildAdminRouteMetadata } from '@admin/_lib/metadata';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

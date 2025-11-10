@@ -1,48 +1,52 @@
 import { NextResponse } from 'next/server';
 
-import { serverEnv } from '@/config/env';
-import { normalizeWhatsappNumber } from '@/lib/phone';
 import { signWhatsappJwt, verifyOtpHash } from '@/lib/otp';
-import { otpRepository } from '@/lib/redis';
+import {
+  deleteWhatsappAuthRequest,
+  incrementWhatsappAuthAttempts,
+  loadWhatsappAuthRequest,
+} from '@/lib/server/whatsapp-auth/store';
+import { hashPhoneForTelemetry } from '@/lib/server/otp/whatsapp';
+import { getWhatsappJwtSecret, resolveOtpTtlSeconds } from '@/lib/server/whatsapp-auth/config';
 
 const MAX_ATTEMPTS = 5;
 
 type VerifyPayload = {
-  phone?: string;
-  otp?: string;
+  requestId?: string;
+  code?: string;
 };
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as VerifyPayload | null;
-  if (!body || typeof body.phone !== 'string' || typeof body.otp !== 'string') {
+  if (!body || typeof body.requestId !== 'string' || typeof body.code !== 'string') {
     return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
   }
 
-  const phone = normalizeWhatsappNumber(body.phone);
-  if (!phone) {
-    return NextResponse.json({ error: 'invalid_phone' }, { status: 400 });
-  }
-
-  const otp = body.otp.trim();
+  const otp = body.code.trim();
   if (!otp) {
     return NextResponse.json({ error: 'otp_required' }, { status: 400 });
   }
 
-  const record = await otpRepository.load(phone);
+  const { record, expired } = loadWhatsappAuthRequest(body.requestId);
+
   if (!record) {
+    if (expired) {
+      return NextResponse.json({ error: 'otp_expired' }, { status: 410 });
+    }
     return NextResponse.json({ error: 'otp_not_found' }, { status: 404 });
   }
 
-  if (record.exp <= Date.now()) {
-    await otpRepository.remove(phone);
-    return NextResponse.json({ error: 'otp_expired' }, { status: 410 });
+  const secret = getWhatsappJwtSecret();
+  if (!secret) {
+    deleteWhatsappAuthRequest(record.id);
+    return NextResponse.json({ error: 'server_misconfigured' }, { status: 500 });
   }
 
-  const valid = verifyOtpHash(otp, serverEnv.JWT_SECRET, phone, record.hash);
+  const valid = verifyOtpHash(otp, secret, record.phone, record.hash);
   if (!valid) {
-    const attempts = await otpRepository.incrementAttempts(phone);
+    const attempts = incrementWhatsappAuthAttempts(record.id);
     if (attempts !== null && attempts >= MAX_ATTEMPTS) {
-      await otpRepository.remove(phone);
+      deleteWhatsappAuthRequest(record.id);
       return NextResponse.json({ error: 'otp_attempts_exceeded' }, { status: 429 });
     }
 
@@ -55,10 +59,16 @@ export async function POST(request: Request) {
     );
   }
 
-  await otpRepository.remove(phone);
+  deleteWhatsappAuthRequest(record.id);
 
-  const ttlSeconds = Math.max(30, Number(serverEnv.OTP_TTL_SEC || 300));
-  const token = signWhatsappJwt(phone, serverEnv.JWT_SECRET, ttlSeconds);
+  const ttlSeconds = resolveOtpTtlSeconds();
+  const token = signWhatsappJwt(record.phone, secret, ttlSeconds);
 
-  return NextResponse.json({ ok: true, token });
+  return NextResponse.json({
+    data: {
+      accessToken: token,
+      refreshToken: token,
+      userId: hashPhoneForTelemetry(record.phone),
+    },
+  });
 }

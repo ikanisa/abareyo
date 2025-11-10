@@ -10,6 +10,7 @@ import {
   isMobileUserAgent,
   shouldAttemptNativeHandoff,
 } from './src/lib/native/links';
+import { CORRELATION_HEADERS } from './src/lib/observability/correlation';
 
 const LOCALES = ['en', 'fr', 'rw'] as const;
 const LOCALE_RE = new RegExp(`^/(?:${LOCALES.join('|')})(?=/|$)`);
@@ -18,6 +19,9 @@ const isProduction = process.env.NODE_ENV === 'production';
 const ADMIN_API_PREFIX = '/admin/api';
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 const API_PREFIX = '/api';
+const CORRELATION_COOKIE = CORRELATION_HEADERS.cookie;
+const CORRELATION_HEADER = CORRELATION_HEADERS.header;
+const REQUEST_ID_HEADER = CORRELATION_HEADERS.requestIdHeader;
 
 type RateLimitRule = {
   matcher: RegExp;
@@ -66,6 +70,32 @@ const resolveClientIdentifier = (req: NextRequest) => {
   }
 
   return req.ip ?? 'anonymous';
+};
+
+const getOrCreateCorrelationId = (req: NextRequest) => {
+  const headerValue =
+    req.headers.get(CORRELATION_HEADER) ??
+    req.headers.get(REQUEST_ID_HEADER) ??
+    req.cookies.get(CORRELATION_COOKIE)?.value ??
+    null;
+
+  if (headerValue && headerValue.trim().length > 0) {
+    return headerValue;
+  }
+
+  return crypto.randomUUID();
+};
+
+const attachCorrelation = (response: NextResponse, correlationId: string) => {
+  response.headers.set(CORRELATION_HEADER, correlationId);
+  response.headers.set(REQUEST_ID_HEADER, correlationId);
+  response.cookies.set(CORRELATION_COOKIE, correlationId, {
+    httpOnly: false,
+    sameSite: 'lax',
+    secure: isProduction,
+    path: '/',
+  });
+  return response;
 };
 
 const applyCors = (response: NextResponse, req: NextRequest) => {
@@ -121,6 +151,12 @@ const shouldAttemptNativeHandoffRequest = (req: NextRequest) =>
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const method = req.method?.toUpperCase() ?? 'GET';
+  const correlationId = getOrCreateCorrelationId(req);
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set(CORRELATION_HEADER, correlationId);
+  requestHeaders.set(REQUEST_ID_HEADER, correlationId);
+
+  const finalize = (response: NextResponse) => withSecurityHeaders(attachCorrelation(response, correlationId));
 
   if (isProduction) {
     const proto = req.headers.get('x-forwarded-proto');
@@ -131,7 +167,7 @@ export function middleware(req: NextRequest) {
       if (host) {
         url.host = host;
       }
-      return withSecurityHeaders(NextResponse.redirect(url, 308));
+      return finalize(NextResponse.redirect(url, 308));
     }
   }
 
@@ -143,7 +179,7 @@ export function middleware(req: NextRequest) {
 
     if (!headerToken || !cookieToken || headerToken !== cookieToken) {
       const response = NextResponse.json({ error: 'admin_csrf_invalid' }, { status: 403 });
-      return withSecurityHeaders(response);
+      return finalize(response);
     }
   }
 
@@ -151,7 +187,7 @@ export function middleware(req: NextRequest) {
     if (method === 'OPTIONS') {
       const response = new NextResponse(null, { status: 204 });
       applyCors(response, req);
-      return withSecurityHeaders(response);
+      return finalize(response);
     }
 
     if (method === 'POST') {
@@ -174,14 +210,14 @@ export function middleware(req: NextRequest) {
           );
           response.headers.set('Retry-After', retryAfterSeconds.toString());
           applyCors(response, req);
-          return withSecurityHeaders(response);
+          return finalize(response);
         }
       }
     }
 
-    const response = NextResponse.next();
+    const response = NextResponse.next({ request: { headers: requestHeaders } });
     applyCors(response, req);
-    return withSecurityHeaders(response);
+    return finalize(response);
   }
 
   // Skip internal next assets and explicit files
@@ -196,7 +232,7 @@ export function middleware(req: NextRequest) {
     pathname === '/apple-touch-icon.png' ||
     /\.[\w-]+$/.test(pathname)
   ) {
-    return withSecurityHeaders(NextResponse.next());
+    return finalize(NextResponse.next({ request: { headers: requestHeaders } }));
   }
 
   const userAgent = req.headers.get('user-agent');
@@ -206,7 +242,7 @@ export function middleware(req: NextRequest) {
       const response = NextResponse.redirect(nativeUrl, 307);
       response.headers.set('x-native-fallback-android', PLAY_STORE_URL);
       response.headers.set('x-native-fallback-ios', APP_STORE_URL);
-      return withSecurityHeaders(response);
+      return finalize(response);
     }
   }
 
@@ -218,20 +254,20 @@ export function middleware(req: NextRequest) {
   // If URL has a locale prefix, rewrite to the bare path for routing
   if (hasPrefix) {
     const bare = pathname.replace(LOCALE_RE, '') || '/';
-    return withSecurityHeaders(NextResponse.rewrite(new URL(bare, req.url)));
+    return finalize(NextResponse.rewrite(new URL(bare, req.url)));
   }
 
   // If no prefix, but referer carried one, keep the user's locale in the URL
   if (refLocale && isTrustedLocaleRedirect(req, refLocale)) {
     const target = pathname === '/' ? `/${refLocale}` : `/${refLocale}${pathname}`;
-    return withSecurityHeaders(NextResponse.redirect(new URL(target, req.url)));
+    return finalize(NextResponse.redirect(new URL(target, req.url)));
   }
 
   // Default (English) without prefix
-  return withSecurityHeaders(NextResponse.next());
+  return finalize(NextResponse.next({ request: { headers: requestHeaders } }));
 }
 
 export const config = {
-  matcher: ['/((?!_next|.*\..*).*)'],
+  matcher: ['/((?!_next|.*[.].*).*)'],
 };
 

@@ -1,5 +1,6 @@
 import pino, { type Logger, type LogFn, type TransportTargetOptions } from "pino";
 
+import { installFetchInterceptor } from "@/lib/observability/fetch-interceptor";
 import { resolveSentryConfiguration } from "./sentry-config";
 
 let lokiLogger: Logger | undefined;
@@ -119,6 +120,7 @@ export const setupNodeObservability = (service = "nextjs-frontend") => {
 
   lokiLogger = pino({ level }, transport);
   patchConsole(lokiLogger);
+  installFetchInterceptor();
 };
 
 export const resetNodeObservability = () => {

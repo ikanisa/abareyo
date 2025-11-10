@@ -1,4 +1,5 @@
 import { clientEnv, serverEnv } from '@/config/env';
+import { serverEnv } from '@/config/env';
 
 const DEFAULT_LOCAL_ORIGINS = [
   "http://localhost:3000",
@@ -78,6 +79,12 @@ export const getAllowedOrigins = (): string[] => {
     serverEnv.SITE_SUPABASE_URL ?? null,
     serverEnv.SUPABASE_URL ?? null,
     clientEnv.NEXT_PUBLIC_SITE_URL ?? null,
+    process.env.NEXT_PUBLIC_BACKEND_URL,
+    serverEnv.NEXT_PUBLIC_SITE_URL,
+    serverEnv.APP_BASE_URL,
+    serverEnv.SITE_SUPABASE_URL,
+    serverEnv.NEXT_PUBLIC_BACKEND_URL,
+    serverEnv.NEXT_PUBLIC_SUPABASE_URL,
   );
 
   if (configured.has("*")) {

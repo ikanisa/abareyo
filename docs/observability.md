@@ -65,7 +65,9 @@ Sentry
 
 Synthetic probes
 
-- GitHub Actions workflow `.github/workflows/observability-probes.yml` runs every 10 minutes and hits `/api/health` and `/metrics`.
+- The managed scheduler (`.github/workflows/managed-schedules.yml`) calls the
+  `.github/workflows/observability-probes.yml` reusable workflow every 10 minutes
+  and hits `/api/health` plus `/metrics`.
 - Configure the following repository secrets before enabling the cron job:
   - `PROBE_BASE_URL`: base URL of the deployed site (e.g. `https://app.rayon.gg`).
   - `PROBE_METRICS_TOKEN`: bearer token protecting `/metrics` (optional if the endpoint is public).

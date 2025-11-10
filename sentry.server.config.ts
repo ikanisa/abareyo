@@ -2,12 +2,21 @@ import * as Sentry from "@sentry/node";
 
 import { resolveSentryConfiguration } from "./src/lib/observability/sentry-config";
 
-const { dsn, environment } = resolveSentryConfiguration("server");
-const enabled = Boolean(dsn);
+const { dsn, environment, release, dist, sampleRates, enabled } = resolveSentryConfiguration("server");
 
 Sentry.init({
   dsn: dsn || undefined,
   enabled,
   environment,
-  tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? "0.1"),
+  release: release ?? undefined,
+  dist: dist ?? undefined,
+  tracesSampleRate: sampleRates.traces,
+  profilesSampleRate: sampleRates.profiles,
+});
+
+Sentry.configureScope((scope) => {
+  scope.setTag("service", "rayon-server");
+  if (release) {
+    scope.setTag("release", release);
+  }
 });

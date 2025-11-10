@@ -1,8 +1,9 @@
 # Deployment Checklist
 
-> **Purpose**: Comprehensive pre-deployment validation and go-live checklist  
-> **Status**: ⚠️ Blocked — regression, load, and deployment validation require staging access
-> **Last Updated**: 2025-11-10T08:00:28Z
+> **Purpose**: Comprehensive pre-deployment validation and go-live checklist
+> **Status**: ⚠️ Blocked — regression, load, go/no-go, and deployment validation still require staging access
+> **Owner**: Release Management — ChatGPT (sandbox operator)
+> **Last Updated**: 2025-11-10T15:13:49Z
 > **Quick Start**: See [DEPLOYMENT_QUICKSTART.md](./DEPLOYMENT_QUICKSTART.md) for first-time deployment  
 > **Related Docs**: [PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md) | [docs/hosting-migration.md](./docs/hosting-migration.md) | [k8s/README.md](./k8s/README.md) | [docs/runbooks/deploy.md](./docs/runbooks/deploy.md) | [docs/dependency-review-cadence.md](./docs/dependency-review-cadence.md)
 
@@ -16,7 +17,7 @@
 | **Deployment** | ⏸️ Blocked | Awaiting access to staging + production tenants for final rehearsal |
 | **Post-Deployment** | ⏸️ Blocked | Pending verification of observability dashboards with real telemetry |
 
-> **2025-11-10 validation summary**: Unable to execute requested full regression, load testing, and production rehearsal in this sandbox. Required staging credentials, mobile build artifacts, and observability access (Sentry, Prometheus/Grafana) are not available in the current environment. A detailed operations note is recorded in [`reports/operations-log.md`](./reports/operations-log.md).
+> **2025-11-10T15:13Z validation summary**: Unable to execute requested full regression, load testing, go/no-go review, or production rehearsal in this sandbox. Required staging credentials, mobile build artifacts, and observability access (Sentry, Prometheus/Grafana) are not available in the current environment. Updated operations note is recorded in [`reports/operations-log.md`](./reports/operations-log.md), and go/no-go evidence placeholder captured in [`reports/2025-11-10-go-no-go.md`](./reports/2025-11-10-go-no-go.md).
 
 ---
 

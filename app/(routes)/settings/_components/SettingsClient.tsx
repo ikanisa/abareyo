@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Bell, Globe, Shield, HelpCircle, MousePointer2 } from "lucide-react";
 
@@ -165,9 +166,17 @@ export function SettingsClient() {
             <Button type="button" className="w-full" disabled={!supportMessage.trim()}>
               Send to support
             </Button>
-            <Button type="button" variant="link" className="w-full text-white">
-              View privacy policy
-            </Button>
+            <div className="grid gap-1">
+              <Button asChild variant="link" className="justify-start px-0 text-white">
+                <Link href="/legal/privacy">Privacy policy</Link>
+              </Button>
+              <Button asChild variant="link" className="justify-start px-0 text-white">
+                <Link href="/legal/terms">Terms of service</Link>
+              </Button>
+              <Button asChild variant="link" className="justify-start px-0 text-white">
+                <Link href="/legal/cookies">Cookie policy</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>

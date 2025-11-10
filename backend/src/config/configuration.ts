@@ -211,6 +211,13 @@ export default () => ({
       },
       tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? 0.1),
       profilesSampleRate: Number(process.env.SENTRY_PROFILES_SAMPLE_RATE ?? 0),
+      release:
+        process.env.SENTRY_RELEASE ??
+        process.env.SENTRY_RELEASE_VERSION ??
+        process.env.APP_VERSION ??
+        process.env.GIT_COMMIT_SHA ??
+        undefined,
+      dist: process.env.SENTRY_DIST ?? undefined,
     },
     prometheus: {
       token: process.env.METRICS_TOKEN ?? '',

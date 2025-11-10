@@ -7,7 +7,7 @@ Owner: Platform Engineering
 
 - **Feature flag hardening** – Module toggles now cover every sidebar section with Supabase seeds for defaults (`admin.module.*`) and a new kill-switch (`admin.shell.enabled`). The feature flag snapshot loader pulls these keys and the shell refuses to render when the master flag is off.
 - **Typed RBAC catalogue** – Introduced `src/config/admin-rbac.ts`, enumerating canonical permission codes, module → permission requirements, and role presets (SYSTEM_ADMIN, MATCH_OPERATIONS, PAYMENTS, CONTENT, SUPPORT). Exposed helpers for permission checks and module access.
-- **Admin access hook** – `useAdminAccess` centralises client-side permission checks; the admin shell nav renders disabled states when a feature flag is off or the user lacks access.
+- **Admin access helpers** – Client surfaces import `canAccessModule`/`hasPermission` from `src/config/admin-rbac.ts`; the retired `useAdminAccess` hook has been folded into those utilities so the shell keeps a single source of truth.
 - **Server-side enforcement** – Added `requireAdminPermissions` and `requireAdminModuleAccess` helpers so App Router handlers guard Supabase mutations with typed permissions. Key routes (`tickets`, `shop`, `sms`, `content`, `admin`) now enforce the correct codes before touching the database or writing audit logs.
 - **Supabase seeding** – Migration `20251118_admin_rbac_seed.sql` seeds the complete permission set, system roles, and module feature flags without mutating existing `enabled` values. SYSTEM_ADMIN is linked to every seeded permission.
 

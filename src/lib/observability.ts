@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 
 import { clientEnv, serverEnv } from "@/config/env";
+import { getCorrelationId } from "@/lib/observability/correlation";
 
 type TelemetryEvent = {
   type: string;
@@ -8,7 +9,18 @@ type TelemetryEvent = {
   [key: string]: unknown;
 };
 
-const HAS_SENTRY_CONFIGURATION = Boolean(clientEnv.NEXT_PUBLIC_SENTRY_DSN || serverEnv.SENTRY_DSN);
+const SENTRY_DSN_SOURCES = [
+  clientEnv.NEXT_PUBLIC_SENTRY_DSN,
+  serverEnv.SENTRY_DSN,
+  serverEnv.BACKEND_SENTRY_DSN,
+  serverEnv.BACKEND_SENTRY_DSN_STAGING,
+  serverEnv.BACKEND_SENTRY_DSN_PRODUCTION,
+];
+
+const resolveSentryDsn = () =>
+  SENTRY_DSN_SOURCES.find((dsn) => typeof dsn === "string" && dsn.trim().length > 0)?.trim() ?? null;
+
+const HAS_SENTRY_CONFIGURATION = Boolean(resolveSentryDsn());
 const DEFAULT_TELEMETRY_ENDPOINT = clientEnv.NEXT_PUBLIC_TELEMETRY_URL || "/api/telemetry/app-state";
 
 const isBrowser = typeof window !== "undefined";
@@ -36,6 +48,15 @@ const captureWithSentry = (error: unknown, context?: Record<string, unknown>) =>
     return false;
   }
 
+  const correlationId = getCorrelationId();
+
+  Sentry.configureScope((scope) => {
+    scope.setTag("correlation_id", correlationId);
+    if (context && Object.keys(context).length > 0) {
+      scope.setContext("extra", context as Record<string, unknown>);
+    }
+  });
+
   if (context && Object.keys(context).length > 0) {
     Sentry.captureException(error, { extra: context });
   } else {
@@ -44,6 +65,8 @@ const captureWithSentry = (error: unknown, context?: Record<string, unknown>) =>
 
   return true;
 };
+
+export const getResolvedSentryDsn = () => resolveSentryDsn();
 
 const createPayload = (event: TelemetryEvent) => {
   const timestamp = event.timestamp ?? Date.now();

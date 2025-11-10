@@ -13,7 +13,7 @@ const config: PlaywrightTestConfig = {
     video: "retain-on-failure",
   },
   webServer: {
-    command: `E2E_API_MOCKS=1 NEXT_PUBLIC_BACKEND_URL=http://localhost:${PORT}/api/e2e NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321 NEXT_PUBLIC_SUPABASE_ANON_KEY=test SUPABASE_SERVICE_ROLE_KEY=test META_WABA_BASE_URL=https://graph.facebook.com/v21.0 META_WABA_PHONE_NUMBER_ID=test-phone-number-id META_WABA_ACCESS_TOKEN=test-access-token OTP_TEMPLATE_NAME=test_otp_template OTP_TEMPLATE_LANGUAGE=en OTP_TTL_SEC=300 RATE_LIMIT_PER_PHONE_PER_HOUR=5 JWT_SECRET=test-secret-value-that-is-long-enough-123456 NEXT_PUBLIC_ENVIRONMENT_LABEL=test NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN=public-token SITE_SUPABASE_URL=http://localhost:54321 SITE_SUPABASE_SECRET_KEY=service-secret ONBOARDING_API_TOKEN=onboard-token npm run dev`,
+    command: `NEXT_DISABLE_LOCKFILE_CHECK=1 NEXT_IGNORE_INCORRECT_LOCKFILE=1 NEXT_MOCK_SENTRY=1 E2E_API_MOCKS=1 NEXT_PUBLIC_BACKEND_URL=http://localhost:${PORT}/api/e2e NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321 NEXT_PUBLIC_SUPABASE_ANON_KEY=test SUPABASE_SERVICE_ROLE_KEY=test META_WABA_BASE_URL=https://graph.facebook.com/v21.0 META_WABA_PHONE_NUMBER_ID=test-phone-number-id META_WABA_ACCESS_TOKEN=test-access-token OTP_TEMPLATE_NAME=test_otp_template OTP_TEMPLATE_LANGUAGE=en OTP_TTL_SEC=300 RATE_LIMIT_PER_PHONE_PER_HOUR=5 JWT_SECRET=test-secret-value-that-is-long-enough-123456 NEXT_PUBLIC_ENVIRONMENT_LABEL=test NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN=public-token SITE_SUPABASE_URL=http://localhost:54321 SITE_SUPABASE_SECRET_KEY=service-secret ONBOARDING_API_TOKEN=onboard-token npm run dev`,
     port: PORT,
     timeout: 240_000,
     reuseExistingServer: !process.env.CI,
@@ -36,6 +36,9 @@ const config: PlaywrightTestConfig = {
       SITE_SUPABASE_URL: "http://localhost:54321",
       SITE_SUPABASE_SECRET_KEY: "service-secret",
       ONBOARDING_API_TOKEN: "onboard-token",
+      NEXT_DISABLE_LOCKFILE_CHECK: "1",
+      NEXT_IGNORE_INCORRECT_LOCKFILE: "1",
+      NEXT_MOCK_SENTRY: "1",
     },
   },
   projects: [

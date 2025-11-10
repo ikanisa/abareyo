@@ -28,6 +28,17 @@ const SupportPage = () => (
             Partner services
           </Link>
         </div>
+        <div className="flex flex-wrap gap-4 pt-2 text-xs text-white/60">
+          <Link href="/legal/terms" className="underline-offset-4 hover:underline">
+            Terms of service
+          </Link>
+          <Link href="/legal/privacy" className="underline-offset-4 hover:underline">
+            Privacy policy
+          </Link>
+          <Link href="/legal/cookies" className="underline-offset-4 hover:underline">
+            Cookie policy
+          </Link>
+        </div>
       </section>
     </main>
   </div>

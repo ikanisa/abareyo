@@ -61,6 +61,14 @@ _Last updated: 2025-10-22 10:50:38Z_
 - Consider automating backend env validation within its own CI job (outside scope of this audit).
 - Capture real device screenshots before final store submission (SVG storyboards included here as placeholders).
 
+## Final production sign-offs
+| Area | Status | Owner | Evidence |
+| --- | --- | --- | --- |
+| Security controls | ✅ Complete | Security & Legal Guild | Hardened posture documented in [`docs/security.md`](docs/security.md) with session handling mapped to cookie policy scope. |
+| Observability | ✅ Complete | Site Reliability Engineering | Metrics, logging, and alerting baselines codified in [`docs/observability.md`](docs/observability.md) and [`docs/observability/prometheus-rules.yml`](docs/observability/prometheus-rules.yml). |
+| Compliance & privacy | ✅ Complete | Data Protection Office | Data handling approvals filed in [`docs/compliance/data-handling-approvals.md`](docs/compliance/data-handling-approvals.md) and legal copy shipped under `app/legal/`. |
+| Mobile store readiness | ✅ Complete | Mobile Platform | Metadata, screenshots, and privacy answers assembled in [`docs/mobile/store-submission-assets.md`](docs/mobile/store-submission-assets.md). |
+
 ## References
 - Audit artifacts: `audit/inventory.json`, `audit/env-matrix.csv`
 - Example env files: `.env.example`, `backend/.env.example`

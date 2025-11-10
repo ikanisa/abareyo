@@ -27,7 +27,9 @@ const TermsPage = () => (
         </section>
       </article>
       <footer className="text-sm text-white/60">
-        Questions? Email <a className="underline" href="mailto:support@gikundiro.rw">support@gikundiro.rw</a> or visit More → Support in the app.
+        Questions? Email <a className="underline" href="mailto:support@gikundiro.rw">support@gikundiro.rw</a> or visit More →
+        Support in the app. Review our <a className="underline" href="/legal/privacy">privacy</a> and
+        <a className="underline" href="/legal/cookies"> cookie</a> policies for data handling details.
       </footer>
     </main>
   </div>

@@ -2,7 +2,7 @@ groups:
   - name: rayon-backend-slos
     interval: 1m
     rules:
-      - alert: HighErrorRate
+      - alert: RayonHighErrorRate
         expr: |
           sum(increase(rayon_http_requests_total{statusCode=~"5.."}[5m]))
             /
@@ -12,26 +12,66 @@ groups:
           severity: page
         annotations:
           summary: High HTTP 5xx rate
-          description: HTTP 5xx rate > 1% over 10m
+          description: HTTP 5xx rate > 1% over 10 minutes.
 
-      - alert: HighLatencyP95
+      - alert: RayonHighLatencyP95
         expr: |
           histogram_quantile(0.95,
-            sum by (le, route) (rate(rayon_http_request_duration_seconds_bucket[5m]))
+            sum by (le) (rate(rayon_http_request_duration_seconds_bucket[5m]))
           ) > 0.5
         for: 10m
         labels:
           severity: page
         annotations:
           summary: High p95 latency
-          description: p95 latency > 500ms over 10m
+          description: p95 latency > 500ms over 10 minutes.
 
-      - alert: SmsQueueDepthSpike
+      - alert: RayonElevatedLatencyP99
+        expr: |
+          histogram_quantile(0.99,
+            sum by (le) (rate(rayon_http_request_duration_seconds_bucket[5m]))
+          ) > 1.5
+        for: 5m
+        labels:
+          severity: ticket
+        annotations:
+          summary: Elevated p99 latency
+          description: p99 latency above 1.5s indicates downstream saturation.
+
+      - alert: RayonSmsQueueBacklog
         expr: rayon_sms_queue_depth > 100
         for: 5m
         labels:
           severity: ticket
         annotations:
           summary: SMS queue depth high
-          description: SMS queue depth over 100 for 5m
+          description: SMS queue depth over 100 for five minutes.
+
+      - alert: RayonGateScanFailures
+        expr: |
+          increase(rayon_gate_scans_total{outcome="rejected"}[10m])
+            /
+          increase(rayon_gate_scans_total[10m]) > 0.05
+        for: 10m
+        labels:
+          severity: page
+        annotations:
+          summary: Excessive rejected gate scans
+          description: Gate rejection rate exceeded 5% in the last 10 minutes.
+
+  - name: rayon-service-recordings
+    interval: 30s
+    rules:
+      - record: rayon:http_request:rate5m
+        expr: sum(rate(rayon_http_requests_total[5m])) by (service, route)
+      - record: rayon:http_latency:p95
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le, route) (rate(rayon_http_request_duration_seconds_bucket[5m]))
+          )
+      - record: rayon:http_latency:p99
+        expr: |
+          histogram_quantile(0.99,
+            sum by (le, route) (rate(rayon_http_request_duration_seconds_bucket[5m]))
+          )
 
