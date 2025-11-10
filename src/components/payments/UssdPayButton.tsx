@@ -4,27 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 
 import { buildUssd, formatTelUri, isIOS, sanitizeAmount, type Provider } from "@/lib/ussd";
 
-let clipboardModule: { setStringAsync?: (value: string) => Promise<void> } | null = null;
-
-async function copyWithExpoClipboard(payload: string) {
-  if (clipboardModule?.setStringAsync) {
-    await clipboardModule.setStringAsync(payload);
-    return true;
-  }
-
-  try {
-    clipboardModule = await import("expo-clipboard");
-    if (clipboardModule?.setStringAsync) {
-      await clipboardModule.setStringAsync(payload);
-      return true;
-    }
-  } catch (error) {
-    console.warn("expo-clipboard unavailable", error);
-  }
-  return false;
-}
-
-function fallbackCopy(payload: string) {
+function copyToClipboard(payload: string) {
   if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
     return navigator.clipboard.writeText(payload).then(() => true).catch(() => false);
   }
@@ -64,7 +44,7 @@ export const UssdPayButton = ({
 
   const handleCopy = useCallback(async () => {
     const raw = formatTelUri(displayCode).replace(/^tel:/i, "");
-    const copied = (await copyWithExpoClipboard(raw)) || (await fallbackCopy(raw));
+    const copied = await copyToClipboard(raw);
     setCopyStatus(copied ? "copied" : "failed");
     if (copied) {
       onCopied?.();

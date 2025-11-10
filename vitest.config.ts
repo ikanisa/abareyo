@@ -49,7 +49,7 @@ const packagesProject = defineProject({
       'packages/**/*.{test,spec}.{ts,tsx}',
       'packages/**/__tests__/**/*.{test,spec}.{ts,tsx}',
     ],
-    exclude: ['**/node_modules/**', 'packages/mobile/e2e/**'],
+    exclude: ['**/node_modules/**'],
     setupFiles: ['tests/setup-env.ts'],
     testTimeout: 15000,
     coverage: {

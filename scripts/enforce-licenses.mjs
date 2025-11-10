@@ -12,7 +12,6 @@ const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const targets = [
   { name: 'web', cwd: repoRoot },
   { name: 'backend', cwd: resolve(repoRoot, 'backend') },
-  { name: 'mobile', cwd: resolve(repoRoot, 'packages/mobile') },
 ];
 
 async function runLicenseChecker(target) {

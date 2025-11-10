@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
-import { getExpoPushToken, requestPermissions } from "@/lib/mobile/expo-notifications";
 
 const DEFAULT_NOTIFICATIONS = {
   kickoff: true,
@@ -25,7 +24,6 @@ export function MatchReminderToggles() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [notifications, setNotifications] = useState(DEFAULT_NOTIFICATIONS);
-  const [expoToken, setExpoToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const canSave = useMemo(() => !loading && !saving, [loading, saving]);
@@ -44,7 +42,6 @@ export function MatchReminderToggles() {
         if (!cancelled) {
           const prefs = payload.prefs ?? {};
           setNotifications({ ...DEFAULT_NOTIFICATIONS, ...(prefs.notifications ?? {}) });
-          setExpoToken(prefs.notifications?.expoPushToken ?? null);
         }
       } catch (loadError) {
         if (!cancelled) {
@@ -75,17 +72,6 @@ export function MatchReminderToggles() {
     setSaving(true);
     setError(null);
 
-    let pushToken = expoToken;
-    if (!pushToken) {
-      const permission = await requestPermissions();
-      if (permission?.status === "granted") {
-        pushToken = await getExpoPushToken();
-        if (pushToken) {
-          setExpoToken(pushToken);
-        }
-      }
-    }
-
     try {
       const response = await fetch("/api/me/prefs", {
         method: "POST",
@@ -93,7 +79,7 @@ export function MatchReminderToggles() {
         body: JSON.stringify({
           notifications: {
             ...notifications,
-            expoPushToken: pushToken ?? null,
+            expoPushToken: null,
           },
         }),
       });
@@ -103,9 +89,7 @@ export function MatchReminderToggles() {
 
       toast({
         title: "Match reminders updated",
-        description: pushToken
-          ? "We will send alerts through Expo push notifications."
-          : "Preferences saved. Enable notifications on your device for live alerts.",
+        description: "Preferences saved. Enable browser notifications for live alerts when they become available.",
       });
     } catch (saveError) {
       console.error("Failed to save match reminders", saveError);
@@ -113,7 +97,7 @@ export function MatchReminderToggles() {
     } finally {
       setSaving(false);
     }
-  }, [canSave, expoToken, notifications, toast]);
+  }, [canSave, notifications, toast]);
 
   return (
     <section className="space-y-4" aria-labelledby="match-reminders-heading">
@@ -122,7 +106,7 @@ export function MatchReminderToggles() {
           Match reminders
         </h2>
         <p className="text-sm text-white/70">
-          Choose which moments trigger push alerts. We'll use Expo notifications when available.
+          Choose which moments trigger push alerts. Browser notifications will roll out once the new service worker hooks land.
         </p>
       </div>
       {error ? <p className="text-sm text-rwanda-yellow">{error}</p> : null}

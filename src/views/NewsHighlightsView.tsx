@@ -1,155 +1,88 @@
 "use client";
 
-import { useMemo, useRef } from "react";
-import { Video, ResizeMode } from "expo-av";
-import { ScrollView, StyleSheet, View, Text, Pressable } from "react-native";
-import { highlights } from "@/app/(routes)/news/_data/highlights";
+import { useMemo } from "react";
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: "#020817",
-  },
-  cta: {
-    borderRadius: 999,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  primaryCta: {
-    backgroundColor: "#2563eb",
-  },
-  secondaryCta: {
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.3)",
-    backgroundColor: "transparent",
-  },
-  primaryLabel: {
-    color: "white",
-    fontWeight: "600",
-  },
-  secondaryLabel: {
-    color: "white",
-    fontWeight: "500",
-  },
-  container: {
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-    gap: 24,
-  },
-  card: {
-    backgroundColor: "rgba(15,23,42,0.7)",
-    borderRadius: 24,
-    padding: 20,
-    gap: 16,
-  },
-  video: {
-    width: "100%",
-    borderRadius: 20,
-    overflow: "hidden",
-  },
-  tagList: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  tag: {
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: "rgba(255,255,255,0.08)",
-  },
-  eyebrow: {
-    fontSize: 12,
-    textTransform: "uppercase",
-    letterSpacing: 2,
-    color: "rgba(255,255,255,0.7)",
-    fontWeight: "600",
-  },
-  headline: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "white",
-  },
-  body: {
-    fontSize: 14,
-    color: "rgba(255,255,255,0.7)",
-  },
-  tagLabel: {
-    fontSize: 12,
-    textTransform: "uppercase",
-    letterSpacing: 2,
-    color: "rgba(255,255,255,0.7)",
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "white",
-  },
-});
+import { highlights } from "@/app/(routes)/news/_data/highlights";
 
 export default function NewsHighlightsView() {
   const featured = highlights[0];
-  const videoRef = useRef<Video | null>(null);
-
   const secondary = useMemo(() => highlights.slice(1), []);
 
   if (!featured) {
     return (
-      <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
-        <View style={styles.card}>
-          <Text style={styles.emptyTitle}>No highlights yet</Text>
-          <Text style={styles.body}>Upload videos from the newsroom console to populate this feed.</Text>
-        </View>
-      </ScrollView>
+      <div className="space-y-4 rounded-3xl bg-slate-950/70 p-8 text-white">
+        <h2 className="text-xl font-semibold">No highlights yet</h2>
+        <p className="text-sm text-white/70">
+          Upload match recaps from the newsroom console to populate this feed.
+        </p>
+      </div>
     );
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.eyebrow}>Featured highlight</Text>
-        <Text style={styles.headline}>{featured.title}</Text>
-        <View style={styles.video}>
-          <Video
-            ref={videoRef}
-            source={{ uri: featured.videoUrl }}
-            resizeMode={ResizeMode.CONTAIN}
-            shouldPlay
-            isLooping
-            useNativeControls
-            style={{ width: "100%", aspectRatio: 16 / 9 }}
-          />
-        </View>
-        <Text style={styles.body}>{featured.summary}</Text>
-        <View style={styles.tagList}>
+    <div className="space-y-8">
+      <section className="rounded-3xl bg-slate-950/70 p-8 text-white shadow-lg shadow-slate-900/20">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">Featured highlight</p>
+        <h2 className="mt-3 text-2xl font-semibold sm:text-3xl">{featured.title}</h2>
+        <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-black">
+          <video
+            key={featured.videoUrl}
+            id="featured-highlight"
+            controls
+            loop
+            autoPlay
+            muted
+            playsInline
+            className="aspect-video w-full object-contain"
+          >
+            <source src={featured.videoUrl} type="video/mp4" />
+            Your browser does not support HTML5 video.
+          </video>
+        </div>
+        <p className="mt-4 text-sm text-white/70">{featured.summary}</p>
+        <div className="mt-4 flex flex-wrap gap-2">
           {featured.tags.map((tag) => (
-            <View key={tag} style={styles.tag}>
-              <Text style={styles.tagLabel}>#{tag}</Text>
-            </View>
+            <span key={tag} className="rounded-full border border-white/20 px-3 py-1 text-xs uppercase tracking-wide">
+              #{tag}
+            </span>
           ))}
-        </View>
-        <Pressable style={[styles.cta, styles.primaryCta]} onPress={() => videoRef.current?.replayAsync()}>
-          <Text style={styles.primaryLabel}>Replay highlight</Text>
-        </Pressable>
-      </View>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            const element = document.getElementById('featured-highlight') as HTMLVideoElement | null;
+            if (element) {
+              element.currentTime = 0;
+              element.play().catch(() => undefined);
+            }
+          }}
+          className="mt-6 inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold transition hover:bg-blue-500"
+        >
+          Replay highlight
+        </button>
+      </section>
 
-      {secondary.map((item) => (
-        <View key={item.slug} style={styles.card}>
-          <Text style={styles.headline}>{item.title}</Text>
-          <Text style={styles.body}>{item.summary}</Text>
-          <View style={styles.tagList}>
-            {item.tags.map((tag) => (
-              <View key={tag} style={styles.tag}>
-                <Text style={styles.tagLabel}>#{tag}</Text>
-              </View>
-            ))}
-          </View>
-          <Pressable style={[styles.cta, styles.secondaryCta]}>
-            <Text style={styles.secondaryLabel}>Open highlight</Text>
-          </Pressable>
-        </View>
-      ))}
-    </ScrollView>
+      <div className="grid gap-6 lg:grid-cols-2">
+        {secondary.map((item) => (
+          <article key={item.slug} className="rounded-3xl bg-slate-950/70 p-6 text-white shadow-md shadow-slate-900/15">
+            <h3 className="text-xl font-semibold">{item.title}</h3>
+            <p className="mt-2 text-sm text-white/70">{item.summary}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {item.tags.map((tag) => (
+                <span key={tag} className="rounded-full border border-white/15 px-3 py-1 text-xs uppercase tracking-wide">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+            <a
+              href={`/news/${item.slug}`}
+              className="mt-6 inline-flex items-center justify-center rounded-full border border-white/20 px-4 py-2 text-sm font-medium transition hover:border-white/40"
+            >
+              Open highlight
+            </a>
+          </article>
+        ))}
+      </div>
+    </div>
   );
 }

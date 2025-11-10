@@ -80,8 +80,6 @@
     "app/**/*.tsx",
     "src/**/*.ts",
     "src/**/*.tsx",
-    "packages/mobile/**/*.ts",
-    "packages/mobile/**/*.tsx",
     "packages/ui/**/*.ts",
     "packages/ui/**/*.tsx",
     "tests/**/*.ts",

@@ -26,8 +26,7 @@
   "exceptions": {
     "vite_react_shadcn_ts@0.0.0": "Monorepo root package is private",
     "@rayon/contracts@0.1.0": "Internal contract package",
-    "rayon-backend@0.1.0": "Internal backend package",
-    "@rayon/mobile@0.1.0": "Internal mobile package"
+    "rayon-backend@0.1.0": "Internal backend package"
   },
   "guidance": {
     "owner": "Security & Legal",

@@ -132,29 +132,9 @@ npm run start
 # Open Chrome DevTools > Application > Service Workers
 ```
 
-## Android APK Build
+## Native Shells (Archived)
 
-### Prerequisites for APK Build
-
-- Android Studio installed
-- Java 17 (Temurin distribution recommended)
-- Android SDK configured
-
-### Building APK Locally
-
-```bash
-# Automated build script
-node scripts/build-apk.mjs
-```
-
-### APK Build Steps
-
-1. Clean previous builds
-2. Build Next.js with Capacitor output
-3. Sync Capacitor with Android project
-4. Build Android release APK using Gradle
-
-APK output location: `android/app/build/outputs/apk/release/app-release.apk`
+The Android and iOS bridges previously bundled in this repository have been retired. Shipping a production build now only requires the PWA deploy flow documented above. The legacy docs remain under `docs/mobile/` for reference should a dedicated mobile shell return.
 
 ## Netlify Functions
 
@@ -198,9 +178,7 @@ Ensure all required environment variables are set in Netlify dashboard.
 
 ### APK Build Fails
 
-1. Ensure Java 17 is installed: `java -version`
-2. Check Android SDK is configured
-3. Clean build: `rm -rf android/app/build && node scripts/build-apk.mjs`
+Android packaging is no longer maintained in this repo. If you need to resurrect the flow, start from the archived instructions in `docs/mobile/` and coordinate with Platform Engineering for tooling support.
 
 ### Functions Not Working
 
@@ -217,7 +195,6 @@ The GitHub Actions workflow `.github/workflows/netlify-deploy.yml` handles:
 3. **Unit tests** - Vitest test suite
 4. **Build** - Next.js production build
 5. **Deployment** - Automatic deploy to Netlify
-6. **APK Build** (on main branch) - Android APK artifact
 
 ## Monitoring and Logs
 

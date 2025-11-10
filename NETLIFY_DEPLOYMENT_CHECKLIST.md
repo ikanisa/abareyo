@@ -139,7 +139,7 @@ Add to GitHub repository secrets (**Settings > Secrets and variables > Actions**
 - [ ] Test APK on Android device
 
 ### Local APK Build (Optional)
-- [ ] Run: `node scripts/build-apk.mjs`
+- [ ] Mobile builds are not produced from this repo; skip the legacy APK step.
 - [ ] Check APK location: `android/app/build/outputs/apk/release/`
 - [ ] Test APK installation on device
 - [ ] Verify app functionality

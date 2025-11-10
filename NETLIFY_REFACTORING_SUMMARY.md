@@ -114,16 +114,7 @@ Step-by-step deployment checklist:
 - `public/manifest.json` - Already configured with shortcuts, icons, screenshots
 - `public/service-worker.js` - Workbox-based service worker with caching strategies
 - `public/offline.html` - Offline fallback page
-- `capacitor.config.ts` - Capacitor configuration for mobile
-
-#### New Script:
-**`scripts/build-apk.mjs`** - Automated APK Build
-- Clean previous builds
-- Build Next.js for Capacitor
-- Sync Capacitor
-- Build Android release APK
-- Verify APK output
-- ES module format for Node.js 20
+- Mobile shell configuration has been archived; the repo no longer ships Capacitor assets.
 
 **`scripts/postbuild-netlify.mjs`** - Build Validation
 - Verify .next directory exists
@@ -154,10 +145,8 @@ Complete CI/CD workflow with two jobs:
 - Deploy previews for PRs
 - Commit and PR comments enabled
 
-**Job 2: build-apk**
-- Runs on: ubuntu-latest
-- Triggers: Push to main only
-- Steps:
+**Job 2: build-apk** *(retired)*
+- The Netlify pipeline previously produced a Capacitor APK. That job has been removed alongside the native bridges; see the CI workflow history if you need to resurrect it.
   1. Checkout code
   2. Setup Node.js 20
   3. Setup Java 17 (Temurin)

@@ -6,16 +6,7 @@ const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
   // Ensure local packages are transpiled in the Next.js build
-  transpilePackages: ['@rayon/contracts', '@rayon/mobile-widgets', '@rayon/api', '@rayon/config'],
-  webpack: (config, { isServer }) => {
-    // Exclude React Native modules from web builds
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'expo-clipboard': false,
-      'expo-modules-core': false,
-    };
-    return config;
-  },
+  transpilePackages: ['@rayon/contracts', '@rayon/api', '@rayon/config'],
   images: {
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60 * 60 * 24,

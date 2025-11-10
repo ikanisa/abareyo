@@ -55,7 +55,6 @@
 - [x] App shortcuts configured
 
 ### Mobile Build:
-- [x] Capacitor configuration (capacitor.config.ts)
 - [x] Android build script
 - [x] APK build automation in CI/CD
 - [x] Build command: `build:capacitor`

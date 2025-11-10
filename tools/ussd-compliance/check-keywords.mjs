@@ -28,7 +28,7 @@ const loadConfig = () => {
 
 const { patterns: patternConfig, ignore: ignoreConfig } = loadConfig();
 
-const defaultRoots = ['app', 'src', 'packages/mobile', 'packages/contracts'];
+const defaultRoots = ['app', 'src', 'packages/contracts'];
 const cliRoots = process.argv.slice(2).filter((arg) => !arg.startsWith('--'));
 const activeRoots = cliRoots.length > 0 ? cliRoots : defaultRoots;
 
