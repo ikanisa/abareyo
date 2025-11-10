@@ -2,7 +2,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-const REPORT_PATH = resolve('reports/sbom/gitleaks.json');
+const REPORT_PATH = resolve('reports/sbom/gitleaks.sarif');
 
 async function loadReport() {
   try {
@@ -11,15 +11,29 @@ async function loadReport() {
       return [];
     }
     const parsed = JSON.parse(raw);
+
     if (Array.isArray(parsed)) {
       return parsed;
     }
+
     if (Array.isArray(parsed?.leaks)) {
       return parsed.leaks;
     }
+
     if (Array.isArray(parsed?.findings)) {
       return parsed.findings;
     }
+
+    if (Array.isArray(parsed?.runs)) {
+      const sarifFindings = [];
+      for (const run of parsed.runs) {
+        if (Array.isArray(run?.results)) {
+          sarifFindings.push(...run.results);
+        }
+      }
+      return sarifFindings;
+    }
+
     return [];
   } catch (error) {
     console.error(`Failed to read gitleaks report at ${REPORT_PATH}`);

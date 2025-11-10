@@ -15,6 +15,24 @@ permissions:
   security-events: write
 
 jobs:
+  dependency-review:
+    name: Dependency review (Advanced Security)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      security-events: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: true
+
   dependency-vulnerability-scan:
     name: Dependency scan (Snyk)
     runs-on: ubuntu-latest
@@ -115,6 +133,7 @@ jobs:
     needs: container-image-security-scan
     permissions:
       contents: read
+      security-events: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -128,7 +147,10 @@ jobs:
         id: gitleaks
         uses: gitleaks/gitleaks-action@v2
         with:
-          args: detect --source . --report-format json --report-path reports/sbom/gitleaks.json
+          args: >-
+            detect --source .
+            --report-format sarif
+            --report-path reports/sbom/gitleaks.sarif
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -138,9 +160,15 @@ jobs:
       - name: Fail if report contains findings
         run: node tools/ci/assert-gitleaks-clean.mjs
 
+      - name: Upload gitleaks results to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: reports/sbom/gitleaks.sarif
+
       - name: Upload gitleaks report artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: gitleaks-report
-          path: reports/sbom/gitleaks.json
+          path: reports/sbom/gitleaks.sarif

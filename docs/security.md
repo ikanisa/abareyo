@@ -59,4 +59,5 @@ Before promoting a release:
 - [ ] Verify monitoring dashboards (Grafana & Sentry) are green.
 - [ ] Ensure payment webhooks return 2xx by replaying from the Supabase dashboard.
 
-For additional resources, review [`docs/runbooks/operations.md`](runbooks/operations.md) and [`docs/runbooks/incident-response.md`](runbooks/incident-response.md).
+For additional resources, review [`docs/runbooks/operations.md`](runbooks/operations.md), [`docs/runbooks/incident-response.md`](runbooks/incident-response.md), and the
+security control library under [`docs/security/`](security/README.md).

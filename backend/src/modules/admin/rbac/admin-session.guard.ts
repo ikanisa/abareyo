@@ -5,9 +5,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 
 import { AdminAuthService } from '../auth/admin-auth.service.js';
+import { normalizeAdminPermissions, ReadonlyAdminPermissionSet } from './admin-permission-set.js';
 
 @Injectable()
 export class AdminSessionGuard implements CanActivate {
@@ -39,7 +40,21 @@ export class AdminSessionGuard implements CanActivate {
 
     const { session, permissionKeys, user } = result;
     request.adminUser = user;
-    request.adminPermissions = permissionKeys;
+
+    let normalizedPermissions: ReadonlyAdminPermissionSet;
+    try {
+      normalizedPermissions = normalizeAdminPermissions(permissionKeys);
+    } catch (error) {
+      this.clearCookie(reply);
+      throw new UnauthorizedException('Admin session invalid or expired');
+    }
+
+    Object.defineProperty(request, 'adminPermissions', {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: normalizedPermissions,
+    });
     request.adminSession = {
       id: session.id,
       expiresAt: session.expiresAt?.toISOString() ?? null,
