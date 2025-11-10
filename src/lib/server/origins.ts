@@ -1,3 +1,5 @@
+import { clientEnv, serverEnv } from '@/config/env';
+
 const DEFAULT_LOCAL_ORIGINS = [
   "http://localhost:3000",
   "http://127.0.0.1:3000",
@@ -66,8 +68,16 @@ const gatherOrigins = (...sources: OriginInput[]): Set<string> => {
 export const getAllowedOrigins = (): string[] => {
   const configured = gatherOrigins(
     process.env.CORS_ALLOWED_ORIGINS,
+    process.env.CORS_ORIGIN,
     process.env.NEXT_PUBLIC_SITE_URL,
     process.env.SITE_SUPABASE_URL,
+    process.env.SUPABASE_URL,
+    serverEnv.NEXT_PUBLIC_SITE_URL ?? null,
+    serverEnv.NEXT_PUBLIC_BACKEND_URL ?? null,
+    serverEnv.APP_BASE_URL ?? null,
+    serverEnv.SITE_SUPABASE_URL ?? null,
+    serverEnv.SUPABASE_URL ?? null,
+    clientEnv.NEXT_PUBLIC_SITE_URL ?? null,
   );
 
   if (configured.has("*")) {

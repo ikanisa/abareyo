@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { dispatchTelemetryEvent } from "@/lib/observability";
 import { setupNodeObservability } from "@/lib/observability/node-observability";
+import { deriveStatusesFromWebhook, persistWhatsappStatuses } from "@/lib/server/whatsapp-delivery";
 
 setupNodeObservability("whatsapp-webhook");
 
@@ -50,8 +51,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: "rejected", reason: "invalid_signature" }, { status: 403 });
   }
 
+  let parsed: unknown;
   try {
-    JSON.parse(rawBody);
+    parsed = JSON.parse(rawBody);
   } catch (_error) {
     logEvent({ stage: "ingest.failed", reason: "invalid_json" });
     return NextResponse.json({ status: "rejected", reason: "invalid_json" }, { status: 400 });
@@ -59,8 +61,21 @@ export async function POST(request: NextRequest) {
 
   logEvent({ stage: "ingest.accepted", hasSignature: Boolean(signature) });
 
-  // TODO: Persist delivery status updates once storage schema is defined.
-  // For now we acknowledge receipt and rely on structured logging for auditing.
+  const statuses = deriveStatusesFromWebhook(parsed);
+  let persistedCount = 0;
 
-  return NextResponse.json({ status: "accepted" }, { status: 202 });
+  if (statuses.length > 0) {
+    try {
+      persistedCount = await persistWhatsappStatuses(statuses);
+      logEvent({ stage: "ingest.persisted", statuses: statuses.length, persisted: persistedCount });
+    } catch (error) {
+      console.error("[whatsapp] Failed to persist delivery statuses", error);
+      logEvent({
+        stage: "ingest.persist_failed",
+        reason: error instanceof Error ? error.message : "unknown_error",
+      });
+    }
+  }
+
+  return NextResponse.json({ status: "accepted", persisted: persistedCount }, { status: 202 });
 }

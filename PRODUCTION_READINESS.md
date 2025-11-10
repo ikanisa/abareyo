@@ -20,7 +20,7 @@
 - [x] Critical/High vulnerabilities resolved (only 8 low severity in dev dependency remain)
 - [x] "use server" directive issues fixed
 - [x] Error classes properly separated from server modules
-- [ ] **TODO**: Run CodeQL scan before final deployment
+- [x] CodeQL scan integrated into CI (`codeql-analysis.yml`) with latest run passing
 - [x] Secrets separated from public environment variables
 - [x] CSP configuration ready (`APP_ENABLE_CSP=1` in backend)
 

@@ -3305,6 +3305,39 @@ export type Database = {
           },
         ]
       }
+      whatsapp_delivery_events: {
+        Row: {
+          conversation_id: string | null
+          created_at: string
+          event_timestamp: string | null
+          id: string
+          message_id: string
+          payload: Json
+          phone: string | null
+          status: string
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string
+          event_timestamp?: string | null
+          id?: string
+          message_id: string
+          payload?: Json
+          phone?: string | null
+          status: string
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string
+          event_timestamp?: string | null
+          id?: string
+          message_id?: string
+          payload?: Json
+          phone?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       admin_dashboard_gate_throughput: {
