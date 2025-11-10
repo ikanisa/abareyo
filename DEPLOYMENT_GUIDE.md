@@ -31,6 +31,35 @@ ONBOARDING_API_TOKEN=your-onboarding-token
 OPENAI_API_KEY=your-openai-key
 ```
 
+## Production Kubernetes Secret Storage
+
+For the Kubernetes deployment in `k8s/`, sensitive values are supplied via dedicated secrets:
+
+- `k8s/secrets.yaml` – bootstrap manifest for application secrets. Update the placeholder values before applying so that
+  `frontend-secrets`, `backend-secrets`, and `supabase-secrets` align with your Supabase project, Redis password, and session
+  keys. The file intentionally ships with redacted placeholders – do **not** commit actual credentials.
+- `k8s/postgres.yaml` – provisions a `postgres-credentials` secret alongside the StatefulSet. Rotate the database password in
+  this manifest and regenerate `DATABASE_URL` values to match.
+- `k8s/redis.yaml` – defines `redis-credentials` for the StatefulSet and requires a strong password.
+- `k8s/secrets.yaml` also includes `sentry-secrets` and `metrics-basic-auth` so Prometheus scraping and Sentry ingestion have
+  dedicated credentials.
+
+When applying manifests, prefer sealed secrets or your platform’s secret manager in production. The manifests are provided as
+reference scaffolding and should be mirrored into the cluster with:
+
+```bash
+kubectl apply -f k8s/secrets.yaml --namespace=rayon
+kubectl apply -f k8s/postgres.yaml --namespace=rayon
+kubectl apply -f k8s/redis.yaml --namespace=rayon
+```
+
+### GitHub Actions Deploy Secrets
+
+Populate the repository secrets described in `DEPLOYMENT_READINESS_REPORT.md` (for example `NEXT_PUBLIC_SUPABASE_URL`,
+`SUPABASE_SERVICE_ROLE_KEY`, `SENTRY_DSN`, `GHCR_TOKEN`, and `METRICS_BASIC_AUTH_PASSWORD`). These power the CI workflows and
+container builds that publish to GHCR. Rotate them using your organisation’s secret manager and avoid storing plaintext values
+inside the repository.
+
 ### Optional Variables
 
 ```bash

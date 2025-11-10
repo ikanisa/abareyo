@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: backend-prisma-migrate
+  namespace: rayon
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app: backend-migrations
+    spec:
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+        - name: migrate
+          image: ghcr.io/ikanisa/abareyo-backend:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: NODE_ENV
+              value: production
+          envFrom:
+            - secretRef:
+                name: backend-secrets
+            - secretRef:
+                name: postgres-credentials
+            - secretRef:
+                name: supabase-secrets
+            - secretRef:
+                name: redis-credentials
+            - secretRef:
+                name: sentry-secrets
+            - secretRef:
+                name: metrics-basic-auth
+          command:
+            - npm
+          args:
+            - run
+            - prisma:migrate
