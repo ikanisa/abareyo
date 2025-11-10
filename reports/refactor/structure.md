@@ -515,7 +515,7 @@ drwxrwxr-x  2 runner runner 4096 Nov  2 12:09 web
 - packages/ui - Add liquid glass components
 - packages/api - Add typed Supabase clients
 - packages/config - Add ESLint/Prettier configs
-- apps/admin - Apply design system
+- app/admin - Apply design system (confirmed root location)
 - PWA manifest and service worker
 
 ### Missing ❌

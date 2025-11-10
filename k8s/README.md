@@ -13,9 +13,14 @@ Secrets are provided as manifests so they can be managed via GitOps or your pref
 values before applying:
 
 - `k8s/secrets.yaml` – application credentials (`frontend-secrets`, `backend-secrets`, `supabase-secrets`, `sentry-secrets`,
-  and `metrics-basic-auth`).
+  and `metrics-basic-auth`). `supabase-secrets` now centralises all Supabase URLs, publishable keys, and service-role secrets so
+  both frontend and backend workloads read the same rotated values without duplication.
 - `k8s/postgres.yaml` – database StatefulSet and the `postgres-credentials` secret.
 - `k8s/redis.yaml` – Redis StatefulSet and the `redis-credentials` secret.
+
+`sentry-secrets` contains both the browser DSN and backend-specific DSNs, while `metrics-basic-auth` holds the credentials
+required to scrape `/metrics`. After rotating any of these secrets, update the corresponding GitHub deployment secrets so CI/CD
+workflows continue to render manifests with the same values.
 
 Apply them with `kubectl apply -f <file> --namespace=rayon`. For the GHCR image pull credentials, create the `ghcr` secret via:
 

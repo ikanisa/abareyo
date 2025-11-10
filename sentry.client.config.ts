@@ -1,15 +1,28 @@
 import * as Sentry from "@sentry/react";
 
 import { resolveSentryConfiguration } from "./src/lib/observability/sentry-config";
+import { getCorrelationId } from "./src/lib/observability/correlation";
 
-const { dsn, environment } = resolveSentryConfiguration("client");
-const enabled = Boolean(dsn);
+const { dsn, environment, release, dist, sampleRates, enabled } = resolveSentryConfiguration("client");
 
 Sentry.init({
   dsn: dsn || undefined,
   enabled,
   environment,
-  tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? "0.1"),
-  replaysSessionSampleRate: Number(process.env.SENTRY_REPLAYS_SESSION_SAMPLE_RATE ?? "0.05"),
-  replaysOnErrorSampleRate: Number(process.env.SENTRY_REPLAYS_ERROR_SAMPLE_RATE ?? "1.0"),
+  release: release ?? undefined,
+  dist: dist ?? undefined,
+  tracesSampleRate: sampleRates.traces,
+  replaysSessionSampleRate: sampleRates.replaysSession,
+  replaysOnErrorSampleRate: sampleRates.replaysError,
+});
+
+Sentry.configureScope((scope) => {
+  scope.setTag("service", "rayon-web");
+  const correlationId = getCorrelationId();
+  if (correlationId) {
+    scope.setTag("correlation_id", correlationId);
+  }
+  if (release) {
+    scope.setTag("release", release);
+  }
 });

@@ -27,7 +27,8 @@ const PrivacyPage = () => (
         </section>
       </article>
       <footer className="text-sm text-white/60">
-        Need help? Email <a className="underline" href="mailto:privacy@gikundiro.rw">privacy@gikundiro.rw</a> or dial *651# for support.
+        Need help? Email <a className="underline" href="mailto:privacy@gikundiro.rw">privacy@gikundiro.rw</a> or dial *651# for
+        support. See also our <a className="underline" href="/legal/cookies">cookie policy</a> for storage details.
       </footer>
     </main>
   </div>

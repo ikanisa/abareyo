@@ -1,0 +1,71 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 30s
+  external_labels:
+    service: rayon
+    cluster: ${CLUSTER_NAME:-local}
+
+rule_files:
+  - ./rules/*.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+scrape_configs:
+  - job_name: rayon-backend
+    scheme: http
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - backend:5000
+        labels:
+          service: rayon-backend
+    authorization:
+      type: Bearer
+      credentials_file: /etc/prometheus/secrets/metrics-token
+    basic_auth:
+      username: ${METRICS_BASIC_AUTH_USER:-}
+      password_file: /etc/prometheus/secrets/metrics-password
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  - job_name: rayon-backend-kubernetes
+    metrics_path: /metrics
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: 'true'
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        target_label: __address__
+        regex: '(.*)'
+        replacement: '${1}'
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: pod
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_service_name]
+        action: replace
+        target_label: service
+      - source_labels: [__address__]
+        target_label: instance
+
+  - job_name: loki
+    scheme: http
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - loki:3100
+        labels:
+          service: loki

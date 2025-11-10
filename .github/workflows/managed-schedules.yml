@@ -1,0 +1,185 @@
+name: Managed Schedules
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+    - cron: '0 3 * * *'
+    - cron: '30 23 * * *'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment for the run
+        type: choice
+        options:
+          - production
+          - staging
+        default: production
+      run_data_retention:
+        description: Execute Supabase data retention maintenance
+        type: boolean
+        default: true
+      run_observability_probes:
+        description: Execute synthetic probes
+        type: boolean
+        default: true
+      run_security_scans:
+        description: Execute scheduled security scans
+        type: boolean
+        default: true
+
+jobs:
+  plan:
+    name: Resolve schedule configuration
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.resolve.outputs.environment }}
+      run_data_retention: ${{ steps.resolve.outputs.run_data_retention }}
+      run_observability_probes: ${{ steps.resolve.outputs.run_observability_probes }}
+      run_security_scans: ${{ steps.resolve.outputs.run_security_scans }}
+    steps:
+      - name: Compute targets
+        id: resolve
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_ENVIRONMENT: ${{ github.event.inputs.environment }}
+          INPUT_RUN_DATA_RETENTION: ${{ github.event.inputs.run_data_retention }}
+          INPUT_RUN_OBSERVABILITY_PROBES: ${{ github.event.inputs.run_observability_probes }}
+          INPUT_RUN_SECURITY_SCANS: ${{ github.event.inputs.run_security_scans }}
+          SCHEDULE_EXPRESSION: ${{ github.event.schedule }}
+        shell: bash
+        run: |
+          env_name="${INPUT_ENVIRONMENT:-}"
+          if [[ "${EVENT_NAME}" != "workflow_dispatch" || -z "${env_name}" ]]; then
+            env_name="production"
+          fi
+          echo "environment=${env_name}" >>"${GITHUB_OUTPUT}"
+
+          run_data_retention="${INPUT_RUN_DATA_RETENTION:-true}"
+          run_probes="${INPUT_RUN_OBSERVABILITY_PROBES:-true}"
+          run_scans="${INPUT_RUN_SECURITY_SCANS:-true}"
+
+          if [[ "${EVENT_NAME}" != "workflow_dispatch" ]]; then
+            case "${SCHEDULE_EXPRESSION}" in
+              '*/10 * * * *')
+                run_data_retention="false"
+                run_probes="true"
+                run_scans="false"
+                ;;
+              '0 3 * * *')
+                run_data_retention="false"
+                run_probes="false"
+                run_scans="true"
+                ;;
+              '30 23 * * *')
+                run_data_retention="true"
+                run_probes="false"
+                run_scans="false"
+                ;;
+              *)
+                run_data_retention="true"
+                run_probes="true"
+                run_scans="true"
+                ;;
+            esac
+          fi
+
+          echo "run_data_retention=${run_data_retention}" >>"${GITHUB_OUTPUT}"
+          echo "run_observability_probes=${run_probes}" >>"${GITHUB_OUTPUT}"
+          echo "run_security_scans=${run_scans}" >>"${GITHUB_OUTPUT}"
+
+  data_retention:
+    name: Data retention maintenance
+    needs: plan
+    if: needs.plan.outputs.run_data_retention == 'true'
+    runs-on: ubuntu-latest
+    env:
+      TARGET_ENVIRONMENT: ${{ needs.plan.outputs.environment }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve managed schedule secrets
+        id: secrets
+        env:
+          TARGET_ENVIRONMENT: ${{ needs.plan.outputs.environment }}
+          PROD_SUPABASE_URL: ${{ secrets.SCHEDULE_PROD_SUPABASE_URL }}
+          PROD_SUPABASE_SECRET: ${{ secrets.SCHEDULE_PROD_SUPABASE_SERVICE_ROLE }}
+          STAGING_SUPABASE_URL: ${{ secrets.SCHEDULE_STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_SECRET: ${{ secrets.SCHEDULE_STAGING_SUPABASE_SERVICE_ROLE }}
+          DEFAULT_SUPABASE_URL: ${{ secrets.SITE_SUPABASE_URL }}
+          DEFAULT_SUPABASE_SECRET: ${{ secrets.SITE_SUPABASE_SECRET_KEY }}
+          PROD_SENTRY_DSN: ${{ secrets.SCHEDULE_PROD_SENTRY_DSN }}
+          STAGING_SENTRY_DSN: ${{ secrets.SCHEDULE_STAGING_SENTRY_DSN }}
+          DEFAULT_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        shell: bash
+        run: |
+          env_name="${TARGET_ENVIRONMENT}"
+          case "${env_name}" in
+            production)
+              url="${PROD_SUPABASE_URL:-${DEFAULT_SUPABASE_URL}}"
+              secret="${PROD_SUPABASE_SECRET:-${DEFAULT_SUPABASE_SECRET}}"
+              sentry="${PROD_SENTRY_DSN:-${DEFAULT_SENTRY_DSN}}"
+              ;;
+            staging)
+              url="${STAGING_SUPABASE_URL:-${DEFAULT_SUPABASE_URL}}"
+              secret="${STAGING_SUPABASE_SECRET:-${DEFAULT_SUPABASE_SECRET}}"
+              sentry="${STAGING_SENTRY_DSN:-${DEFAULT_SENTRY_DSN}}"
+              ;;
+            *)
+              echo "Unknown environment: ${env_name}" >&2
+              exit 1
+              ;;
+          esac
+
+          if [[ -z "${url}" || -z "${secret}" ]]; then
+            echo "Managed schedule secrets missing for ${env_name}. Skipping run." >&2
+            echo "skip=true" >>"${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          echo "supabase_url=${url}" >>"${GITHUB_OUTPUT}"
+          echo "supabase_secret=${secret}" >>"${GITHUB_OUTPUT}"
+          echo "sentry_dsn=${sentry}" >>"${GITHUB_OUTPUT}"
+
+      - name: Execute data retention tasks
+        if: steps.secrets.outputs.skip != 'true'
+        env:
+          SITE_SUPABASE_URL: ${{ steps.secrets.outputs.supabase_url }}
+          SUPABASE_URL: ${{ steps.secrets.outputs.supabase_url }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ steps.secrets.outputs.supabase_url }}
+          SITE_SUPABASE_SECRET_KEY: ${{ steps.secrets.outputs.supabase_secret }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ steps.secrets.outputs.supabase_secret }}
+          NEXT_PUBLIC_ENVIRONMENT_LABEL: ${{ needs.plan.outputs.environment }}
+          SENTRY_ENVIRONMENT: ${{ needs.plan.outputs.environment }}
+          SENTRY_DSN: ${{ steps.secrets.outputs.sentry_dsn }}
+        run: npm run cron:data-retention
+
+  observability_probes:
+    name: Synthetic probes
+    needs: plan
+    if: needs.plan.outputs.run_observability_probes == 'true'
+    uses: ./.github/workflows/observability-probes.yml
+    with:
+      environment: ${{ needs.plan.outputs.environment }}
+    secrets:
+      PROBE_BASE_URL: ${{ needs.plan.outputs.environment == 'production' && secrets.SCHEDULE_PROD_PROBE_BASE_URL || needs.plan.outputs.environment == 'staging' && secrets.SCHEDULE_STAGING_PROBE_BASE_URL || secrets.PROBE_BASE_URL }}
+      PROBE_METRICS_TOKEN: ${{ needs.plan.outputs.environment == 'production' && secrets.SCHEDULE_PROD_PROBE_METRICS_TOKEN || needs.plan.outputs.environment == 'staging' && secrets.SCHEDULE_STAGING_PROBE_METRICS_TOKEN || secrets.PROBE_METRICS_TOKEN }}
+      PAGERDUTY_ROUTING_KEY: ${{ needs.plan.outputs.environment == 'production' && secrets.SCHEDULE_PROD_PAGERDUTY_ROUTING_KEY || needs.plan.outputs.environment == 'staging' && secrets.SCHEDULE_STAGING_PAGERDUTY_ROUTING_KEY || secrets.PAGERDUTY_ROUTING_KEY }}
+
+  security_scans:
+    name: Scheduled security scans
+    needs:
+      - plan
+    if: needs.plan.outputs.run_security_scans == 'true'
+    uses: ./.github/workflows/security-scans.yml
+    secrets:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

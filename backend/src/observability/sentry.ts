@@ -17,6 +17,8 @@ type SentryConfig = {
   };
   tracesSampleRate?: number;
   profilesSampleRate?: number;
+  release?: string;
+  dist?: string;
 };
 
 const lookupDsn = (config: SentryConfig | undefined, environment: string) => {
@@ -49,23 +51,32 @@ export const initSentry = (configService: ConfigService) => {
     enabled: true,
     tracesSampleRate: Number.isNaN(tracesSampleRate) ? 0.1 : tracesSampleRate,
     profilesSampleRate: Number.isNaN(profilesSampleRate) ? 0 : profilesSampleRate,
+    release: sentryConfig?.release,
+    dist: sentryConfig?.dist,
     integrations: [nodeProfilingIntegration()],
   });
 
   Sentry.setTags({
     service: 'rayon-backend',
+    ...(sentryConfig?.release ? { release: sentryConfig.release } : {}),
   });
 
   return true;
 };
 
-export const captureWithSentryScope = (error: unknown, context?: { handler?: string; controller?: string }) => {
+export const captureWithSentryScope = (
+  error: unknown,
+  context?: { handler?: string; controller?: string; correlationId?: string },
+) => {
   Sentry.captureException(error, (scope) => {
     if (context?.handler) {
       scope.setTag('handler', context.handler);
     }
     if (context?.controller) {
       scope.setTag('controller', context.controller);
+    }
+    if (context?.correlationId) {
+      scope.setTag('correlation_id', context.correlationId);
     }
     return scope;
   });

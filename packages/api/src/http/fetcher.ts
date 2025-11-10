@@ -68,6 +68,11 @@ export type ApiFetcherConfig = {
    * By default a failed response throws an {@link ApiError}.
    */
   onUnauthorized?: (error: ApiError) => Promise<unknown> | unknown;
+  /**
+   * Provides a correlation identifier for structured logging/tracing. When supplied the
+   * identifier is propagated via `x-correlation-id` and `x-request-id` headers.
+   */
+  getCorrelationId?: () => string | undefined;
 };
 
 const encodeJson = <TInput>(input: TInput): BodyInit | undefined => {
@@ -136,6 +141,15 @@ export const createApiFetcher = (config?: ApiFetcherConfig): ApiFetcher => {
     const { inputSchema, encode = encodeJson, body, ...init } = options ?? {};
     const validatedBody = inputSchema ? inputSchema.parse(body) : body;
     const headers = ensureHeaders(init);
+    const correlationId = config?.getCorrelationId?.();
+    if (correlationId) {
+      if (!headers.has('x-correlation-id')) {
+        headers.set('x-correlation-id', correlationId);
+      }
+      if (!headers.has('x-request-id')) {
+        headers.set('x-request-id', correlationId);
+      }
+    }
     const encoded = encode(validatedBody as TInput);
 
     const isStructuredBody =

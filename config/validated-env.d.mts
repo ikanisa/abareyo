@@ -50,6 +50,9 @@ type RuntimeEnv = {
   CI?: string;
   E2E_API_MOCKS?: string;
   SENTRY_DSN?: string;
+  BACKEND_SENTRY_DSN?: string;
+  BACKEND_SENTRY_DSN_STAGING?: string;
+  BACKEND_SENTRY_DSN_PRODUCTION?: string;
   SENTRY_TRACES_SAMPLE_RATE?: string;
   SENTRY_REPLAYS_SESSION_SAMPLE_RATE?: string;
   SENTRY_REPLAYS_ERROR_SAMPLE_RATE?: string;
@@ -105,6 +108,9 @@ type ServerEnv = {
   CI?: string;
   E2E_API_MOCKS?: string;
   SENTRY_DSN?: string;
+  BACKEND_SENTRY_DSN?: string;
+  BACKEND_SENTRY_DSN_STAGING?: string;
+  BACKEND_SENTRY_DSN_PRODUCTION?: string;
   SENTRY_TRACES_SAMPLE_RATE?: string;
   SENTRY_REPLAYS_SESSION_SAMPLE_RATE?: string;
   SENTRY_REPLAYS_ERROR_SAMPLE_RATE?: string;

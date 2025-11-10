@@ -1,5 +1,11 @@
 import './config/validated-env.mjs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
 import { buildSecurityHeaders } from './config/security-headers.mjs';
+
+const resolveFromRoot = (relativePath) =>
+  join(dirname(fileURLToPath(import.meta.url)), relativePath);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -7,6 +13,15 @@ const nextConfig = {
   output: 'standalone',
   // Ensure local packages are transpiled in the Next.js build
   transpilePackages: ['@rayon/contracts', '@rayon/api', '@rayon/config'],
+  webpack(config) {
+    if (process.env.NEXT_MOCK_SENTRY === '1') {
+      config.resolve ??= {};
+      config.resolve.alias ??= {};
+      config.resolve.alias['@sentry/nextjs'] = resolveFromRoot('./tests/stubs/sentry-nextjs.ts');
+    }
+
+    return config;
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60 * 60 * 24,

@@ -3,8 +3,19 @@ import { NextResponse } from 'next/server';
 import { serverEnv } from '@/config/env';
 import { normalizeWhatsappNumber } from '@/lib/phone';
 import { generateNumericOtp, hashOtp } from '@/lib/otp';
-import { otpRepository, rateLimiter } from '@/lib/redis';
-import { sendWhatsappOTP, WhatsappRecoverableError } from '@/lib/whatsapp';
+import { rateLimiter } from '@/lib/redis';
+import { sendWhatsAppOtp } from '@/lib/server/otp/whatsapp';
+import {
+  createWhatsappAuthRequest,
+  deleteWhatsappAuthRequest,
+  getWhatsappAuthRequestCountdowns,
+} from '@/lib/server/whatsapp-auth/store';
+import { persistWhatsappDelivery } from '@/lib/server/whatsapp-auth/persistence';
+import {
+  getWhatsappJwtSecret,
+  resolveOtpTtlSeconds,
+  resolveResendDelaySeconds,
+} from '@/lib/server/whatsapp-auth/config';
 
 type StartPayload = {
   phone?: string;
@@ -36,27 +47,67 @@ export async function POST(request: Request) {
     );
   }
 
-  const ttlSeconds = Math.max(30, Number(serverEnv.OTP_TTL_SEC || 300));
-  const otp = generateNumericOtp();
-  const hash = hashOtp(otp, serverEnv.JWT_SECRET, phone);
+  const ttlSeconds = resolveOtpTtlSeconds();
+  const resendDelaySeconds = resolveResendDelaySeconds();
 
-  const record = await otpRepository.create(phone, hash, ttlSeconds);
+  const secret = getWhatsappJwtSecret();
+  if (!secret) {
+    return NextResponse.json({ error: 'server_misconfigured' }, { status: 500 });
+  }
+
+  const otp = generateNumericOtp();
+  const hash = hashOtp(otp, secret, phone);
+
+  const requestRecord = createWhatsappAuthRequest({
+    phone,
+    hash,
+    ttlSeconds,
+    resendDelaySeconds,
+  });
 
   try {
-    await sendWhatsappOTP({ phone, otp });
-  } catch (error) {
-    await otpRepository.remove(phone);
-    if (error instanceof WhatsappRecoverableError) {
+    const delivery = await sendWhatsAppOtp({ phone, code: otp });
+    if (!delivery.ok) {
+      deleteWhatsappAuthRequest(requestRecord.id);
+      await persistWhatsappDelivery({
+        requestId: requestRecord.id,
+        phone,
+        status: 'failed',
+        errorCode: delivery.error,
+      });
       return NextResponse.json(
         {
-          error: error.message,
-          detail: error.detail ?? null,
+          error: 'whatsapp_delivery_failed',
+          detail: delivery.error,
         },
-        { status: error.status ?? 502 },
+        { status: 502 },
       );
     }
+
+    await persistWhatsappDelivery({
+      requestId: requestRecord.id,
+      phone,
+      status: delivery.status,
+      responseId: delivery.responseId ?? null,
+    });
+  } catch (error) {
+    deleteWhatsappAuthRequest(requestRecord.id);
+    await persistWhatsappDelivery({
+      requestId: requestRecord.id,
+      phone,
+      status: 'failed',
+      errorCode: error instanceof Error ? error.message : 'unexpected_error',
+    });
     throw error;
   }
 
-  return NextResponse.json({ ok: true, expiresAt: new Date(record.exp).toISOString() });
+  const { expiresInSeconds, resendAfterSeconds } = getWhatsappAuthRequestCountdowns(requestRecord);
+
+  return NextResponse.json({
+    data: {
+      requestId: requestRecord.id,
+      expiresIn: expiresInSeconds,
+      resendAfter: resendAfterSeconds,
+    },
+  });
 }
