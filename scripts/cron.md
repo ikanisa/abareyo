@@ -38,6 +38,19 @@ The worker logs each delivery attempt (`report.schedule.delivered` or
 additional platform guidance (including cron migration notes), see the
 [Hosting Migration Playbook](../docs/hosting-migration.md).
 
+## Managed automation
+
+- The GitHub Actions workflow
+  [`.github/workflows/managed-schedules.yml`](../.github/workflows/managed-schedules.yml)
+  centralises cron-like automation. It dispatches the reusable
+  `observability-probes` workflow every 10 minutes, executes security scans
+  nightly, and calls the Supabase retention helpers with
+  `npm run cron:data-retention`.
+- Each retention run inserts a row into `public.job_run_audit` with the job id,
+  environment, outcome, and metadata (rows affected or error). Grafana panels
+  can read from this table alongside the existing `data_retention_windows` view
+  to spot anomalies.
+
 ## Manual execution
 
 - To backfill or validate a single schedule, set its `dispatch` flag via the

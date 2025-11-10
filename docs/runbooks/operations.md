@@ -21,15 +21,22 @@ This runbook outlines the checks the Rayon Sports digital team should perform ev
    - Load <http://localhost:3000> once while online, then toggle Chrome DevTools to **Offline** and refresh. Verify the home feed and missions show the offline banner and cached content rather than blank tiles.
    - Inspect `localStorage.getItem("home-surface-cache-v1")` to confirm the cache timestamp updated within the last 24 hours.
 
-## Hourly Smoke (Automated)
+## Automated Checks (Managed Schedules)
 
-Add the following command to the hourly GitHub Actions cron job:
+The `.github/workflows/managed-schedules.yml` workflow now orchestrates all
+recurring automation:
 
-```bash
-npm run test:unit -- --run tests/unit/home-interactive-layer.test.tsx
-```
+- **Synthetic probes** (`observability_probes` job) run every 10 minutes against
+  production (and any staging environment configured via manual dispatch).
+- **Security scans** execute nightly at 03:00 UTC via the `security_scans` job.
+- **Data retention maintenance** calls Supabase cleanup helpers nightly at 23:30
+  UTC and records results in `public.job_run_audit`.
 
-This ensures the offline banner and onboarding modal interactions continue functioning as expected.
+To experiment with new automated smoke checks (e.g. running
+`npm run test:unit -- --run tests/unit/home-interactive-layer.test.tsx`), clone
+the repository, update the managed workflow locally, and dispatch it with
+`run_observability_probes=true` while targeting the desired environment. Submit
+the change through code review so it lands alongside the other scheduled tasks.
 
 ## Incident Response
 

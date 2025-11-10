@@ -46,6 +46,7 @@
     "ci:guard-payments": "tsx scripts/ci/assert-ussd-only.ts",
     "ci:check-env": "node scripts/check-frontend-env.mjs",
     "reports:worker": "tsx scripts/reports/report-schedule-worker.ts",
+    "cron:data-retention": "tsx scripts/cron/run-data-retention.ts",
     "validate:deployment": "node scripts/validate-deployment-readiness.mjs",
     
     "sbom": "node scripts/generate-sbom.mjs",
