@@ -144,6 +144,7 @@ The Netlify build process follows these steps:
 2. **Package builds** - Builds `@rayon/contracts` and other workspace packages
 3. **Next.js build** - Creates optimized production build
 4. **Post-build tasks** - Validates build artifacts and PWA configuration
+5. **Supply chain bundle** - Runs `npm run check:licenses` and `npm run sbom` so Netlify/CI retain license + SBOM reports for attestations
 
 ## PWA Configuration
 

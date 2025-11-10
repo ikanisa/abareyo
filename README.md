@@ -6,7 +6,7 @@ This monorepo powers the Rayon Sports fan experience across web, mobile, and mat
 - **Frontend**: Next.js 14 (App Router), Tailwind CSS, shadcn/ui, TanStack Query, next-themes, Framer Motion.
 - **Backend**: Supabase Postgres (SQL migrations + seeds), Supabase Edge Functions, and Next.js API routes backed by `@supabase/supabase-js`.
 - **Realtime automation**: `/functions/v1/sms-webhook` reconciles MoMo/Airtel SMS receipts while `/functions/v1/issue-policy` turns paid insurance quotes into policies.
-- **Tooling**: Dockerfiles for web, GitHub Actions CI (`npm run lint`, `npm run type-check`, `npm run build`), Supabase CLI helpers.
+- **Tooling**: Dockerfiles for web, GitHub Actions CI (lint/type-check/build + license enforcement and SBOM snapshots), Supabase CLI helpers.
 
 ## MacBook Setup
 
@@ -44,6 +44,7 @@ The repository is a polyglot workspace that keeps application code, infrastructu
 | `src/` | Shared React components, hooks, providers, and utilities imported via path aliases (`@/lib/*`, `@/components/*`). |
 | `backend/` | Historical NestJS services retained for reference and data migrations. |
 | `packages/` | Publishable packages such as `packages/contracts` that provide DTOs/enums for the web and tooling layers. |
+| `packages/api/` | Shared HTTP + Supabase clients used by the web and automation layers (React Query adapters were removed; use TanStack Query directly in routes/components). |
 | `supabase/` | SQL migrations, seed data, and Edge Functions that orchestrate payments and realtime events. |
 | `docs/` | Runbooks, release guides, and policy documents. Notable additions: [`docs/env.md`](docs/env.md), [`docs/security.md`](docs/security.md), and [`docs/payments-policy.md`](docs/payments-policy.md). |
 | `docs/runbooks/` | Operational runbooks including the new [`mobile.md`](docs/runbooks/mobile.md) and [`web.md`](docs/runbooks/web.md) quickstarts. |
@@ -162,6 +163,7 @@ Upcoming production hardening includes a reverse proxy in front of the Next.js r
 
 ## Useful Scripts
 - `pnpm lint` / `pnpm type-check` / `pnpm build` – CI parity checks.
+- Supply chain snapshots: `npm run check:licenses && npm run sbom` – regenerate license and SBOM reports prior to a release (CI uploads the generated bundle automatically).
 - Mobile packaging scripts were removed with the native bridges; reference the historical notes in `docs/mobile` if you need the archived steps.
 - `docker compose up web` – build and run the production web image locally.
 - `node tools/gsm-emulator/send-sms.js "…"` – simulate inbound MoMo/Airtel confirmation messages during flows.
@@ -187,6 +189,7 @@ CI expectations, coverage thresholds, and rollback playbooks are formalised in [
 - `src/providers/` – Global context providers (auth façade, i18n scaffold, theme provider, React Query).
 - `backend/` – Legacy NestJS application retained for reference. The Supabase-backed flows now live in `app/api` and `supabase/`.
 - `packages/contracts/` – Shared DTOs and enums consumed by frontend utilities and any remaining backend tooling.
+- `packages/api/` – HTTP + Supabase wrappers shared between the web app and automation scripts (React Query adapters have been retired in favour of direct TanStack Query usage).
 - `docs/` – Architecture decisions, local runbooks, and historical mobile packaging guides.
 
 ## Next Steps (Production Readiness)

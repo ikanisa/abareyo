@@ -41,7 +41,7 @@ jobs:
         run: npm run lint
 
       - name: License policy compliance
-        run: pnpm check:licenses
+        run: npm run check:licenses
 
       - name: Unit tests (web + OTP)
         env:
@@ -53,3 +53,14 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Generate SBOM snapshot
+        id: sbom
+        run: npm run sbom
+
+      - name: Upload SBOM and license reports
+        if: always() && steps.sbom.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-ci-supply-chain
+          path: report/sbom
