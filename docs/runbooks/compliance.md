@@ -40,26 +40,30 @@ Lifecycle configuration template: `infra/storage/s3-lifecycle.json`.
 
 ## 3. Automated Retention
 
-The migration `20251212090000_data_retention.sql` installs cron-driven cleanup jobs:
+Nightly retention tasks now execute from the managed GitHub Actions workflow
+[`managed-schedules.yml`](../../.github/workflows/managed-schedules.yml). The
+workflow invokes `npm run cron:data-retention`, which calls the Supabase
+functions below and records the outcome in `public.job_run_audit` for
+observability dashboards.
 
-| Function | Schedule | Dataset | TTL |
+| Function | Trigger (GitHub Actions job id) | Dataset | TTL |
 | --- | --- | --- | --- |
-| `public.cleanup_sms_raw()` | Daily 23:30 UTC | `sms_raw` | 90 days |
-| `public.cleanup_sms_parsed()` | Daily 23:35 UTC | `sms_parsed` | 180 days |
-| `public.cleanup_audit_logs()` | Daily 23:40 UTC | `audit_logs` | 400 days |
-| `public.cleanup_admin_sessions()` | Hourly :15 | `admin_sessions` | 36 h grace + 1-day buffer |
+| `public.cleanup_sms_raw()` | `cleanup_sms_raw_daily` | `sms_raw` | 90 days |
+| `public.cleanup_sms_parsed()` | `cleanup_sms_parsed_daily` | `sms_parsed` | 180 days |
+| `public.cleanup_audit_logs()` | `cleanup_audit_logs_daily` | `audit_logs` | 400 days |
+| `public.cleanup_admin_sessions()` | `cleanup_admin_sessions_hourly` | `admin_sessions` | 36 h grace + 1-day buffer |
 
-The helper view `public.data_retention_windows` exposes these TTLs for Grafana / health checks.
+The helper view `public.data_retention_windows` continues to surface these TTLs
+for Grafana and health checks, and `public.job_run_audit` stores one row per
+run with rows deleted or failure messages.
 
 ## 4. Manual Purge Procedure
 
 Use the Supabase SQL editor or `psql` with the service role.
 
-1. **Freeze automations** (optional):
-   ```sql
-   select cron.pause_job(jobname => 'cleanup_sms_raw_daily');
-   ```
-   Resume with `cron.resume_job` when complete.
+1. **Freeze automations** (optional): temporarily disable the "Managed
+   Schedules" workflow in GitHub Actions or run it manually with
+   `run_data_retention=false` to pause future executions.
 2. **Locate subject records**:
    - `select id from public.users where phone_mask ilike '%0788%';`
    - `select id from public.audit_logs where actor->>'user_id' = '<USER_ID>';`
@@ -69,7 +73,8 @@ Use the Supabase SQL editor or `psql` with the service role.
    delete from public.community_posts where user_id = '<USER_ID>';
    update public.users set display_name = 'Deleted user', phone_mask = null, public_profile = '{}'::jsonb where id = '<USER_ID>';
    ```
-4. **Run cleanup helpers** to guarantee TTL enforcement immediately:
+4. **Run cleanup helpers** (or trigger the GitHub Action manually) to guarantee
+   TTL enforcement immediately:
    ```sql
    select public.cleanup_sms_raw();
    select public.cleanup_sms_parsed();
@@ -97,12 +102,17 @@ Use the Supabase SQL editor or `psql` with the service role.
 
 ## 6. Audit & Monitoring
 
-- Grafana panel consumes `public.data_retention_windows` to alert if TTL drifts.
-- Weekly job (Ops digest) cross-checks number of rows older than thresholds.
+- Grafana panels consume both `public.data_retention_windows` and
+  `public.job_run_audit` (filter `job_name`/`status`) to flag drift or repeated
+  failures.
+- The managed schedule posts a GitHub job summary with rows deleted; failures
+  are captured in Sentry (`job.retention.*` tags) and PagerDuty via the probes
+  workflow.
 - S3 lifecycle status can be checked via `aws s3api get-bucket-lifecycle-configuration`.
 
 ## 7. References
 
+- `supabase/migrations/20250218120000_managed_schedules.sql`
 - `supabase/migrations/20251212090000_data_retention.sql`
 - `infra/storage/s3-lifecycle.json`
 - `docs/supabase/phase2-schema-alignment.md`

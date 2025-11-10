@@ -1972,6 +1972,33 @@ export type Database = {
         }
         Relationships: []
       }
+      job_run_audit: {
+        Row: {
+          detail: Json
+          environment: string
+          id: number
+          job_name: string
+          ran_at: string
+          status: string
+        }
+        Insert: {
+          detail?: Json
+          environment: string
+          id?: number
+          job_name: string
+          ran_at?: string
+          status: string
+        }
+        Update: {
+          detail?: Json
+          environment?: string
+          id?: number
+          job_name?: string
+          ran_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           id: string

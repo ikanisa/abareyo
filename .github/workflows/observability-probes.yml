@@ -1,16 +1,38 @@
 name: Observability probes
 
 on:
-  schedule:
-    - cron: '*/10 * * * *'
-  workflow_dispatch: {}
+  workflow_call:
+    inputs:
+      environment:
+        description: Target environment label
+        required: false
+        type: string
+    secrets:
+      PROBE_BASE_URL:
+        required: false
+      PROBE_METRICS_TOKEN:
+        required: false
+      PAGERDUTY_ROUTING_KEY:
+        required: false
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment label
+        type: choice
+        options:
+          - production
+          - staging
+        default: production
 
 jobs:
   probe:
-    name: Probe production surface
+    name: Probe ${{ inputs.environment || github.event.inputs.environment || 'production' }} surface
     runs-on: ubuntu-latest
+    env:
+      TARGET_ENVIRONMENT: ${{ inputs.environment || github.event.inputs.environment || 'production' }}
     outputs:
       failures: ${{ steps.run-probes.outputs.failures }}
+      environment: ${{ steps.run-probes.outputs.environment }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,6 +43,7 @@ jobs:
         env:
           BASE_URL: ${{ secrets.PROBE_BASE_URL }}
           METRICS_TOKEN: ${{ secrets.PROBE_METRICS_TOKEN }}
+          PROBE_ENVIRONMENT: ${{ env.TARGET_ENVIRONMENT }}
         run: |
           if [[ -z "${BASE_URL:-}" ]]; then
             echo "::error title=Missing secret::PROBE_BASE_URL secret must be configured" >&2
@@ -38,6 +61,7 @@ jobs:
           fi
 
           echo "failures=${failures}" >>"${GITHUB_OUTPUT}"
+          echo "environment=${PROBE_ENVIRONMENT}" >>"${GITHUB_OUTPUT}"
 
           exit ${status}
 
@@ -49,7 +73,7 @@ jobs:
           path: artifacts
 
   page:
-    name: Page on failure
+    name: Page on failure (${{ needs.probe.outputs.environment || 'production' }})
     needs: probe
     if: ${{ always() && (needs.probe.result == 'failure' || (needs.probe.outputs.failures || '0') != '0') }}
     runs-on: ubuntu-latest
@@ -60,13 +84,14 @@ jobs:
           ROUTING_KEY: ${{ secrets.PAGERDUTY_ROUTING_KEY }}
           FAILURE_COUNT: ${{ needs.probe.outputs.failures || '1' }}
           BASE_URL: ${{ secrets.PROBE_BASE_URL }}
+          PROBE_ENVIRONMENT: ${{ needs.probe.outputs.environment || 'production' }}
         run: |
           if [[ -z "${ROUTING_KEY:-}" ]]; then
             echo "PagerDuty routing key not configured; skipping page." >&2
             exit 0
           fi
 
-          summary="Rayon observability probe failure (${FAILURE_COUNT} endpoint(s))"
+          summary="Rayon observability probe failure (${PROBE_ENVIRONMENT}, ${FAILURE_COUNT} endpoint(s))"
           details=$(cat <<JSON
 {
   "routing_key": "${ROUTING_KEY}",
@@ -78,7 +103,8 @@ jobs:
     "component": "observability-probes",
     "custom_details": {
       "failures": "${FAILURE_COUNT}",
-      "base_url": "${BASE_URL}"
+      "base_url": "${BASE_URL}",
+      "environment": "${PROBE_ENVIRONMENT}"
     }
   }
 }
