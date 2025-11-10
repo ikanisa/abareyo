@@ -37,12 +37,14 @@ For the Kubernetes deployment in `k8s/`, sensitive values are supplied via dedic
 
 - `k8s/secrets.yaml` – bootstrap manifest for application secrets. Update the placeholder values before applying so that
   `frontend-secrets`, `backend-secrets`, and `supabase-secrets` align with your Supabase project, Redis password, and session
-  keys. The file intentionally ships with redacted placeholders – do **not** commit actual credentials.
+  keys. `supabase-secrets` now centralises *all* Supabase URLs, publishable keys, and service-role credentials so both
+  deployments consume the same rotated values. The file intentionally ships with redacted placeholders – do **not** commit
+  actual credentials.
 - `k8s/postgres.yaml` – provisions a `postgres-credentials` secret alongside the StatefulSet. Rotate the database password in
   this manifest and regenerate `DATABASE_URL` values to match.
 - `k8s/redis.yaml` – defines `redis-credentials` for the StatefulSet and requires a strong password.
-- `k8s/secrets.yaml` also includes `sentry-secrets` and `metrics-basic-auth` so Prometheus scraping and Sentry ingestion have
-  dedicated credentials.
+- `k8s/secrets.yaml` also includes `sentry-secrets` (browser + backend DSNs) and `metrics-basic-auth` (basic auth pair for
+  `/metrics`) so Prometheus scraping and Sentry ingestion have dedicated credentials.
 
 When applying manifests, prefer sealed secrets or your platform’s secret manager in production. The manifests are provided as
 reference scaffolding and should be mirrored into the cluster with:
@@ -59,6 +61,23 @@ Populate the repository secrets described in `DEPLOYMENT_READINESS_REPORT.md` (f
 `SUPABASE_SERVICE_ROLE_KEY`, `SENTRY_DSN`, `GHCR_TOKEN`, and `METRICS_BASIC_AUTH_PASSWORD`). These power the CI workflows and
 container builds that publish to GHCR. Rotate them using your organisation’s secret manager and avoid storing plaintext values
 inside the repository.
+
+### Where secrets live & how to rotate them
+
+- **Primary storage** – store canonical values in the organisation’s vault (1Password, Vault, AWS Secrets Manager, etc.). Each
+  entry should indicate the matching Kubernetes secret name (for example `supabase-secrets`, `sentry-secrets`, or
+  `metrics-basic-auth`).
+- **Kubernetes** – update the manifests in `k8s/` with placeholder values only. When rotating, patch the live secrets via your
+  secrets manager or `kubectl apply -f` with sealed secrets, then redeploy the workloads so new pods receive the credentials.
+- **GitHub Actions** – mirror the same values into repository deploy secrets (`NEXT_PUBLIC_SUPABASE_URL`,
+  `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SENTRY_DSN`, `BACKEND_SENTRY_DSN_PRODUCTION`, `METRICS_BASIC_AUTH_PASSWORD`, etc.).
+  This ensures build pipelines and the migration job resolve the exact configuration pushed to the cluster.
+
+Rotation checklist:
+1. Generate new values in the vault and update the entry metadata (timestamp + owner).
+2. Update the relevant Kubernetes secret (preferably via sealed secret or secret manager sync) and restart dependent pods.
+3. Update the GitHub deploy secrets so CI/CD jobs pick up the same credentials.
+4. Announce the rotation in the ops channel/runbook so downstream services know the change is complete.
 
 ### Optional Variables
 

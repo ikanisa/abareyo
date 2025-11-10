@@ -24,6 +24,9 @@ spec:
         - name: backend
           image: ghcr.io/ikanisa/abareyo-backend:latest
           imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: supabase-secrets
           ports:
             - containerPort: 5000
           env:
@@ -82,34 +85,6 @@ spec:
                 secretKeyRef:
                   name: backend-secrets
                   key: FAN_SESSION_SECRET
-            - name: SUPABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: backend-secrets
-                  key: SUPABASE_URL
-            - name: SUPABASE_SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: backend-secrets
-                  key: SUPABASE_SECRET_KEY
-            - name: SUPABASE_SERVICE_ROLE_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: backend-secrets
-                  key: SUPABASE_SERVICE_ROLE_KEY
-                  optional: true
-            - name: SITE_SUPABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: backend-secrets
-                  key: SITE_SUPABASE_URL
-                  optional: true
-            - name: SITE_SUPABASE_SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: backend-secrets
-                  key: SITE_SUPABASE_SECRET_KEY
-                  optional: true
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
@@ -121,6 +96,18 @@ spec:
                 secretKeyRef:
                   name: sentry-secrets
                   key: SENTRY_DSN
+                  optional: true
+            - name: BACKEND_SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: sentry-secrets
+                  key: BACKEND_SENTRY_DSN
+                  optional: true
+            - name: BACKEND_SENTRY_DSN_STAGING
+              valueFrom:
+                secretKeyRef:
+                  name: sentry-secrets
+                  key: BACKEND_SENTRY_DSN_STAGING
                   optional: true
             - name: BACKEND_SENTRY_DSN_PRODUCTION
               valueFrom:
