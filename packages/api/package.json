@@ -6,7 +6,6 @@
   "exports": {
     "./http": "./src/http/index.ts",
     "./supabase": "./src/supabase/index.ts",
-    "./query": "./src/query/index.ts",
     "./types/database": "./types/database.ts"
   }
 }
