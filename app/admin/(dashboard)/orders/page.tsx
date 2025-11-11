@@ -11,6 +11,7 @@ import type {
   AdminShopOrder,
   AdminDonation,
 } from '@/lib/api/admin/orders';
+import { AdminSection } from '@/components/admin/layout/AdminSection';
 
 const BACKEND_BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:5000/api';
 
@@ -56,25 +57,34 @@ const AdminOrdersPage = async () => {
     <div className="space-y-10">
       <section id="ticket-orders" className="space-y-3">
         <header>
+    <div className="flex flex-col gap-[var(--space-8)]">
+      <AdminSection as="section">
+        <div className="space-y-[var(--space-2)]">
           <h1 className="text-2xl font-semibold text-slate-100">Ticket Orders</h1>
           <p className="text-sm text-slate-400">Manage ticket purchases, resend passes, and issue logical refunds.</p>
-        </header>
+        </div>
         <TicketOrdersTable initial={ticketOrders} />
       </section>
       <section id="shop-orders" className="space-y-3">
         <header>
+      </AdminSection>
+      <AdminSection as="section">
+        <div className="space-y-[var(--space-2)]">
           <h2 className="text-xl font-semibold text-slate-100">Shop Orders</h2>
           <p className="text-sm text-slate-400">Monitor pick/pack status and courier updates.</p>
-        </header>
+        </div>
         <ShopOrdersTable initial={shopOrders} />
       </section>
       <section id="donations" className="space-y-3">
         <header>
+      </AdminSection>
+      <AdminSection as="section">
+        <div className="space-y-[var(--space-2)]">
           <h2 className="text-xl font-semibold text-slate-100">Donations</h2>
           <p className="text-sm text-slate-400">Track contribution flow per fundraising project.</p>
-        </header>
+        </div>
         <DonationsTable initial={donations} />
-      </section>
+      </AdminSection>
     </div>
   );
 };

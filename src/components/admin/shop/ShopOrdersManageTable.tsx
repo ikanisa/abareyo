@@ -16,6 +16,7 @@ import {
   addAdminShopFulfillmentNote,
   updateAdminShopTracking,
 } from '@/lib/api/admin/shop';
+import { ResponsiveSection, responsiveSection } from '@/components/admin/layout/ResponsiveSection';
 
 const statusFilters = ['all', 'pending', 'ready', 'fulfilled', 'cancelled'] as const;
 const statusLabels: Record<string, string> = {
@@ -152,6 +153,7 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
       {
         header: 'Order',
         accessorKey: 'id',
+        enableHiding: false,
         cell: ({ row }) => <span className="font-mono text-xs text-primary/80">{row.original.id.slice(0, 8)}…</span>,
       },
       {
@@ -162,10 +164,12 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
             {formatDistanceToNow(new Date(row.original.createdAt), { addSuffix: true })}
           </span>
         ),
+        meta: { responsive: { hideBelow: 'md' }, columnLabel: 'Placed' },
       },
       {
         header: 'Customer',
         cell: ({ row }) => <span className="text-slate-300">{row.original.user?.email ?? row.original.user?.phoneMask ?? 'Guest'}</span>,
+        meta: { responsive: { hideBelow: 'md' }, columnLabel: 'Customer' },
       },
       {
         header: 'Items',
@@ -178,6 +182,7 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
             ))}
           </div>
         ),
+        meta: { responsive: { hideBelow: 'lg' }, columnLabel: 'Items' },
       },
       {
         header: 'Total',
@@ -212,6 +217,7 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
             </Button>
           </div>
         ),
+        enableHiding: false,
       },
       {
         header: 'Tracking',
@@ -228,6 +234,7 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
             </Button>
           </div>
         ),
+        enableHiding: false,
       },
     ],
     [noteDrafts, trackingDrafts, applyStatus, saveNote, saveTracking],
@@ -235,21 +242,23 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-3">
-        <span className="text-xs uppercase tracking-wide text-slate-400">Status</span>
-        <Select value={status} onValueChange={handleStatusFilter}>
-          <SelectTrigger className="h-8 w-48 bg-white/5 text-slate-100">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            {statusFilters.map((s) => (
-              <SelectItem key={s} value={s} className="capitalize">
-                {statusLabels[s]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <ResponsiveSection columns="sidebar" className="md:items-end">
+        <div className={responsiveSection.stack}>
+          <span className="text-xs uppercase tracking-wide text-slate-400">Status</span>
+          <Select value={status} onValueChange={handleStatusFilter}>
+            <SelectTrigger className="h-8 w-full bg-white/5 text-slate-100 md:w-48">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {statusFilters.map((s) => (
+                <SelectItem key={s} value={s} className="capitalize">
+                  {statusLabels[s]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </ResponsiveSection>
       <DataTable
         columns={columns}
         data={data}
