@@ -172,11 +172,11 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
   );
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-3">
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-white/5 bg-white/5 px-3 py-2">
         <span className="text-xs uppercase tracking-wide text-slate-400">Status</span>
         <Select value={status} onValueChange={handleStatusFilter}>
-          <SelectTrigger className="h-8 w-48 bg-white/5 text-slate-100">
+          <SelectTrigger className="h-8 w-[clamp(10rem,20vw,14rem)] min-w-[10rem] bg-white/5 text-slate-100">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>

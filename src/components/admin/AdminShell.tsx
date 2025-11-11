@@ -179,7 +179,9 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
   return (
     <div className="relative flex min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_55%)]" />
-      <aside className="relative hidden w-72 flex-col border-r border-white/10 bg-slate-950/70 px-4 py-6 backdrop-blur-xl md:flex">
+      <aside
+        className="relative hidden flex-col border-r border-white/10 bg-slate-950/70 px-4 py-6 backdrop-blur-xl md:flex md:w-[clamp(15rem,20vw,18.5rem)] xl:px-6 xl:py-8"
+      >
         <div className="mb-6 flex items-center justify-between">
           <Link href="/admin" className="text-lg font-bold tracking-tight text-primary">
             Rayon Admin
@@ -203,7 +205,9 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
         </div>
       </aside>
       <div className="relative z-[1] flex min-h-screen flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-white/10 bg-slate-950/60 px-4 py-3 backdrop-blur-xl">
+        <header
+          className="flex items-center justify-between border-b border-white/10 bg-slate-950/60 px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-8 xl:px-10 2xl:px-12"
+        >
           <div className="flex items-center gap-3">
             <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
               <SheetTrigger asChild>
@@ -229,7 +233,7 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
             <input
               type="search"
               placeholder="Search ops…"
-              className="hidden w-72 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-primary/60 focus:ring-0 md:block"
+              className="hidden w-[clamp(16rem,22vw,20rem)] min-w-0 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-primary/60 focus:ring-0 md:block"
             />
           </div>
           <div className="flex items-center gap-3">
@@ -272,9 +276,13 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
             </Button>
           </div>
         </header>
-        <main className="relative flex-1 overflow-y-auto px-4 py-6 md:px-8">
+        <main className="relative flex-1 overflow-y-auto">
           <div className="absolute inset-x-0 -top-12 h-24 bg-gradient-to-b from-primary/10 via-transparent to-transparent blur-3xl" />
-          <div className="relative z-[1] space-y-6">{children}</div>
+          <div
+            className="relative z-[1] mx-auto flex w-full max-w-[min(90rem,calc(100vw-3rem))] flex-col gap-6 px-4 py-6 sm:px-6 lg:px-10 2xl:max-w-[min(100rem,calc(100vw-6rem))] 2xl:px-12"
+          >
+            {children}
+          </div>
         </main>
       </div>
       <AdminToastViewport />

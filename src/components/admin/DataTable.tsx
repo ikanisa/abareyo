@@ -159,7 +159,7 @@ export function DataTable<TData>({
           value={globalFilter}
           onChange={(event) => setGlobalFilter(event.target.value)}
           placeholder={searchPlaceholder}
-          className="max-w-sm bg-white/5"
+          className="w-full max-w-md bg-white/5"
         />
       ) : null}
       {enableSelection && renderBatchActions && selectedRows.length > 0 ? (
@@ -175,8 +175,8 @@ export function DataTable<TData>({
           </div>
         </div>
       ) : null}
-      <div className="overflow-hidden rounded-xl border border-white/10">
-        <Table>
+      <div className="overflow-x-auto rounded-xl border border-white/10 bg-slate-950/40">
+        <Table className="min-w-[720px]">
           <TableHeader className="bg-white/5">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="border-white/10 hover:bg-white/10">
@@ -201,7 +201,7 @@ export function DataTable<TData>({
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} className="border-white/5 hover:bg-white/5">
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="text-sm text-slate-100">
+                    <TableCell key={cell.id} className="break-words text-sm text-slate-100">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -218,12 +218,12 @@ export function DataTable<TData>({
         </Table>
       </div>
       {meta && (
-        <div className="flex items-center justify-between text-xs text-slate-400">
-          <div>
+        <div className="flex flex-col gap-3 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-center sm:text-left">
             Page {meta.page} · {rowCount} of {meta.total} rows
           </div>
           {onPageChange && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
