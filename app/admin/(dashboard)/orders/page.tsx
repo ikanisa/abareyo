@@ -54,6 +54,9 @@ const AdminOrdersPage = async () => {
   ]);
 
   return (
+    <div className="space-y-10">
+      <section id="ticket-orders" className="space-y-3">
+        <header>
     <div className="flex flex-col gap-[var(--space-8)]">
       <AdminSection as="section">
         <div className="space-y-[var(--space-2)]">
@@ -61,6 +64,9 @@ const AdminOrdersPage = async () => {
           <p className="text-sm text-slate-400">Manage ticket purchases, resend passes, and issue logical refunds.</p>
         </div>
         <TicketOrdersTable initial={ticketOrders} />
+      </section>
+      <section id="shop-orders" className="space-y-3">
+        <header>
       </AdminSection>
       <AdminSection as="section">
         <div className="space-y-[var(--space-2)]">
@@ -68,6 +74,9 @@ const AdminOrdersPage = async () => {
           <p className="text-sm text-slate-400">Monitor pick/pack status and courier updates.</p>
         </div>
         <ShopOrdersTable initial={shopOrders} />
+      </section>
+      <section id="donations" className="space-y-3">
+        <header>
       </AdminSection>
       <AdminSection as="section">
         <div className="space-y-[var(--space-2)]">
