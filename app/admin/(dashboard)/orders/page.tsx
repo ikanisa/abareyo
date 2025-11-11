@@ -54,21 +54,21 @@ const AdminOrdersPage = async () => {
 
   return (
     <div className="space-y-10">
-      <section className="space-y-3">
+      <section id="ticket-orders" className="space-y-3">
         <header>
           <h1 className="text-2xl font-semibold text-slate-100">Ticket Orders</h1>
           <p className="text-sm text-slate-400">Manage ticket purchases, resend passes, and issue logical refunds.</p>
         </header>
         <TicketOrdersTable initial={ticketOrders} />
       </section>
-      <section className="space-y-3">
+      <section id="shop-orders" className="space-y-3">
         <header>
           <h2 className="text-xl font-semibold text-slate-100">Shop Orders</h2>
           <p className="text-sm text-slate-400">Monitor pick/pack status and courier updates.</p>
         </header>
         <ShopOrdersTable initial={shopOrders} />
       </section>
-      <section className="space-y-3">
+      <section id="donations" className="space-y-3">
         <header>
           <h2 className="text-xl font-semibold text-slate-100">Donations</h2>
           <p className="text-sm text-slate-400">Track contribution flow per fundraising project.</p>
