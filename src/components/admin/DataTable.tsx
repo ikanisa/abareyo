@@ -25,6 +25,7 @@ export type DataTableProps<TData> = {
   meta?: { page: number; pageSize: number; total: number };
   onPageChange?: (page: number) => void;
   onSearchChange?: (term: string) => void;
+  searchValue?: string;
   searchPlaceholder?: string;
   emptyState?: React.ReactNode;
   enableSelection?: boolean;
@@ -40,6 +41,7 @@ export function DataTable<TData>({
   meta,
   onPageChange,
   onSearchChange,
+  searchValue,
   searchPlaceholder = 'Search…',
   emptyState = <div className="py-6 text-sm text-muted-foreground">No results found.</div>,
   enableSelection = false,
@@ -50,16 +52,23 @@ export function DataTable<TData>({
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
+  const isSearchControlled = typeof searchValue === 'string';
+  const resolvedSearchValue = isSearchControlled ? searchValue ?? '' : globalFilter;
 
   React.useEffect(() => {
-    if (onSearchChange) {
-      const handler = setTimeout(() => {
-        onSearchChange(globalFilter);
-      }, 300);
-      return () => clearTimeout(handler);
+    if (!isSearchControlled) return;
+    setGlobalFilter(searchValue ?? '');
+  }, [isSearchControlled, searchValue]);
+
+  React.useEffect(() => {
+    if (!onSearchChange || isSearchControlled) {
+      return undefined;
     }
-    return undefined;
-  }, [globalFilter, onSearchChange]);
+    const handler = window.setTimeout(() => {
+      onSearchChange(globalFilter);
+    }, 300);
+    return () => window.clearTimeout(handler);
+  }, [globalFilter, isSearchControlled, onSearchChange]);
 
   const resolvedColumns = React.useMemo<ColumnDef<TData, unknown>[]>(() => {
     if (!enableSelection) {
@@ -156,8 +165,15 @@ export function DataTable<TData>({
     <div className="space-y-3">
       {onSearchChange ? (
         <Input
-          value={globalFilter}
-          onChange={(event) => setGlobalFilter(event.target.value)}
+          value={resolvedSearchValue}
+          onChange={(event) => {
+            const next = event.target.value;
+            if (isSearchControlled) {
+              onSearchChange?.(next);
+            } else {
+              setGlobalFilter(next);
+            }
+          }}
           placeholder={searchPlaceholder}
           className="max-w-sm bg-white/5"
         />

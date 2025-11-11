@@ -1,7 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
+import Link from 'next/link';
+import { useMemo, useState, type ComponentType } from 'react';
 
+import { AdminBottomSheet } from '@/components/admin/ui';
+import { Button } from '@/components/ui/button';
 import type { DashboardSnapshot } from '@/services/admin/dashboard';
 import { useAdminLocale } from '@/providers/admin-locale-provider';
 
@@ -26,8 +29,18 @@ type AdminDashboardClientProps = {
   snapshot: DashboardSnapshot;
 };
 
+type AlertModalState = {
+  title: string;
+  description: string;
+  message: string;
+  helper?: string;
+  href?: string;
+  ctaLabel?: string;
+};
+
 export const AdminDashboardClient = ({ snapshot }: AdminDashboardClientProps) => {
   const { t } = useAdminLocale();
+  const [activeAlertAction, setActiveAlertAction] = useState<AlertModalState | null>(null);
   const kpiCards = useMemo(() => {
     const vsProjection = t('admin.dashboard.kpi.trend.vsProjection', 'vs projection');
     const onProjection = t('admin.dashboard.kpi.trend.onProjection', 'On projection');
@@ -213,6 +226,32 @@ export const AdminDashboardClient = ({ snapshot }: AdminDashboardClientProps) =>
               >
                 <div className="text-xs uppercase tracking-wide opacity-80">{alert.severity}</div>
                 <div className="mt-1 font-medium">{alert.message}</div>
+                {alert.action ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {alert.action.type === 'link' ? (
+                      <Button variant="secondary" size="sm" asChild>
+                        <Link href={alert.action.href}>{alert.action.label}</Link>
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() =>
+                          setActiveAlertAction({
+                            title: alert.action.title,
+                            description: alert.action.description,
+                            helper: alert.action.helper,
+                            href: alert.action.href,
+                            ctaLabel: alert.action.ctaLabel,
+                            message: alert.message,
+                          })
+                        }
+                      >
+                        {alert.action.label}
+                      </Button>
+                    )}
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>
@@ -222,6 +261,34 @@ export const AdminDashboardClient = ({ snapshot }: AdminDashboardClientProps) =>
           </p>
         )}
       </section>
+
+      <AdminBottomSheet
+        title={activeAlertAction?.title ?? ''}
+        open={Boolean(activeAlertAction)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setActiveAlertAction(null);
+          }
+        }}
+      >
+        {activeAlertAction ? (
+          <div className="space-y-4 text-sm text-slate-200">
+            <p className="text-xs uppercase tracking-wide text-slate-400">Alert</p>
+            <p className="text-sm font-medium text-slate-100">{activeAlertAction.message}</p>
+            <p className="leading-relaxed text-slate-200">{activeAlertAction.description}</p>
+            {activeAlertAction.helper ? (
+              <p className="text-xs text-slate-400">{activeAlertAction.helper}</p>
+            ) : null}
+            {activeAlertAction.href ? (
+              <Button variant="default" size="sm" asChild>
+                <Link href={activeAlertAction.href}>
+                  {activeAlertAction.ctaLabel ?? t('admin.dashboard.alerts.openLink', 'Open link')}
+                </Link>
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
+      </AdminBottomSheet>
     </div>
   );
 };

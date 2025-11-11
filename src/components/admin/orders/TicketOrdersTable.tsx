@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -9,12 +9,14 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { AttachSmsModal } from '@/components/admin/orders/AttachSmsModal';
 import { useAdminSession } from '@/providers/admin-session-provider';
+import { AdminInlineMessage } from '@/components/admin/ui';
 import {
   AdminTicketOrder,
   PaginatedResponse,
   fetchAdminTicketOrders,
   refundTicketOrder,
 } from '@/lib/api/admin/orders';
+import { useAdminFilters, useAdminMutation, useAdminSearch } from '@/lib/admin-ui';
 
 const statusFilters = ['all', 'pending', 'paid', 'cancelled', 'expired'] as const;
 
@@ -24,6 +26,7 @@ const statusLabels: Record<string, string> = {
   paid: 'Paid',
   cancelled: 'Cancelled',
   expired: 'Expired',
+  refund_pending: 'Refund pending',
 };
 
 export type TicketOrdersTableProps = {
@@ -35,85 +38,116 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
   const { user } = useAdminSession();
   const [data, setData] = useState(initial.data);
   const [meta, setMeta] = useState(initial.meta);
-  const [status, setStatus] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(initial.meta.page);
+  const [pageSize] = useState(initial.meta.pageSize);
   const [isLoading, setIsLoading] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [attachTarget, setAttachTarget] = useState<{ id: string; amount: number } | null>(null);
+  const [optimisticStatuses, setOptimisticStatuses] = useState<Record<string, string>>({});
+
+  const { search, debouncedSearch, setSearch, isDebouncing } = useAdminSearch({
+    storageKey: 'admin::ticket-orders::search',
+  });
+
+  const { filters, setFilter } = useAdminFilters({
+    defaults: { status: 'all' },
+    paramMap: { status: 'status' },
+    storageKey: 'admin::ticket-orders::filters',
+  });
+
+  const status = filters.status ?? 'all';
 
   const loadOrders = useCallback(
-    async ({ page, search, status: nextStatus }: { page?: number; search?: string; status?: string }) => {
+    async (targetPage: number) => {
       setIsLoading(true);
+      setLoadError(null);
       try {
         const response = await fetchAdminTicketOrders({
-          page: page ?? meta.page,
-          pageSize: meta.pageSize,
-          search: search ?? searchTerm,
-          status: nextStatus ?? status,
+          page: targetPage,
+          pageSize,
+          search: debouncedSearch ? debouncedSearch : undefined,
+          status: status === 'all' ? undefined : status,
         });
         setData(response.data);
         setMeta(response.meta);
+        setPage(response.meta.page);
       } catch (error) {
-        console.error(error);
-        toast({ title: 'Failed to load ticket orders', variant: 'destructive' });
+        const message = error instanceof Error ? error.message : 'Unable to load ticket orders';
+        setLoadError(message);
+        toast({ title: 'Failed to load ticket orders', description: message, variant: 'destructive' });
       } finally {
         setIsLoading(false);
       }
     },
-    [meta.page, meta.pageSize, searchTerm, status, toast],
+    [debouncedSearch, pageSize, status, toast],
   );
 
-  const handleSearchChange = useCallback(
-    (term: string) => {
-      setSearchTerm(term);
-      startTransition(() => {
-        void loadOrders({ page: 1, search: term });
-      });
+  const refundMutation = useAdminMutation<{ orderId: string }, void>({
+    mutationFn: async ({ orderId }) => {
+      await refundTicketOrder(orderId);
     },
-    [loadOrders],
-  );
+    getEntityId: ({ orderId }) => orderId,
+    onMutate: ({ orderId }) => {
+      setOptimisticStatuses((prev) => ({ ...prev, [orderId]: 'refund_pending' }));
+      return () => {
+        setOptimisticStatuses((prev) => {
+          const next = { ...prev };
+          delete next[orderId];
+          return next;
+        });
+      };
+    },
+    onSuccess: (_, { orderId }) => {
+      setOptimisticStatuses((prev) => {
+        const next = { ...prev };
+        delete next[orderId];
+        return next;
+      });
+      void loadOrders(page);
+    },
+    successToast: {
+      title: 'Order marked for refund',
+      description: 'Payment flagged for manual reconciliation.',
+    },
+    errorToast: {
+      title: 'Refund failed',
+    },
+  });
+
+  const { state: refundState, execute: executeRefund } = refundMutation;
 
   const handleStatusChange = useCallback(
     (next: string) => {
-      setStatus(next);
-      startTransition(() => {
-        void loadOrders({ page: 1, status: next });
-      });
+      setFilter('status', next);
+      setPage(1);
     },
-    [loadOrders],
+    [setFilter],
   );
 
-  const handlePageChange = useCallback(
-    (page: number) => {
-      startTransition(() => {
-        void loadOrders({ page });
-      });
-    },
-    [loadOrders],
-  );
+  const handlePageChange = useCallback((nextPage: number) => {
+    setPage(nextPage);
+  }, []);
 
   const handleRefund = useCallback(
     (orderId: string) => {
-      startTransition(async () => {
-        try {
-          await refundTicketOrder(orderId);
-          toast({
-            title: 'Order marked for refund',
-            description: 'Payment flagged for manual reconciliation.',
-          });
-          await loadOrders({});
-        } catch (error) {
-          console.error(error);
-          toast({
-            title: 'Refund failed',
-            description: error instanceof Error ? error.message : undefined,
-            variant: 'destructive',
-          });
-        }
-      });
+      void executeRefund({ orderId });
     },
-    [loadOrders, toast],
+    [executeRefund],
   );
+
+  useEffect(() => {
+    setData(initial.data);
+    setMeta(initial.meta);
+    setPage(initial.meta.page);
+  }, [initial]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, status]);
+
+  useEffect(() => {
+    void loadOrders(page);
+  }, [loadOrders, page]);
 
   const handleAttachOpen = useCallback((order: AdminTicketOrder) => {
     setAttachTarget({ id: order.id, amount: order.total });
@@ -127,15 +161,8 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
 
   const handleAttached = useCallback(() => {
     setAttachTarget(null);
-    startTransition(() => {
-      void loadOrders({});
-    });
-  }, [loadOrders]);
-
-  useEffect(() => {
-    setData(initial.data);
-    setMeta(initial.meta);
-  }, [initial]);
+    void loadOrders(page);
+  }, [loadOrders, page]);
 
   const columns = useMemo<ColumnDef<AdminTicketOrder, unknown>[]>(
     () => [
@@ -162,12 +189,12 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
       {
         header: 'Fan',
         cell: ({ row }) => {
-          const user = row.original.user;
-          if (!user) return <span className="text-muted-foreground">Guest</span>;
+          const ticketUser = row.original.user;
+          if (!ticketUser) return <span className="text-muted-foreground">Guest</span>;
           return (
             <div className="space-y-0.5 text-sm">
-              <div>{user.email ?? '—'}</div>
-              <div className="text-xs text-slate-400">{user.phoneMask ?? 'no phone'}</div>
+              <div>{ticketUser.email ?? '—'}</div>
+              <div className="text-xs text-slate-400">{ticketUser.phoneMask ?? 'no phone'}</div>
             </div>
           );
         },
@@ -180,11 +207,15 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
       {
         header: 'Status',
         accessorKey: 'status',
-        cell: ({ row }) => (
-          <span className="rounded-full bg-white/10 px-2 py-1 text-xs text-slate-200">
-            {statusLabels[row.original.status] ?? row.original.status}
-          </span>
-        ),
+        cell: ({ row }) => {
+          const optimisticStatus = optimisticStatuses[row.original.id];
+          const statusKey = optimisticStatus ?? row.original.status;
+          return (
+            <span className="rounded-full bg-white/10 px-2 py-1 text-xs text-slate-200">
+              {statusLabels[statusKey] ?? statusKey}
+            </span>
+          );
+        },
       },
       {
         header: 'Created',
@@ -197,26 +228,33 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
       },
       {
         header: 'Actions',
-        cell: ({ row }) => (
-          <div className="flex flex-wrap gap-2">
-            {row.original.status !== 'paid' ? (
-              <Button variant="outline" size="sm" onClick={() => handleAttachOpen(row.original)}>
-                Attach SMS
+        cell: ({ row }) => {
+          const optimisticStatus = optimisticStatuses[row.original.id];
+          const statusKey = optimisticStatus ?? row.original.status;
+          const isRefunding =
+            refundState.status === 'loading' && refundState.activeId === row.original.id;
+          const canAttach = statusKey !== 'paid';
+          return (
+            <div className="flex flex-wrap gap-2">
+              {canAttach ? (
+                <Button variant="outline" size="sm" onClick={() => handleAttachOpen(row.original)}>
+                  Attach SMS
+                </Button>
+              ) : null}
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={statusKey !== 'paid' || isRefunding}
+                onClick={() => handleRefund(row.original.id)}
+              >
+                {isRefunding ? 'Refunding…' : 'Refund'}
               </Button>
-            ) : null}
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={row.original.status !== 'paid' || isPending}
-              onClick={() => handleRefund(row.original.id)}
-            >
-              Refund
-            </Button>
-          </div>
-        ),
+            </div>
+          );
+        },
       },
     ],
-    [handleAttachOpen, handleRefund, isPending],
+    [handleAttachOpen, handleRefund, optimisticStatuses, refundState.activeId, refundState.status],
   );
 
   return (
@@ -240,11 +278,18 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
         columns={columns}
         data={data}
         meta={meta}
-        isLoading={isLoading || isPending}
+        isLoading={isLoading || isDebouncing || refundState.status === 'loading'}
         onPageChange={handlePageChange}
-        onSearchChange={handleSearchChange}
+        onSearchChange={setSearch}
+        searchValue={search}
         searchPlaceholder="Search order ID or email"
       />
+      {loadError ? (
+        <AdminInlineMessage tone="critical" title="Unable to refresh ticket orders" description={loadError} />
+      ) : null}
+      {refundState.status === 'error' && refundState.error ? (
+        <AdminInlineMessage tone="critical" title="Refund request failed" description={refundState.error} />
+      ) : null}
       {attachTarget ? (
         <AttachSmsModal
           open={Boolean(attachTarget)}
