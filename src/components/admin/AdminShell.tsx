@@ -19,6 +19,7 @@ import {
 } from '@/providers/admin-feature-flags-provider';
 import { AdminToastViewport } from '@/components/admin/ui';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { AdminPageShell } from '@/components/admin/layout/AdminPageShell';
 
 const NAV_ITEMS: Array<{
   key: string;
@@ -65,7 +66,7 @@ const NavItems = ({ activeHref }: { activeHref: string }) => {
   const { isEnabled } = useAdminFeatureFlags();
 
   return (
-    <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
+    <nav className="flex flex-1 flex-col gap-[var(--space-1)] overflow-y-auto">
       {NAV_ITEMS.map((item) => {
         const enabled = isEnabled(item.module);
         const isActive = activeHref === item.href;
@@ -77,7 +78,7 @@ const NavItems = ({ activeHref }: { activeHref: string }) => {
               type="button"
               aria-disabled
               className={cn(
-                'flex items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-500/70',
+                'flex items-center justify-between rounded-xl px-[var(--space-3)] py-[var(--space-2)] text-sm text-slate-500/70',
                 'border border-dashed border-white/5 bg-slate-950/50',
               )}
             >
@@ -95,7 +96,7 @@ const NavItems = ({ activeHref }: { activeHref: string }) => {
             href={item.href}
             prefetch={false}
             className={cn(
-              'group flex items-center justify-between rounded-xl px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+              'group flex items-center justify-between rounded-xl px-[var(--space-3)] py-[var(--space-2)] text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
               isActive
                 ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
                 : 'text-slate-300 hover:bg-primary/10 hover:text-primary',
@@ -360,15 +361,85 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
               Quick actions
               <ChevronDown className="h-4 w-4" />
             </Button>
+  const sidebarContent = (
+    <div className="flex flex-1 flex-col gap-[var(--space-6)]">
+      <div className="flex items-center justify-between gap-[var(--space-3)]">
+        <Link href="/admin" className="text-lg font-bold tracking-tight text-primary">
+          Rayon Admin
+        </Link>
+        <Badge variant="outline" className="bg-white/5 text-xs uppercase tracking-wide">
+          {environment}
+        </Badge>
+      </div>
+      <NavItems activeHref={activeHref} />
+      <div className="rounded-xl border border-white/5 bg-white/5 p-[var(--space-3)] text-xs text-slate-300">
+        <div className="font-semibold text-slate-100">Signed in</div>
+        <div>{user.displayName}</div>
+        <div className="truncate text-slate-400">{user.email}</div>
+        <div className="mt-[var(--space-2)] flex flex-wrap gap-[var(--space-1)]">
+          {user.roles.map((role) => (
+            <Badge key={role} variant="secondary" className="bg-primary/15 text-primary">
+              {role}
+            </Badge>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const headerContent = (
+    <>
+      <div className="flex flex-1 items-center gap-[var(--space-3)]">
+        <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+          <SheetTrigger asChild>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              className="border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+              className="inline-flex items-center gap-[var(--space-2)] text-slate-300 hover:text-white lg:hidden"
+              aria-label="Toggle navigation"
             >
-              Sign out
+              <Menu className="h-4 w-4" />
+              Menu
             </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[260px] border-white/10 bg-slate-950/95 text-slate-100">
+            <SheetHeader className="text-left">
+              <SheetTitle className="text-lg font-semibold text-white">Navigation</SheetTitle>
+            </SheetHeader>
+            <div className="mt-[var(--space-6)]">
+              <NavItems activeHref={activeHref} />
+            </div>
+          </SheetContent>
+        </Sheet>
+        <input
+          type="search"
+          placeholder="Search ops…"
+          className="hidden w-[22rem] rounded-lg border border-white/10 bg-white/5 px-[var(--space-3)] py-[var(--space-2)] text-sm outline-none placeholder:text-slate-400 focus:border-primary/60 focus:ring-0 lg:block"
+        />
+      </div>
+      <div className="flex items-center gap-[var(--space-3)]">
+        <div className="hidden items-center gap-[var(--space-1)] text-xs text-slate-400 lg:flex">
+          <span className="uppercase tracking-wide">Lang</span>
+          <div className="flex overflow-hidden rounded-full border border-white/10">
+            {(['en', 'rw'] as const).map((code) => {
+              const isActive = locale === code;
+              return (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => setLocale(code)}
+                  disabled={localeLoading}
+                  className={cn(
+                    'px-[var(--space-2)] py-[0.35rem] text-[11px] font-semibold uppercase transition-colors',
+                    isActive
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-transparent text-slate-300 hover:bg-white/10',
+                  )}
+                >
+                  {code}
+                </button>
+              );
+            })}
           </div>
         </div>
         <main className="relative flex-1 overflow-y-auto px-shell-gutter py-shell-stack">
@@ -391,8 +462,34 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
           )}
         </div>
       </aside>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="hidden items-center gap-[var(--space-2)] text-slate-300 hover:text-white lg:flex"
+        >
+          Quick actions
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className="border-white/10 bg-white/5 text-slate-200 transition-colors hover:bg-white/10"
+        >
+          Sign out
+        </Button>
+      </div>
+    </>
+  );
+
+  return (
+    <>
+      <AdminPageShell sidebar={sidebarContent} header={headerContent}>
+        {children}
+      </AdminPageShell>
       <AdminToastViewport />
-    </div>
+    </>
   );
 };
 
