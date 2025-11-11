@@ -59,6 +59,7 @@ export const DonationsTable = ({ initial }: DonationsTableProps) => {
       {
         header: 'Project',
         accessorKey: 'project',
+        enableHiding: false,
         cell: ({ row }) => <span className="text-sm text-slate-100">{row.original.project.title}</span>,
       },
       {
@@ -73,6 +74,7 @@ export const DonationsTable = ({ initial }: DonationsTableProps) => {
             </div>
           );
         },
+        meta: { responsive: { hideBelow: 'md' }, columnLabel: 'Donor' },
       },
       {
         header: 'Amount',
@@ -85,6 +87,7 @@ export const DonationsTable = ({ initial }: DonationsTableProps) => {
         cell: ({ row }) => (
           <span className="rounded-full bg-white/10 px-2 py-1 text-xs text-slate-200">{row.original.status}</span>
         ),
+        meta: { responsive: { hideBelow: 'md' }, columnLabel: 'Status' },
       },
       {
         header: 'Received',
@@ -94,6 +97,7 @@ export const DonationsTable = ({ initial }: DonationsTableProps) => {
             {formatDistanceToNow(new Date(row.original.createdAt), { addSuffix: true })}
           </span>
         ),
+        meta: { responsive: { hideBelow: 'lg' }, columnLabel: 'Received' },
       },
     ],
     [],
