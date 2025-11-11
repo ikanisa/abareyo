@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -9,7 +9,9 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { AttachSmsModal } from '@/components/admin/orders/AttachSmsModal';
 import { useAdminSession } from '@/providers/admin-session-provider';
+import { AdminInlineMessage } from '@/components/admin/ui';
 import { AdminShopOrder, PaginatedResponse, fetchAdminShopOrders } from '@/lib/api/admin/orders';
+import { useAdminFilters, useAdminSearch } from '@/lib/admin-ui';
 import { ResponsiveSection, responsiveSection } from '@/components/admin/layout/ResponsiveSection';
 
 const statusFilters = ['all', 'pending', 'fulfilled', 'cancelled'] as const;
@@ -30,67 +32,74 @@ export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
   const { user } = useAdminSession();
   const [data, setData] = useState(initial.data);
   const [meta, setMeta] = useState(initial.meta);
-  const [status, setStatus] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(initial.meta.page);
+  const [pageSize] = useState(initial.meta.pageSize);
   const [isLoading, setIsLoading] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [attachTarget, setAttachTarget] = useState<{ id: string; amount: number } | null>(null);
 
+  const { search, debouncedSearch, setSearch, isDebouncing } = useAdminSearch({
+    storageKey: 'admin::shop-orders::search',
+  });
+
+  const { filters, setFilter } = useAdminFilters({
+    defaults: { status: 'all' },
+    paramMap: { status: 'status' },
+    storageKey: 'admin::shop-orders::filters',
+  });
+
+  const status = filters.status ?? 'all';
+
   const loadOrders = useCallback(
-    async ({ page, search, status: nextStatus }: { page?: number; search?: string; status?: string }) => {
+    async (targetPage: number) => {
       setIsLoading(true);
+      setLoadError(null);
       try {
         const response = await fetchAdminShopOrders({
-          page: page ?? meta.page,
-          pageSize: meta.pageSize,
-          search: search ?? searchTerm,
-          status: nextStatus === 'all' ? undefined : nextStatus,
+          page: targetPage,
+          pageSize,
+          search: debouncedSearch ? debouncedSearch : undefined,
+          status: status === 'all' ? undefined : status,
         });
         setData(response.data);
         setMeta(response.meta);
+        setPage(response.meta.page);
       } catch (error) {
-        console.error(error);
-        toast({ title: 'Failed to load shop orders', variant: 'destructive' });
+        const message = error instanceof Error ? error.message : 'Unable to load shop orders';
+        setLoadError(message);
+        toast({ title: 'Failed to load shop orders', description: message, variant: 'destructive' });
       } finally {
         setIsLoading(false);
       }
     },
-    [meta.page, meta.pageSize, searchTerm, toast],
-  );
-
-  const handleSearchChange = useCallback(
-    (term: string) => {
-      setSearchTerm(term);
-      startTransition(() => {
-        void loadOrders({ page: 1, search: term });
-      });
-    },
-    [loadOrders],
+    [debouncedSearch, pageSize, status, toast],
   );
 
   const handleStatusChange = useCallback(
     (next: string) => {
-      setStatus(next);
-      startTransition(() => {
-        void loadOrders({ page: 1, status: next });
-      });
+      setFilter('status', next);
+      setPage(1);
     },
-    [loadOrders],
+    [setFilter],
   );
 
-  const handlePageChange = useCallback(
-    (page: number) => {
-      startTransition(() => {
-        void loadOrders({ page });
-      });
-    },
-    [loadOrders],
-  );
+  const handlePageChange = useCallback((nextPage: number) => {
+    setPage(nextPage);
+  }, []);
 
   useEffect(() => {
     setData(initial.data);
     setMeta(initial.meta);
+    setPage(initial.meta.page);
   }, [initial]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, status]);
+
+  useEffect(() => {
+    void loadOrders(page);
+  }, [loadOrders, page]);
 
   const handleAttachOpen = useCallback((order: AdminShopOrder) => {
     setAttachTarget({ id: order.id, amount: order.total });
@@ -104,10 +113,8 @@ export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
 
   const handleAttached = useCallback(() => {
     setAttachTarget(null);
-    startTransition(() => {
-      void loadOrders({});
-    });
-  }, [loadOrders]);
+    void loadOrders(page);
+  }, [loadOrders, page]);
 
   const columns = useMemo<ColumnDef<AdminShopOrder, unknown>[]>(
     () => [
@@ -120,9 +127,9 @@ export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
       {
         header: 'Customer',
         cell: ({ row }) => {
-          const user = row.original.user;
-          if (!user) return <span className="text-muted-foreground">Guest</span>;
-          return <span className="text-sm text-slate-100">{user.email ?? '—'}</span>;
+          const orderUser = row.original.user;
+          if (!orderUser) return <span className="text-muted-foreground">Guest</span>;
+          return <span className="text-sm text-slate-100">{orderUser.email ?? '—'}</span>;
         },
         meta: { responsive: { hideBelow: 'md' }, columnLabel: 'Customer' },
       },
@@ -204,13 +211,17 @@ export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
         columns={columns}
         data={data}
         meta={meta}
-        isLoading={isLoading || isPending}
+        isLoading={isLoading || isDebouncing}
         onPageChange={handlePageChange}
-        onSearchChange={handleSearchChange}
+        onSearchChange={setSearch}
+        searchValue={search}
         searchPlaceholder="Search order ID or email"
         searchLabel="Search shop orders"
         caption="Shop orders with customer information, totals, and fulfillment status"
       />
+      {loadError ? (
+        <AdminInlineMessage tone="critical" title="Unable to refresh orders" description={loadError} />
+      ) : null}
       {attachTarget ? (
         <AttachSmsModal
           open={Boolean(attachTarget)}

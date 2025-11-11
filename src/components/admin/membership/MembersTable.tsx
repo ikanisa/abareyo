@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCallback, useEffect, useMemo, useState, useTransition, useId } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
@@ -7,10 +8,12 @@ import { formatDistanceToNow } from 'date-fns';
 import { DataTable } from '@/components/admin/DataTable';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AdminInlineMessage } from '@/components/admin/ui';
 import { useToast } from '@/components/ui/use-toast';
 import { Label } from '@/components/ui/label';
 import type { PaginatedResponse, AdminMembershipRecord } from '@/lib/api/admin/membership';
 import { fetchAdminMembershipMembers, updateAdminMembershipStatus } from '@/lib/api/admin/membership';
+import { useAdminFilters, useAdminMutation, useAdminSearch } from '@/lib/admin-ui';
 
 const statusFilters = ['all', 'pending', 'active', 'cancelled', 'expired'] as const;
 const statusLabels: Record<string, string> = {
@@ -21,6 +24,12 @@ const statusLabels: Record<string, string> = {
   expired: 'Expired',
 };
 
+type MembershipUpdateInput = {
+  membershipId: string;
+  status: string;
+  autoRenew?: boolean;
+};
+
 export type MembersTableProps = {
   initial: PaginatedResponse<AdminMembershipRecord>;
 };
@@ -29,95 +38,129 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
   const { toast } = useToast();
   const [data, setData] = useState(initial.data);
   const [meta, setMeta] = useState(initial.meta);
-  const [status, setStatus] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(initial.meta.page);
+  const [pageSize] = useState(initial.meta.pageSize);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const { search, debouncedSearch, setSearch, isDebouncing } = useAdminSearch({
+    storageKey: 'admin::members::search',
+  });
+
+  const { filters, setFilter } = useAdminFilters({
+    defaults: { status: 'all' },
+    paramMap: { status: 'status' },
+    storageKey: 'admin::members::filters',
+  });
+
+  const status = filters.status ?? 'all';
   const [isPending, startTransition] = useTransition();
   const statusFilterId = useId();
 
   const loadMembers = useCallback(
-    async ({ page, search, nextStatus }: { page?: number; search?: string; nextStatus?: string }) => {
+    async (targetPage: number) => {
       setIsLoading(true);
+      setLoadError(null);
       try {
         const response = await fetchAdminMembershipMembers({
-          page: page ?? meta.page,
-          pageSize: meta.pageSize,
-          search: search ?? searchTerm,
-          status: (nextStatus ?? status) === 'all' ? undefined : (nextStatus ?? status),
+          page: targetPage,
+          pageSize,
+          search: debouncedSearch ? debouncedSearch : undefined,
+          status: status === 'all' ? undefined : status,
         });
         setData(response.data);
         setMeta(response.meta);
+        setPage(response.meta.page);
       } catch (error) {
-        console.error(error);
-        toast({ title: 'Failed to load members', variant: 'destructive' });
+        const message = error instanceof Error ? error.message : 'Unable to load members';
+        setLoadError(message);
+        toast({ title: 'Failed to load members', description: message, variant: 'destructive' });
       } finally {
         setIsLoading(false);
       }
     },
-    [meta.page, meta.pageSize, searchTerm, status, toast],
+    [debouncedSearch, pageSize, status, toast],
   );
 
-  const handleSearchChange = useCallback(
-    (term: string) => {
-      setSearchTerm(term);
-      startTransition(() => {
-        void loadMembers({ page: 1, search: term });
-      });
+  const membershipMutation = useAdminMutation<MembershipUpdateInput, AdminMembershipRecord>({
+    mutationFn: async ({ membershipId, status: nextStatus, autoRenew }) => {
+      const payload: { status: string; autoRenew?: boolean } = { status: nextStatus };
+      if (typeof autoRenew === 'boolean') {
+        payload.autoRenew = autoRenew;
+      }
+      return updateAdminMembershipStatus(membershipId, payload);
     },
-    [loadMembers],
-  );
+    getEntityId: ({ membershipId }) => membershipId,
+    onMutate: ({ membershipId, status: nextStatus, autoRenew }) => {
+      let snapshot: AdminMembershipRecord | null = null;
+      setData((prev) =>
+        prev.map((member) => {
+          if (member.id === membershipId) {
+            snapshot = member;
+            return {
+              ...member,
+              status: nextStatus,
+              ...(typeof autoRenew === 'boolean' ? { autoRenew } : {}),
+            };
+          }
+          return member;
+        }),
+      );
+      return () => {
+        if (!snapshot) return;
+        setData((prev) => prev.map((member) => (member.id === membershipId ? snapshot! : member)));
+      };
+    },
+    onSuccess: (result) => {
+      setData((prev) => prev.map((member) => (member.id === result.id ? result : member)));
+    },
+    successToast: { title: 'Member updated' },
+    errorToast: { title: 'Failed to update member' },
+  });
+
+  const { state: mutationState, execute: executeMembershipMutation } = membershipMutation;
 
   const handleStatusFilter = useCallback(
     (value: string) => {
-      setStatus(value);
-      startTransition(() => {
-        void loadMembers({ page: 1, nextStatus: value });
-      });
+      setFilter('status', value);
+      setPage(1);
     },
-    [loadMembers],
+    [setFilter],
   );
 
-  const handlePageChange = useCallback(
-    (page: number) => {
-      startTransition(() => {
-        void loadMembers({ page });
-      });
+  const handlePageChange = useCallback((nextPage: number) => {
+    setPage(nextPage);
+  }, []);
+
+  const updateStatus = useCallback(
+    (membershipId: string, nextStatus: string, autoRenew?: boolean) => {
+      void executeMembershipMutation({ membershipId, status: nextStatus, autoRenew });
     },
-    [loadMembers],
+    [executeMembershipMutation],
   );
 
   useEffect(() => {
     setData(initial.data);
     setMeta(initial.meta);
+    setPage(initial.meta.page);
   }, [initial]);
 
-  const updateStatus = useCallback(
-    async (membershipId: string, nextStatus: string, autoRenew?: boolean) => {
-      try {
-        const updated = await updateAdminMembershipStatus(membershipId, {
-          status: nextStatus,
-          ...(typeof autoRenew === 'boolean' ? { autoRenew } : {}),
-        });
-        setData((prev) =>
-          prev.map((m) =>
-            m.id === membershipId ? { ...m, status: updated.status, autoRenew: updated.autoRenew } : m,
-          ),
-        );
-        toast({ title: 'Member updated' });
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Update failed';
-        toast({ title: 'Failed to update member', description: msg, variant: 'destructive' });
-      }
-    },
-    [toast],
-  );
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, status]);
+
+  useEffect(() => {
+    void loadMembers(page);
+  }, [loadMembers, page]);
 
   const columns = useMemo<ColumnDef<AdminMembershipRecord, unknown>[]>(
     () => [
       {
         header: 'User',
         cell: ({ row }) => (
-          <span className="text-slate-300">{row.original.user?.email ?? row.original.user?.phoneMask ?? row.original.userId}</span>
+          <span className="text-slate-300">
+            {row.original.user?.email ?? row.original.user?.phoneMask ?? row.original.userId}
+          </span>
         ),
       },
       {
@@ -127,6 +170,28 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
       {
         header: 'Status',
         accessorKey: 'status',
+        cell: ({ row }) => {
+          const isUpdating =
+            mutationState.status === 'loading' && mutationState.activeId === row.original.id;
+          return (
+            <Select
+              defaultValue={row.original.status}
+              onValueChange={(value) => updateStatus(row.original.id, value)}
+              disabled={isUpdating}
+            >
+              <SelectTrigger className="h-8 w-40 bg-white/5 text-slate-100">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(['pending', 'active', 'cancelled', 'expired'] as const).map((s) => (
+                  <SelectItem key={s} value={s} className="capitalize">
+                    {statusLabels[s] ?? s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          );
+        },
         cell: ({ row }) => (
           <Select defaultValue={row.original.status} onValueChange={(v) => void updateStatus(row.original.id, v)}>
             <SelectTrigger
@@ -148,6 +213,17 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
       {
         header: 'Auto‑renew',
         accessorKey: 'autoRenew',
+        cell: ({ row }) => {
+          const isUpdating =
+            mutationState.status === 'loading' && mutationState.activeId === row.original.id;
+          return (
+            <Switch
+              checked={row.original.autoRenew}
+              disabled={isUpdating}
+              onCheckedChange={(value) => updateStatus(row.original.id, row.original.status, value)}
+            />
+          );
+        },
         cell: ({ row }) => (
           <Switch
             checked={row.original.autoRenew}
@@ -174,7 +250,7 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
         ),
       },
     ],
-    [updateStatus],
+    [mutationState.activeId, mutationState.status, updateStatus],
   );
 
   return (
@@ -200,13 +276,20 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
         columns={columns}
         data={data}
         meta={meta}
-        isLoading={isLoading || isPending}
+        isLoading={isLoading || isDebouncing || mutationState.status === 'loading'}
         onPageChange={handlePageChange}
-        onSearchChange={handleSearchChange}
+        onSearchChange={setSearch}
+        searchValue={search}
         searchPlaceholder="Search email/phone"
         searchLabel="Search members"
         caption="Membership records with plan enrollment, status, and renewal controls"
       />
+      {loadError ? (
+        <AdminInlineMessage tone="critical" title="Unable to refresh members" description={loadError} />
+      ) : null}
+      {mutationState.status === 'error' && mutationState.error ? (
+        <AdminInlineMessage tone="critical" title="Update failed" description={mutationState.error} />
+      ) : null}
     </div>
   );
 };
