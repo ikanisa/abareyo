@@ -110,7 +110,7 @@ export const DonationsTable = ({ initial }: DonationsTableProps) => {
       meta={meta}
       isLoading={isLoading || isPending}
       onPageChange={handlePageChange}
-      searchPlaceholder=""
+      caption="Donation records grouped by project, donor, and status"
     />
   );
 };

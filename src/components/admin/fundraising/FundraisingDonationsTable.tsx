@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useState, useTransition, useId } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
+import { Label } from '@/components/ui/label';
 import type { PaginatedResponse, AdminFundraisingDonation } from '@/lib/api/admin/fundraising';
 import {
   fetchAdminFundraisingDonations,
@@ -37,6 +38,7 @@ export const FundraisingDonationsTable = ({ initial }: FundraisingDonationsTable
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const statusFilterId = useId();
 
   const loadDonations = useCallback(
     async ({ page, search, nextStatus }: { page?: number; search?: string; nextStatus?: string }) => {
@@ -142,7 +144,10 @@ export const FundraisingDonationsTable = ({ initial }: FundraisingDonationsTable
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
             <Select defaultValue={row.original.status} onValueChange={(v) => void updateStatus(row.original, v)}>
-              <SelectTrigger className="h-8 w-40 bg-white/5 text-slate-100">
+              <SelectTrigger
+                className="h-8 w-40 bg-white/5 text-slate-100"
+                aria-label={`Update status for donation ${row.original.id}`}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -158,6 +163,7 @@ export const FundraisingDonationsTable = ({ initial }: FundraisingDonationsTable
               value={noteDrafts[row.original.id] ?? ''}
               onChange={(e) => setNoteDrafts((m) => ({ ...m, [row.original.id]: e.target.value }))}
               className="h-8 w-40 bg-white/5"
+              aria-label={`Add note for donation ${row.original.id}`}
             />
             <Button
               size="sm"
@@ -176,9 +182,11 @@ export const FundraisingDonationsTable = ({ initial }: FundraisingDonationsTable
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
-        <span className="text-xs uppercase tracking-wide text-slate-400">Status</span>
+        <Label htmlFor={statusFilterId} className="text-xs uppercase tracking-wide text-slate-400">
+          Status
+        </Label>
         <Select value={status} onValueChange={handleStatusFilter}>
-          <SelectTrigger className="h-8 w-48 bg-white/5 text-slate-100">
+          <SelectTrigger id={statusFilterId} className="h-8 w-48 bg-white/5 text-slate-100">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -198,6 +206,8 @@ export const FundraisingDonationsTable = ({ initial }: FundraisingDonationsTable
         onPageChange={handlePageChange}
         onSearchChange={handleSearchChange}
         searchPlaceholder="Search donation id/email/phone"
+        searchLabel="Search fundraising donations"
+        caption="Fundraising donations with project context, donor contact, and reconciliation status"
       />
     </div>
   );

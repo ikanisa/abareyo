@@ -208,6 +208,8 @@ export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
         onPageChange={handlePageChange}
         onSearchChange={handleSearchChange}
         searchPlaceholder="Search order ID or email"
+        searchLabel="Search shop orders"
+        caption="Shop orders with customer information, totals, and fulfillment status"
       />
       {attachTarget ? (
         <AttachSmsModal

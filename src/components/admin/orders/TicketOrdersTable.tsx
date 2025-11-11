@@ -253,6 +253,8 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
         onPageChange={handlePageChange}
         onSearchChange={handleSearchChange}
         searchPlaceholder="Search order ID or email"
+        searchLabel="Search ticket orders"
+        caption="Ticket orders with fan details, payment status, and available actions"
       />
       {attachTarget ? (
         <AttachSmsModal

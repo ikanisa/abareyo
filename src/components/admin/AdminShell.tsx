@@ -1,4 +1,5 @@
 'use client';
+import type { MouseEvent, ReactNode } from 'react';
 
 import type { ReactNode } from 'react';
 
@@ -81,6 +82,9 @@ export type AdminShellProps = {
   secondaryPanel?: ReactNode;
 };
 
+const NavItemsList = ({ activeHref }: { activeHref: string }) => {
+  const { t } = useAdminLocale();
+  const { isEnabled } = useAdminFeatureFlags();
 type NavItemState = {
   item: AdminNavigationItem;
   modulesAvailable: boolean;
@@ -101,6 +105,7 @@ const NavigationBadge = ({ badge }: { badge?: AdminNavigationBadge }) => {
   }
   const toneClass = badgeToneClassNames[badge.tone ?? 'default'];
   return (
+    <ul className="flex flex-1 flex-col gap-1 overflow-y-auto" role="list">
     <Badge variant="outline" className={cn('text-[10px] uppercase tracking-wide', toneClass)}>
       {badge.label}
     </Badge>
@@ -206,6 +211,21 @@ const Breadcrumbs = ({ breadcrumbs }: { breadcrumbs: Breadcrumb[] }) => {
         const label = t(item.key, item.fallback);
         if (!enabled) {
           return (
+            <li key={item.href}>
+              <button
+                type="button"
+                aria-disabled
+                className={cn(
+                  'flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-slate-500/70',
+                  'border border-dashed border-white/5 bg-slate-950/50',
+                )}
+              >
+                <span>{label}</span>
+                <Badge variant="outline" className="border-amber-400/30 text-[10px] uppercase tracking-wide text-amber-200">
+                  Off
+                </Badge>
+              </button>
+            </li>
             <button
               key={item.href}
               type="button"
@@ -228,6 +248,26 @@ const Breadcrumbs = ({ breadcrumbs }: { breadcrumbs: Breadcrumb[] }) => {
       {breadcrumbs.map((crumb, index) => {
         const isLast = index === breadcrumbs.length - 1;
         return (
+          <li key={item.href}>
+            <Link
+              href={item.href}
+              prefetch={false}
+              aria-current={isActive ? 'page' : undefined}
+              className={cn(
+                'group flex items-center justify-between rounded-xl px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                isActive
+                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
+                  : 'text-slate-300 hover:bg-primary/10 hover:text-primary',
+              )}
+            >
+              <span>{label}</span>
+              {item.badge ? (
+                <Badge variant="outline" className="border-white/10 bg-white/10 text-[10px] uppercase text-white">
+                  {item.badge}
+                </Badge>
+              ) : null}
+            </Link>
+          </li>
           <div key={`${crumb.label}-${index}`} className="flex items-center gap-2">
             {index > 0 ? <span className="text-slate-600">/</span> : null}
             {crumb.href && !isLast ? (
@@ -249,7 +289,7 @@ const Breadcrumbs = ({ breadcrumbs }: { breadcrumbs: Breadcrumb[] }) => {
           </div>
         );
       })}
-    </nav>
+    </ul>
   );
 };
 
@@ -582,6 +622,30 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
     router.replace(next ? `${current}?${next}` : current);
   }, [pathname, router, searchParams, toast]);
 
+  const handleSkipToContent = useCallback((event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    const main = document.getElementById('admin-main-content');
+    if (main) {
+      main.focus();
+      main.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
+  return (
+    <div className="relative flex min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+      <a
+        href="#admin-main-content"
+        onClick={handleSkipToContent}
+        className="absolute left-4 top-3 z-50 -translate-y-full transform rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground opacity-0 focus:translate-y-0 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-slate-950"
+      >
+        Skip to main content
+      </a>
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_55%)]" />
+      <nav
+        aria-label="Admin sections"
+        className="relative hidden w-72 flex-col border-r border-white/10 bg-slate-950/70 px-4 py-6 backdrop-blur-xl md:flex"
+      >
+        <div className="mb-6 flex items-center justify-between">
   const hasSecondary = Boolean(secondaryPanel);
 
   return (
@@ -604,6 +668,7 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
             </Badge>
           ) : null}
         </div>
+        <NavItemsList activeHref={activeHref} />
         <div className="mt-shell-stack flex-1 overflow-hidden">
           <NavItems activeHref={activeHref} />
         </div>
@@ -621,7 +686,7 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
             ))}
           </div>
         </div>
-      </aside>
+      </nav>
       <div className="relative z-[1] flex min-h-screen flex-1 flex-col">
         <header className="border-b border-white/10 bg-slate-950/60 px-4 py-3 backdrop-blur-xl md:px-8">
           <div className="flex flex-col gap-3">
@@ -689,6 +754,22 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
                 >
                   Sign out
                 </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[260px] border-white/10 bg-slate-950/95 text-slate-100">
+                <SheetHeader className="text-left">
+                  <SheetTitle className="text-lg font-semibold text-white">Navigation</SheetTitle>
+                </SheetHeader>
+                <nav aria-label="Admin sections" className="mt-6">
+                  <NavItemsList activeHref={activeHref} />
+                </nav>
+              </SheetContent>
+            </Sheet>
+            <input
+              type="search"
+              placeholder="Search ops…"
+              className="hidden w-72 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-primary/60 focus:ring-0 md:block"
+              aria-label="Search admin operations"
+            />
               </div>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -862,6 +943,8 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
               );
             })}
           </div>
+        </header>
+        <main id="admin-main-content" tabIndex={-1} className="relative flex-1 overflow-y-auto px-4 py-6 md:px-8">
         </div>
         <main className="relative flex-1 overflow-y-auto px-shell-gutter py-shell-stack">
           <div className="absolute inset-x-0 -top-12 h-24 bg-gradient-to-b from-primary/10 via-transparent to-transparent blur-3xl" />

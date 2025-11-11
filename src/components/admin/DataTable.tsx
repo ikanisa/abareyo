@@ -14,10 +14,12 @@ import {
 } from '@tanstack/react-table';
 import { ChevronLeft, ChevronRight, Settings2 } from 'lucide-react';
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableCaption, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -34,11 +36,14 @@ export type DataTableProps<TData> = {
   onPageChange?: (page: number) => void;
   onSearchChange?: (term: string) => void;
   searchPlaceholder?: string;
+  searchLabel?: string;
   emptyState?: React.ReactNode;
   enableSelection?: boolean;
   getRowId?: (originalRow: TData, index: number) => string;
   onSelectionChange?: (selectedRows: TData[]) => void;
   renderBatchActions?: (context: { selectedRows: TData[]; clearSelection: () => void }) => React.ReactNode;
+  caption?: React.ReactNode;
+  captionClassName?: string;
 };
 
 export function DataTable<TData>({
@@ -49,15 +54,20 @@ export function DataTable<TData>({
   onPageChange,
   onSearchChange,
   searchPlaceholder = 'Search…',
+  searchLabel = 'Search table results',
   emptyState = <div className="py-6 text-sm text-muted-foreground">No results found.</div>,
   enableSelection = false,
   getRowId,
   onSelectionChange,
   renderBatchActions,
+  caption = 'Table results',
+  captionClassName = 'sr-only',
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
+  const searchInputId = React.useId();
+  const tableCaptionId = React.useId();
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
 
   const breakpointValues = React.useMemo(
@@ -229,6 +239,20 @@ export function DataTable<TData>({
 
   return (
     <div className="space-y-3">
+      {onSearchChange ? (
+        <div className="flex flex-col gap-1">
+          <Label htmlFor={searchInputId} className="sr-only">
+            {searchLabel}
+          </Label>
+          <Input
+            id={searchInputId}
+            value={globalFilter}
+            onChange={(event) => setGlobalFilter(event.target.value)}
+            placeholder={searchPlaceholder}
+            aria-label={searchLabel}
+            className="max-w-sm bg-white/5"
+          />
+        </div>
       {onSearchChange || columnsCanHide.length ? (
         <ResponsiveSection
           columns={onSearchChange && columnsCanHide.length ? 'sidebar' : 'single'}
@@ -304,7 +328,12 @@ export function DataTable<TData>({
         </div>
       ) : null}
       <div className="overflow-hidden rounded-xl border border-white/10">
-        <Table>
+        <Table aria-describedby={caption ? tableCaptionId : undefined}>
+          {caption ? (
+            <TableCaption id={tableCaptionId} className={cn('text-left', captionClassName)}>
+              {caption}
+            </TableCaption>
+          ) : null}
           <TableHeader className="bg-white/5">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="border-white/10 hover:bg-white/10">

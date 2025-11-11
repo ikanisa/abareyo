@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useState, useTransition, useId } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
+import { Label } from '@/components/ui/label';
 import type { PaginatedResponse, AdminShopOrder } from '@/lib/api/admin/shop';
 import {
   fetchAdminShopOrders,
@@ -41,6 +42,7 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
   const [isPending, startTransition] = useTransition();
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const [trackingDrafts, setTrackingDrafts] = useState<Record<string, string>>({});
+  const statusFilterId = useId();
 
   const loadOrders = useCallback(
     async ({ page, search, nextStatus }: { page?: number; search?: string; nextStatus?: string }) => {
@@ -192,6 +194,69 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
       {
         header: 'Status',
         accessorKey: 'status',
+        cell: ({ row }) => {
+          const statusId = `order-${row.original.id}-status`;
+          const noteId = `order-${row.original.id}-note`;
+          return (
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor={statusId} className="sr-only">
+                  Update status for order {row.original.id}
+                </Label>
+                <Select defaultValue={row.original.status} onValueChange={(v) => void applyStatus(row.original.id, v)}>
+                  <SelectTrigger id={statusId} className="h-8 w-40 bg-white/5 text-slate-100">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(['pending', 'ready', 'fulfilled', 'cancelled'] as const).map((s) => (
+                      <SelectItem key={s} value={s} className="capitalize">
+                        {statusLabels[s] ?? s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label htmlFor={noteId} className="sr-only">
+                  Fulfillment note for order {row.original.id}
+                </Label>
+                <Input
+                  id={noteId}
+                  placeholder="Note"
+                  value={noteDrafts[row.original.id] ?? ''}
+                  onChange={(e) => setNoteDrafts((m) => ({ ...m, [row.original.id]: e.target.value }))}
+                  className="h-8 w-40 bg-white/5"
+                />
+                <Button size="sm" variant="outline" onClick={() => void saveNote(row.original.id)}>
+                  Add Note
+                </Button>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        header: 'Tracking',
+        cell: ({ row }) => {
+          const trackingId = `order-${row.original.id}-tracking`;
+          return (
+            <div className="flex items-center gap-2">
+              <Label htmlFor={trackingId} className="sr-only">
+                Tracking number for order {row.original.id}
+              </Label>
+              <Input
+                id={trackingId}
+                placeholder="Tracking #"
+                value={trackingDrafts[row.original.id] ?? row.original.trackingNumber ?? ''}
+                onChange={(e) => setTrackingDrafts((m) => ({ ...m, [row.original.id]: e.target.value }))}
+                className="h-8 w-40 bg-white/5"
+              />
+              <Button size="sm" variant="outline" onClick={() => void saveTracking(row.original.id)}>
+                Save
+              </Button>
+            </div>
+          );
+        },
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
             <Select defaultValue={row.original.status} onValueChange={(v) => void applyStatus(row.original.id, v)}>
@@ -242,6 +307,23 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
 
   return (
     <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <Label htmlFor={statusFilterId} className="text-xs uppercase tracking-wide text-slate-400">
+          Status
+        </Label>
+        <Select value={status} onValueChange={handleStatusFilter}>
+          <SelectTrigger id={statusFilterId} className="h-8 w-48 bg-white/5 text-slate-100">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            {statusFilters.map((s) => (
+              <SelectItem key={s} value={s} className="capitalize">
+                {statusLabels[s]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       <ResponsiveSection columns="sidebar" className="md:items-end">
         <div className={responsiveSection.stack}>
           <span className="text-xs uppercase tracking-wide text-slate-400">Status</span>
@@ -267,6 +349,8 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
         onPageChange={handlePageChange}
         onSearchChange={handleSearchChange}
         searchPlaceholder="Search order id/email"
+        searchLabel="Search shop orders"
+        caption="List of shop orders with status, fulfillment notes, and tracking controls"
       />
     </div>
   );
