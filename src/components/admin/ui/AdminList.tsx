@@ -53,10 +53,12 @@ export function AdminList<TItem>({
 
   return (
     <Card className={cn('flex flex-col gap-6 border-white/10 bg-white/5 p-6 backdrop-blur-md', className)}>
-      <header className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <div className="space-y-1">
-          <h2 className="text-xl font-semibold text-slate-100">{title}</h2>
-          {description ? <p className="text-sm text-slate-400">{description}</p> : null}
+      <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="space-y-2 md:max-w-3xl">
+          <h2 className="text-heading-md text-slate-100">{title}</h2>
+          {description ? (
+            <p className="max-w-prose text-body-sm text-slate-300/90">{description}</p>
+          ) : null}
         </div>
         {actions ? <div className="flex items-center gap-2 self-stretch md:self-auto">{actions}</div> : null}
       </header>
@@ -64,7 +66,7 @@ export function AdminList<TItem>({
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filters.map((filter) => (
             <div key={filter.key} className="flex flex-col gap-2">
-              <Label htmlFor={`admin-list-filter-${filter.key}`} className="text-xs uppercase tracking-wide text-slate-400">
+              <Label htmlFor={`admin-list-filter-${filter.key}`} className="type-caption text-slate-300/80">
                 {filter.label}
               </Label>
               {filter.type === 'search' ? (
@@ -82,18 +84,18 @@ export function AdminList<TItem>({
                 >
                   <SelectTrigger
                     id={`admin-list-filter-${filter.key}`}
-                    className="border-white/10 bg-slate-950/40 text-left text-sm text-slate-100"
-                  >
-                    <SelectValue placeholder={filter.placeholder ?? 'Select'} />
-                  </SelectTrigger>
+                  className="border-white/10 bg-slate-950/40 text-left text-body-sm text-slate-100"
+                >
+                  <SelectValue placeholder={filter.placeholder ?? 'Select'} />
+                </SelectTrigger>
                   <SelectContent className="bg-slate-900/95 text-slate-100">
                     {filter.placeholder ? (
-                      <SelectItem value="" className="text-slate-400">
+                      <SelectItem value="" className="text-body-sm text-slate-400">
                         {filter.placeholder}
                       </SelectItem>
                     ) : null}
                     {filter.options.map((option) => (
-                      <SelectItem key={option.value} value={option.value} className="text-slate-100">
+                      <SelectItem key={option.value} value={option.value} className="text-body-sm text-slate-100">
                         {option.label}
                       </SelectItem>
                     ))}
@@ -107,7 +109,7 @@ export function AdminList<TItem>({
 
       {items.length === 0 ? (
         emptyState ?? (
-          <div className="rounded-xl border border-dashed border-white/10 bg-slate-950/40 p-8 text-center text-sm text-slate-400">
+          <div className="rounded-xl border border-dashed border-white/10 bg-slate-950/40 p-8 text-center text-body-sm text-slate-300/90">
             No records found. Adjust filters or try again later.
           </div>
         )
@@ -120,7 +122,7 @@ export function AdminList<TItem>({
       )}
 
       {pagination && totalPages > 1 ? (
-        <div className="flex flex-col justify-between gap-3 border-t border-white/5 pt-4 text-sm text-slate-300 md:flex-row md:items-center">
+        <div className="flex flex-col justify-between gap-3 border-t border-white/5 pt-4 text-body-sm text-slate-300 md:flex-row md:items-center">
           <span>
             Showing {(currentPage - 1) * pagination.pageSize + 1}–
             {Math.min(pagination.total, currentPage * pagination.pageSize)} of {pagination.total}

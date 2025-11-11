@@ -76,7 +76,7 @@ const NavItems = ({ activeHref }: { activeHref: string }) => {
               type="button"
               aria-disabled
               className={cn(
-                'flex items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-500/70',
+                'flex items-center justify-between rounded-xl px-3 py-2 text-body-sm text-slate-500/70',
                 'border border-dashed border-white/5 bg-slate-950/50',
               )}
             >
@@ -94,7 +94,7 @@ const NavItems = ({ activeHref }: { activeHref: string }) => {
             href={item.href}
             prefetch={false}
             className={cn(
-              'group flex items-center justify-between rounded-xl px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+              'group flex items-center justify-between rounded-xl px-3 py-2 text-body-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
               isActive
                 ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
                 : 'text-slate-300 hover:bg-primary/10 hover:text-primary',
@@ -181,7 +181,7 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_55%)]" />
       <aside className="relative hidden w-72 flex-col border-r border-white/10 bg-slate-950/70 px-4 py-6 backdrop-blur-xl md:flex">
         <div className="mb-6 flex items-center justify-between">
-          <Link href="/admin" className="text-lg font-bold tracking-tight text-primary">
+          <Link href="/admin" className="text-heading-sm font-semibold tracking-tight text-primary">
             Rayon Admin
           </Link>
           <Badge variant="outline" className="bg-white/5 text-xs uppercase tracking-wide">
@@ -189,10 +189,10 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
           </Badge>
         </div>
         <NavItems activeHref={activeHref} />
-        <div className="mt-6 rounded-xl border border-white/5 bg-white/5 p-3 text-xs text-slate-300">
-          <div className="font-semibold text-slate-100">Signed in</div>
+        <div className="mt-6 rounded-xl border border-white/5 bg-white/5 p-3 text-body-sm text-slate-300">
+          <div className="text-body font-semibold text-slate-100">Signed in</div>
           <div>{user.displayName}</div>
-          <div className="truncate text-slate-400">{user.email}</div>
+          <div className="truncate text-caption text-slate-400/80">{user.email}</div>
           <div className="mt-2 flex flex-wrap gap-1">
             {user.roles.map((role) => (
               <Badge key={role} variant="secondary" className="bg-primary/15 text-primary">
@@ -217,28 +217,28 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
                   Menu
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[260px] border-white/10 bg-slate-950/95 text-slate-100">
-                <SheetHeader className="text-left">
-                  <SheetTitle className="text-lg font-semibold text-white">Navigation</SheetTitle>
-                </SheetHeader>
-                <div className="mt-6">
-                  <NavItems activeHref={activeHref} />
-                </div>
-              </SheetContent>
-            </Sheet>
-            <input
-              type="search"
-              placeholder="Search ops…"
-              className="hidden w-72 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-primary/60 focus:ring-0 md:block"
-            />
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-1 text-xs text-slate-400 md:flex">
-              <span className="uppercase tracking-wide">Lang</span>
-              <div className="flex overflow-hidden rounded-full border border-white/10">
-                {(['en', 'rw'] as const).map((code) => {
-                  const isActive = locale === code;
-                  return (
+            <SheetContent side="left" className="w-[260px] border-white/10 bg-slate-950/95 text-slate-100">
+              <SheetHeader className="text-left">
+                <SheetTitle className="text-heading-sm font-semibold text-white">Navigation</SheetTitle>
+              </SheetHeader>
+              <div className="mt-6">
+                <NavItems activeHref={activeHref} />
+              </div>
+            </SheetContent>
+          </Sheet>
+          <input
+            type="search"
+            placeholder="Search ops…"
+            className="hidden w-72 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-body-sm outline-none placeholder:text-slate-400 focus:border-primary/60 focus:ring-0 md:block"
+          />
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="hidden items-center gap-1 text-caption text-slate-400/80 md:flex">
+            <span className="type-caption text-slate-400/80">Lang</span>
+            <div className="flex overflow-hidden rounded-full border border-white/10">
+              {(['en', 'rw'] as const).map((code) => {
+                const isActive = locale === code;
+                return (
                     <button
                       key={code}
                       type="button"
@@ -255,12 +255,12 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
                     </button>
                   );
                 })}
-              </div>
             </div>
-            <Button variant="ghost" size="sm" className="hidden items-center gap-2 text-slate-300 hover:text-white md:flex">
-              Quick actions
-              <ChevronDown className="h-4 w-4" />
-            </Button>
+          </div>
+          <Button variant="ghost" size="sm" className="hidden items-center gap-2 text-body text-slate-300 hover:text-white md:flex">
+            Quick actions
+            <ChevronDown className="h-4 w-4" />
+          </Button>
             <Button
               variant="outline"
               size="sm"
