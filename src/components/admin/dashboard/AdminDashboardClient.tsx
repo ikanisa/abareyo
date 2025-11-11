@@ -2,8 +2,9 @@
 
 import { useMemo } from 'react';
 
-import type { DashboardSnapshot } from '@/services/admin/dashboard';
+import { AdminStatCard } from '@/components/admin/ui';
 import { useAdminLocale } from '@/providers/admin-locale-provider';
+import type { DashboardSnapshot } from '@/services/admin/dashboard';
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -65,50 +66,45 @@ export const AdminDashboardClient = ({ snapshot }: AdminDashboardClientProps) =>
     <div className="space-y-6">
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {kpiCards.map((card) => (
-          <div
+          <AdminStatCard
             key={card.key}
-            className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 shadow-lg shadow-primary/5"
-          >
-            <div className="text-xs uppercase tracking-wide text-slate-400">{card.label}</div>
-            <div className="mt-2 text-2xl font-semibold text-slate-100">
-              {formatValue(card.value7d, card.format)}
-            </div>
-            <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
-              <span>{t('admin.dashboard.kpi.range.sevenDay', 'Last 7 days')}</span>
-              <span>
-                {t('admin.dashboard.kpi.range.thirtyDay', '30d')}
-                : {formatValue(card.value30d, card.format)}
-              </span>
-            </div>
-            {card.trendLabel && (
-              <div
-                className={`mt-2 text-xs font-medium ${
-                  card.isPositive ? 'text-emerald-400' : card.isNegative ? 'text-rose-400' : 'text-slate-400'
-                }`}
-              >
-                {card.trendLabel}
-              </div>
-            )}
-          </div>
+            title={card.label}
+            value={formatValue(card.value7d, card.format)}
+            valueLabel={t('admin.dashboard.kpi.range.sevenDay', 'Last 7 days')}
+            stats={[
+              {
+                label: t('admin.dashboard.kpi.range.thirtyDay', '30d'),
+                value: formatValue(card.value30d, card.format),
+              },
+            ]}
+            trend={
+              card.trendLabel
+                ? {
+                    label: card.trendLabel,
+                    tone: card.isPositive ? 'positive' : card.isNegative ? 'negative' : 'neutral',
+                  }
+                : undefined
+            }
+          />
         ))}
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-          <h2 className="text-lg font-semibold text-slate-100">
-            {t('admin.dashboard.sms.title', 'SMS Parser Health')}
-          </h2>
-          <p className="mt-2 text-sm text-slate-400">
-            {snapshot.sms.successRate === null
+        <AdminStatCard
+          title={t('admin.dashboard.sms.title', 'SMS Parser Health')}
+          description={
+            snapshot.sms.successRate === null
               ? t('admin.dashboard.sms.empty', 'No inbound SMS records in the last 7 days.')
               : t(
                   'admin.dashboard.sms.summary',
                   `Success rate ${(snapshot.sms.successRate * 100).toFixed(1)}% across ${numberFormatter.format(
                     snapshot.sms.rawCount7d,
                   )} messages.`,
-                )}
-          </p>
-          <div className="mt-4 space-y-2 text-sm text-slate-300">
+                )
+          }
+          variant="muted"
+        >
+          <div className="mt-2 space-y-2 text-sm text-slate-300">
             <div className="flex items-center justify-between">
               <span>{t('admin.dashboard.sms.parsed', 'Parsed')}</span>
               <span>{numberFormatter.format(snapshot.sms.parsedCount7d)}</span>
@@ -125,16 +121,17 @@ export const AdminDashboardClient = ({ snapshot }: AdminDashboardClientProps) =>
               </span>
             </div>
           </div>
-        </div>
+        </AdminStatCard>
 
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-          <h2 className="text-lg font-semibold text-slate-100">
-            {t('admin.dashboard.payments.title', 'Payment SLA')}
-          </h2>
-          <p className="mt-2 text-sm text-slate-400">
-            {t('admin.dashboard.payments.subtitle', 'Tracking reconciliation speed across ticket and shop payments.')}
-          </p>
-          <div className="mt-4 space-y-2 text-sm text-slate-300">
+        <AdminStatCard
+          title={t('admin.dashboard.payments.title', 'Payment SLA')}
+          description={t(
+            'admin.dashboard.payments.subtitle',
+            'Tracking reconciliation speed across ticket and shop payments.',
+          )}
+          variant="muted"
+        >
+          <div className="mt-2 space-y-2 text-sm text-slate-300">
             <div className="flex items-center justify-between">
               <span>{t('admin.dashboard.payments.confirmed', 'Confirmed (7d)')}</span>
               <span>{numberFormatter.format(snapshot.payments.confirmedCount7d)}</span>
@@ -157,19 +154,17 @@ export const AdminDashboardClient = ({ snapshot }: AdminDashboardClientProps) =>
               </span>
             </div>
           </div>
-        </div>
+        </AdminStatCard>
 
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-          <h2 className="text-lg font-semibold text-slate-100">
-            {t('admin.dashboard.gates.title', 'Gate Throughput')}
-          </h2>
-          <p className="mt-2 text-sm text-slate-400">
-            {t(
-              'admin.dashboard.gates.subtitle',
-              `Pass issuance activity over the last ${snapshot.gates.windowHours}-hour window.`,
-            )}
-          </p>
-          <div className="mt-4 space-y-2 text-sm text-slate-300">
+        <AdminStatCard
+          title={t('admin.dashboard.gates.title', 'Gate Throughput')}
+          description={t(
+            'admin.dashboard.gates.subtitle',
+            `Pass issuance activity over the last ${snapshot.gates.windowHours}-hour window.`,
+          )}
+          variant="muted"
+        >
+          <div className="mt-2 space-y-2 text-sm text-slate-300">
             <div className="flex items-center justify-between">
               <span>{t('admin.dashboard.gates.totalPasses', 'Total passes')}</span>
               <span>{numberFormatter.format(snapshot.gates.totalPasses)}</span>
@@ -186,24 +181,25 @@ export const AdminDashboardClient = ({ snapshot }: AdminDashboardClientProps) =>
               </div>
             )}
           </div>
-        </div>
+        </AdminStatCard>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-100">
-            {t('admin.dashboard.alerts.title', 'Operational Alerts')}
-          </h2>
-          <span className="text-xs text-slate-500">
-            {t('admin.dashboard.alerts.refreshedAt', 'Refreshed')} {new Date(snapshot.generatedAt).toLocaleString()}
-          </span>
-        </div>
+      <AdminStatCard
+        title={t('admin.dashboard.alerts.title', 'Operational Alerts')}
+        description={
+          snapshot.alerts.length
+            ? t('admin.dashboard.alerts.summary', 'Live checks across ingestion and reconciliation pipelines.')
+            : t('admin.dashboard.alerts.empty', 'All systems nominal. No alerts triggered in the last refresh.')
+        }
+        variant="muted"
+        footer={`${t('admin.dashboard.alerts.refreshedAt', 'Refreshed')} ${new Date(snapshot.generatedAt).toLocaleString()}`}
+      >
         {snapshot.alerts.length ? (
-          <ul className="mt-4 space-y-2">
+          <ul className="mt-2 space-y-2 text-sm">
             {snapshot.alerts.map((alert) => (
               <li
                 key={alert.id}
-                className={`rounded-xl border p-3 text-sm ${
+                className={`rounded-xl border p-3 ${
                   alert.severity === 'critical'
                     ? 'border-rose-500/50 bg-rose-500/10 text-rose-100'
                     : alert.severity === 'warning'
@@ -216,12 +212,8 @@ export const AdminDashboardClient = ({ snapshot }: AdminDashboardClientProps) =>
               </li>
             ))}
           </ul>
-        ) : (
-          <p className="mt-4 text-sm text-slate-400">
-            {t('admin.dashboard.alerts.empty', 'All systems nominal. No alerts triggered in the last refresh.')}
-          </p>
-        )}
-      </section>
+        ) : null}
+      </AdminStatCard>
     </div>
   );
 };

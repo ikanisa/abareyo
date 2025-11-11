@@ -34,13 +34,11 @@
     "test": "npm run typecheck && npm run test:unit",
     "test:unit": "vitest run",
     "coverage": "vitest run --coverage",
-    
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:a11y": "playwright test tests/e2e/a11y",
     "test:e2e:mobile": "playwright test --project=mobile-small --project=mobile-medium",
     "test:e2e:headed": "playwright test --headed",
-    
     "setup:hooks": "git config core.hooksPath .githooks",
     "seed": "tsx scripts/seed.ts",
     "ci:guard-payments": "tsx scripts/ci/assert-ussd-only.ts",
@@ -48,7 +46,6 @@
     "reports:worker": "tsx scripts/reports/report-schedule-worker.ts",
     "cron:data-retention": "tsx scripts/cron/run-data-retention.ts",
     "validate:deployment": "node scripts/validate-deployment-readiness.mjs",
-    
     "sbom": "node scripts/generate-sbom.mjs",
     "check:licenses": "node scripts/enforce-licenses.mjs",
     "prepare": "husky"
@@ -128,6 +125,7 @@
     "@lhci/cli": "^0.14.0",
     "@netlify/functions": "^2.8.2",
     "@playwright/test": "^1.50.1",
+    "@storybook/react": "^8.4.5",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.5.2",

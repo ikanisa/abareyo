@@ -5,6 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
 
 import { DataTable } from '@/components/admin/DataTable';
+import { AdminFilterBar } from '@/components/admin/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -235,21 +236,28 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-3">
-        <span className="text-xs uppercase tracking-wide text-slate-400">Status</span>
-        <Select value={status} onValueChange={handleStatusFilter}>
-          <SelectTrigger className="h-8 w-48 bg-white/5 text-slate-100">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            {statusFilters.map((s) => (
-              <SelectItem key={s} value={s} className="capitalize">
-                {statusLabels[s]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <AdminFilterBar
+        segments={[
+          {
+            label: 'Status',
+            content: (
+              <Select value={status} onValueChange={handleStatusFilter}>
+                <SelectTrigger className="h-9 w-48 border-white/10 bg-slate-950/60 text-slate-100">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusFilters.map((s) => (
+                    <SelectItem key={s} value={s} className="capitalize">
+                      {statusLabels[s]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ),
+          },
+        ]}
+        isLoading={isLoading || isPending}
+      />
       <DataTable
         columns={columns}
         data={data}

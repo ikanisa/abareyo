@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import {
+  AdminActionToolbar,
   AdminConfirmDialog,
   AdminEditDrawer,
   AdminInlineMessage,
@@ -95,25 +96,24 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
           description="Quotes awaiting issuance or follow-up."
           items={insurance}
           renderItem={(item) => (
-            <div className="flex items-center justify-between rounded-xl border border-white/5 bg-slate-950/50 p-4">
-              <div>
-                <p className="text-sm font-semibold text-slate-100">Premium {item.premium.toLocaleString()} RWF</p>
-                <p className="text-xs text-slate-400">Quote #{item.id.slice(0, 8)}</p>
-                <p className="text-xs text-slate-500">Status: <span className={statusBadge(item.status)}>{item.status}</span></p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => setSelectedQuote(item.id)}>
-                  Edit
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => issuePolicy(item.id)}
-                  disabled={item.status === 'issued'}
-                >
-                  Issue policy
-                </Button>
-              </div>
-            </div>
+            <AdminActionToolbar.Section
+              title={`Premium ${item.premium.toLocaleString()} RWF`}
+              description={`Quote #${item.id.slice(0, 8)}`}
+              actions={
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setSelectedQuote(item.id)}>
+                    Edit
+                  </Button>
+                  <Button size="sm" onClick={() => issuePolicy(item.id)} disabled={item.status === 'issued'}>
+                    Issue policy
+                  </Button>
+                </div>
+              }
+            >
+              <p className="text-xs text-slate-500">
+                Status: <span className={statusBadge(item.status)}>{item.status}</span>
+              </p>
+            </AdminActionToolbar.Section>
           )}
         />
       </section>
@@ -128,30 +128,33 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
           description="Recent SACCO deposits awaiting confirmation."
           items={deposits}
           renderItem={(item) => (
-            <div className="flex items-center justify-between rounded-xl border border-white/5 bg-slate-950/50 p-4">
-              <div>
-                <p className="text-sm font-semibold text-slate-100">{item.amount.toLocaleString()} RWF</p>
-                <p className="text-xs text-slate-400">Deposit #{item.id.slice(0, 8)}</p>
-                <p className="text-xs text-slate-500">Status: <span className={statusBadge(item.status)}>{item.status}</span></p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => updateDeposit(item.id, 'pending')}
-                  disabled={item.status === 'pending'}
-                >
-                  Mark pending
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => setConfirmDeposit({ id: item.id, status: 'confirmed' })}
-                  disabled={item.status === 'confirmed'}
-                >
-                  Mark confirmed
-                </Button>
-              </div>
-            </div>
+            <AdminActionToolbar.Section
+              title={`${item.amount.toLocaleString()} RWF`}
+              description={`Deposit #${item.id.slice(0, 8)}`}
+              actions={
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => updateDeposit(item.id, 'pending')}
+                    disabled={item.status === 'pending'}
+                  >
+                    Mark pending
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => setConfirmDeposit({ id: item.id, status: 'confirmed' })}
+                    disabled={item.status === 'confirmed'}
+                  >
+                    Mark confirmed
+                  </Button>
+                </div>
+              }
+            >
+              <p className="text-xs text-slate-500">
+                Status: <span className={statusBadge(item.status)}>{item.status}</span>
+              </p>
+            </AdminActionToolbar.Section>
           )}
         />
       </section>

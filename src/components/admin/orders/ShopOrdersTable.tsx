@@ -5,6 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
 
 import { DataTable } from '@/components/admin/DataTable';
+import { AdminFilterBar } from '@/components/admin/ui';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { AttachSmsModal } from '@/components/admin/orders/AttachSmsModal';
@@ -176,21 +177,28 @@ export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="text-xs uppercase tracking-wide text-slate-400">Status</span>
-        <div className="flex flex-wrap gap-2">
-          {statusFilters.map((option) => (
-            <Button
-              key={option}
-              variant={status === option ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => handleStatusChange(option)}
-            >
-              {statusLabels[option]}
-            </Button>
-          ))}
-        </div>
-      </div>
+      <AdminFilterBar
+        segments={[
+          {
+            label: 'Status',
+            content: (
+              <div className="flex flex-wrap gap-2">
+                {statusFilters.map((option) => (
+                  <Button
+                    key={option}
+                    variant={status === option ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => handleStatusChange(option)}
+                  >
+                    {statusLabels[option]}
+                  </Button>
+                ))}
+              </div>
+            ),
+          },
+        ]}
+        isLoading={isLoading || isPending}
+      />
       <DataTable
         columns={columns}
         data={data}
