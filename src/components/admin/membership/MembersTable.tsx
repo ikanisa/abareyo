@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useTransition, useId } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -9,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AdminInlineMessage } from '@/components/admin/ui';
 import { useToast } from '@/components/ui/use-toast';
+import { Label } from '@/components/ui/label';
 import type { PaginatedResponse, AdminMembershipRecord } from '@/lib/api/admin/membership';
 import { fetchAdminMembershipMembers, updateAdminMembershipStatus } from '@/lib/api/admin/membership';
 import { useAdminFilters, useAdminMutation, useAdminSearch } from '@/lib/admin-ui';
@@ -52,6 +54,8 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
   });
 
   const status = filters.status ?? 'all';
+  const [isPending, startTransition] = useTransition();
+  const statusFilterId = useId();
 
   const loadMembers = useCallback(
     async (targetPage: number) => {
@@ -188,6 +192,23 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
             </Select>
           );
         },
+        cell: ({ row }) => (
+          <Select defaultValue={row.original.status} onValueChange={(v) => void updateStatus(row.original.id, v)}>
+            <SelectTrigger
+              className="h-8 w-40 bg-white/5 text-slate-100"
+              aria-label={`Update status for member ${row.original.id}`}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(['pending', 'active', 'cancelled', 'expired'] as const).map((s) => (
+                <SelectItem key={s} value={s} className="capitalize">
+                  {statusLabels[s] ?? s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ),
       },
       {
         header: 'Auto‑renew',
@@ -203,6 +224,13 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
             />
           );
         },
+        cell: ({ row }) => (
+          <Switch
+            checked={row.original.autoRenew}
+            onCheckedChange={(v) => void updateStatus(row.original.id, row.original.status, v)}
+            aria-label={`Toggle auto-renew for member ${row.original.id}`}
+          />
+        ),
       },
       {
         header: 'Created',
@@ -228,9 +256,11 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
-        <span className="text-xs uppercase tracking-wide text-slate-400">Status</span>
+        <Label htmlFor={statusFilterId} className="text-xs uppercase tracking-wide text-slate-400">
+          Status
+        </Label>
         <Select value={status} onValueChange={handleStatusFilter}>
-          <SelectTrigger className="h-8 w-48 bg-white/5 text-slate-100">
+          <SelectTrigger id={statusFilterId} className="h-8 w-48 bg-white/5 text-slate-100">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -251,6 +281,8 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
         onSearchChange={setSearch}
         searchValue={search}
         searchPlaceholder="Search email/phone"
+        searchLabel="Search members"
+        caption="Membership records with plan enrollment, status, and renewal controls"
       />
       {loadError ? (
         <AdminInlineMessage tone="critical" title="Unable to refresh members" description={loadError} />

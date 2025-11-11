@@ -50,7 +50,7 @@ const captureWithSentry = (error: unknown, context?: Record<string, unknown>) =>
 
   const correlationId = getCorrelationId();
 
-  Sentry.configureScope((scope) => {
+  hub?.configureScope?.((scope) => {
     scope.setTag("correlation_id", correlationId);
     if (context && Object.keys(context).length > 0) {
       scope.setContext("extra", context as Record<string, unknown>);

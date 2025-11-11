@@ -12,6 +12,7 @@ import { useAdminSession } from '@/providers/admin-session-provider';
 import { AdminInlineMessage } from '@/components/admin/ui';
 import { AdminShopOrder, PaginatedResponse, fetchAdminShopOrders } from '@/lib/api/admin/orders';
 import { useAdminFilters, useAdminSearch } from '@/lib/admin-ui';
+import { ResponsiveSection, responsiveSection } from '@/components/admin/layout/ResponsiveSection';
 
 const statusFilters = ['all', 'pending', 'fulfilled', 'cancelled'] as const;
 
@@ -120,6 +121,7 @@ export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
       {
         header: 'Order',
         accessorKey: 'id',
+        enableHiding: false,
         cell: ({ row }) => <span className="font-mono text-xs text-primary/80">{row.original.id.slice(0, 8)}…</span>,
       },
       {
@@ -129,6 +131,7 @@ export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
           if (!orderUser) return <span className="text-muted-foreground">Guest</span>;
           return <span className="text-sm text-slate-100">{orderUser.email ?? '—'}</span>;
         },
+        meta: { responsive: { hideBelow: 'md' }, columnLabel: 'Customer' },
       },
       {
         header: 'Items',
@@ -141,6 +144,7 @@ export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
             ))}
           </div>
         ),
+        meta: { responsive: { hideBelow: 'lg' }, columnLabel: 'Items' },
       },
       {
         header: 'Total',
@@ -155,6 +159,7 @@ export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
             {statusLabels[row.original.status] ?? row.original.status}
           </span>
         ),
+        meta: { responsive: { hideBelow: 'md' }, columnLabel: 'Status' },
       },
       {
         header: 'Created',
@@ -164,6 +169,7 @@ export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
             {formatDistanceToNow(new Date(row.original.createdAt), { addSuffix: true })}
           </span>
         ),
+        meta: { responsive: { hideBelow: 'lg' }, columnLabel: 'Created' },
       },
       {
         header: 'Actions',
@@ -176,6 +182,7 @@ export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
             ) : null}
           </div>
         ),
+        enableHiding: false,
       },
     ],
     [handleAttachOpen],
@@ -183,21 +190,23 @@ export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="text-xs uppercase tracking-wide text-slate-400">Status</span>
-        <div className="flex flex-wrap gap-2">
-          {statusFilters.map((option) => (
-            <Button
-              key={option}
-              variant={status === option ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => handleStatusChange(option)}
-            >
-              {statusLabels[option]}
-            </Button>
-          ))}
+      <ResponsiveSection columns="sidebar" className="md:items-end">
+        <div className={responsiveSection.stack}>
+          <span className="text-xs uppercase tracking-wide text-slate-400">Status</span>
+          <div className={responsiveSection.controlGroup}>
+            {statusFilters.map((option) => (
+              <Button
+                key={option}
+                variant={status === option ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => handleStatusChange(option)}
+              >
+                {statusLabels[option]}
+              </Button>
+            ))}
+          </div>
         </div>
-      </div>
+      </ResponsiveSection>
       <DataTable
         columns={columns}
         data={data}
@@ -207,6 +216,8 @@ export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
         onSearchChange={setSearch}
         searchValue={search}
         searchPlaceholder="Search order ID or email"
+        searchLabel="Search shop orders"
+        caption="Shop orders with customer information, totals, and fulfillment status"
       />
       {loadError ? (
         <AdminInlineMessage tone="critical" title="Unable to refresh orders" description={loadError} />

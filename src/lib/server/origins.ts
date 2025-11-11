@@ -1,5 +1,4 @@
 import { clientEnv, serverEnv } from '@/config/env';
-import { serverEnv } from '@/config/env';
 
 const DEFAULT_LOCAL_ORIGINS = [
   "http://localhost:3000",

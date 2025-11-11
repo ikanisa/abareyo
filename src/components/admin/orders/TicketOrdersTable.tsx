@@ -17,6 +17,7 @@ import {
   refundTicketOrder,
 } from '@/lib/api/admin/orders';
 import { useAdminFilters, useAdminMutation, useAdminSearch } from '@/lib/admin-ui';
+import { ResponsiveSection, responsiveSection } from '@/components/admin/layout/ResponsiveSection';
 
 const statusFilters = ['all', 'pending', 'paid', 'cancelled', 'expired'] as const;
 
@@ -169,6 +170,7 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
       {
         header: 'Order ID',
         accessorKey: 'id',
+        enableHiding: false,
         cell: ({ row }) => <span className="font-mono text-xs text-primary/80">{row.original.id.slice(0, 8)}…</span>,
       },
       {
@@ -185,6 +187,7 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
             </div>
           );
         },
+        meta: { responsive: { hideBelow: 'lg' }, columnLabel: 'Match' },
       },
       {
         header: 'Fan',
@@ -198,6 +201,7 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
             </div>
           );
         },
+        meta: { responsive: { hideBelow: 'md' }, columnLabel: 'Fan' },
       },
       {
         header: 'Total',
@@ -216,6 +220,12 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
             </span>
           );
         },
+        cell: ({ row }) => (
+          <span className="rounded-full bg-white/10 px-2 py-1 text-xs text-slate-200">
+            {statusLabels[row.original.status] ?? row.original.status}
+          </span>
+        ),
+        meta: { responsive: { hideBelow: 'md' }, columnLabel: 'Status' },
       },
       {
         header: 'Created',
@@ -225,6 +235,7 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
             {formatDistanceToNow(new Date(row.original.createdAt), { addSuffix: true })}
           </span>
         ),
+        meta: { responsive: { hideBelow: 'lg' }, columnLabel: 'Created' },
       },
       {
         header: 'Actions',
@@ -252,6 +263,18 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
             </div>
           );
         },
+            ) : null}
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={row.original.status !== 'paid' || isPending}
+              onClick={() => handleRefund(row.original.id)}
+            >
+              Refund
+            </Button>
+          </div>
+        ),
+        enableHiding: false,
       },
     ],
     [handleAttachOpen, handleRefund, optimisticStatuses, refundState.activeId, refundState.status],
@@ -259,21 +282,23 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="text-xs uppercase tracking-wide text-slate-400">Status</span>
-        <div className="flex flex-wrap gap-2">
-          {statusFilters.map((option) => (
-            <Button
-              key={option}
-              variant={status === option ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => handleStatusChange(option)}
-            >
-              {statusLabels[option]}
-            </Button>
-          ))}
+      <ResponsiveSection columns="sidebar" className="md:items-end">
+        <div className={responsiveSection.stack}>
+          <span className="text-xs uppercase tracking-wide text-slate-400">Status</span>
+          <div className={responsiveSection.controlGroup}>
+            {statusFilters.map((option) => (
+              <Button
+                key={option}
+                variant={status === option ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => handleStatusChange(option)}
+              >
+                {statusLabels[option]}
+              </Button>
+            ))}
+          </div>
         </div>
-      </div>
+      </ResponsiveSection>
       <DataTable
         columns={columns}
         data={data}
@@ -283,6 +308,8 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
         onSearchChange={setSearch}
         searchValue={search}
         searchPlaceholder="Search order ID or email"
+        searchLabel="Search ticket orders"
+        caption="Ticket orders with fan details, payment status, and available actions"
       />
       {loadError ? (
         <AdminInlineMessage tone="critical" title="Unable to refresh ticket orders" description={loadError} />
