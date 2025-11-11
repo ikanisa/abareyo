@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useState, useTransition, useId } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -8,6 +8,7 @@ import { DataTable } from '@/components/admin/DataTable';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
+import { Label } from '@/components/ui/label';
 import type { PaginatedResponse, AdminMembershipRecord } from '@/lib/api/admin/membership';
 import { fetchAdminMembershipMembers, updateAdminMembershipStatus } from '@/lib/api/admin/membership';
 
@@ -32,6 +33,7 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const statusFilterId = useId();
 
   const loadMembers = useCallback(
     async ({ page, search, nextStatus }: { page?: number; search?: string; nextStatus?: string }) => {
@@ -127,7 +129,10 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
         accessorKey: 'status',
         cell: ({ row }) => (
           <Select defaultValue={row.original.status} onValueChange={(v) => void updateStatus(row.original.id, v)}>
-            <SelectTrigger className="h-8 w-40 bg-white/5 text-slate-100">
+            <SelectTrigger
+              className="h-8 w-40 bg-white/5 text-slate-100"
+              aria-label={`Update status for member ${row.original.id}`}
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -147,6 +152,7 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
           <Switch
             checked={row.original.autoRenew}
             onCheckedChange={(v) => void updateStatus(row.original.id, row.original.status, v)}
+            aria-label={`Toggle auto-renew for member ${row.original.id}`}
           />
         ),
       },
@@ -174,9 +180,11 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
-        <span className="text-xs uppercase tracking-wide text-slate-400">Status</span>
+        <Label htmlFor={statusFilterId} className="text-xs uppercase tracking-wide text-slate-400">
+          Status
+        </Label>
         <Select value={status} onValueChange={handleStatusFilter}>
-          <SelectTrigger className="h-8 w-48 bg-white/5 text-slate-100">
+          <SelectTrigger id={statusFilterId} className="h-8 w-48 bg-white/5 text-slate-100">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -196,6 +204,8 @@ export const MembersTable = ({ initial }: MembersTableProps) => {
         onPageChange={handlePageChange}
         onSearchChange={handleSearchChange}
         searchPlaceholder="Search email/phone"
+        searchLabel="Search members"
+        caption="Membership records with plan enrollment, status, and renewal controls"
       />
     </div>
   );
