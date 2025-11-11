@@ -12,6 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { cn } from '@/lib/utils';
 
 export type AdminConfirmDialogProps = {
   title: string;
@@ -22,6 +23,8 @@ export type AdminConfirmDialogProps = {
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   children?: ReactNode;
+  intent?: 'default' | 'danger';
+  loading?: boolean;
 };
 
 export const AdminConfirmDialog = ({
@@ -33,6 +36,8 @@ export const AdminConfirmDialog = ({
   onOpenChange,
   onConfirm,
   children,
+  intent = 'default',
+  loading = false,
 }: AdminConfirmDialogProps) => (
   <AlertDialog open={open} onOpenChange={onOpenChange}>
     <AlertDialogContent className="border-white/10 bg-slate-950/95 text-slate-100 backdrop-blur">
@@ -48,10 +53,20 @@ export const AdminConfirmDialog = ({
           {cancelLabel}
         </AlertDialogCancel>
         <AlertDialogAction
-          onClick={onConfirm}
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
+          onClick={() => {
+            if (!loading) {
+              onConfirm();
+            }
+          }}
+          disabled={loading}
+          className={cn(
+            intent === 'danger'
+              ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+              : 'bg-primary text-primary-foreground hover:bg-primary/90',
+            loading ? 'opacity-80' : null,
+          )}
         >
-          {confirmLabel}
+          {loading ? 'Working…' : confirmLabel}
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>

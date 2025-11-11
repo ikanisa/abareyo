@@ -17,49 +17,85 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
+
+export type DataTableFilterFacetOption = {
+  label: string;
+  value: string;
+  count?: number;
+  disabled?: boolean;
+};
+
+export type DataTableFilterFacet = {
+  id: string;
+  label: string;
+  value: string;
+  options: DataTableFilterFacetOption[];
+  onChange: (value: string) => void;
+};
 
 export type DataTableProps<TData> = {
   columns: ColumnDef<TData, unknown>[];
   data: TData[];
   isLoading?: boolean;
+  isError?: boolean;
   meta?: { page: number; pageSize: number; total: number };
   onPageChange?: (page: number) => void;
   onSearchChange?: (term: string) => void;
   searchPlaceholder?: string;
+  searchValue?: string;
+  searchDebounceMs?: number;
   emptyState?: React.ReactNode;
+  errorState?: React.ReactNode;
   enableSelection?: boolean;
   getRowId?: (originalRow: TData, index: number) => string;
   onSelectionChange?: (selectedRows: TData[]) => void;
   renderBatchActions?: (context: { selectedRows: TData[]; clearSelection: () => void }) => React.ReactNode;
+  filterFacets?: DataTableFilterFacet[];
 };
 
 export function DataTable<TData>({
   columns,
   data,
   isLoading,
+  isError,
   meta,
   onPageChange,
   onSearchChange,
   searchPlaceholder = 'Search…',
+  searchValue,
+  searchDebounceMs = 300,
   emptyState = <div className="py-6 text-sm text-muted-foreground">No results found.</div>,
+  errorState = (
+    <div className="py-6 text-sm text-destructive">
+      Something went wrong while loading this table. Please try again.
+    </div>
+  ),
   enableSelection = false,
   getRowId,
   onSelectionChange,
   renderBatchActions,
+  filterFacets = [],
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = React.useState('');
+  const [globalFilter, setGlobalFilter] = React.useState(searchValue ?? '');
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
 
   React.useEffect(() => {
     if (onSearchChange) {
       const handler = setTimeout(() => {
         onSearchChange(globalFilter);
-      }, 300);
+      }, searchDebounceMs);
       return () => clearTimeout(handler);
     }
     return undefined;
-  }, [globalFilter, onSearchChange]);
+  }, [globalFilter, onSearchChange, searchDebounceMs]);
+
+  React.useEffect(() => {
+    if (typeof searchValue === 'string' && searchValue !== globalFilter) {
+      setGlobalFilter(searchValue);
+    }
+  }, [globalFilter, searchValue]);
 
   const resolvedColumns = React.useMemo<ColumnDef<TData, unknown>[]>(() => {
     if (!enableSelection) {
@@ -140,6 +176,7 @@ export function DataTable<TData>({
   }, [enableSelection, rowSelection, table]);
 
   const rowCount = data.length;
+  const visibleColumnCount = table.getVisibleLeafColumns().length || columns.length || 1;
 
   React.useEffect(() => {
     if (!enableSelection || !onSelectionChange) {
@@ -154,13 +191,51 @@ export function DataTable<TData>({
 
   return (
     <div className="space-y-3">
-      {onSearchChange ? (
-        <Input
-          value={globalFilter}
-          onChange={(event) => setGlobalFilter(event.target.value)}
-          placeholder={searchPlaceholder}
-          className="max-w-sm bg-white/5"
-        />
+      {onSearchChange || filterFacets.length ? (
+        <div className="space-y-3">
+          {onSearchChange ? (
+            <Input
+              value={globalFilter}
+              onChange={(event) => setGlobalFilter(event.target.value)}
+              placeholder={searchPlaceholder}
+              className="max-w-sm bg-white/5"
+            />
+          ) : null}
+          {filterFacets.length ? (
+            <div className="space-y-2">
+              {filterFacets.map((facet) => (
+                <div key={facet.id} className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs uppercase tracking-wide text-slate-400">{facet.label}</span>
+                  <div className="flex flex-wrap gap-2">
+                    {facet.options.map((option) => (
+                      <Button
+                        key={option.value}
+                        type="button"
+                        variant={option.value === facet.value ? 'default' : 'outline'}
+                        size="sm"
+                        disabled={option.disabled}
+                        className={cn(
+                          option.value === facet.value
+                            ? 'shadow-sm shadow-primary/30'
+                            : 'border-white/20 text-slate-200 hover:text-white',
+                          option.disabled ? 'opacity-60' : null,
+                        )}
+                        onClick={() => facet.onChange(option.value)}
+                      >
+                        <span>{option.label}</span>
+                        {typeof option.count === 'number' ? (
+                          <span className="ml-2 rounded-full bg-slate-900/60 px-2 py-0.5 text-[10px] font-semibold text-slate-200">
+                            {option.count}
+                          </span>
+                        ) : null}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
       ) : null}
       {enableSelection && renderBatchActions && selectedRows.length > 0 ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary-foreground">
@@ -193,8 +268,14 @@ export function DataTable<TData>({
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={visibleColumnCount} className="py-10 text-center text-sm text-muted-foreground">
                   Loading…
+                </TableCell>
+              </TableRow>
+            ) : isError ? (
+              <TableRow>
+                <TableCell colSpan={visibleColumnCount} className="py-10 text-center">
+                  {errorState}
                 </TableCell>
               </TableRow>
             ) : rowCount ? (
@@ -209,7 +290,7 @@ export function DataTable<TData>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="py-10 text-center">
+                <TableCell colSpan={visibleColumnCount} className="py-10 text-center">
                   {emptyState}
                 </TableCell>
               </TableRow>

@@ -5,6 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
 
 import { DataTable } from '@/components/admin/DataTable';
+import { CrudConfirmDialog, useCrudUndoToast } from '@/components/admin/ui';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { AttachSmsModal } from '@/components/admin/orders/AttachSmsModal';
@@ -40,10 +41,15 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [attachTarget, setAttachTarget] = useState<{ id: string; amount: number } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [confirmRefund, setConfirmRefund] = useState<AdminTicketOrder | null>(null);
+  const [isRefunding, setIsRefunding] = useState(false);
+  const showUndoToast = useCrudUndoToast();
 
   const loadOrders = useCallback(
     async ({ page, search, status: nextStatus }: { page?: number; search?: string; status?: string }) => {
       setIsLoading(true);
+      setError(null);
       try {
         const response = await fetchAdminTicketOrders({
           page: page ?? meta.page,
@@ -56,6 +62,7 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
       } catch (error) {
         console.error(error);
         toast({ title: 'Failed to load ticket orders', variant: 'destructive' });
+        setError(error instanceof Error ? error.message : 'unknown_error');
       } finally {
         setIsLoading(false);
       }
@@ -90,29 +97,6 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
       });
     },
     [loadOrders],
-  );
-
-  const handleRefund = useCallback(
-    (orderId: string) => {
-      startTransition(async () => {
-        try {
-          await refundTicketOrder(orderId);
-          toast({
-            title: 'Order marked for refund',
-            description: 'Payment flagged for manual reconciliation.',
-          });
-          await loadOrders({});
-        } catch (error) {
-          console.error(error);
-          toast({
-            title: 'Refund failed',
-            description: error instanceof Error ? error.message : undefined,
-            variant: 'destructive',
-          });
-        }
-      });
-    },
-    [loadOrders, toast],
   );
 
   const handleAttachOpen = useCallback((order: AdminTicketOrder) => {
@@ -207,8 +191,8 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
             <Button
               variant="outline"
               size="sm"
-              disabled={row.original.status !== 'paid' || isPending}
-              onClick={() => handleRefund(row.original.id)}
+              disabled={row.original.status !== 'paid' || isPending || isRefunding}
+              onClick={() => setConfirmRefund(row.original)}
             >
               Refund
             </Button>
@@ -216,34 +200,46 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
         ),
       },
     ],
-    [handleAttachOpen, handleRefund, isPending],
+    [handleAttachOpen, isPending, isRefunding],
   );
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="text-xs uppercase tracking-wide text-slate-400">Status</span>
-        <div className="flex flex-wrap gap-2">
-          {statusFilters.map((option) => (
-            <Button
-              key={option}
-              variant={status === option ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => handleStatusChange(option)}
-            >
-              {statusLabels[option]}
-            </Button>
-          ))}
-        </div>
-      </div>
       <DataTable
         columns={columns}
         data={data}
         meta={meta}
         isLoading={isLoading || isPending}
+        isError={Boolean(error)}
+        errorState={
+          <div className="space-y-1 text-sm">
+            <p className="font-semibold text-destructive">Failed to load orders.</p>
+            {error ? <p className="text-xs text-muted-foreground">{error}</p> : null}
+          </div>
+        }
         onPageChange={handlePageChange}
         onSearchChange={handleSearchChange}
+        searchValue={searchTerm}
         searchPlaceholder="Search order ID or email"
+        filterFacets={[
+          {
+            id: 'status',
+            label: 'Status',
+            value: status,
+            options: statusFilters.map((option) => ({
+              value: option,
+              label: statusLabels[option],
+              disabled: isLoading || isPending,
+            })),
+            onChange: handleStatusChange,
+          },
+        ]}
+        emptyState={
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>No ticket orders found for the current filters.</p>
+            <p className="text-xs">Adjust the search or status facet to broaden the results.</p>
+          </div>
+        }
       />
       {attachTarget ? (
         <AttachSmsModal
@@ -255,6 +251,53 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
           onAttached={handleAttached}
         />
       ) : null}
+      <CrudConfirmDialog
+        intent="danger"
+        title="Refund ticket order"
+        description="Marking an order for refund notifies finance to reconcile the payment manually."
+        confirmLabel="Mark for refund"
+        open={Boolean(confirmRefund)}
+        loading={isRefunding}
+        onOpenChange={(open) => {
+          if (!open) {
+            setConfirmRefund(null);
+          }
+        }}
+        onConfirm={async () => {
+          if (!confirmRefund) return;
+          try {
+            setIsRefunding(true);
+            await refundTicketOrder(confirmRefund.id);
+            showUndoToast({
+              title: 'Order marked for refund',
+              description: 'Payment flagged for manual reconciliation.',
+              onUndo: () => loadOrders({}),
+            });
+            await loadOrders({});
+          } catch (error) {
+            console.error(error);
+            toast({
+              title: 'Refund failed',
+              description: error instanceof Error ? error.message : undefined,
+              variant: 'destructive',
+            });
+          } finally {
+            setIsRefunding(false);
+            setConfirmRefund(null);
+          }
+        }}
+      >
+        {confirmRefund ? (
+          <div className="space-y-1 text-xs text-slate-200">
+            <p>
+              <span className="font-semibold text-slate-100">Order:</span> {confirmRefund.id.slice(0, 8)}…
+            </p>
+            <p>
+              <span className="font-semibold text-slate-100">Total:</span> {confirmRefund.total.toLocaleString()} RWF
+            </p>
+          </div>
+        ) : null}
+      </CrudConfirmDialog>
     </div>
   );
 };
