@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
+import { useAdminLocale } from '@/providers/admin-locale-provider';
 import type { PaginatedResponse, AdminShopOrder } from '@/lib/api/admin/shop';
 import {
   fetchAdminShopOrders,
@@ -18,20 +19,13 @@ import {
 } from '@/lib/api/admin/shop';
 
 const statusFilters = ['all', 'pending', 'ready', 'fulfilled', 'cancelled'] as const;
-const statusLabels: Record<string, string> = {
-  all: 'All',
-  pending: 'Pending',
-  ready: 'Ready',
-  fulfilled: 'Fulfilled',
-  cancelled: 'Cancelled',
-};
-
 export type ShopOrdersManageTableProps = {
   initial: PaginatedResponse<AdminShopOrder>;
 };
 
 export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) => {
   const { toast } = useToast();
+  const { t } = useAdminLocale();
   const [data, setData] = useState(initial.data);
   const [meta, setMeta] = useState(initial.meta);
   const [status, setStatus] = useState<string>('all');
@@ -55,12 +49,12 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
         setMeta(response.meta);
       } catch (error) {
         console.error(error);
-        toast({ title: 'Failed to load shop orders', variant: 'destructive' });
+        toast({ title: t('admin.toast.shop.orders.loadFailed', 'Failed to load shop orders'), variant: 'destructive' });
       } finally {
         setIsLoading(false);
       }
     },
-    [meta.page, meta.pageSize, searchTerm, status, toast],
+    [meta.page, meta.pageSize, searchTerm, status, t, toast],
   );
 
   const handleSearchChange = useCallback(
@@ -107,13 +101,17 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
             o.id === orderId ? { ...o, status: updated.status, fulfillmentNotes: updated.fulfillmentNotes } : o,
           ),
         );
-        toast({ title: 'Order updated' });
+        toast({ title: t('admin.toast.shop.orders.updated', 'Order updated') });
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Update failed';
-        toast({ title: 'Failed to update order', description: msg, variant: 'destructive' });
+        toast({
+          title: t('admin.toast.shop.orders.updateFailed', 'Failed to update order'),
+          description: msg,
+          variant: 'destructive',
+        });
       }
     },
-    [noteDrafts, toast],
+    [noteDrafts, t, toast],
   );
 
   const saveNote = useCallback(
@@ -124,13 +122,17 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
         const updated = await addAdminShopFulfillmentNote(orderId, note);
         setData((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
         setNoteDrafts((m) => ({ ...m, [orderId]: '' }));
-        toast({ title: 'Note added' });
+        toast({ title: t('admin.toast.shop.orders.noteAdded', 'Note added') });
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Failed to add note';
-        toast({ title: 'Failed to add note', description: msg, variant: 'destructive' });
+        toast({
+          title: t('admin.toast.shop.orders.noteFailed', 'Failed to add note'),
+          description: msg,
+          variant: 'destructive',
+        });
       }
     },
-    [noteDrafts, toast],
+    [noteDrafts, t, toast],
   );
 
   const saveTracking = useCallback(
@@ -138,24 +140,28 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
       try {
         const updated = await updateAdminShopTracking(orderId, trackingDrafts[orderId] ?? undefined);
         setData((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
-        toast({ title: 'Tracking updated' });
+        toast({ title: t('admin.toast.shop.orders.trackingUpdated', 'Tracking updated') });
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Failed to update tracking';
-        toast({ title: 'Failed to update tracking', description: msg, variant: 'destructive' });
+        toast({
+          title: t('admin.toast.shop.orders.trackingFailed', 'Failed to update tracking'),
+          description: msg,
+          variant: 'destructive',
+        });
       }
     },
-    [trackingDrafts, toast],
+    [t, toast, trackingDrafts],
   );
 
   const columns = useMemo<ColumnDef<AdminShopOrder, unknown>[]>(
     () => [
       {
-        header: 'Order',
+        header: t('admin.shop.orders.table.order', 'Order'),
         accessorKey: 'id',
         cell: ({ row }) => <span className="font-mono text-xs text-primary/80">{row.original.id.slice(0, 8)}…</span>,
       },
       {
-        header: 'When',
+        header: t('admin.shop.orders.table.when', 'When'),
         accessorKey: 'createdAt',
         cell: ({ row }) => (
           <span className="text-xs text-slate-400">
@@ -164,11 +170,11 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
         ),
       },
       {
-        header: 'Customer',
+        header: t('admin.shop.orders.table.customer', 'Customer'),
         cell: ({ row }) => <span className="text-slate-300">{row.original.user?.email ?? row.original.user?.phoneMask ?? 'Guest'}</span>,
       },
       {
-        header: 'Items',
+        header: t('admin.shop.orders.table.items', 'Items'),
         cell: ({ row }) => (
           <div className="text-xs text-slate-300">
             {row.original.items.map((item) => (
@@ -180,12 +186,12 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
         ),
       },
       {
-        header: 'Total',
+        header: t('admin.shop.orders.table.total', 'Total'),
         accessorKey: 'total',
         cell: ({ row }) => <span className="font-semibold text-slate-100">{row.original.total.toLocaleString()} RWF</span>,
       },
       {
-        header: 'Status',
+        header: t('admin.shop.orders.table.status', 'Status'),
         accessorKey: 'status',
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
@@ -196,55 +202,57 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
               <SelectContent>
                 {(['pending', 'ready', 'fulfilled', 'cancelled'] as const).map((s) => (
                   <SelectItem key={s} value={s} className="capitalize">
-                    {statusLabels[s] ?? s}
+                    {t(`admin.shop.orders.status.${s}`, statusLabelFallback(s))}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Input
-              placeholder="Note"
+              placeholder={t('admin.form.shop.orders.note.placeholder', 'Note')}
               value={noteDrafts[row.original.id] ?? ''}
               onChange={(e) => setNoteDrafts((m) => ({ ...m, [row.original.id]: e.target.value }))}
               className="h-8 w-40 bg-white/5"
             />
             <Button size="sm" variant="outline" onClick={() => void saveNote(row.original.id)}>
-              Add Note
+              {t('admin.shop.orders.actions.addNote', 'Add Note')}
             </Button>
           </div>
         ),
       },
       {
-        header: 'Tracking',
+        header: t('admin.shop.orders.table.tracking', 'Tracking'),
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
             <Input
-              placeholder="Tracking #"
+              placeholder={t('admin.form.shop.orders.tracking.placeholder', 'Tracking #')}
               value={trackingDrafts[row.original.id] ?? row.original.trackingNumber ?? ''}
               onChange={(e) => setTrackingDrafts((m) => ({ ...m, [row.original.id]: e.target.value }))}
               className="h-8 w-40 bg-white/5"
             />
             <Button size="sm" variant="outline" onClick={() => void saveTracking(row.original.id)}>
-              Save
+              {t('admin.shop.orders.actions.saveTracking', 'Save')}
             </Button>
           </div>
         ),
       },
     ],
-    [noteDrafts, trackingDrafts, applyStatus, saveNote, saveTracking],
+    [applyStatus, noteDrafts, saveNote, saveTracking, t, trackingDrafts],
   );
 
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
-        <span className="text-xs uppercase tracking-wide text-slate-400">Status</span>
+        <span className="text-xs uppercase tracking-wide text-slate-400">
+          {t('admin.shop.orders.filters.status.label', 'Status')}
+        </span>
         <Select value={status} onValueChange={handleStatusFilter}>
           <SelectTrigger className="h-8 w-48 bg-white/5 text-slate-100">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder={t('admin.shop.orders.filters.status.placeholder', 'Status')} />
           </SelectTrigger>
           <SelectContent>
             {statusFilters.map((s) => (
               <SelectItem key={s} value={s} className="capitalize">
-                {statusLabels[s]}
+                {t(`admin.shop.orders.status.${s}`, statusLabelFallback(s))}
               </SelectItem>
             ))}
           </SelectContent>
@@ -257,8 +265,25 @@ export const ShopOrdersManageTable = ({ initial }: ShopOrdersManageTableProps) =
         isLoading={isLoading || isPending}
         onPageChange={handlePageChange}
         onSearchChange={handleSearchChange}
-        searchPlaceholder="Search order id/email"
+        searchPlaceholder={t('admin.shop.orders.search.placeholder', 'Search order id/email')}
       />
     </div>
   );
+};
+
+const statusLabelFallback = (status: string) => {
+  switch (status) {
+    case 'all':
+      return 'All';
+    case 'pending':
+      return 'Pending';
+    case 'ready':
+      return 'Ready';
+    case 'fulfilled':
+      return 'Fulfilled';
+    case 'cancelled':
+      return 'Cancelled';
+    default:
+      return status;
+  }
 };

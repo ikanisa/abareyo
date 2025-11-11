@@ -6,6 +6,7 @@ import { AdminInlineMessage, AdminList } from '@/components/admin/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import { useAdminLocale } from '@/providers/admin-locale-provider';
 import { adminFetch } from '@/lib/admin/csrf';
 
 export type AdminRewardsDashboardProps = {
@@ -26,6 +27,7 @@ export const AdminRewardsDashboard = ({ initialEvents }: AdminRewardsDashboardPr
   const [matchId, setMatchId] = useState('');
   const [reason, setReason] = useState('');
   const { toast } = useToast();
+  const { t } = useAdminLocale();
 
   const refresh = async () => {
     const data = await adminFetch('/admin/api/rewards/events').then((res) => res.json());
@@ -46,14 +48,21 @@ export const AdminRewardsDashboard = ({ initialEvents }: AdminRewardsDashboardPr
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body?.error?.message ?? 'reward_issue_failed');
-      toast({ title: 'Reward queued', description: 'Retro reward issued successfully.' });
+      toast({
+        title: t('admin.toast.rewards.queued', 'Reward queued'),
+        description: t('admin.toast.rewards.issued', 'Retro reward issued successfully.'),
+      });
       await refresh();
       setUserId('');
       setPoints('');
       setMatchId('');
       setReason('');
     } catch (error) {
-      toast({ title: 'Failed to issue reward', description: (error as Error).message, variant: 'destructive' });
+      toast({
+        title: t('admin.toast.rewards.failed', 'Failed to issue reward'),
+        description: (error as Error).message,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -61,42 +70,47 @@ export const AdminRewardsDashboard = ({ initialEvents }: AdminRewardsDashboardPr
     <div className="space-y-6">
       <AdminInlineMessage
         tone="info"
-        title="Retro issue rewards"
-        description="Grant loyalty points or ticket perks when reconciling transactions or handling support cases."
+        title={t('admin.rewards.inline.title', 'Retro issue rewards')}
+        description={t(
+          'admin.rewards.inline.description',
+          'Grant loyalty points or ticket perks when reconciling transactions or handling support cases.',
+        )}
       />
       <div className="grid gap-3 rounded-xl border border-white/10 bg-slate-950/60 p-4 md:grid-cols-2">
         <Input
           value={userId}
           onChange={(event) => setUserId(event.target.value)}
-          placeholder="User id"
+          placeholder={t('admin.form.rewards.userId.placeholder', 'User id')}
           className="bg-slate-900/80"
         />
         <Input
           value={points}
           onChange={(event) => setPoints(event.target.value)}
-          placeholder="Points (optional)"
+          placeholder={t('admin.form.rewards.points.placeholder', 'Points (optional)')}
           type="number"
           className="bg-slate-900/80"
         />
         <Input
           value={matchId}
           onChange={(event) => setMatchId(event.target.value)}
-          placeholder="Match id for ticket perk"
+          placeholder={t('admin.form.rewards.matchId.placeholder', 'Match id for ticket perk')}
           className="bg-slate-900/80"
         />
         <Input
           value={reason}
           onChange={(event) => setReason(event.target.value)}
-          placeholder="Reason or note"
+          placeholder={t('admin.form.rewards.reason.placeholder', 'Reason or note')}
           className="bg-slate-900/80"
         />
         <div className="md:col-span-2 flex justify-end">
-          <Button onClick={submit} disabled={!userId}>Issue reward</Button>
+          <Button onClick={submit} disabled={!userId}>
+            {t('admin.rewards.actions.issue', 'Issue reward')}
+          </Button>
         </div>
       </div>
       <AdminList
-        title="Recent events"
-        description="Latest loyalty events recorded in Supabase."
+        title={t('admin.rewards.list.title', 'Recent events')}
+        description={t('admin.rewards.list.description', 'Latest loyalty events recorded in Supabase.')}
         items={events}
         renderItem={(item) => (
           <div className="rounded-xl border border-white/5 bg-slate-950/40 p-4 text-sm text-slate-200">

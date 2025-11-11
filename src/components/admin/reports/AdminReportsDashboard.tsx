@@ -6,6 +6,7 @@ import { AdminInlineMessage, AdminList } from '@/components/admin/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import { useAdminLocale } from '@/providers/admin-locale-provider';
 import { adminFetch } from '@/lib/admin/csrf';
 
 type ReportSchedule = {
@@ -34,6 +35,7 @@ export const AdminReportsDashboard = ({ initialSchedules }: AdminReportsDashboar
   const [destination, setDestination] = useState('ops@gikundiro.com');
   const [payload, setPayload] = useState('');
   const { toast } = useToast();
+  const { t } = useAdminLocale();
 
   const refresh = async () => {
     const data = await adminFetch('/admin/api/reports/schedules').then((res) => res.json());
@@ -58,12 +60,19 @@ export const AdminReportsDashboard = ({ initialSchedules }: AdminReportsDashboar
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result?.error?.message ?? 'report_schedule_failed');
-      toast({ title: 'Schedule created', description: 'Report schedule saved successfully.' });
+      toast({
+        title: t('admin.toast.reports.scheduleCreated', 'Schedule created'),
+        description: t('admin.toast.reports.scheduleSaved', 'Report schedule saved successfully.'),
+      });
       await refresh();
       setName('');
       setPayload('');
     } catch (error) {
-      toast({ title: 'Failed to create schedule', description: (error as Error).message, variant: 'destructive' });
+      toast({
+        title: t('admin.toast.reports.scheduleFailed', 'Failed to create schedule'),
+        description: (error as Error).message,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -71,26 +80,49 @@ export const AdminReportsDashboard = ({ initialSchedules }: AdminReportsDashboar
     <div className="space-y-6">
       <AdminInlineMessage
         tone="info"
-        title="Report automation"
-        description="Generate CSV exports and deliver them to an email or webhook destination on a schedule."
+        title={t('admin.reports.inline.title', 'Report automation')}
+        description={t(
+          'admin.reports.inline.description',
+          'Generate CSV exports and deliver them to an email or webhook destination on a schedule.',
+        )}
       />
       <div className="grid gap-3 rounded-xl border border-white/10 bg-slate-950/60 p-4 md:grid-cols-2">
-        <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Report name" className="bg-slate-900/70" />
-        <Input value={cron} onChange={(event) => setCron(event.target.value)} placeholder="Cron expression" className="bg-slate-900/70" />
-        <Input value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="Destination" className="bg-slate-900/70" />
+        <Input
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          placeholder={t('admin.form.reports.schedule.name.placeholder', 'Report name')}
+          className="bg-slate-900/70"
+        />
+        <Input
+          value={cron}
+          onChange={(event) => setCron(event.target.value)}
+          placeholder={t('admin.form.reports.schedule.cron.placeholder', 'Cron expression')}
+          className="bg-slate-900/70"
+        />
+        <Input
+          value={destination}
+          onChange={(event) => setDestination(event.target.value)}
+          placeholder={t('admin.form.reports.schedule.destination.placeholder', 'Destination')}
+          className="bg-slate-900/70"
+        />
         <Input
           value={payload}
           onChange={(event) => setPayload(event.target.value)}
-          placeholder='Payload JSON (e.g. {"range":"last7"})'
+          placeholder={t(
+            'admin.form.reports.schedule.payload.placeholder',
+            'Payload JSON (e.g. {"range":"last7"})',
+          )}
           className="bg-slate-900/70"
         />
         <div className="md:col-span-2 flex justify-end">
-          <Button onClick={submit} disabled={!name || !cron || !destination}>Save schedule</Button>
+          <Button onClick={submit} disabled={!name || !cron || !destination}>
+            {t('admin.reports.schedule.saveButton', 'Save schedule')}
+          </Button>
         </div>
       </div>
       <AdminList
-        title="Active schedules"
-        description="Configured report deliveries."
+        title={t('admin.reports.list.title', 'Active schedules')}
+        description={t('admin.reports.list.description', 'Configured report deliveries.')}
         items={schedules}
         renderItem={(item) => {
           const metadata = (item.delivery_metadata ?? {}) as Record<string, unknown>;
