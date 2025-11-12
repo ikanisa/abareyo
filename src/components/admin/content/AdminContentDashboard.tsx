@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
+import { useAdminLocale } from '@/providers/admin-locale-provider';
 import { adminFetch } from '@/lib/admin/csrf';
 
 export type AdminContentDashboardProps = {
@@ -26,6 +27,7 @@ export const AdminContentDashboard = ({ initialItems }: AdminContentDashboardPro
   const [slug, setSlug] = useState('');
   const [body, setBody] = useState('');
   const { toast } = useToast();
+  const { t } = useAdminLocale();
 
   const refresh = async () => {
     const data = await adminFetch('/admin/api/content/library').then((res) => res.json());
@@ -41,13 +43,20 @@ export const AdminContentDashboard = ({ initialItems }: AdminContentDashboardPro
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error?.message ?? 'content_save_failed');
-      toast({ title: 'Content saved', description: 'Draft created successfully.' });
+      toast({
+        title: t('admin.toast.content.saved', 'Content saved'),
+        description: t('admin.toast.content.draftCreated', 'Draft created successfully.'),
+      });
       setTitle('');
       setSlug('');
       setBody('');
       await refresh();
     } catch (error) {
-      toast({ title: 'Failed to save content', description: (error as Error).message, variant: 'destructive' });
+      toast({
+        title: t('admin.toast.content.saveFailed', 'Failed to save content'),
+        description: (error as Error).message,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -55,26 +64,41 @@ export const AdminContentDashboard = ({ initialItems }: AdminContentDashboardPro
     <div className="space-y-6">
       <AdminInlineMessage
         tone="info"
-        title="Content library"
-        description="Manage articles and media scheduled for the fan-facing experience."
+        title={t('admin.content.inline.title', 'Content library')}
+        description={t(
+          'admin.content.inline.description',
+          'Manage articles and media scheduled for the fan-facing experience.',
+        )}
       />
       <div className="space-y-3 rounded-xl border border-white/10 bg-slate-950/60 p-4">
-        <p className="text-sm font-semibold text-slate-100">Create draft</p>
-        <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Title" className="bg-slate-900/70" />
-        <Input value={slug} onChange={(event) => setSlug(event.target.value)} placeholder="Slug (optional)" className="bg-slate-900/70" />
+        <p className="text-sm font-semibold text-slate-100">{t('admin.content.create.heading', 'Create draft')}</p>
+        <Input
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+          placeholder={t('admin.form.content.title.placeholder', 'Title')}
+          className="bg-slate-900/70"
+        />
+        <Input
+          value={slug}
+          onChange={(event) => setSlug(event.target.value)}
+          placeholder={t('admin.form.content.slug.placeholder', 'Slug (optional)')}
+          className="bg-slate-900/70"
+        />
         <Textarea
           value={body}
           onChange={(event) => setBody(event.target.value)}
-          placeholder="Body markdown"
+          placeholder={t('admin.form.content.body.placeholder', 'Body markdown')}
           className="min-h-[120px] bg-slate-900/70"
         />
         <div className="flex justify-end">
-          <Button onClick={save} disabled={!title}>Save draft</Button>
+          <Button onClick={save} disabled={!title}>
+            {t('admin.content.create.saveButton', 'Save draft')}
+          </Button>
         </div>
       </div>
       <AdminList
-        title="Recent drafts"
-        description="Draft and published content sorted by last update."
+        title={t('admin.content.list.title', 'Recent drafts')}
+        description={t('admin.content.list.description', 'Draft and published content sorted by last update.')}
         items={items}
         renderItem={(item) => (
           <div className="rounded-xl border border-white/5 bg-slate-950/40 p-4 text-sm text-slate-200">
