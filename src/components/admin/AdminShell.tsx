@@ -776,6 +776,33 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
     return match?.href ?? '/admin';
   }, [pathname]);
 
+  const deniedMessages = useMemo(
+    () => ({
+      orders: t(
+        'admin.shell.denied.orders',
+        'Order management requires elevated access. Ask an administrator to enable it.',
+      ),
+      'match-ops': t(
+        'admin.shell.denied.matchOps',
+        'Match operations require the match:update permission. Request the role before retrying.',
+      ),
+      translations: t(
+        'admin.shell.denied.translations',
+        'The translations console requires translation:view access. Contact localization support.',
+      ),
+      membership: t(
+        'admin.shell.denied.membership',
+        'Membership insights require membership:member:view access. Request approval from an admin.',
+      ),
+      fundraising: t(
+        'admin.shell.denied.fundraising',
+        'Fundraising data is limited to fundraising:donation:view. Ask finance ops for access.',
+      ),
+      reports: t('admin.shell.denied.reports', 'Reports require reports:view permission. Request the analytics role.'),
+    }),
+    [t],
+  );
+
   const navMatch = useMemo(() => navIndex.get(activeHref) ?? null, [activeHref, navIndex]);
 
   const breadcrumbs = useMemo(() => {
@@ -916,6 +943,11 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
       return;
     }
 
+    toast({
+      title: t('admin.shell.denied.title', 'Access denied'),
+      description:
+        deniedMessages[denied] ??
+        t('admin.shell.denied.fallback', 'You do not have permission to open that section.'),
     const deniedMessages: Record<string, { key: string; fallback: string }> = {
       orders: {
         key: 'admin.toast.denied.orders',
@@ -957,6 +989,7 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
     const next = params.toString();
     const current = pathname || '/admin';
     router.replace(next ? `${current}?${next}` : current);
+  }, [deniedMessages, pathname, router, searchParams, t, toast]);
   }, [pathname, router, searchParams, t, toast]);
 
   useEffect(() => {
@@ -1047,7 +1080,7 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
       <aside className="relative hidden h-full flex-col border-r border-white/10 bg-slate-950/70 px-shell-gutter py-shell-stack backdrop-blur-xl md:flex">
         <div className="flex items-center justify-between">
           <Link href="/admin" className="text-lg font-bold tracking-tight text-primary">
-            Rayon Admin
+            {t('admin.shell.brand', 'Rayon Admin')}
           </Link>
           {environment ? (
             <Badge variant="outline" className="bg-white/5 text-xs uppercase tracking-wide">
@@ -1067,6 +1100,7 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
           <div className="text-body font-semibold text-slate-100">Signed in</div>
         <NavItems states={navStates} activeItem={activeItem} />
         <div className="mt-6 rounded-xl border border-white/5 bg-white/5 p-3 text-xs text-slate-300">
+          <div className="font-semibold text-slate-100">{t('admin.shell.account.signedIn', 'Signed in')}</div>
         <div className="mt-shell-stack rounded-xl border border-white/5 bg-white/5 p-3 text-xs text-slate-300">
           <div className="font-semibold text-slate-100">Signed in</div>
           <div>{user.displayName}</div>
@@ -1190,6 +1224,10 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
                   size="sm"
                   ref={menuTriggerRef}
                   className="inline-flex items-center gap-2 text-slate-300 hover:text-white md:hidden"
+                  aria-label={t('admin.shell.nav.toggleLabel', 'Toggle navigation')}
+                >
+                  <Menu className="h-4 w-4" />
+                  {t('admin.shell.nav.menuButton', 'Menu')}
                   aria-label={t('admin.shell.menu.aria', 'Toggle navigation')}
                 >
                   <Menu className="h-4 w-4" />
@@ -1218,6 +1256,7 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
               >
                 <SheetHeader className="text-left">
                   <SheetTitle className="text-lg font-semibold text-white">
+                    {t('admin.shell.nav.sheetTitle', 'Navigation')}
                     {t('admin.shell.menu.sheetTitle', 'Navigation')}
                   </SheetTitle>
                 </SheetHeader>
@@ -1266,6 +1305,7 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
             </Sheet>
             <input
               type="search"
+              placeholder={t('admin.shell.search.placeholder', 'Search operations…')}
               placeholder={t('admin.shell.search.placeholder', 'Search ops…')}
               placeholder="Search ops…"
               className="hidden w-[clamp(16rem,22vw,20rem)] min-w-0 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-primary/60 focus:ring-0 md:block"
@@ -1351,6 +1391,9 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
           />
           <div className="hidden items-center gap-3 lg:hidden">
             <div className="hidden items-center gap-1 text-xs text-slate-400 md:flex">
+              <span className="uppercase tracking-wide">
+                {t('admin.shell.language.label', 'Language')}
+              </span>
               <span className="uppercase tracking-wide">{t('admin.shell.language.toggleLabel', 'Lang')}</span>
               <div className="flex overflow-hidden rounded-full border border-white/10">
                 {(['en', 'rw'] as const).map((code) => {
@@ -1450,6 +1493,7 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
               aria-live="polite"
               aria-label={isLoggingOut ? 'Signing out of admin' : 'Sign out of admin'}
             >
+              {t('admin.shell.account.signOut', 'Sign out')}
               {t('admin.shell.signOut', 'Sign out')}
               {isLoggingOut ? 'Signing out…' : 'Sign out'}
               className="inline-flex items-center gap-[var(--space-2)] text-slate-300 hover:text-white lg:hidden"
