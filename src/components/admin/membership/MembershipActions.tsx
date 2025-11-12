@@ -3,6 +3,10 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { ChevronDown, ChevronUp } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
@@ -10,6 +14,7 @@ import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminInput } from '@/components/admin/ui/AdminInput';
 import { AdminCard } from '@/components/admin/ui/AdminCard';
 import { upsertAdminMembershipPlan, updateAdminMembershipStatus } from '@/lib/api/admin/membership';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export const MembershipActions = () => {
   const router = useRouter();
@@ -28,6 +33,9 @@ export const MembershipActions = () => {
   const [membershipId, setMembershipId] = useState('');
   const [memberStatus, setMemberStatus] = useState('pending');
   const [autoRenew, setAutoRenew] = useState(false);
+
+  const [planOpen, setPlanOpen] = useState(true);
+  const [memberOpen, setMemberOpen] = useState(false);
 
   const handleSavePlan = async () => {
     startTransition(async () => {
@@ -67,6 +75,46 @@ export const MembershipActions = () => {
   };
 
   return (
+    <div className="grid gap-4 lg:[grid-template-columns:minmax(0,1fr)_minmax(0,1fr)]">
+      <Collapsible
+        open={planOpen}
+        onOpenChange={setPlanOpen}
+        className="rounded-xl border border-white/10 bg-white/5"
+      >
+        <div className="flex items-center justify-between gap-2 px-4 py-3">
+          <div className="text-sm font-semibold text-slate-100">Create/Update Plan</div>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="icon" className="text-slate-300 hover:text-white">
+              {planOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
+          </CollapsibleTrigger>
+        </div>
+        <CollapsibleContent className="space-y-3 border-t border-white/10 px-4 py-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="col-span-2">
+              <Label htmlFor="plan-id">Existing Plan ID (optional)</Label>
+              <Input id="plan-id" value={planId} onChange={(e) => setPlanId(e.target.value)} placeholder="Leave blank to create" />
+            </div>
+            <div>
+              <Label htmlFor="plan-name">Name</Label>
+              <Input id="plan-name" value={planName} onChange={(e) => setPlanName(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="plan-slug">Slug</Label>
+              <Input id="plan-slug" value={planSlug} onChange={(e) => setPlanSlug(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="plan-price">Price (RWF)</Label>
+              <Input id="plan-price" type="number" value={planPrice} onChange={(e) => setPlanPrice(parseInt(e.target.value || '0', 10))} />
+            </div>
+            <div className="col-span-2">
+              <Label htmlFor="plan-perks">Perks (comma-separated)</Label>
+              <Input id="plan-perks" value={planPerks} onChange={(e) => setPlanPerks(e.target.value)} placeholder="e.g., Priority gate, Merch discount" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch id="plan-active" checked={planActive} onCheckedChange={setPlanActive} />
+              <Label htmlFor="plan-active">Active</Label>
+            </div>
     <div className="grid gap-4 md:grid-cols-2">
       <AdminCard className="space-y-3" tone="muted" padding="md" elevated>
         <div className="text-sm font-semibold text-slate-100">Create/Update Plan</div>
@@ -136,7 +184,45 @@ export const MembershipActions = () => {
             <Switch id="auto-renew" checked={autoRenew} onCheckedChange={setAutoRenew} />
             <Label htmlFor="auto-renew">Auto‑renew</Label>
           </div>
+          <Button onClick={handleSavePlan} disabled={isPending} className="w-full sm:w-auto">
+            Save Plan
+          </Button>
+        </CollapsibleContent>
+      </Collapsible>
+
+      <Collapsible
+        open={memberOpen}
+        onOpenChange={setMemberOpen}
+        className="rounded-xl border border-white/10 bg-white/5"
+      >
+        <div className="flex items-center justify-between gap-2 px-4 py-3">
+          <div className="text-sm font-semibold text-slate-100">Update Member Status</div>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="icon" className="text-slate-300 hover:text-white">
+              {memberOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
+          </CollapsibleTrigger>
         </div>
+        <CollapsibleContent className="space-y-3 border-t border-white/10 px-4 py-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="col-span-2">
+              <Label htmlFor="membership-id">Membership ID</Label>
+              <Input id="membership-id" value={membershipId} onChange={(e) => setMembershipId(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="member-status">Status</Label>
+              <Input id="member-status" value={memberStatus} onChange={(e) => setMemberStatus(e.target.value)} placeholder="pending | active | cancelled | expired" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch id="auto-renew" checked={autoRenew} onCheckedChange={setAutoRenew} />
+              <Label htmlFor="auto-renew">Auto‑renew</Label>
+            </div>
+          </div>
+          <Button onClick={handleUpdateMember} disabled={isPending} className="w-full sm:w-auto">
+            Update Member
+          </Button>
+        </CollapsibleContent>
+      </Collapsible>
         <AdminButton onClick={handleUpdateMember} isLoading={isPending} disabled={isPending}>
           Update Member
         </AdminButton>

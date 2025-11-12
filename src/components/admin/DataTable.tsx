@@ -286,7 +286,7 @@ export function DataTable<TData>({
             }
           }}
           placeholder={searchPlaceholder}
-          className="max-w-sm bg-white/5"
+          className="w-full max-w-md bg-white/5"
         />
         <div className="flex flex-col gap-1">
           <Label htmlFor={searchInputId} className="sr-only">
@@ -383,6 +383,8 @@ export function DataTable<TData>({
           </div>
         </div>
       ) : null}
+      <div className="overflow-x-auto rounded-xl border border-white/10 bg-slate-950/40">
+        <Table className="min-w-[720px]">
       <p className="sr-only" aria-live="polite">
         {statusMessage}
       </p>
@@ -422,7 +424,7 @@ export function DataTable<TData>({
                   tabIndex={0}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="text-sm text-slate-100">
+                    <TableCell key={cell.id} className="break-words text-sm text-slate-100">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -439,12 +441,14 @@ export function DataTable<TData>({
         </Table>
       </div>
       {meta && (
+        <div className="flex flex-col gap-3 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-center sm:text-left">
         <div className="flex items-center justify-between text-xs text-slate-400">
           <div role="status" aria-live="polite">
             Page {meta.page} · {rowCount} of {meta.total} rows
           </div>
           {onPageChange && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
