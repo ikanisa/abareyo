@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useAdminLocale } from '@/providers/admin-locale-provider';
 import { adminFetch } from '@/lib/admin/csrf';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 type ReportSchedule = {
   id: string;
@@ -34,6 +36,7 @@ export const AdminReportsDashboard = ({ initialSchedules }: AdminReportsDashboar
   const [cron, setCron] = useState('0 6 * * *');
   const [destination, setDestination] = useState('ops@gikundiro.com');
   const [payload, setPayload] = useState('');
+  const [formOpen, setFormOpen] = useState(true);
   const { toast } = useToast();
   const { t } = useAdminLocale();
 
@@ -118,8 +121,51 @@ export const AdminReportsDashboard = ({ initialSchedules }: AdminReportsDashboar
           <Button onClick={submit} disabled={!name || !cron || !destination}>
             {t('admin.reports.schedule.saveButton', 'Save schedule')}
           </Button>
+      <Collapsible
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        className="rounded-xl border border-white/10 bg-slate-950/60"
+      >
+        <div className="flex items-center justify-between gap-3 px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-slate-100">Create schedule</p>
+            <p className="text-xs text-slate-400">Provide destination details and an optional JSON payload.</p>
+          </div>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="icon" className="text-slate-300 hover:text-white">
+              {formOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
+          </CollapsibleTrigger>
         </div>
-      </div>
+        <CollapsibleContent className="space-y-4 border-t border-white/10 px-4 py-4">
+          <div className="grid gap-3 md:[grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+            <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Report name" className="bg-slate-900/70" />
+            <Input value={cron} onChange={(event) => setCron(event.target.value)} placeholder="Cron expression" className="bg-slate-900/70" />
+            <Input value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="Destination" className="bg-slate-900/70" />
+            <Input
+              value={payload}
+              onChange={(event) => setPayload(event.target.value)}
+              placeholder='Payload JSON (e.g. {"range":"last7"})'
+              className="bg-slate-900/70"
+            />
+          </div>
+          <div className="flex flex-col items-stretch justify-end gap-3 sm:flex-row">
+            <Button onClick={submit} disabled={!name || !cron || !destination} className="sm:ml-auto">
+              Save schedule
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setName('');
+                setPayload('');
+              }}
+            >
+              Reset form
+            </Button>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
       <AdminList
         title={t('admin.reports.list.title', 'Active schedules')}
         description={t('admin.reports.list.description', 'Configured report deliveries.')}

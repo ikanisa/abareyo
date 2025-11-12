@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Activity, Trash2 } from "lucide-react";
+import { Activity, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { REALTIME_EVENTS, useRealtime } from "@/providers/realtime-provider";
 
 type EventLogEntry = {
@@ -44,6 +45,7 @@ const AdminRealtimeView = () => {
   const [logs, setLogs] = useState<EventLogEntry[]>([]);
   const [activeEvents, setActiveEvents] = useState<string[]>(() => REALTIME_EVENTS.map((item) => item.event));
   const [connectionState, setConnectionState] = useState<'connected' | 'disconnected'>('disconnected');
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const eventMap = useMemo(() => new Map(REALTIME_EVENTS.map((item) => [item.event, item.label])), []);
 
@@ -86,65 +88,83 @@ const AdminRealtimeView = () => {
   const filteredLogs = logs.filter((log) => activeEvents.includes(log.event));
 
   return (
-    <div className="min-h-screen pb-24 px-4">
-      <div className="pt-8 pb-6 space-y-2">
-        <h1 className="text-3xl font-black gradient-text">Realtime Monitor</h1>
-        <p className="text-muted-foreground">Live feed from the websocket gateway. Use this when operating matchday flows.</p>
-      </div>
+    <div className="min-h-screen pb-24">
+      <div className="mx-auto w-full max-w-[min(90rem,calc(100vw-3rem))] px-4 pb-10 pt-8 sm:px-6 lg:px-10 2xl:max-w-[min(100rem,calc(100vw-6rem))] 2xl:px-12">
+        <div className="space-y-2 pb-6">
+          <h1 className="text-3xl font-black gradient-text">Realtime Monitor</h1>
+          <p className="text-muted-foreground">
+            Live feed from the websocket gateway. Use this when operating matchday flows.
+          </p>
+        </div>
 
-      <GlassCard className="p-5 space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Activity className="w-6 h-6 text-primary" />
-            <div>
-              <p className="font-semibold text-foreground">Connection status</p>
-              <p className="text-xs text-muted-foreground">Namespace `/ws`</p>
+        <GlassCard className="space-y-5 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <Activity className="h-6 w-6 text-primary" />
+              <div>
+                <p className="font-semibold text-foreground">Connection status</p>
+                <p className="text-xs text-muted-foreground">Namespace `/ws`</p>
+              </div>
             </div>
+            <Badge variant={connectionState === 'connected' ? 'success' : 'secondary'}>{connectionState}</Badge>
           </div>
-          <Badge variant={connectionState === 'connected' ? 'success' : 'secondary'}>{connectionState}</Badge>
-        </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {REALTIME_EVENTS.map(({ event, label }) => {
-            const isActive = activeEvents.includes(event);
-            return (
-              <Button
-                key={event}
-                variant={isActive ? 'hero' : 'glass'}
-                size="sm"
-                onClick={() => {
-                  setActiveEvents((prev) =>
-                    prev.includes(event) ? prev.filter((item) => item !== event) : [...prev, event],
+          <Collapsible
+            open={filtersOpen}
+            onOpenChange={setFiltersOpen}
+            className="rounded-xl border border-border/40 bg-muted/10"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+              <div>
+                <p className="text-sm font-medium text-foreground">Event filters</p>
+                <p className="text-xs text-muted-foreground">Toggle individual channels to focus the feed.</p>
+              </div>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                  {filtersOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
+              </CollapsibleTrigger>
+            </div>
+            <CollapsibleContent>
+              <div className="flex flex-wrap items-center gap-2 border-t border-border/40 px-4 py-4">
+                {REALTIME_EVENTS.map(({ event, label }) => {
+                  const isActive = activeEvents.includes(event);
+                  return (
+                    <Button
+                      key={event}
+                      variant={isActive ? 'hero' : 'glass'}
+                      size="sm"
+                      onClick={() => {
+                        setActiveEvents((prev) =>
+                          prev.includes(event) ? prev.filter((item) => item !== event) : [...prev, event],
+                        );
+                      }}
+                    >
+                      {label}
+                    </Button>
                   );
-                }}
-              >
-                {label}
-              </Button>
-            );
-          })}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setActiveEvents(REALTIME_EVENTS.map((item) => item.event))}
-          >
-            Show all
-          </Button>
-          <Button
-            variant="glass"
-            size="sm"
-            onClick={() => setLogs([])}
-          >
-            <Trash2 className="w-4 h-4" />
-            Clear feed
-          </Button>
-        </div>
+                })}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setActiveEvents(REALTIME_EVENTS.map((item) => item.event))}
+                >
+                  Show all
+                </Button>
+                <Button variant="glass" size="sm" onClick={() => setLogs([])}>
+                  <Trash2 className="h-4 w-4" />
+                  Clear feed
+                </Button>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
-        <ScrollArea className="max-h-[28rem] rounded-xl border border-border/40">
-          <div className="divide-y divide-border/40">
-            {filteredLogs.length === 0 ? (
-              <div className="p-6 text-sm text-muted-foreground text-center">No events captured yet.</div>
-            ) : (
-              filteredLogs.map((log) => (
+          <ScrollArea className="max-h-[32rem] rounded-xl border border-border/40">
+            <div className="divide-y divide-border/40">
+              {filteredLogs.length === 0 ? (
+                <div className="p-6 text-sm text-muted-foreground text-center">No events captured yet.</div>
+              ) : (
+                filteredLogs.map((log) => (
                 <div key={log.id} className="p-4 space-y-2">
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span className="font-semibold text-foreground">{eventMap.get(log.event) ?? log.event}</span>
@@ -157,8 +177,9 @@ const AdminRealtimeView = () => {
               ))
             )}
           </div>
-        </ScrollArea>
-      </GlassCard>
+          </ScrollArea>
+        </GlassCard>
+      </div>
     </div>
   );
 };
