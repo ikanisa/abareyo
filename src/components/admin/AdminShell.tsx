@@ -728,6 +728,7 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const menuTriggerRef = useRef<HTMLButtonElement | null>(null);
   const mobileSheetRef = useRef<HTMLDivElement | null>(null);
+  const previousMobileNavOpen = useRef(mobileNavOpen);
   const { locale, setLocale, loading: localeLoading } = useAdminLocale();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { locale, setLocale, loading: localeLoading, t } = useAdminLocale();
@@ -936,12 +937,11 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
         'a[href]:not([aria-disabled="true"]), button:not([disabled]), [tabindex]:not([tabindex="-1"])',
       );
       focusable?.focus();
-      return;
-    }
-
-    if (!mobileNavOpen && menuTriggerRef.current) {
+    } else if (previousMobileNavOpen.current && menuTriggerRef.current) {
       menuTriggerRef.current.focus();
     }
+
+    previousMobileNavOpen.current = mobileNavOpen;
   }, [mobileNavOpen]);
   const handleSkipToContent = useCallback((event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
