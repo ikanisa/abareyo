@@ -135,10 +135,12 @@ export function DataTable<TData>({
   }, [globalFilter, onSearchChange, searchDebounceMs]);
 
   React.useEffect(() => {
-    if (typeof searchValue === 'string' && searchValue !== globalFilter) {
-      setGlobalFilter(searchValue);
+    if (typeof searchValue !== 'string') {
+      return;
     }
-  }, [globalFilter, searchValue]);
+
+    setGlobalFilter((current) => (current === searchValue ? current : searchValue));
+  }, [searchValue]);
     if (!onSearchChange || isSearchControlled) {
       return undefined;
     }
