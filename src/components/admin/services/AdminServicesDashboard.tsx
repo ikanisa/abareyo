@@ -4,6 +4,8 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { AdminConfirmDialog, AdminEditDrawer, AdminInlineMessage, AdminList } from '@/components/admin/ui';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
+import { useAdminLocale } from '@/providers/admin-locale-provider';
 import { adminFetch } from '@/lib/admin/csrf';
 import { useAdminMutation } from '@/lib/admin-ui';
 
@@ -66,6 +68,10 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
   const [insurance, setInsurance] = useState(initialInsurance);
   const [deposits, setDeposits] = useState(initialDeposits);
   const [selectedQuote, setSelectedQuote] = useState<string | null>(null);
+  const [updating, setUpdating] = useState(false);
+  const [confirmDeposit, setConfirmDeposit] = useState<{ id: string; status: 'pending' | 'confirmed' } | null>(null);
+  const { toast } = useToast();
+  const { t } = useAdminLocale();
   const [confirmDeposit, setConfirmDeposit] = useState<{ id: string; status: DepositStatus } | null>(null);
 
   const quote = useMemo(() => insurance.find((item) => item.id === selectedQuote) ?? null, [insurance, selectedQuote]);
@@ -96,6 +102,21 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
         body: JSON.stringify({ quote_id: quoteId }),
       });
       const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error?.message ?? 'policy_issue_failed');
+      toast({
+        title: t('admin.toast.services.policyIssued', 'Policy issued'),
+        description: t('admin.toast.services.policyIssuedDescription', 'The policy has been issued successfully.'),
+      });
+      const refreshed = await adminFetch('/admin/api/services/insurance').then((res) => res.json());
+      setInsurance(refreshed.data?.quotes ?? refreshed.quotes ?? []);
+    } catch (error) {
+      toast({
+        title: t('admin.toast.services.policyFailed', 'Failed to issue policy'),
+        description: (error as Error).message,
+        variant: 'destructive',
+      });
+    }
+  };
       if (!response.ok) {
         throw new Error(payload?.error?.message ?? 'policy_issue_failed');
       }
@@ -137,6 +158,22 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
         body: JSON.stringify({ id: depositId, status }),
       });
       const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error?.message ?? 'deposit_update_failed');
+      const statusTemplate = t('admin.toast.services.depositStatus', 'Status set to {{status}}.');
+      toast({
+        title: t('admin.toast.services.depositUpdated', 'Deposit updated'),
+        description: statusTemplate.replace('{{status}}', status),
+      });
+      const refreshed = await adminFetch('/admin/api/services/sacco').then((res) => res.json());
+      setDeposits(refreshed.data?.deposits ?? refreshed.deposits ?? []);
+    } catch (error) {
+      toast({
+        title: t('admin.toast.services.depositFailed', 'Failed to update deposit'),
+        description: (error as Error).message,
+        variant: 'destructive',
+      });
+    }
+  };
       if (!response.ok) {
         throw new Error(payload?.error?.message ?? 'deposit_update_failed');
       }
@@ -221,15 +258,18 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
       <section className="space-y-4">
         <AdminInlineMessage
           tone="info"
-          title="Insurance"
-          description="Review paid quotes, issue policies, and grant perks where applicable."
+          title={t('admin.services.insurance.inlineTitle', 'Insurance')}
+          description={t(
+            'admin.services.insurance.inlineDescription',
+            'Review paid quotes, issue policies, and grant perks where applicable.',
+          )}
         />
         {policyState.status === 'error' && policyState.error ? (
           <AdminInlineMessage tone="critical" title="Policy issuance failed" description={policyState.error} />
         ) : null}
         <AdminList
-          title="Quotes"
-          description="Quotes awaiting issuance or follow-up."
+          title={t('admin.services.insurance.listTitle', 'Quotes')}
+          description={t('admin.services.insurance.listDescription', 'Quotes awaiting issuance or follow-up.')}
           items={insurance}
           renderItem={(item) => {
             const isIssuing = policyState.status === 'loading' && policyState.activeId === item.id;
@@ -255,6 +295,20 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
                   </Button>
                 </div>
               </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => setSelectedQuote(item.id)}>
+                  {t('admin.services.insurance.actions.edit', 'Edit')}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => issuePolicy(item.id)}
+                  disabled={item.status === 'issued'}
+                >
+                  {t('admin.services.insurance.actions.issue', 'Issue policy')}
+                </Button>
+              </div>
+            </div>
+          )}
             );
           }}
         />
@@ -263,15 +317,18 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
       <section className="space-y-4">
         <AdminInlineMessage
           tone="success"
-          title="SACCO Deposits"
-          description="Confirm SACCO deposits once reconciled via SMS or ledger uploads."
+          title={t('admin.services.deposits.inlineTitle', 'SACCO Deposits')}
+          description={t(
+            'admin.services.deposits.inlineDescription',
+            'Confirm SACCO deposits once reconciled via SMS or ledger uploads.',
+          )}
         />
         {depositState.status === 'error' && depositState.error ? (
           <AdminInlineMessage tone="critical" title="Deposit update failed" description={depositState.error} />
         ) : null}
         <AdminList
-          title="Deposits"
-          description="Recent SACCO deposits awaiting confirmation."
+          title={t('admin.services.deposits.listTitle', 'Deposits')}
+          description={t('admin.services.deposits.listDescription', 'Recent SACCO deposits awaiting confirmation.')}
           items={deposits}
           renderItem={(item) => {
             const isUpdating = depositState.status === 'loading' && depositState.activeId === item.id;
@@ -302,14 +359,36 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
                   </Button>
                 </div>
               </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => updateDeposit(item.id, 'pending')}
+                  disabled={item.status === 'pending'}
+                >
+                  {t('admin.services.deposits.actions.markPending', 'Mark pending')}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => setConfirmDeposit({ id: item.id, status: 'confirmed' })}
+                  disabled={item.status === 'confirmed'}
+                >
+                  {t('admin.services.deposits.actions.markConfirmed', 'Mark confirmed')}
+                </Button>
+              </div>
+            </div>
+          )}
             );
           }}
         />
       </section>
 
       <AdminEditDrawer
-        title="Update quote"
-        description="Adjust quote metadata or ticket perk eligibility."
+        title={t('admin.services.insurance.drawerTitle', 'Update quote')}
+        description={t(
+          'admin.services.insurance.drawerDescription',
+          'Adjust quote metadata or ticket perk eligibility.',
+        )}
         open={Boolean(selectedQuote && quote)}
         onOpenChange={(open) => {
           if (!open) setSelectedQuote(null);
@@ -317,6 +396,29 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
         onSubmit={async () => {
           if (!quote || quoteState.status === 'loading') return;
           try {
+            setUpdating(true);
+            const response = await adminFetch('/admin/api/services/insurance', {
+              method: 'PATCH',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ id: quote.id, status: quote.status, ticket_perk: quote.ticket_perk }),
+            });
+            const payload = await response.json();
+            if (!response.ok) throw new Error(payload?.error?.message ?? 'quote_update_failed');
+            toast({
+              title: t('admin.toast.services.quoteUpdated', 'Quote updated'),
+              description: t('admin.toast.services.quoteSaved', 'Changes applied successfully.'),
+            });
+            const refreshed = await adminFetch('/admin/api/services/insurance').then((res) => res.json());
+            setInsurance(refreshed.data?.quotes ?? refreshed.quotes ?? []);
+            setSelectedQuote(null);
+          } catch (error) {
+            toast({
+              title: t('admin.toast.services.quoteFailed', 'Failed to update quote'),
+              description: (error as Error).message,
+              variant: 'destructive',
+            });
+          } finally {
+            setUpdating(false);
             await executeQuoteUpdate({ id: quote.id, status: quote.status, ticket_perk: quote.ticket_perk });
           } catch {
             // handled by mutation toast
@@ -331,7 +433,7 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
               <AdminInlineMessage tone="critical" title="Update failed" description={quoteState.error} />
             ) : null}
             <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Status
+              {t('admin.services.insurance.fields.status', 'Status')}
               <select
                 className="rounded-lg border border-white/10 bg-slate-900 px-2 py-1 text-sm text-slate-100"
                 value={quote.status}
@@ -347,7 +449,7 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
               </select>
             </label>
             <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Ticket perk
+              {t('admin.services.insurance.fields.ticketPerk', 'Ticket perk')}
               <input
                 type="checkbox"
                 checked={quote.ticket_perk}
@@ -365,6 +467,13 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
       </AdminEditDrawer>
 
       <AdminConfirmDialog
+        title={t('admin.services.deposits.confirmTitle', 'Confirm deposit')}
+        description={t(
+          'admin.services.deposits.confirmDescription',
+          'Are you sure this SACCO deposit is reconciled?',
+        )}
+        confirmLabel={t('admin.services.deposits.confirmAction', 'Confirm deposit')}
+        cancelLabel={t('admin.shared.cancel', 'Cancel')}
         title="Confirm deposit"
         description="Are you sure this SACCO deposit is reconciled?"
         confirmLabel={depositState.status === 'loading' ? 'Confirming…' : 'Confirm deposit'}

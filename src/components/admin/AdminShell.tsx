@@ -286,6 +286,11 @@ const Breadcrumbs = ({ breadcrumbs }: { breadcrumbs: Breadcrumb[] }) => {
                 'border border-dashed border-white/5 bg-slate-950/50',
               )}
             >
+              <span>{label}</span>
+              <Badge variant="outline" className="border-amber-400/30 text-[10px] uppercase tracking-wide text-amber-200">
+                {t('admin.shell.nav.disabled', 'Off')}
+              </Badge>
+            </button>
               <Icon className={cn('h-4 w-4', isCollapsed ? 'h-5 w-5' : 'text-slate-500/80')} aria-hidden />
               {!isCollapsed && (
                 <>
@@ -726,6 +731,7 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
   const { toast } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const { locale, setLocale, loading: localeLoading, t } = useAdminLocale();
   const menuTriggerRef = useRef<HTMLButtonElement | null>(null);
   const mobileSheetRef = useRef<HTMLDivElement | null>(null);
   const { locale, setLocale, loading: localeLoading } = useAdminLocale();
@@ -908,18 +914,39 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
       return;
     }
 
-    const messages: Record<string, string> = {
-      orders: 'You lack permission to view order management. Contact an admin to request access.',
-      'match-ops': 'Match operations require the match:update permission.',
-      translations: 'Translations console requires the translation:view permission.',
-      membership: 'Membership console requires the membership:member:view permission.',
-      fundraising: 'Fundraising console requires the fundraising:donation:view permission.',
-      reports: 'Reports require the reports:view permission.',
+    const deniedMessages: Record<string, { key: string; fallback: string }> = {
+      orders: {
+        key: 'admin.toast.denied.orders',
+        fallback: 'You lack permission to view order management. Contact an admin to request access.',
+      },
+      'match-ops': {
+        key: 'admin.toast.denied.matchOps',
+        fallback: 'Match operations require the match:update permission.',
+      },
+      translations: {
+        key: 'admin.toast.denied.translations',
+        fallback: 'Translations console requires the translation:view permission.',
+      },
+      membership: {
+        key: 'admin.toast.denied.membership',
+        fallback: 'Membership console requires the membership:member:view permission.',
+      },
+      fundraising: {
+        key: 'admin.toast.denied.fundraising',
+        fallback: 'Fundraising console requires the fundraising:donation:view permission.',
+      },
+      reports: {
+        key: 'admin.toast.denied.reports',
+        fallback: 'Reports require the reports:view permission.',
+      },
     };
 
     toast({
-      title: 'Access denied',
-      description: messages[denied] ?? 'You do not have permission to access that section.',
+      title: t('admin.toast.denied.title', 'Access denied'),
+      description: t(
+        deniedMessages[denied]?.key ?? 'admin.toast.denied.generic',
+        deniedMessages[denied]?.fallback ?? 'You do not have permission to access that section.',
+      ),
       variant: 'destructive',
     });
 
@@ -928,7 +955,7 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
     const next = params.toString();
     const current = pathname || '/admin';
     router.replace(next ? `${current}?${next}` : current);
-  }, [pathname, router, searchParams, toast]);
+  }, [pathname, router, searchParams, t, toast]);
 
   useEffect(() => {
     if (mobileNavOpen) {
@@ -1158,6 +1185,10 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
                   size="sm"
                   ref={menuTriggerRef}
                   className="inline-flex items-center gap-2 text-slate-300 hover:text-white md:hidden"
+                  aria-label={t('admin.shell.menu.aria', 'Toggle navigation')}
+                >
+                  <Menu className="h-4 w-4" />
+                  {t('admin.shell.menu.label', 'Menu')}
                   aria-label="Open navigation menu"
                   aria-controls="admin-mobile-navigation"
                   aria-expanded={mobileNavOpen}
@@ -1176,7 +1207,9 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
                 id="admin-mobile-navigation"
               >
                 <SheetHeader className="text-left">
-                  <SheetTitle className="text-lg font-semibold text-white">Navigation</SheetTitle>
+                  <SheetTitle className="text-lg font-semibold text-white">
+                    {t('admin.shell.menu.sheetTitle', 'Navigation')}
+                  </SheetTitle>
                 </SheetHeader>
                 <div className="mt-6">
                   <NavItems activeHref={activeHref} onSelect={() => setMobileNavOpen(false)} />
@@ -1223,6 +1256,7 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
             </Sheet>
             <input
               type="search"
+              placeholder={t('admin.shell.search.placeholder', 'Search ops…')}
               placeholder="Search ops…"
               className="hidden w-[clamp(16rem,22vw,20rem)] min-w-0 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-primary/60 focus:ring-0 md:block"
               className="hidden w-72 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-primary/60 focus:ring-0 md:block"
@@ -1294,7 +1328,7 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
           />
           <div className="hidden items-center gap-3 lg:hidden">
             <div className="hidden items-center gap-1 text-xs text-slate-400 md:flex">
-              <span className="uppercase tracking-wide">Lang</span>
+              <span className="uppercase tracking-wide">{t('admin.shell.language.toggleLabel', 'Lang')}</span>
               <div className="flex overflow-hidden rounded-full border border-white/10">
                 {(['en', 'rw'] as const).map((code) => {
                   const isActive = locale === code;
@@ -1346,7 +1380,7 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
               </DropdownMenuContent>
             </DropdownMenu>
             <Button variant="ghost" size="sm" className="hidden items-center gap-2 text-slate-300 hover:text-white md:flex">
-              Quick actions
+              {t('admin.shell.quickActions', 'Quick actions')}
               <ChevronDown className="h-4 w-4" />
             </Button>
   const sidebarContent = (
@@ -1389,6 +1423,7 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
               aria-live="polite"
               aria-label={isLoggingOut ? 'Signing out of admin' : 'Sign out of admin'}
             >
+              {t('admin.shell.signOut', 'Sign out')}
               {isLoggingOut ? 'Signing out…' : 'Sign out'}
               className="inline-flex items-center gap-[var(--space-2)] text-slate-300 hover:text-white lg:hidden"
               aria-label="Toggle navigation"
