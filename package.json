@@ -42,6 +42,8 @@
     "test:e2e:a11y": "playwright test tests/e2e/a11y",
     "test:e2e:mobile": "playwright test --project=mobile-small --project=mobile-medium",
     "test:e2e:headed": "playwright test --headed",
+    "test:visual": "playwright test tests/visual-regression --project=chromium",
+    "test:visual:update": "playwright test tests/visual-regression --project=chromium --update-snapshots",
     "setup:hooks": "git config core.hooksPath .githooks",
     "seed": "tsx scripts/seed.ts",
     "ci:guard-payments": "tsx scripts/ci/assert-ussd-only.ts",

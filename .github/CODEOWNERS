@@ -1,0 +1,106 @@
+# Rayon Sports Platform - Code Owners
+#
+# This file defines who should review changes to specific parts of the codebase.
+# GitHub automatically requests reviews from code owners when a PR touches their files.
+#
+# Format: <path pattern> <owner(s)>
+# Owners can be @username, @org/team-name, or email addresses
+#
+# More info: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything in the repo (unless a more specific pattern matches)
+* @platform-team
+
+# Admin Design System & Components
+# Requires design review for visual changes and accessibility audit for interactive changes
+/app/admin/**                                    @platform-team @design-team
+/src/components/admin/**                         @platform-team @design-team
+/docs/design-system/**                           @design-team
+/docs/admin-design-system.md                     @design-team
+
+# Admin UI Primitives (require accessibility review for changes)
+/src/components/admin/ui/**                      @platform-team @design-team @a11y-champions
+
+# Admin Storybook Stories (require visual regression review)
+/src/components/admin/**/*.stories.tsx           @design-team
+/src/components/admin/**/*.stories.ts            @design-team
+
+# Admin API Routes
+/app/admin/api/**                                @platform-team @backend-team
+
+# Admin Layout Components (critical for shell consistency)
+/src/components/admin/layout/**                  @platform-team @design-team
+/src/components/admin/AdminShell.tsx             @platform-team @design-team
+
+# Design System Documentation
+/docs/ux/**                                      @design-team
+/docs/admin/**                                   @design-team
+/.storybook/**                                   @design-team @platform-team
+
+# CI/CD Workflows
+/.github/workflows/**                            @platform-team @devops-team
+/.github/workflows/ci.yml                        @platform-team @devops-team
+/.github/workflows/deploy.yml                    @devops-team
+
+# Security & Compliance
+/.github/workflows/security-scans.yml            @security-team
+/.github/workflows/codeql-analysis.yml           @security-team
+/docs/security/**                                @security-team
+/docs/compliance/**                              @security-team
+
+# Infrastructure & Deployment
+/k8s/**                                          @devops-team
+/infra/**                                        @devops-team
+/docker-compose.yml                              @devops-team
+/Dockerfile*                                     @devops-team
+
+# Backend Services
+/backend/**                                      @backend-team
+/supabase/**                                     @backend-team
+
+# Supabase Functions (Edge Functions)
+/supabase/functions/**                           @backend-team
+/.github/workflows/supabase-functions-deploy.yml @backend-team
+
+# Database Migrations (require careful review)
+/supabase/migrations/**                          @backend-team @data-team
+/backend/prisma/migrations/**                    @backend-team @data-team
+
+# Shared Contracts & Types
+/packages/contracts/**                           @platform-team @backend-team
+
+# Mobile App (Capacitor)
+/ios/**                                          @mobile-team
+/android/**                                      @mobile-team
+/capacitor.config.ts                             @mobile-team
+
+# Configuration Files (require platform team approval)
+/package.json                                    @platform-team
+/tsconfig*.json                                  @platform-team
+/next.config.mjs                                 @platform-team
+/tailwind.config.ts                              @platform-team
+/eslint.config.js                                @platform-team
+
+# Testing Configuration
+/playwright.config.ts                            @platform-team
+/vitest.config.ts                                @platform-team
+/.storybook/**                                   @platform-team @design-team
+
+# Observability & Monitoring
+/docs/observability/**                           @devops-team @sre-team
+/docs/grafana/**                                 @devops-team @sre-team
+/docs/runbooks/**                                @devops-team @sre-team
+
+# Documentation (general)
+/docs/**                                         @platform-team
+/README.md                                       @platform-team
+/CONTRIBUTING.md                                 @platform-team
+
+# License & Legal
+/LICENSE*                                        @legal-team
+/docs/compliance/**                              @legal-team
+
+# Dependencies & Supply Chain
+/package-lock.json                               @platform-team
+/.github/workflows/managed-schedules.yml         @platform-team
+/scripts/enforce-licenses.mjs                    @platform-team @security-team

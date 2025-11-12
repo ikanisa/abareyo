@@ -146,8 +146,6 @@ const NavigationBadge = ({ badge }: { badge?: AdminNavigationBadge }) => {
   }
   const toneClass = badgeToneClassNames[badge.tone ?? 'default'];
   return (
-    <nav aria-label="Admin sections" className="flex flex-1 flex-col gap-1 overflow-y-auto">
-    <ul className="flex flex-1 flex-col gap-1 overflow-y-auto" role="list">
     <Badge variant="outline" className={cn('text-[10px] uppercase tracking-wide', toneClass)}>
       {badge.label}
     </Badge>
@@ -164,8 +162,6 @@ const NavItems = ({
   onNavigate?: () => void;
 }) => {
   return (
-    <nav className={cn('flex flex-1 flex-col gap-1 overflow-y-auto', isCollapsed && 'items-center')}>
-      {ADMIN_NAV_ITEMS.map((item) => {
     <nav className="flex flex-1 flex-col gap-4 overflow-y-auto">
       {Array.from(
         states.reduce<Map<string, NavItemState[]>>((acc, state) => {

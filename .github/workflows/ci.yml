@@ -114,6 +114,47 @@ jobs:
           NEXT_PUBLIC_BACKEND_URL: 'http://localhost:3000/api/e2e'
         run: npm run test:e2e:a11y
 
+      # Admin Design System - Storybook and Visual Regression Testing
+      - name: Build Storybook
+        run: npm run build-storybook
+        env:
+          NODE_ENV: production
+
+      - name: Run Storybook accessibility tests
+        run: npx test-storybook --maxWorkers=2
+        continue-on-error: true
+        # TODO: Change to false once all accessibility violations are fixed
+
+      - name: Upload Storybook build
+        uses: actions/upload-artifact@v4
+        with:
+          name: storybook-static
+          path: storybook-static/
+          retention-days: 7
+
+      # Visual regression testing for admin components
+      # Captures screenshots of Storybook stories at multiple breakpoints
+      - name: Run visual regression tests on admin components
+        run: |
+          # Create test script if it doesn't exist
+          if ! grep -q "test:visual" package.json; then
+            echo "⚠️  test:visual script not found in package.json, skipping visual regression"
+            exit 0
+          fi
+          npm run test:visual
+        continue-on-error: true
+        # TODO: Change to false once baseline screenshots are established
+
+      - name: Upload visual regression diffs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-diffs
+          path: |
+            tests/visual-regression/diffs/
+            playwright-report/
+          retention-days: 14
+
       - name: Generate SBOMs
         # Guidance: CI pipeline SBOM/license flow is documented in CI_PIPELINE_FIXES.md
         run: npm run sbom
