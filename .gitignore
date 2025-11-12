@@ -37,6 +37,15 @@ supabase/supabase/.temp/
 test-results
 playwright-report
 
+# Visual regression test artifacts
+tests/visual-regression/baselines/
+tests/visual-regression/diffs/
+tests/visual-regression/*.png
+tests/visual-regression/**/*.png
+
+# Storybook build
+storybook-static
+
 # Deployment platforms
 .logs/
 k8s-secrets.sh
