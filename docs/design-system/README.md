@@ -27,3 +27,9 @@ contrast ratios and the tooling used to verify compliance.
   [`responsive-guidelines.md`](./responsive-guidelines.md) before introducing new columns or inputs.
 - Collapsible panels are the preferred affordance for optional analytics filters and batch action drawers;
   default-open critical workflows and keep triggers accessible via icon-labelled buttons.
+## Storybook and Admin UI Catalogue
+
+- Run `npm run storybook` to explore the admin primitives (buttons, inputs, cards, toasts) and
+  reference states for hover, focus, disabled, and loading scenarios.
+- The full admin component audit lives in [`admin-component-audit.md`](./admin-component-audit.md)
+  and should be kept in sync with Storybook when adding or modifying surfaces.
