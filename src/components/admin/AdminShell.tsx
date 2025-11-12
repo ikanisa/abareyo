@@ -82,7 +82,7 @@ const NavItems = ({ activeHref }: { activeHref: string }) => {
             >
               <span>{label}</span>
               <Badge variant="outline" className="border-amber-400/30 text-[10px] uppercase tracking-wide text-amber-200">
-                Off
+                {t('admin.shell.nav.disabled', 'Off')}
               </Badge>
             </button>
           );
@@ -120,7 +120,7 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
   const { toast } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const { locale, setLocale, loading: localeLoading } = useAdminLocale();
+  const { locale, setLocale, loading: localeLoading, t } = useAdminLocale();
   const activeHref = useMemo(() => {
     if (!pathname) {
       return '/admin';
@@ -128,6 +128,33 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
     const match = NAV_ITEMS.find((item) => pathname.startsWith(item.href));
     return match?.href ?? '/admin';
   }, [pathname]);
+
+  const deniedMessages = useMemo(
+    () => ({
+      orders: t(
+        'admin.shell.denied.orders',
+        'Order management requires elevated access. Ask an administrator to enable it.',
+      ),
+      'match-ops': t(
+        'admin.shell.denied.matchOps',
+        'Match operations require the match:update permission. Request the role before retrying.',
+      ),
+      translations: t(
+        'admin.shell.denied.translations',
+        'The translations console requires translation:view access. Contact localization support.',
+      ),
+      membership: t(
+        'admin.shell.denied.membership',
+        'Membership insights require membership:member:view access. Request approval from an admin.',
+      ),
+      fundraising: t(
+        'admin.shell.denied.fundraising',
+        'Fundraising data is limited to fundraising:donation:view. Ask finance ops for access.',
+      ),
+      reports: t('admin.shell.denied.reports', 'Reports require reports:view permission. Request the analytics role.'),
+    }),
+    [t],
+  );
 
   const handleLogout = useCallback(async () => {
     if (isLoggingOut) {
@@ -154,18 +181,11 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
       return;
     }
 
-    const messages: Record<string, string> = {
-      orders: 'You lack permission to view order management. Contact an admin to request access.',
-      'match-ops': 'Match operations require the match:update permission.',
-      translations: 'Translations console requires the translation:view permission.',
-      membership: 'Membership console requires the membership:member:view permission.',
-      fundraising: 'Fundraising console requires the fundraising:donation:view permission.',
-      reports: 'Reports require the reports:view permission.',
-    };
-
     toast({
-      title: 'Access denied',
-      description: messages[denied] ?? 'You do not have permission to access that section.',
+      title: t('admin.shell.denied.title', 'Access denied'),
+      description:
+        deniedMessages[denied] ??
+        t('admin.shell.denied.fallback', 'You do not have permission to open that section.'),
       variant: 'destructive',
     });
 
@@ -174,7 +194,7 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
     const next = params.toString();
     const current = pathname || '/admin';
     router.replace(next ? `${current}?${next}` : current);
-  }, [pathname, router, searchParams, toast]);
+  }, [deniedMessages, pathname, router, searchParams, t, toast]);
 
   return (
     <div className="relative flex min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
@@ -182,7 +202,7 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
       <aside className="relative hidden w-72 flex-col border-r border-white/10 bg-slate-950/70 px-4 py-6 backdrop-blur-xl md:flex">
         <div className="mb-6 flex items-center justify-between">
           <Link href="/admin" className="text-lg font-bold tracking-tight text-primary">
-            Rayon Admin
+            {t('admin.shell.brand', 'Rayon Admin')}
           </Link>
           <Badge variant="outline" className="bg-white/5 text-xs uppercase tracking-wide">
             {environment}
@@ -190,7 +210,7 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
         </div>
         <NavItems activeHref={activeHref} />
         <div className="mt-6 rounded-xl border border-white/5 bg-white/5 p-3 text-xs text-slate-300">
-          <div className="font-semibold text-slate-100">Signed in</div>
+          <div className="font-semibold text-slate-100">{t('admin.shell.account.signedIn', 'Signed in')}</div>
           <div>{user.displayName}</div>
           <div className="truncate text-slate-400">{user.email}</div>
           <div className="mt-2 flex flex-wrap gap-1">
@@ -211,15 +231,17 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
                   variant="ghost"
                   size="sm"
                   className="inline-flex items-center gap-2 text-slate-300 hover:text-white md:hidden"
-                  aria-label="Toggle navigation"
+                  aria-label={t('admin.shell.nav.toggleLabel', 'Toggle navigation')}
                 >
                   <Menu className="h-4 w-4" />
-                  Menu
+                  {t('admin.shell.nav.menuButton', 'Menu')}
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-[260px] border-white/10 bg-slate-950/95 text-slate-100">
                 <SheetHeader className="text-left">
-                  <SheetTitle className="text-lg font-semibold text-white">Navigation</SheetTitle>
+                  <SheetTitle className="text-lg font-semibold text-white">
+                    {t('admin.shell.nav.sheetTitle', 'Navigation')}
+                  </SheetTitle>
                 </SheetHeader>
                 <div className="mt-6">
                   <NavItems activeHref={activeHref} />
@@ -228,13 +250,15 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
             </Sheet>
             <input
               type="search"
-              placeholder="Search ops…"
+              placeholder={t('admin.shell.search.placeholder', 'Search operations…')}
               className="hidden w-72 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-primary/60 focus:ring-0 md:block"
             />
           </div>
           <div className="flex items-center gap-3">
             <div className="hidden items-center gap-1 text-xs text-slate-400 md:flex">
-              <span className="uppercase tracking-wide">Lang</span>
+              <span className="uppercase tracking-wide">
+                {t('admin.shell.language.label', 'Language')}
+              </span>
               <div className="flex overflow-hidden rounded-full border border-white/10">
                 {(['en', 'rw'] as const).map((code) => {
                   const isActive = locale === code;
@@ -258,7 +282,7 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
               </div>
             </div>
             <Button variant="ghost" size="sm" className="hidden items-center gap-2 text-slate-300 hover:text-white md:flex">
-              Quick actions
+              {t('admin.shell.quickActions', 'Quick actions')}
               <ChevronDown className="h-4 w-4" />
             </Button>
             <Button
@@ -268,7 +292,7 @@ const ShellInner = ({ user, environment, children }: AdminShellProps) => {
               disabled={isLoggingOut}
               className="border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
             >
-              Sign out
+              {t('admin.shell.account.signOut', 'Sign out')}
             </Button>
           </div>
         </header>

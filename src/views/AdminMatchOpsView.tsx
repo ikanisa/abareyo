@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Activity, Calendar, MapPin, PlusCircle, RefreshCw, Trash2 } from "lucide-react";
 
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { useAdminSession } from "@/providers/admin-session-provider";
+import { useAdminLocale } from "@/providers/admin-locale-provider";
 import { useRealtime } from "@/providers/realtime-provider";
 import {
   AdminMatch,
@@ -36,20 +37,7 @@ import {
 
 const MATCH_STATUS_OPTIONS: Array<AdminMatch["status"]> = ["scheduled", "live", "finished", "postponed"];
 
-const MATCH_STATUS_LABELS: Record<AdminMatch["status"], string> = {
-  scheduled: "Scheduled",
-  live: "Live",
-  finished: "Finished",
-  postponed: "Postponed",
-};
-
-const formatDateLabel = (iso?: string | null) => {
-  if (!iso) {
-    return "TBD";
-  }
-  const date = new Date(iso);
-  return `${date.toLocaleDateString()} · ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
-};
+type AdminTranslate = (key: string, fallback?: string) => string;
 
 const formatInputDate = (iso?: string | null) => {
   if (!iso) {
@@ -70,11 +58,33 @@ const AdminMatchOpsView = ({ initialMatches }: AdminMatchOpsViewProps) => {
   const queryClient = useQueryClient();
   const { permissions } = useAdminSession();
   const { socket } = useRealtime();
+  const { t } = useAdminLocale();
 
   const canCreateMatch = permissions.includes("match:create");
   const canUpdateMatch = permissions.includes("match:update");
   const canDeleteMatch = permissions.includes("match:delete");
   const canManageGates = permissions.includes("gate:update");
+
+  const matchStatusLabels = useMemo(
+    () => ({
+      scheduled: t('admin.matchOps.status.scheduled', 'Scheduled'),
+      live: t('admin.matchOps.status.live', 'Live'),
+      finished: t('admin.matchOps.status.finished', 'Finished'),
+      postponed: t('admin.matchOps.status.postponed', 'Postponed'),
+    }),
+    [t],
+  );
+
+  const formatDateLabel = useCallback(
+    (iso?: string | null) => {
+      if (!iso) {
+        return t('admin.matchOps.match.unscheduled', 'TBD');
+      }
+      const date = new Date(iso);
+      return `${date.toLocaleDateString()} · ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    },
+    [t],
+  );
 
   const matchesQuery = useQuery({
     queryKey: ["admin", "match-ops", "matches"],
@@ -105,15 +115,18 @@ const AdminMatchOpsView = ({ initialMatches }: AdminMatchOpsViewProps) => {
     mutationFn: createAdminMatch,
     onSuccess: (match) => {
       toast({
-        title: "Match created",
-        description: `vs ${match.opponent} on ${formatDateLabel(match.kickoff)}`,
+        title: t('admin.matchOps.toast.createSuccess.title', 'Match created'),
+        description: t(
+          'admin.matchOps.toast.createSuccess.description',
+          `vs ${match.opponent} on ${formatDateLabel(match.kickoff)}`,
+        ),
       });
       queryClient.invalidateQueries({ queryKey: ["admin", "match-ops", "matches"] });
       setSelectedMatchId(match.id);
     },
     onError: (error: unknown) => {
       toast({
-        title: "Unable to create match",
+        title: t('admin.matchOps.toast.createError.title', 'Unable to create match'),
         description: error instanceof Error ? error.message : undefined,
         variant: "destructive",
       });
@@ -124,12 +137,18 @@ const AdminMatchOpsView = ({ initialMatches }: AdminMatchOpsViewProps) => {
     mutationFn: ({ matchId, payload }: { matchId: string; payload: Parameters<typeof updateAdminMatch>[1] }) =>
       updateAdminMatch(matchId, payload),
     onSuccess: (match) => {
-      toast({ title: "Match updated", description: `Status → ${MATCH_STATUS_LABELS[match.status]}` });
+      toast({
+        title: t('admin.matchOps.toast.updateSuccess.title', 'Match updated'),
+        description: t(
+          'admin.matchOps.toast.updateSuccess.description',
+          `Status → ${matchStatusLabels[match.status]}`,
+        ),
+      });
       queryClient.invalidateQueries({ queryKey: ["admin", "match-ops", "matches"] });
     },
     onError: (error: unknown) => {
       toast({
-        title: "Update failed",
+        title: t('admin.matchOps.toast.updateError.title', 'Update failed'),
         description: error instanceof Error ? error.message : undefined,
         variant: "destructive",
       });
@@ -139,13 +158,13 @@ const AdminMatchOpsView = ({ initialMatches }: AdminMatchOpsViewProps) => {
   const deleteMutation = useMutation({
     mutationFn: deleteAdminMatch,
     onSuccess: () => {
-      toast({ title: "Match removed" });
+      toast({ title: t('admin.matchOps.toast.deleteSuccess.title', 'Match removed') });
       queryClient.invalidateQueries({ queryKey: ["admin", "match-ops", "matches"] });
       setSelectedMatchId(null);
     },
     onError: (error: unknown) => {
       toast({
-        title: "Delete failed",
+        title: t('admin.matchOps.toast.deleteError.title', 'Delete failed'),
         description: error instanceof Error ? error.message : undefined,
         variant: "destructive",
       });
@@ -156,12 +175,12 @@ const AdminMatchOpsView = ({ initialMatches }: AdminMatchOpsViewProps) => {
     mutationFn: ({ matchId, payload }: { matchId: string; payload: Parameters<typeof upsertMatchZone>[1] }) =>
       upsertMatchZone(matchId, payload),
     onSuccess: () => {
-      toast({ title: "Zone saved" });
+      toast({ title: t('admin.matchOps.toast.zoneSuccess.title', 'Zone saved') });
       queryClient.invalidateQueries({ queryKey: ["admin", "match-ops", "matches"] });
     },
     onError: (error: unknown) => {
       toast({
-        title: "Unable to save zone",
+        title: t('admin.matchOps.toast.zoneError.title', 'Unable to save zone'),
         description: error instanceof Error ? error.message : undefined,
         variant: "destructive",
       });
@@ -171,12 +190,12 @@ const AdminMatchOpsView = ({ initialMatches }: AdminMatchOpsViewProps) => {
   const deleteZoneMutation = useMutation({
     mutationFn: ({ matchId, zoneId }: { matchId: string; zoneId: string }) => deleteMatchZone(matchId, zoneId),
     onSuccess: () => {
-      toast({ title: "Zone deleted" });
+      toast({ title: t('admin.matchOps.toast.zoneDeleteSuccess.title', 'Zone deleted') });
       queryClient.invalidateQueries({ queryKey: ["admin", "match-ops", "matches"] });
     },
     onError: (error: unknown) => {
       toast({
-        title: "Delete failed",
+        title: t('admin.matchOps.toast.deleteError.title', 'Delete failed'),
         description: error instanceof Error ? error.message : undefined,
         variant: "destructive",
       });
@@ -187,13 +206,13 @@ const AdminMatchOpsView = ({ initialMatches }: AdminMatchOpsViewProps) => {
     mutationFn: ({ matchId, payload }: { matchId: string; payload: Parameters<typeof upsertMatchGate>[1] }) =>
       upsertMatchGate(matchId, payload),
     onSuccess: () => {
-      toast({ title: "Gate saved" });
+      toast({ title: t('admin.matchOps.toast.gateSuccess.title', 'Gate saved') });
       queryClient.invalidateQueries({ queryKey: ["admin", "match-ops", "matches"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "match-ops", "metrics", selectedMatchId] });
     },
     onError: (error: unknown) => {
       toast({
-        title: "Unable to save gate",
+        title: t('admin.matchOps.toast.gateError.title', 'Unable to save gate'),
         description: error instanceof Error ? error.message : undefined,
         variant: "destructive",
       });
@@ -203,13 +222,13 @@ const AdminMatchOpsView = ({ initialMatches }: AdminMatchOpsViewProps) => {
   const deleteGateMutation = useMutation({
     mutationFn: ({ matchId, gateId }: { matchId: string; gateId: string }) => deleteMatchGate(matchId, gateId),
     onSuccess: () => {
-      toast({ title: "Gate deleted" });
+      toast({ title: t('admin.matchOps.toast.gateDeleteSuccess.title', 'Gate deleted') });
       queryClient.invalidateQueries({ queryKey: ["admin", "match-ops", "matches"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "match-ops", "metrics", selectedMatchId] });
     },
     onError: (error: unknown) => {
       toast({
-        title: "Delete failed",
+        title: t('admin.matchOps.toast.deleteError.title', 'Delete failed'),
         description: error instanceof Error ? error.message : undefined,
         variant: "destructive",
       });
@@ -273,8 +292,12 @@ const AdminMatchOpsView = ({ initialMatches }: AdminMatchOpsViewProps) => {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-100">Match Operations</h1>
-          <p className="text-sm text-slate-400">Configure fixtures, ticketing zones, and gate throughput targets.</p>
+          <h1 className="text-3xl font-bold text-slate-100">
+            {t('admin.matchOps.header.title', 'Match operations')}
+          </h1>
+          <p className="text-sm text-slate-400">
+            {t('admin.matchOps.header.subtitle', 'Manage fixtures, zones, and throughput targets with confidence.')}
+          </p>
         </div>
         <Button
           variant="ghost"
@@ -282,7 +305,8 @@ const AdminMatchOpsView = ({ initialMatches }: AdminMatchOpsViewProps) => {
           onClick={() => matchesQuery.refetch()}
           disabled={matchesQuery.isFetching}
         >
-          <RefreshCw className="mr-2 h-4 w-4" /> Refresh
+          <RefreshCw className="mr-2 h-4 w-4" />
+          {t('admin.matchOps.actions.refresh', 'Refresh')}
         </Button>
       </div>
 
@@ -290,7 +314,9 @@ const AdminMatchOpsView = ({ initialMatches }: AdminMatchOpsViewProps) => {
         <GlassCard className="flex h-[32rem] flex-col overflow-hidden">
           <div className="border-b border-white/10 p-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Matches</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+                {t('admin.matchOps.matches.title', 'Matches')}
+              </h2>
               <Badge variant="outline" className="bg-white/10 text-xs text-slate-200">
                 {matchesQuery.data?.length ?? 0}
               </Badge>
@@ -308,22 +334,30 @@ const AdminMatchOpsView = ({ initialMatches }: AdminMatchOpsViewProps) => {
                       isActive ? "border-primary bg-primary/10" : "border-white/10 bg-white/[0.02]"
                     }`}
                   >
-                    <div className="text-xs uppercase tracking-wide text-slate-400">{match.competition ?? "Friendly"}</div>
-                    <div className="text-sm font-semibold text-slate-100">vs {match.opponent}</div>
+                    <div className="text-xs uppercase tracking-wide text-slate-400">
+                      {match.competition ?? t('admin.matchOps.matches.friendly', 'Friendly')}
+                    </div>
+                    <div className="text-sm font-semibold text-slate-100">
+                      {t('admin.matchOps.matches.vsOpponent', `vs ${match.opponent}`)}
+                    </div>
                     <div className="mt-1 flex items-center gap-2 text-xs text-slate-400">
                       <Calendar className="h-3.5 w-3.5" />
                       {formatDateLabel(match.kickoff)}
                     </div>
                     <div className="mt-1 flex items-center gap-2 text-xs text-slate-400">
                       <MapPin className="h-3.5 w-3.5" />
-                      {match.venue}
+                      {match.venue || t('admin.matchOps.matches.venuePending', 'Venue pending')}
                     </div>
-                    <div className="mt-2 text-xs text-primary">Status: {MATCH_STATUS_LABELS[match.status]}</div>
+                    <div className="mt-2 text-xs text-primary">
+                      {t('admin.matchOps.matches.statusLabel', 'Status:')} {matchStatusLabels[match.status]}
+                    </div>
                   </button>
                 );
               })}
               {(matchesQuery.data?.length ?? 0) === 0 && (
-                <p className="text-sm text-slate-400">No matches defined yet. Create one to get started.</p>
+                <p className="text-sm text-slate-400">
+                  {t('admin.matchOps.matches.empty', 'No matches defined yet. Create one to get started.')}
+                </p>
               )}
             </div>
           </ScrollArea>
@@ -332,6 +366,8 @@ const AdminMatchOpsView = ({ initialMatches }: AdminMatchOpsViewProps) => {
               <CreateMatchForm
                 isSubmitting={createMutation.isPending}
                 onSubmit={(payload) => createMutation.mutate(payload)}
+                translate={t}
+                statusLabels={matchStatusLabels}
               />
             </div>
           )}
@@ -360,10 +396,15 @@ const AdminMatchOpsView = ({ initialMatches }: AdminMatchOpsViewProps) => {
                 gateMutation.isPending ||
                 deleteGateMutation.isPending
               }
+              translate={t}
+              statusLabels={matchStatusLabels}
+              formatDate={formatDateLabel}
             />
           ) : (
             <GlassCard className="flex h-[32rem] items-center justify-center">
-              <p className="text-sm text-slate-400">Select a match to view operational controls.</p>
+              <p className="text-sm text-slate-400">
+                {t('admin.matchOps.matches.selectPrompt', 'Select a match to view operational controls.')}
+              </p>
             </GlassCard>
           )}
         </div>
@@ -377,10 +418,15 @@ export default AdminMatchOpsView;
 const CreateMatchForm = ({
   isSubmitting,
   onSubmit,
+  translate,
+  statusLabels,
 }: {
   isSubmitting: boolean;
   onSubmit: (payload: Parameters<typeof createAdminMatch>[0]) => void;
+  translate: AdminTranslate;
+  statusLabels: Record<AdminMatch['status'], string>;
 }) => {
+  const t = translate;
   const [opponent, setOpponent] = useState("");
   const [kickoff, setKickoff] = useState("");
   const [venue, setVenue] = useState("");
@@ -410,29 +456,31 @@ const CreateMatchForm = ({
       }}
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-200">New Match</h3>
+        <h3 className="text-sm font-semibold text-slate-200">
+          {t('admin.matchOps.form.newMatch', 'New match')}
+        </h3>
         <Badge variant="outline" className="bg-white/5 text-xs text-slate-300">
           <PlusCircle className="mr-1 h-3 w-3" />
-          Create
+          {t('admin.matchOps.form.createBadge', 'Create')}
         </Badge>
       </div>
       <div className="space-y-2">
         <div className="space-y-1">
           <Label htmlFor="match-opponent" className="text-xs text-slate-300">
-            Opponent
+            {t('admin.matchOps.form.opponentLabel', 'Opponent')}
           </Label>
           <Input
             id="match-opponent"
             value={opponent}
             onChange={(event) => setOpponent(event.target.value)}
-            placeholder="APR FC"
+            placeholder={t('admin.matchOps.form.opponentPlaceholder', 'APR FC')}
             className="bg-white/5 text-slate-100"
             required
           />
         </div>
         <div className="space-y-1">
           <Label htmlFor="match-kickoff" className="text-xs text-slate-300">
-            Kickoff
+            {t('admin.matchOps.form.kickoffLabel', 'Kickoff')}
           </Label>
           <Input
             id="match-kickoff"
@@ -445,29 +493,29 @@ const CreateMatchForm = ({
         </div>
         <div className="space-y-1">
           <Label htmlFor="match-venue" className="text-xs text-slate-300">
-            Venue
+            {t('admin.matchOps.form.venueLabel', 'Venue')}
           </Label>
           <Input
             id="match-venue"
             value={venue}
             onChange={(event) => setVenue(event.target.value)}
-            placeholder="Kigali Stadium"
+            placeholder={t('admin.matchOps.form.venuePlaceholder', 'Kigali Stadium')}
             className="bg-white/5 text-slate-100"
             required
           />
         </div>
         <div className="space-y-1">
           <Label htmlFor="match-status" className="text-xs text-slate-300">
-            Status
+            {t('admin.matchOps.form.statusLabel', 'Status')}
           </Label>
           <Select value={status} onValueChange={(value) => setStatus(value as AdminMatch["status"])}>
             <SelectTrigger className="bg-white/5 text-slate-100">
-              <SelectValue placeholder="Select status" />
+              <SelectValue placeholder={t('admin.matchOps.form.statusPlaceholder', 'Select status')} />
             </SelectTrigger>
             <SelectContent>
               {MATCH_STATUS_OPTIONS.map((option) => (
                 <SelectItem key={option} value={option}>
-                  {MATCH_STATUS_LABELS[option]}
+                  {statusLabels[option]}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -475,19 +523,21 @@ const CreateMatchForm = ({
         </div>
         <div className="space-y-1">
           <Label htmlFor="match-competition" className="text-xs text-slate-300">
-            Competition (optional)
+            {t('admin.matchOps.form.competitionLabel', 'Competition (optional)')}
           </Label>
           <Input
             id="match-competition"
             value={competition}
             onChange={(event) => setCompetition(event.target.value)}
-            placeholder="Rwanda Premier League"
+            placeholder={t('admin.matchOps.form.competitionPlaceholder', 'Rwanda Premier League')}
             className="bg-white/5 text-slate-100"
           />
         </div>
       </div>
       <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? "Creating…" : "Create match"}
+        {isSubmitting
+          ? t('admin.matchOps.form.creating', 'Creating…')
+          : t('admin.matchOps.form.submit', 'Create match')}
       </Button>
     </form>
   );
@@ -507,6 +557,9 @@ const MatchDetailPanel = ({
   onSaveGate,
   onDeleteGate,
   isMutating,
+  translate,
+  statusLabels,
+  formatDate,
 }: {
   match: AdminMatch;
   canUpdate: boolean;
@@ -521,7 +574,11 @@ const MatchDetailPanel = ({
   onSaveGate: (payload: Parameters<typeof upsertMatchGate>[1]) => void;
   onDeleteGate: (gateId: string) => void;
   isMutating: boolean;
+  translate: AdminTranslate;
+  statusLabels: Record<AdminMatch['status'], string>;
+  formatDate: (iso?: string | null) => string;
 }) => {
+  const t = translate;
   const [formOpponent, setFormOpponent] = useState(match.opponent);
   const [formKickoff, setFormKickoff] = useState(formatInputDate(match.kickoff));
   const [formVenue, setFormVenue] = useState(match.venue);
@@ -545,20 +602,26 @@ const MatchDetailPanel = ({
     setFormStatus(match.status);
   }, [match]);
 
+  const opponentHeading = t('admin.matchOps.detail.vsOpponent', `vs ${match.opponent}`);
+  const venueDisplay = match.venue || t('admin.matchOps.detail.venuePending', 'Venue pending');
+  const competitionLabel = match.competition ?? t('admin.matchOps.matches.friendly', 'Friendly');
+
   return (
     <div className="space-y-6">
       <GlassCard className="space-y-4 p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-semibold text-slate-100">vs {match.opponent}</h2>
-            <p className="text-sm text-slate-400">{formatDateLabel(match.kickoff)} · {match.venue}</p>
+            <h2 className="text-2xl font-semibold text-slate-100">{opponentHeading}</h2>
+            <p className="text-sm text-slate-400">
+              {t('admin.matchOps.detail.schedule', `${formatDate(match.kickoff)} · ${venueDisplay}`)}
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline" className="bg-white/10 text-xs text-slate-200">
-              {match.competition ?? "Friendly"}
+              {competitionLabel}
             </Badge>
             <Badge variant="secondary" className="bg-primary/15 text-xs text-primary">
-              {MATCH_STATUS_LABELS[match.status]}
+              {statusLabels[match.status]}
             </Badge>
           </div>
         </div>
@@ -580,7 +643,7 @@ const MatchDetailPanel = ({
             <div className="md:col-span-2 grid gap-3 md:grid-cols-2">
               <div className="space-y-1">
                 <Label className="text-xs text-slate-300" htmlFor="match-detail-opponent">
-                  Opponent
+                  {t('admin.matchOps.detail.opponentLabel', 'Opponent')}
                 </Label>
                 <Input
                   id="match-detail-opponent"
@@ -592,7 +655,7 @@ const MatchDetailPanel = ({
               </div>
               <div className="space-y-1">
                 <Label className="text-xs text-slate-300" htmlFor="match-detail-venue">
-                  Venue
+                  {t('admin.matchOps.detail.venueLabel', 'Venue')}
                 </Label>
                 <Input
                   id="match-detail-venue"
@@ -605,7 +668,7 @@ const MatchDetailPanel = ({
             </div>
             <div className="space-y-1">
               <Label className="text-xs text-slate-300" htmlFor="match-detail-kickoff">
-                Kickoff
+                {t('admin.matchOps.detail.kickoffLabel', 'Kickoff')}
               </Label>
               <Input
                 id="match-detail-kickoff"
@@ -616,15 +679,17 @@ const MatchDetailPanel = ({
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-slate-300">Status</Label>
+              <Label className="text-xs text-slate-300" htmlFor="match-detail-status">
+                {t('admin.matchOps.detail.statusLabel', 'Status')}
+              </Label>
               <Select value={formStatus} onValueChange={(value) => setFormStatus(value as AdminMatch["status"])}>
-                <SelectTrigger className="bg-white/5 text-slate-100">
-                  <SelectValue />
+                <SelectTrigger id="match-detail-status" className="bg-white/5 text-slate-100">
+                  <SelectValue placeholder={t('admin.matchOps.detail.statusPlaceholder', 'Select status')} />
                 </SelectTrigger>
                 <SelectContent>
                   {MATCH_STATUS_OPTIONS.map((option) => (
                     <SelectItem key={option} value={option}>
-                      {MATCH_STATUS_LABELS[option]}
+                      {statusLabels[option]}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -632,19 +697,19 @@ const MatchDetailPanel = ({
             </div>
             <div className="md:col-span-2 space-y-1">
               <Label className="text-xs text-slate-300" htmlFor="match-detail-competition">
-                Competition
+                {t('admin.matchOps.detail.competitionLabel', 'Competition')}
               </Label>
               <Input
                 id="match-detail-competition"
                 value={formCompetition}
                 onChange={(event) => setFormCompetition(event.target.value)}
                 className="bg-white/5 text-slate-100"
-                placeholder="Rwanda Premier League"
+                placeholder={t('admin.matchOps.detail.competitionPlaceholder', 'Rwanda Premier League')}
               />
             </div>
             <div className="md:col-span-2 flex flex-wrap gap-2">
               <Button type="submit" disabled={isMutating}>
-                Save changes
+                {t('admin.matchOps.detail.save', 'Save changes')}
               </Button>
               {canDelete && (
                 <Button
@@ -654,14 +719,18 @@ const MatchDetailPanel = ({
                   onClick={() => onDelete()}
                   className="bg-red-500/90 hover:bg-red-500"
                 >
-                  <Trash2 className="mr-2 h-4 w-4" /> Remove match
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {t('admin.matchOps.detail.remove', 'Remove match')}
                 </Button>
               )}
             </div>
           </form>
         ) : (
           <p className="text-sm text-slate-400">
-            You do not have permission to update match details. Contact an administrator if this is unexpected.
+            {t(
+              'admin.matchOps.detail.readonly',
+              'You cannot update match details. Contact an administrator if this is unexpected.',
+            )}
           </p>
         )}
       </GlassCard>
@@ -670,8 +739,12 @@ const MatchDetailPanel = ({
         <section className="space-y-3">
           <header className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-slate-100">Ticket Zones</h3>
-              <p className="text-xs text-slate-400">Update inventory slices, pricing, and gate assignments.</p>
+              <h3 className="text-lg font-semibold text-slate-100">
+                {t('admin.matchOps.zones.title', 'Ticket zones')}
+              </h3>
+              <p className="text-xs text-slate-400">
+                {t('admin.matchOps.zones.subtitle', 'Update inventory slices, pricing, and gate assignments.')}
+              </p>
             </div>
             <Badge variant="outline" className="bg-white/10 text-xs text-slate-200">
               {match.zones.length}
@@ -684,9 +757,14 @@ const MatchDetailPanel = ({
                   <div>
                     <div className="text-sm font-semibold text-slate-100">{zone.name}</div>
                     <div className="text-xs text-slate-400">
-                      {zone.capacity.toLocaleString()} seats · {zone.price.toLocaleString()} RWF
+                      {t(
+                        'admin.matchOps.zones.summary',
+                        `${zone.capacity.toLocaleString()} seats · ${zone.price.toLocaleString()} RWF`,
+                      )}
                     </div>
-                    <div className="text-xs text-slate-500">Gate {zone.gate ?? "–"}</div>
+                    <div className="text-xs text-slate-500">
+                      {t('admin.matchOps.zones.gateLabel', `Gate ${zone.gate ?? '–'}`)}
+                    </div>
                   </div>
                   {canUpdate && (
                     <Button
@@ -703,7 +781,9 @@ const MatchDetailPanel = ({
               </div>
             ))}
             {match.zones.length === 0 && (
-              <p className="text-xs text-slate-400">No zones configured. Add your first zone below.</p>
+              <p className="text-xs text-slate-400">
+                {t('admin.matchOps.zones.empty', 'No zones configured. Add your first zone below.')}
+              </p>
             )}
           </div>
           {canUpdate && (
@@ -727,13 +807,14 @@ const MatchDetailPanel = ({
               }}
             >
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-300">
-                <PlusCircle className="h-3.5 w-3.5" /> Add or update zone
+                <PlusCircle className="h-3.5 w-3.5" />
+                {t('admin.matchOps.zones.addOrUpdate', 'Add or update zone')}
               </div>
               <div className="grid gap-2 md:grid-cols-2">
                 <Input
                   value={zoneName}
                   onChange={(event) => setZoneName(event.target.value)}
-                  placeholder="North Stand"
+                  placeholder={t('admin.matchOps.zones.namePlaceholder', 'North Stand')}
                   className="bg-white/5 text-slate-100"
                   required
                 />
@@ -742,7 +823,7 @@ const MatchDetailPanel = ({
                   min={0}
                   value={zoneCapacity}
                   onChange={(event) => setZoneCapacity(event.target.value)}
-                  placeholder="Capacity"
+                  placeholder={t('admin.matchOps.zones.capacityPlaceholder', 'Capacity')}
                   className="bg-white/5 text-slate-100"
                   required
                 />
@@ -751,19 +832,19 @@ const MatchDetailPanel = ({
                   min={0}
                   value={zonePrice}
                   onChange={(event) => setZonePrice(event.target.value)}
-                  placeholder="Price"
+                  placeholder={t('admin.matchOps.zones.pricePlaceholder', 'Price')}
                   className="bg-white/5 text-slate-100"
                   required
                 />
                 <Input
                   value={zoneGate}
                   onChange={(event) => setZoneGate(event.target.value)}
-                  placeholder="Gate (optional)"
+                  placeholder={t('admin.matchOps.zones.gatePlaceholder', 'Gate (optional)')}
                   className="bg-white/5 text-slate-100"
                 />
               </div>
               <Button type="submit" disabled={isMutating}>
-                Save zone
+                {t('admin.matchOps.zones.save', 'Save zone')}
               </Button>
             </form>
           )}
@@ -772,8 +853,12 @@ const MatchDetailPanel = ({
         <section className="space-y-3">
           <header className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-slate-100">Gates & Throughput</h3>
-              <p className="text-xs text-slate-400">Coordinate stewarding targets ahead of matchday.</p>
+              <h3 className="text-lg font-semibold text-slate-100">
+                {t('admin.matchOps.gates.title', 'Gates & throughput')}
+              </h3>
+              <p className="text-xs text-slate-400">
+                {t('admin.matchOps.gates.subtitle', 'Coordinate stewarding targets ahead of matchday.')}
+              </p>
             </div>
             <Badge variant="outline" className="bg-white/10 text-xs text-slate-200">
               {match.gates.length}
@@ -785,8 +870,17 @@ const MatchDetailPanel = ({
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="text-sm font-semibold text-slate-100">{gate.name}</div>
-                    <div className="text-xs text-slate-400">{gate.location ?? "No location set"}</div>
-                    <div className="text-xs text-slate-500">Max throughput: {gate.maxThroughput ?? "—"} / hr</div>
+                    <div className="text-xs text-slate-400">
+                      {gate.location
+                        ? gate.location
+                        : t('admin.matchOps.gates.locationPending', 'No location set')}
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      {t(
+                        'admin.matchOps.gates.throughputLabel',
+                        `Max throughput: ${gate.maxThroughput ?? '—'} / hr`,
+                      )}
+                    </div>
                   </div>
                   {canManageGates && (
                     <Button
@@ -803,7 +897,9 @@ const MatchDetailPanel = ({
               </div>
             ))}
             {match.gates.length === 0 && (
-              <p className="text-xs text-slate-400">No gates configured. Add throughput targets below.</p>
+              <p className="text-xs text-slate-400">
+                {t('admin.matchOps.gates.empty', 'No gates configured. Add throughput targets below.')}
+              </p>
             )}
           </div>
           {canManageGates && (
@@ -825,20 +921,21 @@ const MatchDetailPanel = ({
               }}
             >
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-300">
-                <PlusCircle className="h-3.5 w-3.5" /> Add or update gate
+                <PlusCircle className="h-3.5 w-3.5" />
+                {t('admin.matchOps.gates.addOrUpdate', 'Add or update gate')}
               </div>
               <div className="grid gap-2 md:grid-cols-2">
                 <Input
                   value={gateName}
                   onChange={(event) => setGateName(event.target.value)}
-                  placeholder="Gate A"
+                  placeholder={t('admin.matchOps.gates.namePlaceholder', 'Gate A')}
                   className="bg-white/5 text-slate-100"
                   required
                 />
                 <Input
                   value={gateLocation}
                   onChange={(event) => setGateLocation(event.target.value)}
-                  placeholder="North concourse"
+                  placeholder={t('admin.matchOps.gates.locationPlaceholder', 'North concourse')}
                   className="bg-white/5 text-slate-100"
                 />
                 <Input
@@ -846,40 +943,49 @@ const MatchDetailPanel = ({
                   min={0}
                   value={gateThroughput}
                   onChange={(event) => setGateThroughput(event.target.value)}
-                  placeholder="Max per hour"
+                  placeholder={t('admin.matchOps.gates.throughputPlaceholder', 'Max per hour')}
                   className="bg-white/5 text-slate-100"
                 />
               </div>
               <Button type="submit" disabled={isMutating}>
-                Save gate
+                {t('admin.matchOps.gates.save', 'Save gate')}
               </Button>
             </form>
           )}
 
           <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-4">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-300">
-              <Activity className="h-3.5 w-3.5" /> Live scan metrics
+              <Activity className="h-3.5 w-3.5" />
+              {t('admin.matchOps.metrics.title', 'Live scan metrics')}
             </div>
             {canManageGates ? (
               metricsLoading ? (
-                <p className="mt-2 text-xs text-slate-400">Loading metrics…</p>
+                <p className="mt-2 text-xs text-slate-400">{t('admin.matchOps.metrics.loading', 'Loading metrics…')}</p>
               ) : metrics.length ? (
                 <ul className="mt-2 space-y-2 text-xs text-slate-300">
                   {metrics.map((metric) => (
                     <li key={metric.gate} className="flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
                       <span className="font-medium text-slate-200">{metric.gate}</span>
                       <span className="text-slate-400">
-                        {metric.total} scans · {metric.verified} ok · {metric.rejected} flagged
+                        {t(
+                          'admin.matchOps.metrics.summary',
+                          `${metric.total} scans · ${metric.verified} ok · ${metric.rejected} flagged`,
+                        )}
                       </span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="mt-2 text-xs text-slate-400">No scans recorded yet for this match.</p>
+                <p className="mt-2 text-xs text-slate-400">
+                  {t('admin.matchOps.metrics.empty', 'No scans recorded yet for this match.')}
+                </p>
               )
             ) : (
               <p className="mt-2 text-xs text-slate-400">
-                You need `gate:update` permission to view throughput metrics.
+                {t(
+                  'admin.matchOps.metrics.permission',
+                  'You need gate:update permission to view throughput metrics.',
+                )}
               </p>
             )}
           </div>

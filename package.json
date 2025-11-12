@@ -24,6 +24,7 @@
     "lint": "eslint app src tests/unit",
     "lint:a11y": "eslint \"app/(routes)\" src/components/admin --max-warnings=0",
     "lint:fix": "eslint app src tests/unit --fix",
+    "lint:admin-copy": "node scripts/check-admin-copy.mjs",
     "lint:pwa": "npm run build && lhci autorun --config=./lighthouserc.json",
     "lint:lh": "npm run lint:pwa",
     "start": "next start",

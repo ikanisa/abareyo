@@ -184,46 +184,6 @@ async function fetchAdminContext(cookieHeader: string): Promise<AdminContextResu
   };
 }
 
-type AdminOfflineNoticeProps = {
-  message: string;
-  reason: AdminUnavailableReason;
-  retryAfterSeconds?: number | null;
-};
-
-const offlineCopyByReason: Record<AdminUnavailableReason, { title: string; helper: string }> = {
-  'network-error': {
-    title: 'Cannot reach admin API',
-    helper: 'Check VPN, backend pods, and reverse proxy routes before retrying.',
-  },
-  'http-error': {
-    title: 'Admin API returned an error',
-    helper: 'Inspect API logs for the failing request and redeploy if required.',
-  },
-  'bad-gateway': {
-    title: 'Upstream gateway error',
-    helper: 'Verify ingress, service mesh, or load balancer health. Restart pods if needed.',
-  },
-  'maintenance': {
-    title: 'Planned maintenance in progress',
-    helper: 'Ops is rolling out updates. Access will resume once the deployment completes.',
-  },
-  'rate-limited': {
-    title: 'Too many admin requests',
-    helper: 'Slow down API calls or investigate automation loops triggering the endpoint.',
-  },
-};
-
-const formatRetryAfter = (retryAfterSeconds?: number | null) => {
-  if (!retryAfterSeconds || Number.isNaN(retryAfterSeconds)) {
-    return null;
-  }
-  const minutes = Math.ceil(retryAfterSeconds / 60);
-  if (minutes <= 1) {
-    return 'Try again in about a minute.';
-  }
-  return `Try again in approximately ${minutes} minutes.`;
-};
-
 const AdminDashboardLayout = async ({ children }: { children: ReactNode }) => {
   if (!BACKEND_BASE) {
     return (
