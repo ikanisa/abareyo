@@ -4,6 +4,7 @@ export * from './AdminBottomSheet';
 export * from './AdminToast';
 export * from './AdminConfirmDialog';
 export * from './AdminInlineMessage';
+export * from './crud';
 export * from './AdminStatCard';
 export * from './AdminFilterBar';
 export * from './AdminActionToolbar';

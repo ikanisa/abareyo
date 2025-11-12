@@ -18,6 +18,22 @@ import { Table, TableBody, TableCell, TableCaption, TableHead, TableHeader, Tabl
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
+
+export type DataTableFilterFacetOption = {
+  label: string;
+  value: string;
+  count?: number;
+  disabled?: boolean;
+};
+
+export type DataTableFilterFacet = {
+  id: string;
+  label: string;
+  value: string;
+  options: DataTableFilterFacetOption[];
+  onChange: (value: string) => void;
+};
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import {
@@ -32,17 +48,22 @@ export type DataTableProps<TData> = {
   columns: ColumnDef<TData, unknown>[];
   data: TData[];
   isLoading?: boolean;
+  isError?: boolean;
   meta?: { page: number; pageSize: number; total: number };
   onPageChange?: (page: number) => void;
   onSearchChange?: (term: string) => void;
   searchValue?: string;
   searchPlaceholder?: string;
+  searchValue?: string;
+  searchDebounceMs?: number;
   searchLabel?: string;
   emptyState?: React.ReactNode;
+  errorState?: React.ReactNode;
   enableSelection?: boolean;
   getRowId?: (originalRow: TData, index: number) => string;
   onSelectionChange?: (selectedRows: TData[]) => void;
   renderBatchActions?: (context: { selectedRows: TData[]; clearSelection: () => void }) => React.ReactNode;
+  filterFacets?: DataTableFilterFacet[];
   caption?: React.ReactNode;
   captionClassName?: string;
 };
@@ -51,23 +72,32 @@ export function DataTable<TData>({
   columns,
   data,
   isLoading,
+  isError,
   meta,
   onPageChange,
   onSearchChange,
   searchValue,
   searchPlaceholder = 'Search…',
+  searchValue,
+  searchDebounceMs = 300,
   emptyState = <div className="py-6 text-body-sm text-muted-foreground">No results found.</div>,
   searchLabel = 'Search table results',
   emptyState = <div className="py-6 text-sm text-muted-foreground">No results found.</div>,
+  errorState = (
+    <div className="py-6 text-sm text-destructive">
+      Something went wrong while loading this table. Please try again.
+    </div>
+  ),
   enableSelection = false,
   getRowId,
   onSelectionChange,
   renderBatchActions,
+  filterFacets = [],
   caption = 'Table results',
   captionClassName = 'sr-only',
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = React.useState('');
+  const [globalFilter, setGlobalFilter] = React.useState(searchValue ?? '');
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
   const idBase = React.useId().replace(/:/g, '');
   const tableId = `data-table-${idBase}`;
@@ -95,6 +125,20 @@ export function DataTable<TData>({
   }, [isSearchControlled, searchValue]);
 
   React.useEffect(() => {
+    if (onSearchChange) {
+      const handler = setTimeout(() => {
+        onSearchChange(globalFilter);
+      }, searchDebounceMs);
+      return () => clearTimeout(handler);
+    }
+    return undefined;
+  }, [globalFilter, onSearchChange, searchDebounceMs]);
+
+  React.useEffect(() => {
+    if (typeof searchValue === 'string' && searchValue !== globalFilter) {
+      setGlobalFilter(searchValue);
+    }
+  }, [globalFilter, searchValue]);
     if (!onSearchChange || isSearchControlled) {
       return undefined;
     }
@@ -233,6 +277,7 @@ export function DataTable<TData>({
   }, [enableSelection, rowSelection, table]);
 
   const rowCount = data.length;
+  const visibleColumnCount = table.getVisibleLeafColumns().length || columns.length || 1;
   const totalRows = meta?.total ?? rowCount;
 
   const statusMessage = React.useMemo(() => {
@@ -270,6 +315,52 @@ export function DataTable<TData>({
   }, []);
 
   return (
+    <div className="space-y-3">
+      {onSearchChange || filterFacets.length ? (
+        <div className="space-y-3">
+          {onSearchChange ? (
+            <Input
+              value={globalFilter}
+              onChange={(event) => setGlobalFilter(event.target.value)}
+              placeholder={searchPlaceholder}
+              className="max-w-sm bg-white/5"
+            />
+          ) : null}
+          {filterFacets.length ? (
+            <div className="space-y-2">
+              {filterFacets.map((facet) => (
+                <div key={facet.id} className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs uppercase tracking-wide text-slate-400">{facet.label}</span>
+                  <div className="flex flex-wrap gap-2">
+                    {facet.options.map((option) => (
+                      <Button
+                        key={option.value}
+                        type="button"
+                        variant={option.value === facet.value ? 'default' : 'outline'}
+                        size="sm"
+                        disabled={option.disabled}
+                        className={cn(
+                          option.value === facet.value
+                            ? 'shadow-sm shadow-primary/30'
+                            : 'border-white/20 text-slate-200 hover:text-white',
+                          option.disabled ? 'opacity-60' : null,
+                        )}
+                        onClick={() => facet.onChange(option.value)}
+                      >
+                        <span>{option.label}</span>
+                        {typeof option.count === 'number' ? (
+                          <span className="ml-2 rounded-full bg-slate-900/60 px-2 py-0.5 text-[10px] font-semibold text-slate-200">
+                            {option.count}
+                          </span>
+                        ) : null}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
     <div className="space-y-3" aria-live="polite">
       {onSearchChange ? (
         <div className="flex flex-col gap-1">
@@ -416,8 +507,14 @@ export function DataTable<TData>({
           <TableBody className="[&>tr:focus-visible]:outline [&>tr:focus-visible]:outline-2 [&>tr:focus-visible]:outline-offset-2 [&>tr:focus-visible]:outline-primary">
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={visibleColumnCount} className="py-10 text-center text-sm text-muted-foreground">
                   Loading…
+                </TableCell>
+              </TableRow>
+            ) : isError ? (
+              <TableRow>
+                <TableCell colSpan={visibleColumnCount} className="py-10 text-center">
+                  {errorState}
                 </TableCell>
               </TableRow>
             ) : rowCount ? (
@@ -437,6 +534,7 @@ export function DataTable<TData>({
               ))
             ) : (
               <TableRow>
+                <TableCell colSpan={visibleColumnCount} className="py-10 text-center">
                 <TableCell colSpan={columns.length} className="py-10 text-center text-body">
                   {emptyState}
                 </TableCell>

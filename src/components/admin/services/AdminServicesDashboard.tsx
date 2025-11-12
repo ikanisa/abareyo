@@ -8,6 +8,9 @@ import {
   AdminEditDrawer,
   AdminInlineMessage,
   AdminList,
+  CrudConfirmDialog,
+  CrudCreateEditModal,
+  useCrudUndoToast,
 } from '@/components/admin/ui';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -78,8 +81,12 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
   const [deposits, setDeposits] = useState(initialDeposits);
   const [selectedQuote, setSelectedQuote] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
-  const [confirmDeposit, setConfirmDeposit] = useState<{ id: string; status: 'pending' | 'confirmed' } | null>(null);
+  const [confirmingDeposit, setConfirmingDeposit] = useState(false);
+  const [confirmDeposit, setConfirmDeposit] = useState<
+    { id: string; status: 'pending' | 'confirmed'; previousStatus: 'pending' | 'confirmed' } | null
+  >(null);
   const { toast } = useToast();
+  const showUndoToast = useCrudUndoToast();
   const { t } = useAdminLocale();
   const [confirmDeposit, setConfirmDeposit] = useState<{ id: string; status: DepositStatus } | null>(null);
 
@@ -94,6 +101,17 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
     }
   }, []);
 
+  const refreshInsurance = async () => {
+    const refreshed = await adminFetch('/admin/api/services/insurance').then((res) => res.json());
+    setInsurance(refreshed.data?.quotes ?? refreshed.quotes ?? []);
+  };
+
+  const refreshDeposits = async () => {
+    const refreshed = await adminFetch('/admin/api/services/sacco').then((res) => res.json());
+    setDeposits(refreshed.data?.deposits ?? refreshed.deposits ?? []);
+  };
+
+  const issuePolicy = async (quoteId: string, previousStatus: string) => {
   const refreshDeposits = useCallback(async () => {
     try {
       const refreshed = await fetchDeposits();
@@ -112,6 +130,20 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error?.message ?? 'policy_issue_failed');
+      await refreshInsurance();
+      showUndoToast({
+        title: 'Policy issued',
+        description: 'The policy has been issued successfully.',
+        undoLabel: 'Revert',
+        onUndo: async () => {
+          await adminFetch('/admin/api/services/insurance', {
+            method: 'PATCH',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ id: quoteId, status: previousStatus }),
+          });
+          await refreshInsurance();
+        },
+      });
       toast({
         title: t('admin.toast.services.policyIssued', 'Policy issued'),
         description: t('admin.toast.services.policyIssuedDescription', 'The policy has been issued successfully.'),
@@ -159,6 +191,12 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
     },
   });
 
+  const updateDeposit = async (
+    depositId: string,
+    status: 'pending' | 'confirmed',
+    options?: { previousStatus?: 'pending' | 'confirmed'; quiet?: boolean },
+  ) => {
+    try {
   const depositMutation = useAdminMutation<{ depositId: string; status: DepositStatus }, void>({
     mutationFn: async ({ depositId, status }) => {
       const response = await adminFetch('/admin/api/services/sacco', {
@@ -168,6 +206,18 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error?.message ?? 'deposit_update_failed');
+      await refreshDeposits();
+      if (!options?.quiet) {
+        showUndoToast({
+          title: 'Deposit updated',
+          description: `Status set to ${status}.`,
+          undoLabel: 'Undo',
+          onUndo:
+            options?.previousStatus !== undefined
+              ? () => updateDeposit(depositId, options.previousStatus!, { quiet: true })
+              : undefined,
+        });
+      }
       const statusTemplate = t('admin.toast.services.depositStatus', 'Status set to {{status}}.');
       toast({
         title: t('admin.toast.services.depositUpdated', 'Deposit updated'),
@@ -325,7 +375,7 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
                 </Button>
                 <Button
                   size="sm"
-                  onClick={() => issuePolicy(item.id)}
+                  onClick={() => void issuePolicy(item.id, item.status)}
                   disabled={item.status === 'issued'}
                 >
                   {t('admin.services.insurance.actions.issue', 'Issue policy')}
@@ -401,14 +451,20 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => updateDeposit(item.id, 'pending')}
+                  onClick={() => void updateDeposit(item.id, 'pending', { previousStatus: item.status as 'pending' | 'confirmed' })}
                   disabled={item.status === 'pending'}
                 >
                   {t('admin.services.deposits.actions.markPending', 'Mark pending')}
                 </Button>
                 <Button
                   size="sm"
-                  onClick={() => setConfirmDeposit({ id: item.id, status: 'confirmed' })}
+                  onClick={() =>
+                    setConfirmDeposit({
+                      id: item.id,
+                      status: 'confirmed',
+                      previousStatus: item.status as 'pending' | 'confirmed',
+                    })
+                  }
                   disabled={item.status === 'confirmed'}
                 >
                   {t('admin.services.deposits.actions.markConfirmed', 'Mark confirmed')}
@@ -420,6 +476,9 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
           }}
         />
       </section>
+      <CrudCreateEditModal
+        title="Update quote"
+        description="Adjust quote metadata or ticket perk eligibility."
 
       <AdminEditDrawer
         title={t('admin.services.insurance.drawerTitle', 'Update quote')}
@@ -442,6 +501,8 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
             });
             const payload = await response.json();
             if (!response.ok) throw new Error(payload?.error?.message ?? 'quote_update_failed');
+            await refreshInsurance();
+            showUndoToast({ title: 'Quote updated', description: 'Changes applied successfully.' });
             toast({
               title: t('admin.toast.services.quoteUpdated', 'Quote updated'),
               description: t('admin.toast.services.quoteSaved', 'Changes applied successfully.'),
@@ -502,6 +563,11 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
             </label>
           </div>
         ) : null}
+      </CrudCreateEditModal>
+      <CrudConfirmDialog
+        title="Confirm deposit"
+        description="Are you sure this SACCO deposit is reconciled?"
+        confirmLabel="Confirm deposit"
       </AdminEditDrawer>
 
       <AdminConfirmDialog
@@ -517,10 +583,20 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
         confirmLabel={depositState.status === 'loading' ? 'Confirming…' : 'Confirm deposit'}
         cancelLabel="Cancel"
         open={Boolean(confirmDeposit)}
+        loading={confirmingDeposit}
         onOpenChange={(open) => {
           if (!open) setConfirmDeposit(null);
         }}
         onConfirm={async () => {
+          if (!confirmDeposit) return;
+          try {
+            setConfirmingDeposit(true);
+            await updateDeposit(confirmDeposit.id, confirmDeposit.status, {
+              previousStatus: confirmDeposit.previousStatus,
+            });
+            setConfirmDeposit(null);
+          } finally {
+            setConfirmingDeposit(false);
           if (!confirmDeposit || depositState.status === 'loading') return;
           try {
             await executeDeposit({ depositId: confirmDeposit.id, status: confirmDeposit.status });

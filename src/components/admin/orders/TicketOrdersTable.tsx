@@ -5,6 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
 
 import { DataTable } from '@/components/admin/DataTable';
+import { CrudConfirmDialog, useCrudUndoToast } from '@/components/admin/ui';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { AttachSmsModal } from '@/components/admin/orders/AttachSmsModal';
@@ -44,6 +45,10 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [attachTarget, setAttachTarget] = useState<{ id: string; amount: number } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [confirmRefund, setConfirmRefund] = useState<AdminTicketOrder | null>(null);
+  const [isRefunding, setIsRefunding] = useState(false);
+  const showUndoToast = useCrudUndoToast();
   const [optimisticStatuses, setOptimisticStatuses] = useState<Record<string, string>>({});
 
   const { search, debouncedSearch, setSearch, isDebouncing } = useAdminSearch({
@@ -61,6 +66,7 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
   const loadOrders = useCallback(
     async (targetPage: number) => {
       setIsLoading(true);
+      setError(null);
       setLoadError(null);
       try {
         const response = await fetchAdminTicketOrders({
@@ -73,6 +79,9 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
         setMeta(response.meta);
         setPage(response.meta.page);
       } catch (error) {
+        console.error(error);
+        toast({ title: 'Failed to load ticket orders', variant: 'destructive' });
+        setError(error instanceof Error ? error.message : 'unknown_error');
         const message = error instanceof Error ? error.message : 'Unable to load ticket orders';
         setLoadError(message);
         toast({ title: 'Failed to load ticket orders', description: message, variant: 'destructive' });
@@ -267,8 +276,8 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
             <Button
               variant="outline"
               size="sm"
-              disabled={row.original.status !== 'paid' || isPending}
-              onClick={() => handleRefund(row.original.id)}
+              disabled={row.original.status !== 'paid' || isPending || isRefunding}
+              onClick={() => setConfirmRefund(row.original)}
             >
               Refund
             </Button>
@@ -277,6 +286,7 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
         enableHiding: false,
       },
     ],
+    [handleAttachOpen, isPending, isRefunding],
     [handleAttachOpen, handleRefund, optimisticStatuses, refundState.activeId, refundState.status],
   );
 
@@ -303,6 +313,37 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
         columns={columns}
         data={data}
         meta={meta}
+        isLoading={isLoading || isPending}
+        isError={Boolean(error)}
+        errorState={
+          <div className="space-y-1 text-sm">
+            <p className="font-semibold text-destructive">Failed to load orders.</p>
+            {error ? <p className="text-xs text-muted-foreground">{error}</p> : null}
+          </div>
+        }
+        onPageChange={handlePageChange}
+        onSearchChange={handleSearchChange}
+        searchValue={searchTerm}
+        searchPlaceholder="Search order ID or email"
+        filterFacets={[
+          {
+            id: 'status',
+            label: 'Status',
+            value: status,
+            options: statusFilters.map((option) => ({
+              value: option,
+              label: statusLabels[option],
+              disabled: isLoading || isPending,
+            })),
+            onChange: handleStatusChange,
+          },
+        ]}
+        emptyState={
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>No ticket orders found for the current filters.</p>
+            <p className="text-xs">Adjust the search or status facet to broaden the results.</p>
+          </div>
+        }
         isLoading={isLoading || isDebouncing || refundState.status === 'loading'}
         onPageChange={handlePageChange}
         onSearchChange={setSearch}
@@ -327,6 +368,53 @@ export const TicketOrdersTable = ({ initial }: TicketOrdersTableProps) => {
           onAttached={handleAttached}
         />
       ) : null}
+      <CrudConfirmDialog
+        intent="danger"
+        title="Refund ticket order"
+        description="Marking an order for refund notifies finance to reconcile the payment manually."
+        confirmLabel="Mark for refund"
+        open={Boolean(confirmRefund)}
+        loading={isRefunding}
+        onOpenChange={(open) => {
+          if (!open) {
+            setConfirmRefund(null);
+          }
+        }}
+        onConfirm={async () => {
+          if (!confirmRefund) return;
+          try {
+            setIsRefunding(true);
+            await refundTicketOrder(confirmRefund.id);
+            showUndoToast({
+              title: 'Order marked for refund',
+              description: 'Payment flagged for manual reconciliation.',
+              onUndo: () => loadOrders({}),
+            });
+            await loadOrders({});
+          } catch (error) {
+            console.error(error);
+            toast({
+              title: 'Refund failed',
+              description: error instanceof Error ? error.message : undefined,
+              variant: 'destructive',
+            });
+          } finally {
+            setIsRefunding(false);
+            setConfirmRefund(null);
+          }
+        }}
+      >
+        {confirmRefund ? (
+          <div className="space-y-1 text-xs text-slate-200">
+            <p>
+              <span className="font-semibold text-slate-100">Order:</span> {confirmRefund.id.slice(0, 8)}…
+            </p>
+            <p>
+              <span className="font-semibold text-slate-100">Total:</span> {confirmRefund.total.toLocaleString()} RWF
+            </p>
+          </div>
+        ) : null}
+      </CrudConfirmDialog>
     </div>
   );
 };
