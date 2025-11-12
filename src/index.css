@@ -48,6 +48,30 @@
 
     --radius: 1rem;
 
+    /* LawAI Typographic Scale */
+    --type-scale-display: clamp(2.75rem, 2.5vw + 2rem, 3.5rem);
+    --type-scale-heading-xl: clamp(2.125rem, 1.8vw + 1.7rem, 2.75rem);
+    --type-scale-heading-lg: clamp(1.75rem, 1.1vw + 1.45rem, 2.125rem);
+    --type-scale-heading-md: clamp(1.5rem, 0.85vw + 1.3rem, 1.75rem);
+    --type-scale-heading-sm: clamp(1.3125rem, 0.6vw + 1.15rem, 1.5rem);
+    --type-scale-heading-xs: clamp(1.125rem, 0.4vw + 1rem, 1.3125rem);
+    --type-scale-subtitle: clamp(1.0625rem, 0.3vw + 0.95rem, 1.1875rem);
+    --type-scale-body-lg: clamp(1.0625rem, 0.3vw + 0.98rem, 1.1875rem);
+    --type-scale-body: clamp(1rem, 0.25vw + 0.96rem, 1.0625rem);
+    --type-scale-body-sm: clamp(0.9375rem, 0.2vw + 0.88rem, 1rem);
+    --type-scale-caption: clamp(0.8125rem, 0.15vw + 0.75rem, 0.875rem);
+
+    --type-leading-tight: 1.18;
+    --type-leading-snug: 1.28;
+    --type-leading-normal: 1.4;
+    --type-leading-relaxed: 1.5;
+    --type-leading-loose: 1.62;
+
+    --type-tracking-tight: -0.01em;
+    --type-tracking-default: 0;
+    --type-tracking-relaxed: 0.012em;
+    --type-tracking-wide: 0.08em;
+
     /* Glass & Motion */
     --glass-bg: 0 0% 100% / 0.82;
     --glass-border: 232 80% 52% / 0.12;
@@ -117,12 +141,60 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground text-body antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
   html {
     scroll-behavior: smooth;
+  }
+
+  h1 {
+    @apply text-display font-semibold text-balance;
+  }
+
+  h2 {
+    @apply text-heading-xl font-semibold text-balance;
+  }
+
+  h3 {
+    @apply text-heading-lg font-semibold text-balance;
+  }
+
+  h4 {
+    @apply text-heading-md font-medium text-balance;
+  }
+
+  h5 {
+    @apply text-heading-sm font-medium text-balance;
+  }
+
+  h6 {
+    @apply text-heading-xs font-medium uppercase tracking-[var(--type-tracking-wide)];
+  }
+
+  p {
+    @apply text-body text-pretty;
+  }
+
+  small {
+    @apply text-body-sm;
+  }
+
+  .type-subtitle {
+    @apply text-subtitle font-medium text-pretty;
+  }
+
+  .type-body-lg {
+    @apply text-body-lg text-pretty;
+  }
+
+  .type-body-sm {
+    @apply text-body-sm text-pretty;
+  }
+
+  .type-caption {
+    @apply text-caption uppercase tracking-[var(--type-tracking-wide)];
   }
 
   @media (prefers-reduced-motion: reduce) {

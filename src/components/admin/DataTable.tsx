@@ -56,6 +56,7 @@ export function DataTable<TData>({
   onSearchChange,
   searchValue,
   searchPlaceholder = 'Search…',
+  emptyState = <div className="py-6 text-body-sm text-muted-foreground">No results found.</div>,
   searchLabel = 'Search table results',
   emptyState = <div className="py-6 text-sm text-muted-foreground">No results found.</div>,
   enableSelection = false,
@@ -286,6 +287,7 @@ export function DataTable<TData>({
             }
           }}
           placeholder={searchPlaceholder}
+          className="max-w-sm bg-white/5 text-body"
           className="w-full max-w-md bg-white/5"
         />
         <div className="flex flex-col gap-1">
@@ -367,6 +369,8 @@ export function DataTable<TData>({
         </ResponsiveSection>
       ) : null}
       {enableSelection && renderBatchActions && selectedRows.length > 0 ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-body-sm text-primary-foreground">
+          <span className="font-semibold">
         <div
           className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary-foreground"
           role="status"
@@ -400,7 +404,7 @@ export function DataTable<TData>({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="border-white/10 hover:bg-white/10">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="text-xs uppercase tracking-wide text-slate-300">
+                  <TableHead key={header.id} className="type-caption text-slate-200">
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -424,6 +428,7 @@ export function DataTable<TData>({
                   tabIndex={0}
                 >
                   {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className="text-body-sm text-slate-100">
                     <TableCell key={cell.id} className="break-words text-sm text-slate-100">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
@@ -432,7 +437,7 @@ export function DataTable<TData>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="py-10 text-center">
+                <TableCell colSpan={columns.length} className="py-10 text-center text-body">
                   {emptyState}
                 </TableCell>
               </TableRow>
@@ -441,6 +446,8 @@ export function DataTable<TData>({
         </Table>
       </div>
       {meta && (
+        <div className="flex items-center justify-between text-caption text-slate-400">
+          <div>
         <div className="flex flex-col gap-3 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-center sm:text-left">
         <div className="flex items-center justify-between text-xs text-slate-400">

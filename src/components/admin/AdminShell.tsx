@@ -280,6 +280,7 @@ const Breadcrumbs = ({ breadcrumbs }: { breadcrumbs: Breadcrumb[] }) => {
               aria-disabled
               disabled
               className={cn(
+                'flex items-center justify-between rounded-xl px-3 py-2 text-body-sm text-slate-500/70',
                 'flex w-full items-center gap-3 rounded-xl border border-dashed border-white/5 bg-slate-950/50 px-3 py-2 text-sm text-slate-500/70',
                 isCollapsed && 'w-12 justify-center px-2 py-3',
                 'flex items-center justify-between rounded-xl px-[var(--space-3)] py-[var(--space-2)] text-sm text-slate-500/70',
@@ -357,6 +358,7 @@ const Breadcrumbs = ({ breadcrumbs }: { breadcrumbs: Breadcrumb[] }) => {
             href={item.href}
             prefetch={false}
             className={cn(
+              'group flex items-center justify-between rounded-xl px-3 py-2 text-body-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
               'group flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
               'group flex items-center justify-between rounded-xl px-[var(--space-3)] py-[var(--space-2)] text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
               isActive
@@ -1030,6 +1032,7 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
         className="relative hidden w-72 flex-col border-r border-white/10 bg-slate-950/70 px-4 py-6 backdrop-blur-xl md:flex"
       >
         <div className="mb-6 flex items-center justify-between">
+          <Link href="/admin" className="text-heading-sm font-semibold tracking-tight text-primary">
   const hasSecondary = Boolean(secondaryPanel);
 
   return (
@@ -1060,12 +1063,14 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
           Admin navigation
         </h2>
         <NavItems activeHref={activeHref} />
+        <div className="mt-6 rounded-xl border border-white/5 bg-white/5 p-3 text-body-sm text-slate-300">
+          <div className="text-body font-semibold text-slate-100">Signed in</div>
         <NavItems states={navStates} activeItem={activeItem} />
         <div className="mt-6 rounded-xl border border-white/5 bg-white/5 p-3 text-xs text-slate-300">
         <div className="mt-shell-stack rounded-xl border border-white/5 bg-white/5 p-3 text-xs text-slate-300">
           <div className="font-semibold text-slate-100">Signed in</div>
           <div>{user.displayName}</div>
-          <div className="truncate text-slate-400">{user.email}</div>
+          <div className="truncate text-caption text-slate-400/80">{user.email}</div>
           <div className="mt-2 flex flex-wrap gap-1">
             {user.roles.map((role) => (
               <Badge key={role} variant="secondary" className="bg-primary/15 text-primary">
@@ -1199,6 +1204,11 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
                   Sign out
                 </Button>
               </SheetTrigger>
+            <SheetContent side="left" className="w-[260px] border-white/10 bg-slate-950/95 text-slate-100">
+              <SheetHeader className="text-left">
+                <SheetTitle className="text-heading-sm font-semibold text-white">Navigation</SheetTitle>
+              </SheetHeader>
+              <div className="mt-6">
               <SheetContent
                 side="left"
                 className="w-[260px] border-white/10 bg-slate-950/95 text-slate-100"
@@ -1303,6 +1313,19 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
               </div>
             </SheetContent>
           </Sheet>
+          <input
+            type="search"
+            placeholder="Search ops…"
+            className="hidden w-72 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-body-sm outline-none placeholder:text-slate-400 focus:border-primary/60 focus:ring-0 md:block"
+          />
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="hidden items-center gap-1 text-caption text-slate-400/80 md:flex">
+            <span className="type-caption text-slate-400/80">Lang</span>
+            <div className="flex overflow-hidden rounded-full border border-white/10">
+              {(['en', 'rw'] as const).map((code) => {
+                const isActive = locale === code;
+                return (
           <div className="flex items-center gap-2">
             {environment ? (
               <Badge variant="outline" className="bg-white/5 text-[10px] uppercase tracking-wide">
@@ -1349,8 +1372,12 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
                     </button>
                   );
                 })}
-              </div>
             </div>
+          </div>
+          <Button variant="ghost" size="sm" className="hidden items-center gap-2 text-body text-slate-300 hover:text-white md:flex">
+            Quick actions
+            <ChevronDown className="h-4 w-4" />
+          </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="hidden items-center gap-2 text-slate-300 hover:text-white md:flex">
