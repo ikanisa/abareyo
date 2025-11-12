@@ -1,5 +1,14 @@
 'use client';
 
+import { useState } from 'react';
+
+import {
+  AdminActionToolbar,
+  AdminConfirmDialog,
+  AdminEditDrawer,
+  AdminInlineMessage,
+  AdminList,
+} from '@/components/admin/ui';
 import { useCallback, useMemo, useState } from 'react';
 
 import { AdminConfirmDialog, AdminEditDrawer, AdminInlineMessage, AdminList } from '@/components/admin/ui';
@@ -271,6 +280,11 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
           title={t('admin.services.insurance.listTitle', 'Quotes')}
           description={t('admin.services.insurance.listDescription', 'Quotes awaiting issuance or follow-up.')}
           items={insurance}
+          renderItem={(item) => (
+            <AdminActionToolbar.Section
+              title={`Premium ${item.premium.toLocaleString()} RWF`}
+              description={`Quote #${item.id.slice(0, 8)}`}
+              actions={
           renderItem={(item) => {
             const isIssuing = policyState.status === 'loading' && policyState.activeId === item.id;
             return (
@@ -286,6 +300,16 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
                   <Button variant="outline" size="sm" onClick={() => setSelectedQuote(item.id)}>
                     Edit
                   </Button>
+                  <Button size="sm" onClick={() => issuePolicy(item.id)} disabled={item.status === 'issued'}>
+                    Issue policy
+                  </Button>
+                </div>
+              }
+            >
+              <p className="text-xs text-slate-500">
+                Status: <span className={statusBadge(item.status)}>{item.status}</span>
+              </p>
+            </AdminActionToolbar.Section>
                   <Button
                     size="sm"
                     onClick={() => executePolicy({ quoteId: item.id })}
@@ -330,6 +354,11 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
           title={t('admin.services.deposits.listTitle', 'Deposits')}
           description={t('admin.services.deposits.listDescription', 'Recent SACCO deposits awaiting confirmation.')}
           items={deposits}
+          renderItem={(item) => (
+            <AdminActionToolbar.Section
+              title={`${item.amount.toLocaleString()} RWF`}
+              description={`Deposit #${item.id.slice(0, 8)}`}
+              actions={
           renderItem={(item) => {
             const isUpdating = depositState.status === 'loading' && depositState.activeId === item.id;
             return (
@@ -345,6 +374,8 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
                   <Button
                     size="sm"
                     variant="outline"
+                    onClick={() => updateDeposit(item.id, 'pending')}
+                    disabled={item.status === 'pending'}
                     onClick={() => executeDeposit({ depositId: item.id, status: 'pending' })}
                     disabled={item.status === 'pending' || isUpdating}
                   >
@@ -353,11 +384,18 @@ export const AdminServicesDashboard = ({ initialInsurance, initialDeposits }: Ad
                   <Button
                     size="sm"
                     onClick={() => setConfirmDeposit({ id: item.id, status: 'confirmed' })}
+                    disabled={item.status === 'confirmed'}
                     disabled={item.status === 'confirmed' || isUpdating}
                   >
                     Mark confirmed
                   </Button>
                 </div>
+              }
+            >
+              <p className="text-xs text-slate-500">
+                Status: <span className={statusBadge(item.status)}>{item.status}</span>
+              </p>
+            </AdminActionToolbar.Section>
               </div>
               <div className="flex items-center gap-2">
                 <Button

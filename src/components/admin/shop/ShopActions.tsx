@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { AdminActionToolbar } from '@/components/admin/ui';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -128,6 +129,21 @@ export const ShopActions = () => {
   };
 
   return (
+    <AdminActionToolbar>
+      <AdminActionToolbar.Section
+        title="Update Order Status"
+        description="Set fulfillment status, add notes, and sync with customer support."
+        footer={
+          <div className="flex gap-2">
+            <Button onClick={handleUpdateStatus} disabled={isPending}>
+              Update Status
+            </Button>
+            <Button variant="outline" onClick={handleAddNote} disabled={isPending || !note}>
+              Add Note
+            </Button>
+          </div>
+        }
+      >
     <div className="grid gap-4 md:grid-cols-2">
       <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-4">
         <div className="text-sm font-semibold text-slate-100">
@@ -139,11 +155,13 @@ export const ShopActions = () => {
             <Input id="order-id" value={orderId} onChange={(e) => setOrderId(e.target.value)} />
           </div>
           <div>
+            <Label htmlFor="status">Status</Label>
             <Label htmlFor="status">{t('admin.shop.actions.fields.status', 'Status')}</Label>
             <Input
               id="status"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
+              placeholder="pending | ready | fulfilled | cancelled"
               placeholder={t('admin.form.shop.orders.status.placeholder', 'pending | ready | fulfilled | cancelled')}
             />
           </div>
@@ -157,6 +175,17 @@ export const ShopActions = () => {
             />
           </div>
         </div>
+      </AdminActionToolbar.Section>
+
+      <AdminActionToolbar.Section
+        title="Update Tracking"
+        description="Attach a carrier tracking number for outbound shipments."
+        footer={
+          <Button onClick={handleUpdateTracking} disabled={isPending}>
+            Save Tracking
+          </Button>
+        }
+      >
         <div className="flex gap-2">
           <Button onClick={handleUpdateStatus} disabled={isPending}>
             {t('admin.shop.actions.buttons.updateStatus', 'Update Status')}
@@ -181,6 +210,18 @@ export const ShopActions = () => {
             <Input id="tracking-number" value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} />
           </div>
         </div>
+      </AdminActionToolbar.Section>
+
+      <AdminActionToolbar.Section
+        className="md:col-span-2"
+        title="Batch Update Status"
+        description="Provide comma separated IDs to push a bulk fulfillment change."
+        footer={
+          <Button onClick={handleBatchUpdate} disabled={isPending}>
+            Run Batch Update
+          </Button>
+        }
+      >
         <Button onClick={handleUpdateTracking} disabled={isPending}>
           {t('admin.shop.actions.buttons.saveTracking', 'Save Tracking')}
         </Button>
@@ -210,6 +251,8 @@ export const ShopActions = () => {
             />
           </div>
         </div>
+      </AdminActionToolbar.Section>
+    </AdminActionToolbar>
         <Button onClick={handleBatchUpdate} disabled={isPending}>
           {t('admin.shop.actions.buttons.runBatch', 'Run Batch Update')}
         </Button>

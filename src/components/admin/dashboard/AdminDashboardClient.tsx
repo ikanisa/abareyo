@@ -3,6 +3,9 @@
 import Link from 'next/link';
 import { useMemo, useState, type ComponentType } from 'react';
 
+import { AdminStatCard } from '@/components/admin/ui';
+import { useAdminLocale } from '@/providers/admin-locale-provider';
+import type { DashboardSnapshot } from '@/services/admin/dashboard';
 import { AdminBottomSheet } from '@/components/admin/ui';
 import { Button } from '@/components/ui/button';
 import type { DashboardSnapshot } from '@/services/admin/dashboard';
@@ -81,8 +84,26 @@ export const AdminDashboardClient = ({ snapshot }: AdminDashboardClientProps) =>
     <div className="space-y-6">
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {kpiCards.map((card) => (
-          <div
+          <AdminStatCard
             key={card.key}
+            title={card.label}
+            value={formatValue(card.value7d, card.format)}
+            valueLabel={t('admin.dashboard.kpi.range.sevenDay', 'Last 7 days')}
+            stats={[
+              {
+                label: t('admin.dashboard.kpi.range.thirtyDay', '30d'),
+                value: formatValue(card.value30d, card.format),
+              },
+            ]}
+            trend={
+              card.trendLabel
+                ? {
+                    label: card.trendLabel,
+                    tone: card.isPositive ? 'positive' : card.isNegative ? 'negative' : 'neutral',
+                  }
+                : undefined
+            }
+          />
             className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 shadow-lg shadow-primary/5"
           >
             <div className="type-caption text-slate-300/80">{card.label}</div>
@@ -112,6 +133,10 @@ export const AdminDashboardClient = ({ snapshot }: AdminDashboardClientProps) =>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
+        <AdminStatCard
+          title={t('admin.dashboard.sms.title', 'SMS Parser Health')}
+          description={
+            snapshot.sms.successRate === null
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
           <h2 className="text-heading-md text-slate-100">
             {t('admin.dashboard.sms.title', 'SMS Parser Health')}
@@ -124,6 +149,11 @@ export const AdminDashboardClient = ({ snapshot }: AdminDashboardClientProps) =>
                   `Success rate ${(snapshot.sms.successRate * 100).toFixed(1)}% across ${numberFormatter.format(
                     snapshot.sms.rawCount7d,
                   )} messages.`,
+                )
+          }
+          variant="muted"
+        >
+          <div className="mt-2 space-y-2 text-sm text-slate-300">
                 )}
           </p>
           <div className="mt-5 space-y-2 text-body-sm text-slate-100/90">
@@ -175,6 +205,18 @@ export const AdminDashboardClient = ({ snapshot }: AdminDashboardClientProps) =>
                 </div>
               )}
             </div>
+          </div>
+        </AdminStatCard>
+
+        <AdminStatCard
+          title={t('admin.dashboard.payments.title', 'Payment SLA')}
+          description={t(
+            'admin.dashboard.payments.subtitle',
+            'Tracking reconciliation speed across ticket and shop payments.',
+          )}
+          variant="muted"
+        >
+          <div className="mt-2 space-y-2 text-sm text-slate-300">
           ))}
         </div>
       </AdminSection>
@@ -241,6 +283,17 @@ export const AdminDashboardClient = ({ snapshot }: AdminDashboardClientProps) =>
               </div>
             </div>
           </div>
+        </AdminStatCard>
+
+        <AdminStatCard
+          title={t('admin.dashboard.gates.title', 'Gate Throughput')}
+          description={t(
+            'admin.dashboard.gates.subtitle',
+            `Pass issuance activity over the last ${snapshot.gates.windowHours}-hour window.`,
+          )}
+          variant="muted"
+        >
+          <div className="mt-2 space-y-2 text-sm text-slate-300">
 
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
           <h2 className="text-heading-md text-slate-100">
@@ -326,6 +379,25 @@ export const AdminDashboardClient = ({ snapshot }: AdminDashboardClientProps) =>
               )}
             </div>
           </div>
+        </AdminStatCard>
+      </section>
+
+      <AdminStatCard
+        title={t('admin.dashboard.alerts.title', 'Operational Alerts')}
+        description={
+          snapshot.alerts.length
+            ? t('admin.dashboard.alerts.summary', 'Live checks across ingestion and reconciliation pipelines.')
+            : t('admin.dashboard.alerts.empty', 'All systems nominal. No alerts triggered in the last refresh.')
+        }
+        variant="muted"
+        footer={`${t('admin.dashboard.alerts.refreshedAt', 'Refreshed')} ${new Date(snapshot.generatedAt).toLocaleString()}`}
+      >
+        {snapshot.alerts.length ? (
+          <ul className="mt-2 space-y-2 text-sm">
+            {snapshot.alerts.map((alert) => (
+              <li
+                key={alert.id}
+                className={`rounded-xl border p-3 ${
         </div>
       </AdminSection>
 
@@ -387,6 +459,8 @@ export const AdminDashboardClient = ({ snapshot }: AdminDashboardClientProps) =>
               </li>
             ))}
           </ul>
+        ) : null}
+      </AdminStatCard>
         ) : (
           <p className="mt-4 max-w-prose text-body-sm text-slate-300/90">
           <p className="mt-[var(--space-4)] text-sm text-slate-400">
