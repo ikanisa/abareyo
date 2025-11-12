@@ -245,14 +245,12 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
     router.replace(next ? `${current}?${next}` : current);
   }, [pathname, router, searchParams, toast]);
 
-  const hasSecondary = Boolean(secondaryPanel);
-
   return (
     <div
       className={cn(
         'relative grid min-h-screen grid-cols-1 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100',
         'md:grid-cols-admin-shell',
-        hasSecondary ? 'lg:grid-cols-admin-shell-rail' : 'lg:grid-cols-admin-shell',
+        'lg:grid-cols-admin-shell-rail',
       )}
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_55%)]" />
