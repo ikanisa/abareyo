@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -93,7 +93,13 @@ export const ShopOrdersTable = ({ initial }: ShopOrdersTableProps) => {
     setPage(initial.meta.page);
   }, [initial]);
 
+  const shouldResetPage = useRef(false);
+
   useEffect(() => {
+    if (!shouldResetPage.current) {
+      shouldResetPage.current = true;
+      return;
+    }
     setPage(1);
   }, [debouncedSearch, status]);
 
