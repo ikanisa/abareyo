@@ -68,6 +68,9 @@ export function DataTable<TData>({
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
+  const idBase = React.useId().replace(/:/g, '');
+  const tableId = `data-table-${idBase}`;
+  const searchInputId = `${tableId}-search`;
   const isSearchControlled = typeof searchValue === 'string';
   const resolvedSearchValue = isSearchControlled ? searchValue ?? '' : globalFilter;
   const searchInputId = React.useId();
@@ -229,6 +232,25 @@ export function DataTable<TData>({
   }, [enableSelection, rowSelection, table]);
 
   const rowCount = data.length;
+  const totalRows = meta?.total ?? rowCount;
+
+  const statusMessage = React.useMemo(() => {
+    if (isLoading) {
+      return 'Loading results';
+    }
+
+    if (rowCount === 0) {
+      return 'No results available';
+    }
+
+    if (meta) {
+      const start = (meta.page - 1) * meta.pageSize + 1;
+      const end = Math.min(meta.page * meta.pageSize, meta.total);
+      return `Showing ${rowCount} of ${meta.total} rows, rows ${start} to ${end}`;
+    }
+
+    return `Showing ${rowCount} rows`;
+  }, [isLoading, meta, rowCount]);
 
   const columnsCanHide = React.useMemo(
     () => table.getAllLeafColumns().filter((column) => column.getCanHide()),
@@ -247,8 +269,12 @@ export function DataTable<TData>({
   }, []);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" aria-live="polite">
       {onSearchChange ? (
+        <div className="flex flex-col gap-1">
+          <label htmlFor={searchInputId} className="sr-only">
+            {searchPlaceholder}
+          </label>
         <Input
           value={resolvedSearchValue}
           onChange={(event) => {
@@ -271,6 +297,10 @@ export function DataTable<TData>({
             value={globalFilter}
             onChange={(event) => setGlobalFilter(event.target.value)}
             placeholder={searchPlaceholder}
+            className="max-w-sm bg-white/5 focus-visible:ring-offset-4"
+            aria-controls={tableId}
+          />
+        </div>
             aria-label={searchLabel}
             className="max-w-sm bg-white/5"
           />
@@ -337,7 +367,11 @@ export function DataTable<TData>({
         </ResponsiveSection>
       ) : null}
       {enableSelection && renderBatchActions && selectedRows.length > 0 ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary-foreground">
+        <div
+          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary-foreground"
+          role="status"
+          aria-live="assertive"
+        >
           <span className="font-medium">
             {selectedRows.length} selected
           </span>
@@ -349,7 +383,11 @@ export function DataTable<TData>({
           </div>
         </div>
       ) : null}
+      <p className="sr-only" aria-live="polite">
+        {statusMessage}
+      </p>
       <div className="overflow-hidden rounded-xl border border-white/10">
+        <Table id={tableId} aria-rowcount={totalRows} aria-busy={isLoading}>
         <Table aria-describedby={caption ? tableCaptionId : undefined}>
           {caption ? (
             <TableCaption id={tableCaptionId} className={cn('text-left', captionClassName)}>
@@ -369,7 +407,7 @@ export function DataTable<TData>({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
+          <TableBody className="[&>tr:focus-visible]:outline [&>tr:focus-visible]:outline-2 [&>tr:focus-visible]:outline-offset-2 [&>tr:focus-visible]:outline-primary">
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={columns.length} className="py-10 text-center text-sm text-muted-foreground">
@@ -378,7 +416,11 @@ export function DataTable<TData>({
               </TableRow>
             ) : rowCount ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="border-white/5 hover:bg-white/5">
+                <TableRow
+                  key={row.id}
+                  className="border-white/5 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  tabIndex={0}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="text-sm text-slate-100">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -398,7 +440,7 @@ export function DataTable<TData>({
       </div>
       {meta && (
         <div className="flex items-center justify-between text-xs text-slate-400">
-          <div>
+          <div role="status" aria-live="polite">
             Page {meta.page} · {rowCount} of {meta.total} rows
           </div>
           {onPageChange && (

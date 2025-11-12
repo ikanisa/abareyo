@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
@@ -120,6 +121,7 @@ export type AdminShellProps = {
   secondaryPanel?: ReactNode;
 };
 
+const NavItems = ({ activeHref, onSelect }: { activeHref: string; onSelect?: () => void }) => {
 const NavItems = ({ activeHref, isCollapsed }: { activeHref: string; isCollapsed: boolean }) => {
 const NavItemsList = ({ activeHref }: { activeHref: string }) => {
   const { t } = useAdminLocale();
@@ -144,6 +146,7 @@ const NavigationBadge = ({ badge }: { badge?: AdminNavigationBadge }) => {
   }
   const toneClass = badgeToneClassNames[badge.tone ?? 'default'];
   return (
+    <nav aria-label="Admin sections" className="flex flex-1 flex-col gap-1 overflow-y-auto">
     <ul className="flex flex-1 flex-col gap-1 overflow-y-auto" role="list">
     <Badge variant="outline" className={cn('text-[10px] uppercase tracking-wide', toneClass)}>
       {badge.label}
@@ -273,6 +276,9 @@ const Breadcrumbs = ({ breadcrumbs }: { breadcrumbs: Breadcrumb[] }) => {
             </li>
             <button
               key={item.href}
+              type="button"
+              aria-disabled
+              disabled
               className={cn(
                 'flex w-full items-center gap-3 rounded-xl border border-dashed border-white/5 bg-slate-950/50 px-3 py-2 text-sm text-slate-500/70',
                 isCollapsed && 'w-12 justify-center px-2 py-3',
@@ -353,6 +359,8 @@ const Breadcrumbs = ({ breadcrumbs }: { breadcrumbs: Breadcrumb[] }) => {
                 : 'text-slate-300 hover:bg-primary/10 hover:text-primary',
               isCollapsed && 'w-12 justify-center px-2 py-3 text-base',
             )}
+            aria-current={isActive ? 'page' : undefined}
+            onClick={() => onSelect?.()}
           >
             <Icon className={cn('h-4 w-4', isCollapsed && 'h-5 w-5')} aria-hidden />
             {!isCollapsed && <span className="flex-1 truncate">{label}</span>}
@@ -718,6 +726,9 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
   const { toast } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const menuTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const mobileSheetRef = useRef<HTMLDivElement | null>(null);
+  const { locale, setLocale, loading: localeLoading } = useAdminLocale();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { locale, setLocale, loading: localeLoading, t } = useAdminLocale();
 
@@ -919,6 +930,19 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
     router.replace(next ? `${current}?${next}` : current);
   }, [pathname, router, searchParams, toast]);
 
+  useEffect(() => {
+    if (mobileNavOpen) {
+      const focusable = mobileSheetRef.current?.querySelector<HTMLElement>(
+        'a[href]:not([aria-disabled="true"]), button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      focusable?.focus();
+      return;
+    }
+
+    if (!mobileNavOpen && menuTriggerRef.current) {
+      menuTriggerRef.current.focus();
+    }
+  }, [mobileNavOpen]);
   const handleSkipToContent = useCallback((event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
     const main = document.getElementById('admin-main-content');
@@ -938,6 +962,13 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
         Skip to main content
       </a>
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_55%)]" />
+      <a
+        href="#admin-main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+      >
+        Skip to main content
+      </a>
+      <aside className="relative hidden w-72 flex-col border-r border-white/10 bg-slate-950/70 px-4 py-6 backdrop-blur-xl md:flex" aria-labelledby="admin-nav-heading">
       <aside
         className={cn(
           'relative hidden flex-col border-r border-white/10 bg-slate-950/70 py-6 backdrop-blur-xl transition-all duration-200 md:flex',
@@ -996,6 +1027,10 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
         <div className="mt-shell-stack flex-1 overflow-hidden">
           <NavItems activeHref={activeHref} />
         </div>
+        <h2 id="admin-nav-heading" className="sr-only">
+          Admin navigation
+        </h2>
+        <NavItems activeHref={activeHref} />
         <NavItems states={navStates} activeItem={activeItem} />
         <div className="mt-6 rounded-xl border border-white/5 bg-white/5 p-3 text-xs text-slate-300">
         <div className="mt-shell-stack rounded-xl border border-white/5 bg-white/5 p-3 text-xs text-slate-300">
@@ -1113,6 +1148,11 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
                 <Button
                   variant="outline"
                   size="sm"
+                  ref={menuTriggerRef}
+                  className="inline-flex items-center gap-2 text-slate-300 hover:text-white md:hidden"
+                  aria-label="Open navigation menu"
+                  aria-controls="admin-mobile-navigation"
+                  aria-expanded={mobileNavOpen}
                   onClick={handleLogout}
                   disabled={isLoggingOut}
                   className="border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
@@ -1120,11 +1160,36 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
                   Sign out
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[260px] border-white/10 bg-slate-950/95 text-slate-100">
+              <SheetContent
+                side="left"
+                className="w-[260px] border-white/10 bg-slate-950/95 text-slate-100"
+                ref={mobileSheetRef}
+                aria-label="Admin navigation"
+                id="admin-mobile-navigation"
+              >
                 <SheetHeader className="text-left">
                   <SheetTitle className="text-lg font-semibold text-white">Navigation</SheetTitle>
                 </SheetHeader>
                 <div className="mt-6">
+                  <NavItems activeHref={activeHref} onSelect={() => setMobileNavOpen(false)} />
+                </div>
+              </SheetContent>
+            </Sheet>
+            <form role="search" className="hidden md:block">
+              <label htmlFor="admin-search" className="sr-only">
+                Search admin data
+              </label>
+              <input
+                id="admin-search"
+                type="search"
+                placeholder="Search operations"
+                aria-describedby="admin-search-hint"
+                className="w-72 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-primary/60 focus:ring-0"
+              />
+              <span id="admin-search-hint" className="sr-only">
+                Type to filter tables and navigation results.
+              </span>
+            </form>
                   <NavItems activeHref={activeHref} isCollapsed={false} />
                 </div>
               </SheetContent>
@@ -1309,6 +1374,13 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
             <Button
               variant="ghost"
               size="sm"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-primary"
+              aria-live="polite"
+              aria-label={isLoggingOut ? 'Signing out of admin' : 'Sign out of admin'}
+            >
+              {isLoggingOut ? 'Signing out…' : 'Sign out'}
               className="inline-flex items-center gap-[var(--space-2)] text-slate-300 hover:text-white lg:hidden"
               aria-label="Toggle navigation"
             >
@@ -1356,6 +1428,7 @@ const ShellInner = ({ user, environment, children, secondaryPanel }: AdminShellP
             })}
           </div>
         </header>
+        <main id="admin-main" className="relative flex-1 overflow-y-auto px-4 py-6 md:px-8" tabIndex={-1}>
         <main id="admin-main-content" tabIndex={-1} className="relative flex-1 overflow-y-auto px-4 py-6 md:px-8">
         </div>
         <main className="relative flex-1 overflow-y-auto px-shell-gutter py-shell-stack">
