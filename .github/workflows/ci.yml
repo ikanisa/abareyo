@@ -132,6 +132,13 @@ jobs:
           path: storybook-static/
           retention-days: 7
 
+      - name: Start Storybook static server
+        run: |
+          npx http-server storybook-static -p 6006 --silent &
+          STORYBOOK_SERVER_PID=$!
+          echo "STORYBOOK_SERVER_PID=$STORYBOOK_SERVER_PID" >> $GITHUB_ENV
+          npx wait-on http://127.0.0.1:6006
+
       # Visual regression testing for admin components
       # Captures screenshots of Storybook stories at multiple breakpoints
       - name: Run visual regression tests on admin components
@@ -154,6 +161,13 @@ jobs:
             tests/visual-regression/diffs/
             playwright-report/
           retention-days: 14
+
+      - name: Stop Storybook static server
+        if: always()
+        run: |
+          if [ -n "${STORYBOOK_SERVER_PID:-}" ]; then
+            kill "${STORYBOOK_SERVER_PID}" || true
+          fi
 
       - name: Generate SBOMs
         # Guidance: CI pipeline SBOM/license flow is documented in CI_PIPELINE_FIXES.md
