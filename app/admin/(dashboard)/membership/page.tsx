@@ -51,15 +51,15 @@ export default async function AdminMembershipPage() {
           <h1 className="text-2xl font-semibold text-slate-100">Membership</h1>
           <p className="text-sm text-slate-400">Plans and members (read-only placeholder).</p>
         </header>
-        <div className="overflow-hidden rounded-xl border border-white/10">
-          <table className="w-full text-left text-sm">
+        <div className="overflow-x-auto rounded-xl border border-white/10 bg-slate-950/60">
+          <table className="min-w-[680px] w-full text-left text-sm">
             <thead>
               <tr className="bg-white/5 text-slate-300">
-                <th className="px-3 py-2">Plan</th>
-                <th className="px-3 py-2">Slug</th>
-                <th className="px-3 py-2">Price</th>
-                <th className="px-3 py-2">Active</th>
-                <th className="px-3 py-2">Perks</th>
+                <th className="whitespace-nowrap px-3 py-2">Plan</th>
+                <th className="whitespace-nowrap px-3 py-2">Slug</th>
+                <th className="whitespace-nowrap px-3 py-2">Price</th>
+                <th className="whitespace-nowrap px-3 py-2">Active</th>
+                <th className="whitespace-nowrap px-3 py-2">Perks</th>
               </tr>
             </thead>
             <tbody>
