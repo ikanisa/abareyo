@@ -3,11 +3,12 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
+import { AdminButton } from '@/components/admin/ui/AdminButton';
+import { AdminInput } from '@/components/admin/ui/AdminInput';
+import { AdminCard } from '@/components/admin/ui/AdminCard';
 import { upsertAdminMembershipPlan, updateAdminMembershipStatus } from '@/lib/api/admin/membership';
 
 export const MembershipActions = () => {
@@ -67,55 +68,79 @@ export const MembershipActions = () => {
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-4">
+      <AdminCard className="space-y-3" tone="muted" padding="md" elevated>
         <div className="text-sm font-semibold text-slate-100">Create/Update Plan</div>
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2">
             <Label htmlFor="plan-id">Existing Plan ID (optional)</Label>
-            <Input id="plan-id" value={planId} onChange={(e) => setPlanId(e.target.value)} placeholder="Leave blank to create" />
+            <AdminInput
+              id="plan-id"
+              value={planId}
+              onChange={(e) => setPlanId(e.target.value)}
+              placeholder="Leave blank to create"
+            />
           </div>
           <div>
             <Label htmlFor="plan-name">Name</Label>
-            <Input id="plan-name" value={planName} onChange={(e) => setPlanName(e.target.value)} />
+            <AdminInput id="plan-name" value={planName} onChange={(e) => setPlanName(e.target.value)} />
           </div>
           <div>
             <Label htmlFor="plan-slug">Slug</Label>
-            <Input id="plan-slug" value={planSlug} onChange={(e) => setPlanSlug(e.target.value)} />
+            <AdminInput id="plan-slug" value={planSlug} onChange={(e) => setPlanSlug(e.target.value)} />
           </div>
           <div>
             <Label htmlFor="plan-price">Price (RWF)</Label>
-            <Input id="plan-price" type="number" value={planPrice} onChange={(e) => setPlanPrice(parseInt(e.target.value || '0', 10))} />
+            <AdminInput
+              id="plan-price"
+              type="number"
+              value={planPrice}
+              onChange={(e) => setPlanPrice(parseInt(e.target.value || '0', 10))}
+            />
           </div>
           <div className="col-span-2">
             <Label htmlFor="plan-perks">Perks (comma-separated)</Label>
-            <Input id="plan-perks" value={planPerks} onChange={(e) => setPlanPerks(e.target.value)} placeholder="e.g., Priority gate, Merch discount" />
+            <AdminInput
+              id="plan-perks"
+              value={planPerks}
+              onChange={(e) => setPlanPerks(e.target.value)}
+              placeholder="e.g., Priority gate, Merch discount"
+            />
           </div>
           <div className="flex items-center gap-2">
             <Switch id="plan-active" checked={planActive} onCheckedChange={setPlanActive} />
             <Label htmlFor="plan-active">Active</Label>
           </div>
         </div>
-        <Button onClick={handleSavePlan} disabled={isPending}>Save Plan</Button>
-      </div>
+        <AdminButton onClick={handleSavePlan} isLoading={isPending} disabled={isPending}>
+          Save Plan
+        </AdminButton>
+      </AdminCard>
 
-      <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-4">
+      <AdminCard className="space-y-3" tone="muted" padding="md" elevated>
         <div className="text-sm font-semibold text-slate-100">Update Member Status</div>
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2">
             <Label htmlFor="membership-id">Membership ID</Label>
-            <Input id="membership-id" value={membershipId} onChange={(e) => setMembershipId(e.target.value)} />
+            <AdminInput id="membership-id" value={membershipId} onChange={(e) => setMembershipId(e.target.value)} />
           </div>
           <div>
             <Label htmlFor="member-status">Status</Label>
-            <Input id="member-status" value={memberStatus} onChange={(e) => setMemberStatus(e.target.value)} placeholder="pending | active | cancelled | expired" />
+            <AdminInput
+              id="member-status"
+              value={memberStatus}
+              onChange={(e) => setMemberStatus(e.target.value)}
+              placeholder="pending | active | cancelled | expired"
+            />
           </div>
           <div className="flex items-center gap-2">
             <Switch id="auto-renew" checked={autoRenew} onCheckedChange={setAutoRenew} />
             <Label htmlFor="auto-renew">Auto‑renew</Label>
           </div>
         </div>
-        <Button onClick={handleUpdateMember} disabled={isPending}>Update Member</Button>
-      </div>
+        <AdminButton onClick={handleUpdateMember} isLoading={isPending} disabled={isPending}>
+          Update Member
+        </AdminButton>
+      </AdminCard>
     </div>
   );
 };

@@ -29,6 +29,7 @@ export const FeatureFlagsTable = ({ initial }: { initial: AdminFeatureFlag[] }) 
   return (
     <div className="overflow-hidden rounded-xl border border-white/10">
       <table className="w-full text-left text-sm">
+        <caption className="sr-only">Feature flag toggles with descriptions and last updated timestamps</caption>
         <thead>
           <tr className="bg-white/5 text-slate-300">
             <th className="px-3 py-2">Key</th>
@@ -42,7 +43,12 @@ export const FeatureFlagsTable = ({ initial }: { initial: AdminFeatureFlag[] }) 
             <tr key={f.key} className="border-t border-white/10">
               <td className="px-3 py-2 font-mono text-xs text-slate-300">{f.key}</td>
               <td className="px-3 py-2">
-                <Switch checked={f.enabled} onCheckedChange={(v) => toggle(f.key, !!v)} disabled={isPending} />
+                <Switch
+                  checked={f.enabled}
+                  onCheckedChange={(v) => toggle(f.key, !!v)}
+                  disabled={isPending}
+                  aria-label={`Toggle feature ${f.key}`}
+                />
               </td>
               <td className="px-3 py-2 text-slate-300">{f.description ?? '—'}</td>
               <td className="px-3 py-2 text-slate-400">{new Date(f.updatedAt).toLocaleString()}</td>

@@ -3,12 +3,12 @@
 import { Fragment, type ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AdminButton } from './AdminButton';
+import { AdminCard } from './AdminCard';
 
 export type AdminListFilter =
   | { key: string; label: string; type: 'search'; placeholder?: string; value?: string }
@@ -52,7 +52,7 @@ export function AdminList<TItem>({
   const currentPage = pagination ? Math.min(Math.max(1, pagination.page), totalPages) : 1;
 
   return (
-    <Card className={cn('flex flex-col gap-6 border-white/10 bg-white/5 p-6 backdrop-blur-md', className)}>
+    <AdminCard className={cn('flex flex-col gap-6', className)} tone="muted" padding="md" elevated>
       <header className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="space-y-1">
           <h2 className="text-xl font-semibold text-slate-100">{title}</h2>
@@ -128,7 +128,7 @@ export function AdminList<TItem>({
           <Pagination className="ml-auto">
             <PaginationContent>
               <PaginationItem>
-                <Button
+                <AdminButton
                   type="button"
                   variant="ghost"
                   size="sm"
@@ -137,7 +137,7 @@ export function AdminList<TItem>({
                   onClick={() => pagination.onPageChange?.(currentPage - 1)}
                 >
                   Previous
-                </Button>
+                </AdminButton>
               </PaginationItem>
               {Array.from({ length: totalPages }).map((_, idx) => (
                 <PaginationItem key={idx}>
@@ -151,7 +151,7 @@ export function AdminList<TItem>({
                 </PaginationItem>
               ))}
               <PaginationItem>
-                <Button
+                <AdminButton
                   type="button"
                   variant="ghost"
                   size="sm"
@@ -160,12 +160,12 @@ export function AdminList<TItem>({
                   onClick={() => pagination.onPageChange?.(currentPage + 1)}
                 >
                   Next
-                </Button>
+                </AdminButton>
               </PaginationItem>
             </PaginationContent>
           </Pagination>
         </div>
       ) : null}
-    </Card>
+    </AdminCard>
   );
 }

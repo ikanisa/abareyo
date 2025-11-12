@@ -18,3 +18,10 @@ the Chrome accessibility panel.
 
 Document any future token adjustments (opacity, hue, or blur) here alongside the measured
 contrast ratios and the tooling used to verify compliance.
+
+## Storybook and Admin UI Catalogue
+
+- Run `npm run storybook` to explore the admin primitives (buttons, inputs, cards, toasts) and
+  reference states for hover, focus, disabled, and loading scenarios.
+- The full admin component audit lives in [`admin-component-audit.md`](./admin-component-audit.md)
+  and should be kept in sync with Storybook when adding or modifying surfaces.
