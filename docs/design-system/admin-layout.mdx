@@ -1,0 +1,100 @@
+---
+title: Admin layout primitives
+---
+
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Design System/Admin Layout" />
+
+## Layout audit (pre-tokenization)
+
+The original `AdminShell` hard-coded a number of layout primitives:
+
+- Sidebar width of `w-72` (18rem) with `px-4` and `py-6` padding.
+- Header spacing driven by `px-4`, `py-3`, and implicit height from its children.
+- Content gutters defined via `px-4`, `md:px-8`, and `py-6` on the `<main>` element.
+- Background treatments combining `bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950` with a radial overlay and a separate top-of-page gradient.
+- Component spacing that relied on Tailwind literals (`gap-3`, `mt-6`, etc.) instead of reusable tokens.
+
+Documenting these values provides a reference point when validating migrations away from bespoke layout constants.
+
+## Token scale
+
+Layout tokens now live in `src/styles/tokens.css` and are globally imported from `app/globals.css`.
+
+```css
+:root {
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 1.75rem;
+  --space-8: 2rem;
+  --space-9: 2.5rem;
+  --space-10: 3rem;
+  --space-12: 3.5rem;
+  --space-14: 4rem;
+  --space-16: 4.5rem;
+
+  /* Widths & breakpoints */
+  --content-width-md: 48rem;
+  --content-width-lg: 60rem;
+  --content-width-xl: 72rem;
+  --content-width-2xl: 88rem;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+
+  /* Admin primitives */
+  --admin-sidebar-width: 18rem;
+  --admin-header-height: var(--space-14);
+  --admin-surface-gradient: linear-gradient(135deg, #020617 0%, #0f172a 45%, #020617 100%);
+  --admin-surface-glow: radial-gradient(circle at top, rgba(59, 130, 246, 0.14), transparent 58%);
+  --admin-highlight-gradient: linear-gradient(to bottom, rgba(59, 130, 246, 0.18), rgba(59, 130, 246, 0));
+}
+```
+
+The `--space-gutter-inline` token responds to breakpoints so primary gutters scale from 1.25rem on mobile to 2.5rem on wide desktops.
+
+## Layout primitives
+
+Two layout components encapsulate the responsive grid and surface treatments:
+
+### `<AdminPageShell>`
+
+- Applies the gradient background, radial glow, and top highlight via CSS utilities defined in `tokens.css`.
+- Establishes a CSS grid with the sidebar column fixed to `--admin-sidebar-width` and main content constrained by `contentWidth` (`lg | xl | 2xl | full`).
+- Normalizes header height, gutters, and backdrop blur while exposing slots for the sidebar and header content.
+
+### `<AdminSection>`
+
+- Wraps page sections with consistent gutters and max-widths (default `--content-width-2xl`).
+- Supports `variant="plain"` for grid/grouping contexts, `variant="surface"` for elevated panels, and `variant="soft"` for low-contrast groupings.
+- Provides `padded`, `bleed`, and `maxWidth` modifiers to handle dashboards, tables, and nested cards.
+
+## Usage example
+
+```tsx
+import { AdminPageShell } from '@/components/admin/layout/AdminPageShell';
+import { AdminSection } from '@/components/admin/layout/AdminSection';
+
+export const ExampleAdminPage = () => (
+  <AdminPageShell sidebar={<MySidebar />} header={<MyHeader />}>
+    <AdminSection>
+      <h1 className="text-2xl font-semibold text-slate-100">Orders</h1>
+      <OrdersTable />
+    </AdminSection>
+    <AdminSection variant="plain" padded={false} className="gap-0">
+      <div className="grid gap-[var(--space-4)] md:grid-cols-2">
+        <MetricCard title="Ticket revenue" value="$24k" />
+        <MetricCard title="Check-ins" value="4,812" />
+      </div>
+    </AdminSection>
+  </AdminPageShell>
+);
+```
+
+This pattern keeps admin routes aligned with the UX guide while providing reusable guardrails for future surfaces.

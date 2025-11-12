@@ -28,10 +28,15 @@ type GateTelemetry = {
   breakdown: Array<{ gate: string; passes: number }>;
 };
 
+type AlertAction =
+  | { type: 'link'; label: string; href: string }
+  | { type: 'modal'; label: string; title: string; description: string; href?: string; ctaLabel?: string; helper?: string };
+
 type Alert = {
   id: string;
   message: string;
   severity: 'info' | 'warning' | 'critical';
+  action?: AlertAction;
 };
 
 export type DashboardSnapshot = {
@@ -71,6 +76,11 @@ export const fetchDashboardSnapshot = async (): Promise<DashboardSnapshot> => {
         id: 'supabase-config',
         severity: 'info',
         message: 'Configure Supabase URL and secret key to activate live metrics.',
+        action: {
+          type: 'link',
+          label: 'Open configuration',
+          href: '/admin/settings/integrations',
+        },
       },
     ],
   });
@@ -190,6 +200,15 @@ export const fetchDashboardSnapshot = async (): Promise<DashboardSnapshot> => {
           id: 'sms-success',
           severity: 'warning',
           message: `SMS parse success is at ${(smsSuccessRate * 100).toFixed(1)}% over the last 7 days.`,
+          action: {
+            type: 'modal',
+            label: 'Investigate parser',
+            title: 'Investigate SMS parser accuracy',
+            description:
+              'Recent inbound SMS messages are failing to match known templates. Verify the latest parser rules in the Realtime console and replay affected payloads.',
+            href: '/admin/realtime',
+            ctaLabel: 'Open realtime view',
+          },
         });
       }
       if (smsAverageLatency !== null && smsAverageLatency > 300) {
@@ -197,6 +216,16 @@ export const fetchDashboardSnapshot = async (): Promise<DashboardSnapshot> => {
           id: 'sms-latency',
           severity: 'warning',
           message: `Average parser latency is ${(smsAverageLatency / 60).toFixed(1)} minutes.`,
+          action: {
+            type: 'modal',
+            label: 'Review latency playbook',
+            title: 'SMS latency playbook',
+            description:
+              'Parser latency above 5 minutes indicates a backlog on Supabase functions. Scale the worker deployment and verify Airtel webhook throughput.',
+            helper: 'Need more context? Check the parser metrics dashboard in Metabase.',
+            href: '/admin/realtime',
+            ctaLabel: 'View parser metrics',
+          },
         });
       }
       if (paymentAverage !== null && paymentAverage > 900) {
@@ -204,6 +233,11 @@ export const fetchDashboardSnapshot = async (): Promise<DashboardSnapshot> => {
           id: 'payment-latency',
           severity: 'critical',
           message: `Payment confirmations are averaging ${(paymentAverage / 60).toFixed(1)} minutes.`,
+          action: {
+            type: 'link',
+            label: 'Open payments monitor',
+            href: '/admin/orders/tickets',
+          },
         });
       }
       if (pendingOrders > 0) {
@@ -211,6 +245,11 @@ export const fetchDashboardSnapshot = async (): Promise<DashboardSnapshot> => {
           id: 'pending-orders',
           severity: 'info',
           message: `${pendingOrders} orders are still pending payment reconciliation.`,
+          action: {
+            type: 'link',
+            label: 'Review pending orders',
+            href: '/admin/orders/shop',
+          },
         });
       }
 

@@ -18,3 +18,18 @@ the Chrome accessibility panel.
 
 Document any future token adjustments (opacity, hue, or blur) here alongside the measured
 contrast ratios and the tooling used to verify compliance.
+
+## Responsive layout
+
+- The admin shell now clamps content using `max-w-[min(90rem,calc(100vw-3rem))]` at `xl` and
+  `max-w-[min(100rem,calc(100vw-6rem))]` at `2xl` breakpoints to stay legible on 1280 → 1920 px displays.
+- Tables and dense forms should opt into the responsive utilities listed in
+  [`responsive-guidelines.md`](./responsive-guidelines.md) before introducing new columns or inputs.
+- Collapsible panels are the preferred affordance for optional analytics filters and batch action drawers;
+  default-open critical workflows and keep triggers accessible via icon-labelled buttons.
+## Storybook and Admin UI Catalogue
+
+- Run `npm run storybook` to explore the admin primitives (buttons, inputs, cards, toasts) and
+  reference states for hover, focus, disabled, and loading scenarios.
+- The full admin component audit lives in [`admin-component-audit.md`](./admin-component-audit.md)
+  and should be kept in sync with Storybook when adding or modifying surfaces.
