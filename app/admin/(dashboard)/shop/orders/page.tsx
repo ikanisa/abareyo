@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useId } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, PackageCheck, ShoppingBag } from 'lucide-react';
 
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { GlassCard } from '@/components/ui/glass-card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -41,6 +42,8 @@ export default function AdminShopOrdersPage() {
   const [statusFilter, setStatusFilter] = useState<ShopStatus>('all');
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
+  const statusFieldId = useId();
+  const searchFieldId = useId();
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebounced(search.trim()), 300);
@@ -75,9 +78,11 @@ export default function AdminShopOrdersPage() {
       <GlassCard className="p-4">
         <div className="grid gap-3 md:grid-cols-3">
           <div>
-            <label className="text-xs uppercase tracking-wide text-slate-400">Status</label>
+            <Label htmlFor={statusFieldId} className="text-xs uppercase tracking-wide text-slate-400">
+              Status
+            </Label>
             <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ShopStatus)}>
-              <SelectTrigger className="mt-1 bg-slate-900/60 text-slate-100">
+              <SelectTrigger id={statusFieldId} className="mt-1 bg-slate-900/60 text-slate-100">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-slate-900 text-slate-100">
@@ -90,8 +95,11 @@ export default function AdminShopOrdersPage() {
             </Select>
           </div>
           <div className="md:col-span-2">
-            <label className="text-xs uppercase tracking-wide text-slate-400">Search</label>
+            <Label htmlFor={searchFieldId} className="text-xs uppercase tracking-wide text-slate-400">
+              Search
+            </Label>
             <Input
+              id={searchFieldId}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Order ID or reference"

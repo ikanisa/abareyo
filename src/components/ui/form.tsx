@@ -48,13 +48,17 @@ FormLabel.displayName = "FormLabel";
 const FormControl = React.forwardRef<React.ElementRef<typeof Slot>, React.ComponentPropsWithoutRef<typeof Slot>>(
   ({ ...props }, ref) => {
     const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
+    const describedBy = error
+      ? [formDescriptionId, formMessageId].filter(Boolean).join(' ')
+      : [formDescriptionId].filter(Boolean).join(' ');
 
     return (
       <Slot
         ref={ref}
         id={formItemId}
-        aria-describedby={!error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`}
+        aria-describedby={describedBy || undefined}
         aria-invalid={!!error}
+        aria-errormessage={error ? formMessageId : undefined}
         {...props}
       />
     );
@@ -81,7 +85,14 @@ const FormMessage = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<
     }
 
     return (
-      <p ref={ref} id={formMessageId} className={cn("text-sm font-medium text-destructive", className)} {...props}>
+      <p
+        ref={ref}
+        id={formMessageId}
+        role="alert"
+        aria-live="assertive"
+        className={cn("text-sm font-medium text-destructive", className)}
+        {...props}
+      >
         {body}
       </p>
     );
