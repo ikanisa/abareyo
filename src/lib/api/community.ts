@@ -37,10 +37,6 @@ export type CreatePostRequest = {
   pollOptions?: string[];
 };
 
-export type ModeratePostRequest = {
-  status: 'published' | 'removed';
-};
-
 export type CreateCommentRequest = {
   postId: string;
   userId?: string;
@@ -137,40 +133,6 @@ export type CommunityMissionsContract = {
   } | null;
 };
 
-export type AdminQuizContract = {
-  id: string;
-  prompt: string;
-  correctAnswer: string;
-  rewardPoints: number;
-  activeFrom: string;
-  activeUntil: string | null;
-  createdAt: string;
-};
-
-export type AdminPredictionContract = {
-  id: string;
-  matchId: string;
-  question: string;
-  rewardPoints: number;
-  deadline: string;
-  createdAt: string;
-  match?: {
-    opponent: string;
-    kickoff: string;
-    venue?: string | null;
-  } | null;
-};
-
-export type CommunityAdminMissionsContract = {
-  quizzes: AdminQuizContract[];
-  predictions: AdminPredictionContract[];
-  analytics: {
-    checkInsToday: number;
-    quizSubmissionsToday: number;
-    predictionsToday: number;
-  };
-};
-
 import { httpClient } from '@/services/http-client';
 
 export function fetchCommunityFeed() {
@@ -189,59 +151,6 @@ export function fetchCommunityLeaderboard(period: 'weekly' | 'monthly' = 'weekly
 
 export function fetchCommunityMissions() {
   return httpClient.data<CommunityMissionsContract>(`/community/missions`);
-}
-
-export function fetchCommunityAdminMissions() {
-  return httpClient.data<CommunityAdminMissionsContract>(`/admin/community/missions`, {
-    admin: true,
-  });
-}
-
-export async function createAdminQuiz(payload: {
-  prompt: string;
-  correctAnswer: string;
-  rewardPoints?: number;
-  activeFrom?: string;
-  activeUntil?: string;
-}) {
-  return httpClient.data<AdminQuizContract>(`/admin/community/quizzes`, {
-    admin: true,
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
-export async function closeAdminQuiz(quizId: string) {
-  return httpClient.data<{ id: string; activeUntil: string }>(
-    `/admin/community/quizzes/${quizId}/close`,
-    {
-      admin: true,
-      method: 'POST',
-    },
-  );
-}
-
-export async function createAdminPrediction(payload: {
-  matchId: string;
-  question: string;
-  rewardPoints?: number;
-  deadline: string;
-}) {
-  return httpClient.data<AdminPredictionContract>(`/admin/community/predictions`, {
-    admin: true,
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
-export async function closeAdminPrediction(predictionId: string) {
-  return httpClient.data<{ id: string; deadline: string }>(
-    `/admin/community/predictions/${predictionId}/close`,
-    {
-      admin: true,
-      method: 'POST',
-    },
-  );
 }
 
 export async function checkInCommunity(payload: CheckInRequestContract) {
@@ -305,20 +214,4 @@ export async function voteCommunityPoll(payload: VotePollRequest) {
     method: 'POST',
     body: JSON.stringify({ userId: payload.userId, optionId: payload.optionId }),
   });
-}
-
-export function fetchFlaggedPosts() {
-  return httpClient.data<CommunityPost[]>(`/admin/community/moderation`, { admin: true });
-}
-
-export async function moderatePost(postId: string, payload: ModeratePostRequest) {
-  return httpClient.data<CommunityPost>(`/admin/community/posts/${postId}/moderate`, {
-    admin: true,
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
-export function fetchCommunityAnalytics() {
-  return httpClient.data<PostAnalyticsResponse>(`/admin/community/analytics`, { admin: true });
 }

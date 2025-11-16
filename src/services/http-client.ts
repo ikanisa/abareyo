@@ -1,5 +1,4 @@
 import { clientEnv } from '@/config/env';
-import { adminFetch } from '@/lib/admin/csrf';
 
 const FALLBACK_BASE = '/api';
 const rawBaseUrl = clientEnv.NEXT_PUBLIC_BACKEND_URL?.trim() || FALLBACK_BASE;
@@ -35,12 +34,11 @@ const buildUrl = (path: string, searchParams?: Record<string, string | number | 
 
 export type RequestOptions = RequestInit & {
   searchParams?: Record<string, string | number | boolean | null | undefined>;
-  admin?: boolean;
   parseData?: boolean;
   responseType?: 'json' | 'text' | 'none';
 };
 
-const applyHeaders = (init?: RequestInit, admin?: boolean) => {
+const applyHeaders = (init?: RequestInit) => {
   const headers = new Headers(init?.headers ?? {});
   if (!headers.has('content-type')) {
     headers.set('content-type', 'application/json');
@@ -79,13 +77,11 @@ const parseResponse = async <T>(
 };
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { searchParams, admin, parseData = false, responseType, ...init } = options;
+  const { searchParams, parseData = false, responseType, ...init } = options;
   const url = buildUrl(path, searchParams);
-  const headers = applyHeaders(init, admin);
-  const requester = admin ? adminFetch : fetch;
-  const response = await requester(url, {
+  const headers = applyHeaders(init);
+  const response = await fetch(url, {
     ...init,
-    credentials: admin ? init.credentials ?? 'include' : init.credentials,
     headers,
   });
 

@@ -53,9 +53,6 @@ export const resolveNativePath = (pathname: string): string => {
   if (clean.startsWith('wallet')) {
     return 'wallet';
   }
-  if (clean.startsWith('ops/gate')) {
-    return 'ops/gate';
-  }
 
   return clean;
 };
