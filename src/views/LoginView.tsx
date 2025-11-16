@@ -9,6 +9,7 @@ import HeroBlock from "@/app/_components/widgets/HeroBlock";
 import { GlassCard } from "@/components/ui/glass-card";
 import { useAuth } from "@/providers/auth-provider";
 import { useI18n } from "@/providers/i18n-provider";
+import QrHandshakeCard from "./QrHandshakeCard";
 
 const LoginView = () => {
   const { user } = useAuth();
@@ -31,6 +32,8 @@ const LoginView = () => {
       />
 
       <section className="space-y-3">
+        <QrHandshakeCard />
+
         <GlassCard className="flex flex-col gap-4 p-6">
           <div className="flex items-start gap-3">
             <ShieldCheck className="mt-1 h-5 w-5 text-primary" />
