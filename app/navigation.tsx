@@ -1,23 +1,11 @@
-export type NavigationSurface = 'bottom-nav' | 'drawer' | 'sidebar';
+export type NavigationSurface = "sidebar" | "top";
 
-export type ConsumerNavigationItem = {
-  id:
-    | 'home'
-    | 'matches'
-    | 'tickets'
-    | 'shop'
-    | 'community'
-    | 'fundraising'
-    | 'membership'
-    | 'wallet'
-    | 'services'
-    | 'more';
+export type NavigationItem = {
+  id: "dashboard" | "users" | "audit" | "settings";
   href: string;
   title: string;
-  labelKey: string;
   description?: string;
-  icon: 'home' | 'calendar' | 'ticket' | 'bag' | 'users' | 'more';
-  analyticsId: string;
+  icon: "dashboard" | "users" | "activity" | "settings";
   surfaces: NavigationSurface[];
   meta: {
     title: string;
@@ -26,182 +14,62 @@ export type ConsumerNavigationItem = {
 };
 
 export type AppNavigation = {
-  consumer: ConsumerNavigationItem[];
+  primary: NavigationItem[];
 };
 
 export const appNavigation: AppNavigation = {
-  consumer: [
+  primary: [
     {
-      id: 'home',
-      href: '/',
-      title: 'Home',
-      labelKey: 'nav.home',
-      description: 'Match centre, news, and rewards overview.',
-      icon: 'home',
-      analyticsId: 'nav-home',
-      surfaces: ['bottom-nav'],
+      id: "dashboard",
+      href: "/",
+      title: "Dashboard",
+      description: "System health, KPIs, and quick actions.",
+      icon: "dashboard",
+      surfaces: ["sidebar", "top"],
       meta: {
-        title: 'Rayon Sports Fan Home',
-        description: 'Match centre, news, and supporter rewards.',
+        title: "Control Center",
+        description: "Operational overview for the platform.",
       },
     },
     {
-      id: 'matches',
-      href: '/matches',
-      title: 'Matches',
-      labelKey: 'nav.matches',
-      description: 'Fixtures, results, and live match tracking.',
-      icon: 'calendar',
-      analyticsId: 'nav-matches',
-      surfaces: ['bottom-nav'],
+      id: "users",
+      href: "/users",
+      title: "Users",
+      description: "Accounts, roles, and access management.",
+      icon: "users",
+      surfaces: ["sidebar", "top"],
       meta: {
-        title: 'Rayon Sports Matches',
-        description: 'Fixtures, results, and live match tracking.',
+        title: "User Management",
+        description: "Manage administrators and customer accounts.",
       },
     },
     {
-      id: 'events',
-      href: '/events',
-      title: 'Events',
-      labelKey: 'nav.events',
-      description: 'Club meetups, watch parties, and activations.',
-      icon: 'calendar',
-      analyticsId: 'nav-events',
-      surfaces: ['drawer', 'sidebar'],
+      id: "audit",
+      href: "/audit",
+      title: "Audit & Logs",
+      description: "Recent changes, alerts, and event history.",
+      icon: "activity",
+      surfaces: ["sidebar", "top"],
       meta: {
-        title: 'Rayon Sports Events',
-        description: 'Club meetups, watch parties, and supporter activations.',
+        title: "Audit Log",
+        description: "Trace configuration changes and platform events.",
       },
     },
     {
-      id: 'tickets',
-      href: '/tickets',
-      title: 'Tickets',
-      labelKey: 'nav.tickets',
-      description: 'Buy, transfer, and view match passes.',
-      icon: 'ticket',
-      analyticsId: 'nav-tickets',
-      surfaces: ['bottom-nav'],
+      id: "settings",
+      href: "/settings",
+      title: "Settings",
+      description: "Environment, notifications, and preferences.",
+      icon: "settings",
+      surfaces: ["sidebar"],
       meta: {
-        title: 'Rayon Sports Tickets',
-        description: 'Buy, transfer, and manage match passes.',
-      },
-    },
-    {
-      id: 'shop',
-      href: '/shop',
-      title: 'Shop',
-      labelKey: 'nav.shop',
-      description: 'Merchandise and match-day essentials.',
-      icon: 'bag',
-      analyticsId: 'nav-shop',
-      surfaces: ['bottom-nav'],
-      meta: {
-        title: 'Rayon Sports Shop',
-        description: 'Merchandise and match-day essentials for fans.',
-      },
-    },
-    {
-      id: 'community',
-      href: '/community',
-      title: 'Community',
-      labelKey: 'nav.community',
-      description: 'Polls, missions, and supporter leaderboard.',
-      icon: 'users',
-      analyticsId: 'nav-community',
-      surfaces: ['bottom-nav'],
-      meta: {
-        title: 'Rayon Sports Community',
-        description: 'Polls, missions, and supporter leaderboard.',
-      },
-    },
-    {
-      id: 'clubs',
-      href: '/clubs',
-      title: 'Fan Clubs',
-      labelKey: 'nav.clubs',
-      description: 'Connect with captains and verified supporter groups.',
-      icon: 'users',
-      analyticsId: 'nav-clubs',
-      surfaces: ['drawer', 'sidebar'],
-      meta: {
-        title: 'Rayon Sports Fan Clubs',
-        description: 'Connect with captains and verified supporter groups.',
-      },
-    },
-    {
-      id: 'fundraising',
-      href: '/fundraising',
-      title: 'Fundraising',
-      labelKey: 'nav.fundraising',
-      description: 'Support academy projects and community drives.',
-      icon: 'bag',
-      analyticsId: 'nav-fundraising',
-      surfaces: ['drawer', 'sidebar'],
-      meta: {
-        title: 'Fundraising for Rayon Sports',
-        description: 'Support academy projects and community drives.',
-      },
-    },
-    {
-      id: 'membership',
-      href: '/membership',
-      title: 'Membership',
-      labelKey: 'nav.membership',
-      description: 'Manage GIKUNDIRO+ plans, billing, and perks.',
-      icon: 'users',
-      analyticsId: 'nav-membership',
-      surfaces: ['drawer', 'sidebar'],
-      meta: {
-        title: 'GIKUNDIRO+ Membership',
-        description: 'Manage GIKUNDIRO+ plans, billing, and perks.',
-      },
-    },
-    {
-      id: 'wallet',
-      href: '/wallet',
-      title: 'Wallet',
-      labelKey: 'nav.wallet',
-      description: 'Stored passes, loyalty points, and balances.',
-      icon: 'ticket',
-      analyticsId: 'nav-wallet',
-      surfaces: ['drawer', 'sidebar'],
-      meta: {
-        title: 'Fan Wallet',
-        description: 'Stored passes, loyalty points, and balances.',
-      },
-    },
-    {
-      id: 'services',
-      href: '/services',
-      title: 'Partner Services',
-      labelKey: 'nav.services',
-      description: 'Insurance, SACCO deposits, and partner offers.',
-      icon: 'bag',
-      analyticsId: 'nav-services',
-      surfaces: ['drawer', 'sidebar'],
-      meta: {
-        title: 'Partner Services Hub',
-        description: 'Insurance quotes, SACCO deposits, and perks from Rayon partners.',
-      },
-    },
-    {
-      id: 'more',
-      href: '/more',
-      title: 'More',
-      labelKey: 'nav.more',
-      description: 'Wallet, membership, and club info.',
-      icon: 'more',
-      analyticsId: 'nav-more',
-      surfaces: ['bottom-nav'],
-      meta: {
-        title: 'More from Rayon Sports',
-        description: 'Wallet, membership, and club information hub.',
+        title: "Settings",
+        description: "Tune the control center for your team.",
       },
     },
   ],
 };
 
-export const consumerNavigationByHref = new Map(appNavigation.consumer.map((item) => [item.href, item] as const));
+export const navigationByHref = new Map(appNavigation.primary.map((item) => [item.href, item] as const));
 
 export default appNavigation;

@@ -1,16 +1,15 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
+
 import "@/index.css";
 import "./globals.css";
+
+import { AppShell } from "./_components/layout/AppShell";
 import ClientErrorBoundary from "./_components/telemetry/ClientErrorBoundary";
-import { Providers } from "./providers";
-import { InstallPrompt, OfflineBanner } from "./_components/pwa/PwaHelpers";
-import BottomNavContainer from "./_components/BottomNavContainer";
-import NativeAppHandoff from "./_components/pwa/NativeAppHandoff";
-import WebPushGate from "./_components/pwa/WebPushGate";
-import { Suspense } from "react";
 import PageViewTracker from "./_components/telemetry/PageViewTracker";
 import SkipNavLink from "@/components/a11y/SkipNavLink";
 import { clientEnv } from "@/config/env";
+import { Providers } from "./providers";
 
 const siteUrl = clientEnv.NEXT_PUBLIC_SITE_URL;
 const metadataBase = (() => {
@@ -20,85 +19,38 @@ const metadataBase = (() => {
   try {
     return new URL(siteUrl);
   } catch (error) {
-    console.warn('Invalid NEXT_PUBLIC_SITE_URL value skipped for metadataBase', error);
+    console.warn("Invalid NEXT_PUBLIC_SITE_URL value skipped for metadataBase", error);
     return undefined;
   }
 })();
 
 export const metadata: Metadata = {
   metadataBase,
-  title: "Rayon Sports - Fan App",
-  description: "Official Rayon Sports fan experience.",
+  title: "Rayon Sports - Control Center",
+  description: "Minimal admin workspace for Rayon Sports operations.",
   applicationName: "Rayon Sports",
-  appleWebApp: {
-    capable: true,
-    title: "Rayon Sports",
-    statusBarStyle: "black-translucent",
-  },
-  icons: {
-    icon: [
-      { url: "/icon-192x192.png", type: "image/png", sizes: "192x192" },
-      { url: "/icon-512x512.png", type: "image/png", sizes: "512x512" },
-      "/favicon.ico",
-    ],
-    apple: "/apple-touch-icon.png",
-  },
   manifest: "/manifest.json",
-  appLinks: {
-    ios: {
-      app_store_id: "0000000000",
-      app_name: "Rayon Sports",
-      url: "gikundiro://home",
-    },
-    android: {
-      package: "com.rayonsports.fanapp",
-      app_name: "Rayon Sports",
-      url: "gikundiro://home",
-    },
-    web: {
-      url: siteUrl ?? "https://gikundiro.com",
-      should_fallback: true,
-    },
-  },
-  other: {
-    "theme-color": "#0033FF",
-    "apple-itunes-app": "app-id=0000000000, app-argument=gikundiro://home",
-    "google-play-app": "app-id=com.rayonsports.fanapp",
-    "al:ios:url": "gikundiro://home",
-    "al:ios:app_store_id": "0000000000",
-    "al:ios:app_name": "Rayon Sports",
-    "al:android:url": "gikundiro://home",
-    "al:android:package": "com.rayonsports.fanapp",
-    "al:android:app_name": "Rayon Sports",
-  },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0033FF",
+  themeColor: "#0f172a",
   minimumScale: 1,
 };
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => (
   <html lang="en" suppressHydrationWarning>
-    <body className="bg-background text-foreground">
+    <body className="bg-slate-950 text-slate-100">
       <SkipNavLink />
-      <OfflineBanner />
       <ClientErrorBoundary>
         <Providers>
-          <div className="flex min-h-screen flex-col">
-            <div id="main-content" tabIndex={-1} className="flex-1 focus:outline-none focus-visible:outline-none">
-              {children}
-            </div>
-            <BottomNavContainer />
+          <AppShell>
             <Suspense fallback={null}>
               <PageViewTracker />
-              <NativeAppHandoff />
-              <WebPushGate />
             </Suspense>
-          </div>
+            {children}
+          </AppShell>
         </Providers>
       </ClientErrorBoundary>
-      <InstallPrompt />
     </body>
   </html>
 );

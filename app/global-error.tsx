@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { captureException } from '@/lib/observability';
 
 type GlobalErrorProps = {
@@ -15,22 +18,23 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
 
   return (
     <html>
-      <body className="flex min-h-screen flex-col items-center justify-center bg-neutral-950 px-6 py-12 text-neutral-100">
-        <div className="w-full max-w-md rounded-2xl border border-neutral-800/60 bg-neutral-900/70 p-8 text-center shadow-xl">
-          <h1 className="text-xl font-semibold">Something went wrong</h1>
-          <p className="mt-3 text-sm text-neutral-400">
-            Our team has been notified. You can try again or head back to the previous page.
-          </p>
-          <div className="mt-6 flex justify-center gap-3">
-            <button
-              type="button"
-              onClick={() => reset()}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-            >
+      <body className="flex min-h-screen items-center justify-center bg-slate-950 px-6 py-12 text-slate-100">
+        <Card className="w-full max-w-md border-slate-800 bg-slate-900 text-slate-100">
+          <CardHeader>
+            <CardTitle className="text-lg">Something went wrong</CardTitle>
+            <CardDescription className="text-slate-400">
+              The minimal workspace ran into an issue. Try again or return to the dashboard.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-end gap-2">
+            <Button variant="secondary" className="bg-slate-800 text-slate-50 hover:bg-slate-700" onClick={() => reset()}>
               Try again
-            </button>
-          </div>
-        </div>
+            </Button>
+            <Button asChild>
+              <a href="/">Go to dashboard</a>
+            </Button>
+          </CardContent>
+        </Card>
       </body>
     </html>
   );

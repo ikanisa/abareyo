@@ -11,10 +11,6 @@ vi.mock("@/app/_components/onboarding/OnboardingModal", () => ({
   default: ({ open }: { open: boolean }) => (open ? <div data-testid="onboarding-modal" /> : null),
 }));
 
-vi.mock("@/app/_components/ui/BottomNav", () => ({
-  default: () => <nav data-testid="bottom-nav" />, // minimal stub
-}));
-
 vi.mock("@/app/_components/ui/TopAppBar", () => ({
   default: ({ onOpenOnboarding }: { onOpenOnboarding: () => void }) => (
     <button onClick={onOpenOnboarding} type="button">
