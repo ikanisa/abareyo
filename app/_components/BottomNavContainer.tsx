@@ -4,12 +4,10 @@ import { usePathname } from "next/navigation";
 import BottomNav from "@/app/_components/shell/BottomNav";
 
 const LOCALE_PREFIX = /^\/(en|fr|rw)(?=\/|$)/;
-const HIDDEN_PREFIXES = ["/admin", "/api"];
-const HIDDEN_ROUTES = new Set(["/admin/login"]);
+const HIDDEN_PREFIXES = ["/api"];
 
 const shouldRenderBottomNav = (barePath: string) =>
-  !HIDDEN_PREFIXES.some((prefix) => barePath.startsWith(prefix)) &&
-  !HIDDEN_ROUTES.has(barePath);
+  !HIDDEN_PREFIXES.some((prefix) => barePath.startsWith(prefix));
 
 const BottomNavContainer = () => {
   const pathname = usePathname();

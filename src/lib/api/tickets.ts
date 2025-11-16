@@ -1,5 +1,3 @@
-import { adminFetch } from '@/lib/admin/csrf';
-
 // Type definitions inlined from contracts
 export enum TicketZoneContract {
   VIP = 'VIP',
@@ -47,37 +45,6 @@ export type TicketCatalogMatchContract = {
 
 export type TicketCatalogResponseContract = {
   matches: TicketCatalogMatchContract[];
-};
-
-export type TicketAnalyticsContract = {
-  totals: {
-    revenue: number;
-    orders: number;
-    paid: number;
-    pending: number;
-    cancelled: number;
-    expired: number;
-    averageOrderValue: number;
-  };
-  matchBreakdown: {
-    matchId: string;
-    opponent: string;
-    kickoff: string;
-    venue: string;
-    totalRevenue: number;
-    paidOrders: number;
-    seatsSold: number;
-    capacity: number;
-  }[];
-  recentSales: {
-    date: string;
-    revenue: number;
-    orders: number;
-  }[];
-  paymentStatus: {
-    status: string;
-    count: number;
-  }[];
 };
 
 export type TicketOrderMatchContract = {
@@ -168,61 +135,6 @@ export async function createTicketCheckout(
   return data;
 }
 
-export interface PassVerificationResponse {
-  status: 'verified' | 'used' | 'refunded' | 'not_found';
-  passId?: string;
-  orderId?: string;
-  zone?: string;
-}
-
-export async function verifyTicketPass(token: string, options?: { dryRun?: boolean; stewardId?: string }) {
-  const params = new URLSearchParams();
-  if (options?.dryRun) {
-    params.set('dryRun', 'true');
-  }
-
-  const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/tickets/verify-pass${params.toString() ? `?${params.toString()}` : ''}`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ token, stewardId: options?.stewardId }),
-  });
-
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
-
-  const { data } = (await response.json()) as { data: PassVerificationResponse };
-  return data;
-}
-
-export interface GateHistoryItem {
-  id: string;
-  passId: string;
-  stewardId?: string | null;
-  result: string;
-  createdAt: string;
-  pass: {
-    id: string;
-    zone: string;
-    orderId: string;
-    order: {
-      matchId: string;
-      userId?: string | null;
-    };
-  };
-}
-
-export async function fetchGateHistory() {
-  const response = await adminFetch('/admin/api/tickets/gate-history', { cache: 'no-store' });
-
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
-
-  const { data } = (await response.json()) as { data: GateHistoryItem[] };
-  return data;
-}
-
 export interface InitiateTransferPayload {
   passId: string;
   ownerUserId: string;
@@ -310,17 +222,6 @@ export async function fetchMatchSummaries() {
     throw new Error(await response.text());
   }
   const { data } = (await response.json()) as { data: TicketMatchSummary[] };
-  return data;
-}
-
-export async function fetchTicketAnalytics() {
-  const response = await adminFetch('/admin/api/tickets/analytics', { cache: 'no-store' });
-
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
-
-  const { data } = (await response.json()) as { data: TicketAnalyticsContract };
   return data;
 }
 

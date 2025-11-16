@@ -6,7 +6,7 @@ import { z } from 'zod';
  * CRITICAL SECURITY NOTES:
  * - Variables prefixed with NEXT_PUBLIC_ are exposed to the browser client bundle.
  * - Server-only secrets (SUPABASE_SERVICE_ROLE_KEY, SITE_SUPABASE_SECRET_KEY,
- *   OPENAI_API_KEY, ADMIN_SESSION_SECRET, ONBOARDING_API_TOKEN, etc.)
+ *   OPENAI_API_KEY, ONBOARDING_API_TOKEN, etc.)
  *   MUST NEVER be prefixed with NEXT_PUBLIC_ or referenced in client code.
  * - Always verify that server-only keys remain server-only in both config and usage.
  */
@@ -62,7 +62,6 @@ const envSchema = z.object({
   NEXT_PUBLIC_TELEMETRY_URL: z.string().optional(),
   NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
   NEXT_PUBLIC_OPENAI_BASE_URL: z.string().optional(),
-  NEXT_PUBLIC_ADMIN_SESSION_COOKIE: z.string().optional(),
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK: z.string().optional(),
   NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY: z.string().optional(),
 
@@ -80,9 +79,6 @@ const envSchema = z.object({
   ONBOARDING_API_TOKEN: z.string().min(1).optional(), // SERVER-ONLY: Onboarding service auth token
   ONBOARDING_ALLOW_MOCK: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(), // SERVER-ONLY: OpenAI API authentication key
-  ADMIN_SMS_PARSER_TEST_ENABLED: z.string().optional(),
-  ADMIN_SMS_PARSER_TEST_RATE_LIMIT: z.string().optional(),
-  ADMIN_SMS_PARSER_TEST_WINDOW_MS: z.string().optional(),
   WEB_PUSH_PRIVATE_KEY: z.string().optional(),
   WEB_PUSH_CONTACT: z.string().optional(),
   EXPO_PUSH_ACCESS_TOKEN: z.string().optional(),
@@ -203,7 +199,6 @@ const serverEnv = {
   NEXT_PUBLIC_TELEMETRY_URL: parsed.NEXT_PUBLIC_TELEMETRY_URL,
   NEXT_PUBLIC_SENTRY_DSN: parsed.NEXT_PUBLIC_SENTRY_DSN,
   NEXT_PUBLIC_OPENAI_BASE_URL: parsed.NEXT_PUBLIC_OPENAI_BASE_URL,
-  NEXT_PUBLIC_ADMIN_SESSION_COOKIE: parsed.NEXT_PUBLIC_ADMIN_SESSION_COOKIE,
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK: parsed.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK,
   NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY: parsed.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY,
   PORT: parsed.PORT,
@@ -264,7 +259,6 @@ const clientEnv = {
   NEXT_PUBLIC_TELEMETRY_URL: parsed.NEXT_PUBLIC_TELEMETRY_URL,
   NEXT_PUBLIC_SENTRY_DSN: parsed.NEXT_PUBLIC_SENTRY_DSN,
   NEXT_PUBLIC_OPENAI_BASE_URL: parsed.NEXT_PUBLIC_OPENAI_BASE_URL,
-  NEXT_PUBLIC_ADMIN_SESSION_COOKIE: parsed.NEXT_PUBLIC_ADMIN_SESSION_COOKIE,
   NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK: parsed.NEXT_PUBLIC_ONBOARDING_ALLOW_MOCK,
   NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY: parsed.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY,
 };
