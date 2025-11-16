@@ -1,7 +1,7 @@
 # Mobile Signing Keys & Rotation
 
 This guide describes how Android and iOS signing material is stored, injected into CI, and rotated. It complements the
-checklists in `DEPLOYMENT_CHECKLIST.md` and the CI playbooks under `reports/ci/`.
+deployment runbooks in `docs/runbooks/` and the CI playbooks under `reports/ci/`.
 
 ## Storage Overview
 

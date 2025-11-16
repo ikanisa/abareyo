@@ -14,7 +14,7 @@ Local contributors primarily develop on Apple Silicon MacBooks. The streamlined 
 
 ## Supabase Configuration
 
-Supabase drives authentication, storage, and realtime updates. Copy `.env.example` to `.env.local` (machine-specific overrides only) and populate the following values. Keys prefixed with `NEXT_PUBLIC_` are exposed to the browser and should point at the deployed backend/API origin. For production builds, use `.env.production.local` based on `.env.production.example` and source values from your secret manager.
+Supabase now owns the entire auth surface (OTP + session exchange) and the QR access pipeline. Copy `.env.example` to `.env.local` (machine-specific overrides only) and populate the following values. Keys prefixed with `NEXT_PUBLIC_` are exposed to the browser and should point at the deployed backend/API origin. For production builds, use `.env.production.local` based on `.env.production.example` and source values from your secret manager.
 
 ```
 SUPABASE_URL=
@@ -24,15 +24,20 @@ SUPABASE_SECRET_KEY=
 # SUPABASE_ANON_KEY=
 # SUPABASE_SERVICE_ROLE_KEY=
 SUPABASE_PROJECT_REF=
+REALTIME_SIGNING_SECRET=
+SUPABASE_AUTH_REDIRECT_URL=
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SMS_WEBHOOK_TOKEN=
 SMS_INGEST_TOKEN=
 NEXT_PUBLIC_BACKEND_URL=http://localhost:3000
 NEXT_PUBLIC_ENVIRONMENT_LABEL=local
 ```
 
-`.env.local` is gitignored and takes precedence when you need to experiment with staging Supabase references, alternate webhook tokens, or forthcoming Cloudflare Tunnel hostnames.
+`.env.local` is gitignored and takes precedence when you need to experiment with staging Supabase references, alternate webhook tokens, or forthcoming Cloudflare Tunnel hostnames. The QR Edge Functions (`qr-token`, `event-checkin`) require `REALTIME_SIGNING_SECRET` to validate channel auth; set it alongside the Supabase service credentials before deploying functions.
 
-> Supabase reserves the `SUPABASE_*` prefix for its own managed secrets when using the CLI/Vault. When setting project secrets via `supabase secrets set`, use the `SITE_SUPABASE_URL`, `SITE_SUPABASE_PUBLISHABLE_KEY`, and `SITE_SUPABASE_SECRET_KEY` aliases (they are automatically picked up by the codebase).
+> Supabase reserves the `SUPABASE_*` prefix for its own managed secrets when using the CLI/Vault. When setting project secrets via `supabase secrets set`, use the `SITE_SUPABASE_URL`, `SITE_SUPABASE_PUBLISHABLE_KEY`, and `SITE_SUPABASE_SECRET_KEY` aliases (they are automatically picked up by the codebase). Use `SUPABASE_AUTH_REDIRECT_URL` when enabling magic-link login so Supabase can redirect back to `/admin/login`.
 
 ## Workspace Layout
 
@@ -174,11 +179,11 @@ Upcoming production hardening includes a reverse proxy in front of the Next.js r
 
 ## Deployment Entry Points
 
-Deployment processes are orchestrated via Make targets and GitHub Actions. Consult [`docs/release.md`](docs/release.md) for the full checklist; the quick reference is below:
+Deployment processes are orchestrated via Make targets and GitHub Actions. Consult [`docs/release.md`](docs/release.md) and [`docs/runbooks/deploy.md`](docs/runbooks/deploy.md) for the end-to-end flow; the quick reference is below:
 
 - `make deploy-staging` / `make deploy-production` – Triggers the web deployment workflow with the current commit.
-- `make deploy:rollback ENV=<staging|production>` – Restores the last known good artifact (see [`docs/release.md`](docs/release.md#rollback-procedures)).
-- `pnpm supabase:functions deploy` – Deploys updated Edge Functions; details live in [`docs/runbooks/web.md`](docs/runbooks/web.md#deployment-steps).
+- `make deploy:rollback ENV=<staging|production>` – Restores the last known good artifact (see [`docs/runbooks/rollback.md`](docs/runbooks/rollback.md)).
+- `pnpm supabase:functions deploy` – Deploys updated Edge Functions (including `qr-token` and `event-checkin`) against the current `SUPABASE_PROJECT_REF`.
 - Native release targets are no longer built from this repo; coordinate with Product if a dedicated mobile shell is reintroduced.
 
 CI expectations, coverage thresholds, and rollback playbooks are formalised in [`docs/release.md`](docs/release.md#quality-gates) and [`docs/runbooks/rollback.md`](docs/runbooks/rollback.md).
@@ -196,45 +201,13 @@ CI expectations, coverage thresholds, and rollback playbooks are formalised in [
 
 ### Deployment Checklist & Validation
 
-**NEW**: We have created a comprehensive deployment checklist and automated validation tool:
+Use the streamlined deployment runbook and automation instead of the retired standalone checklists:
 
-- **[DEPLOYMENT_QUICKSTART.md](./DEPLOYMENT_QUICKSTART.md)** – **Start here!** Step-by-step guide for first-time production deployment (2-3 hours):
-  - Infrastructure provisioning (databases, K8s, services)
-  - Secret configuration and K8s setup
-  - Database migrations
-  - Automated or manual deployment
-  - Verification and troubleshooting
-  - Post-deployment monitoring setup
+- [docs/runbooks/deploy.md](./docs/runbooks/deploy.md) – Source of truth for build promotion, Supabase migrations, and function deploys.
+- [docs/runbooks/web.md](./docs/runbooks/web.md#deployment-steps) – Per-app commands (build, lint/type-check/test, and preflight) and smoke checks.
+- Automated validation: `npm run validate:deployment` or `make validate-deployment` verifies environment completeness, Node.js compatibility, lint/type-check/test parity, and env documentation. Add `--check-k8s` + `--check-services` for cluster/service reachability.
 
-- **[DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** – Complete reference with phase-by-phase checklists covering:
-  - Code quality validation (lint, typecheck, tests, security scans)
-  - Environment configuration (frontend & backend secrets)
-  - Infrastructure provisioning (K8s, databases, services)
-  - Deployment execution (automated via GitHub Actions or manual)
-  - Post-deployment monitoring and validation
-  - Rollback procedures and incident response
-
-- **Automated Validation**: Run `npm run validate:deployment` or `make validate-deployment` to check:
-  - Required files and configurations present
-  - Node.js version compatibility (v20+)
-  - Dependencies installed and valid
-  - Environment variables documented
-  - Code quality (linting and type checking pass)
-  - Security vulnerabilities (npm audit)
-  
-  Add `--check-k8s` to validate Kubernetes cluster access and `--check-services` to test external service connectivity:
-  ```bash
-  npm run validate:deployment -- --check-k8s --check-services
-  # or
-  make validate-deployment-full
-  ```
-
-- **Related Documentation**:
-  - [PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md) – Detailed production checklist with resolved code fixes
-  - [DEPLOYMENT_AUDIT_SUMMARY.md](./DEPLOYMENT_AUDIT_SUMMARY.md) – Security assessment and audit results
-  - [k8s/README.md](./k8s/README.md) – Complete Kubernetes deployment guide
-  - [docs/runbooks/deploy.md](./docs/runbooks/deploy.md) – Deployment procedures
-  - [docs/runbooks/on-call-enablement-checklist.md](./docs/runbooks/on-call-enablement-checklist.md) – On-call setup
+Retired documents (`DEPLOYMENT_CHECKLIST.md`, `DEPLOYMENT_QUICKSTART.md`, Netlify/K8s quick references, and audit summaries) have been removed in favor of the consolidated runbooks above.
 
 ### Infrastructure Setup
 

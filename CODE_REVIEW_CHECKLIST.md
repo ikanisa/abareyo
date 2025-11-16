@@ -21,7 +21,7 @@
 - [x] `.github/workflows/netlify-deploy.yml` - CI/CD pipeline for Netlify
 - [x] `scripts/postbuild-netlify.mjs` - Post-build validation script
 - [x] `scripts/build-apk.mjs` - Android APK build automation
-- [x] `DEPLOYMENT_GUIDE.md` - Comprehensive deployment documentation
+- [x] `docs/runbooks/deploy.md` - Supabase-first deployment documentation
 
 ### Configuration Files:
 - [x] `package.json` - Added Netlify build scripts
@@ -108,7 +108,7 @@
 ## ✅ Documentation
 
 ### Created/Updated:
-- [x] `DEPLOYMENT_GUIDE.md` - Complete deployment instructions
+- [x] `docs/runbooks/deploy.md` - Complete deployment instructions
 - [x] `CODE_REVIEW_CHECKLIST.md` - This file
 - [x] Netlify environment configuration documented
 - [x] PWA installation instructions

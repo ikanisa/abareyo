@@ -15,16 +15,24 @@ This runbook documents how to develop, deploy, and operate the Next.js web appli
 | Coverage report only | `pnpm coverage` |
 | Playwright smoke tests | `make e2e` |
 | Deployment preflight | `node scripts/preflight.mjs` |
+| Supabase function deploys | `pnpm supabase:functions deploy` |
 
 ## Local Development Loop
 
 1. Bootstrap dependencies: `pnpm install`.
-2. Start Supabase locally: `supabase start`.
-3. Apply migrations/seeds: `supabase migration up && supabase db seed`.
-4. Run the dev server: `pnpm dev`.
-5. Use the GSM emulator for payment tests: `node tools/gsm-emulator/send-sms.js "Paid RWF 25000 Ref XYZ"`.
+2. Copy `.env.example` to `.env.local` and populate Supabase auth + QR settings (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `REALTIME_SIGNING_SECRET`).
+3. Start Supabase locally: `supabase start`.
+4. Apply migrations/seeds: `supabase migration up && supabase db seed`.
+5. Serve or deploy Edge Functions when testing auth/QR flows locally: `supabase functions serve qr-token --env-file .env.local` (repeat for `event-checkin` if you need gate scans).
+6. Run the dev server: `pnpm dev`.
+7. Use the GSM emulator for payment tests: `node tools/gsm-emulator/send-sms.js "Paid RWF 25000 Ref XYZ"`.
 
 If Supabase containers break, run `supabase stop && supabase start` then `supabase migration up` to resync.
+
+## Auth & QR smokes
+
+- OTP: follow the WhatsApp curl smoke in [`README.md`](../../README.md#whatsapp-otp-smoke-tests) after setting `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SECRET_KEY`.
+- QR channel auth: with `REALTIME_SIGNING_SECRET` set, deploy the `qr-token` function (`pnpm supabase:functions deploy qr-token`) and validate gate scans against `/api/tickets/passes` while watching the Supabase Realtime logs for signature failures.
 
 ## Feature Development Checklist
 
@@ -37,9 +45,10 @@ If Supabase containers break, run `supabase stop && supabase start` then `supaba
 
 1. Ensure CI is green (`pnpm lint`, `pnpm type-check`, `pnpm test --coverage`, `pnpm build`).
 2. Run `node scripts/preflight.mjs` to verify environment parity.
-3. Trigger deployment via `make deploy-staging` (staging) or `make deploy-production` (production).
-4. Monitor the GitHub Actions workflow for completion.
-5. Validate the deployment using `/healthz`, `/admin/realtime`, and the payments dashboard.
+3. Run `pnpm supabase:functions check-secrets` to ensure `REALTIME_SIGNING_SECRET` + `SITE_SUPABASE_*` are available before deploying auth/QR changes.
+4. Trigger deployment via `make deploy-staging` (staging) or `make deploy-production` (production).
+5. Monitor the GitHub Actions workflow for completion.
+6. Validate the deployment using `/healthz`, `/admin/realtime`, and the payments dashboard.
 
 ## Observability
 
