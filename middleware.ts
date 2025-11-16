@@ -11,6 +11,7 @@ import {
   shouldAttemptNativeHandoff,
 } from './src/lib/native/links';
 import { CORRELATION_HEADERS } from './src/lib/observability/correlation';
+import { getSupabaseServerClient } from './src/lib/supabase/server';
 
 const LOCALES = ['en', 'fr', 'rw'] as const;
 const LOCALE_RE = new RegExp(`^/(?:${LOCALES.join('|')})(?=/|$)`);
@@ -22,6 +23,7 @@ const API_PREFIX = '/api';
 const CORRELATION_COOKIE = CORRELATION_HEADERS.cookie;
 const CORRELATION_HEADER = CORRELATION_HEADERS.header;
 const REQUEST_ID_HEADER = CORRELATION_HEADERS.requestIdHeader;
+const PROTECTED_PATHS = ['/wallet', '/tickets', '/orders', '/profile', '/settings', '/members', '/community'];
 
 type RateLimitRule = {
   matcher: RegExp;
@@ -148,7 +150,10 @@ const isTrustedLocaleRedirect = (req: NextRequest, locale: string | null) => {
 const shouldAttemptNativeHandoffRequest = (req: NextRequest) =>
   shouldAttemptNativeHandoff(req.nextUrl.searchParams);
 
-export function middleware(req: NextRequest) {
+const isProtectedPath = (pathname: string) =>
+  PROTECTED_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const method = req.method?.toUpperCase() ?? 'GET';
   const correlationId = getOrCreateCorrelationId(req);
@@ -233,6 +238,25 @@ export function middleware(req: NextRequest) {
     /\.[\w-]+$/.test(pathname)
   ) {
     return finalize(NextResponse.next({ request: { headers: requestHeaders } }));
+  }
+
+  if (isProtectedPath(pathname)) {
+    const response = NextResponse.next({ request: { headers: requestHeaders } });
+    try {
+      const supabase = getSupabaseServerClient({ request: req, response });
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data?.user) {
+        const loginUrl = new URL('/auth/login', req.url);
+        loginUrl.searchParams.set('redirect', pathname);
+        return finalize(NextResponse.redirect(loginUrl));
+      }
+    } catch (error) {
+      const loginUrl = new URL('/auth/login', req.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return finalize(NextResponse.redirect(loginUrl));
+    }
+
+    return finalize(response);
   }
 
   const userAgent = req.headers.get('user-agent');

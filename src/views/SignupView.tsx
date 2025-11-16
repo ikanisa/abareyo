@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ShieldCheck, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import TopAppBar from "@/app/_components/ui/TopAppBar";
@@ -14,23 +14,28 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/providers/auth-provider";
 import { useI18n } from "@/providers/i18n-provider";
 
-const LoginView = () => {
+const SignupView = () => {
   const { t } = useI18n();
-  const { signInWithPassword, sendMagicLink, loading } = useAuth();
+  const { signUp, sendMagicLink, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handlePasswordSignIn = async (event: React.FormEvent) => {
+  const handleSignup = async (event: React.FormEvent) => {
     event.preventDefault();
     setMessage(null);
     setError(null);
+    if (password !== confirmPassword) {
+      setError(t("auth.passwordMismatch", "Passwords must match."));
+      return;
+    }
     try {
-      await signInWithPassword({ email: email.trim(), password });
-      setMessage(t("auth.success", "Signed in successfully."));
-    } catch (authError) {
-      setError(authError instanceof Error ? authError.message : t("auth.errors.generic", "Unable to sign in."));
+      await signUp({ email: email.trim(), password });
+      setMessage(t("auth.signupSuccess", "Account created. Check your inbox to confirm."));
+    } catch (signupError) {
+      setError(signupError instanceof Error ? signupError.message : t("auth.errors.generic", "Unable to sign up."));
     }
   };
 
@@ -48,25 +53,20 @@ const LoginView = () => {
 
   return (
     <PageShell mainClassName="space-y-6 pb-24">
-      <TopAppBar right={<Link className="btn" href="/more">{t("nav.more", "More")}</Link>} />
+      <TopAppBar right={<Link className="btn" href="/auth/login">{t("auth.signIn", "Sign in")}</Link>} />
       <HeroBlock
-        title={t("auth.loginHeadline", "Welcome back")}
-        subtitle={t("auth.loginSubtitle", "Sign in to manage your wallet, tickets, and rewards.")}
+        title={t("auth.signupHeadline", "Create your account")}
+        subtitle={t("auth.signupSubtitle", "Use email and a strong password to join. Magic links are also available.")}
         ctas={
-          <div className="flex flex-wrap gap-2">
-            <Link className="btn" href="/auth/signup">
-              {t("auth.needAccount", "Create account")}
-            </Link>
-            <Link className="btn" href="/auth/reset">
-              {t("auth.resetPassword", "Reset password")}
-            </Link>
-          </div>
+          <Link className="btn" href="/auth/login">
+            {t("auth.haveAccount", "Already have an account?")}
+          </Link>
         }
       />
 
       <section className="space-y-3">
         <GlassCard className="flex flex-col gap-4 p-6">
-          <form className="space-y-4" onSubmit={handlePasswordSignIn}>
+          <form className="space-y-4" onSubmit={handleSignup}>
             <div className="space-y-2">
               <Label htmlFor="email">{t("auth.email", "Email")}</Label>
               <Input
@@ -91,7 +91,21 @@ const LoginView = () => {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 required
-                autoComplete="current-password"
+                autoComplete="new-password"
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">{t("auth.confirmPassword", "Confirm password")}</Label>
+              <Input
+                id="confirm-password"
+                name="confirm-password"
+                type="password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                required
+                autoComplete="new-password"
                 disabled={loading}
               />
             </div>
@@ -99,7 +113,7 @@ const LoginView = () => {
             {message && !error && <p className="text-sm text-emerald-500">{message}</p>}
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-                {t("auth.signIn", "Sign in")}
+                {t("auth.signUp", "Create account")}
               </Button>
               <Button type="button" variant="secondary" disabled={loading} onClick={handleMagicLink} className="w-full sm:w-auto">
                 {t("auth.magicLink", "Email me a magic link")}
@@ -110,33 +124,15 @@ const LoginView = () => {
 
         <GlassCard className="flex flex-col gap-4 p-6">
           <div className="flex items-start gap-3">
-            <ShieldCheck className="mt-1 h-5 w-5 text-primary" />
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">{t("auth.securityTitle", "Secure by default")}</h2>
-              <p className="text-sm text-muted-foreground">
-                {t(
-                  "auth.securityBody",
-                  "Sessions are handled by Supabase. Sign in on any device with your email and password or request a one-time link.",
-                )}
-              </p>
-            </div>
-          </div>
-        </GlassCard>
-
-        <GlassCard className="flex flex-col gap-4 p-6">
-          <div className="flex items-start gap-3">
             <Sparkles className="mt-1 h-5 w-5 text-secondary" />
             <div>
-              <h2 className="text-lg font-semibold text-foreground">{t("auth.tipsTitle", "Need an invite?")}</h2>
+              <h2 className="text-lg font-semibold text-foreground">{t("auth.signupTips", "Tips for a smooth start")}</h2>
               <p className="text-sm text-muted-foreground">
                 {t(
-                  "auth.tipsBody",
-                  "New supporters can sign up with email and start with a magic link. Staff can request admin access via the support desk.",
+                  "auth.signupCopy",
+                  "Use a reachable email address so you never miss password resets or magic links. You can always upgrade permissions later.",
                 )}
               </p>
-              <Link className="btn mt-3" href="/support">
-                {t("auth.contactSupport", "Contact support")}
-              </Link>
             </div>
           </div>
         </GlassCard>
@@ -145,4 +141,4 @@ const LoginView = () => {
   );
 };
 
-export default LoginView;
+export default SignupView;
