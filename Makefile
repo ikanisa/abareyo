@@ -1,4 +1,4 @@
-.PHONY: dev test e2e backend-migrate backend-seed env-check k8s-apply k8s-namespace validate-deployment
+.PHONY: dev test e2e backend-migrate backend-seed env-check verify k8s-apply k8s-namespace validate-deployment
 
 dev:
 	npm run dev
@@ -17,6 +17,9 @@ backend-seed:
 
 env-check:
 	cd backend && npm run env:check
+
+verify:
+	./scripts/check-supabase-schema.sh
 
 validate-deployment:
 	npm run validate:deployment
