@@ -46,6 +46,11 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.0 --activate
+
       - name: Use npm@11.4.2
         run: npm i -g npm@11.4.2
 
@@ -65,14 +70,8 @@ jobs:
       - name: License policy compliance
         run: npm run check:licenses
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Type check
-        run: npm run type-check
-
-      - name: Test
-        run: npm test
+      - name: Verify (lint, type-check, build, targeted tests)
+        run: make verify
 
       - name: Preflight (env + backend + build)
         run: node scripts/preflight.mjs

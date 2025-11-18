@@ -1,4 +1,11 @@
-.PHONY: dev test e2e backend-migrate backend-seed env-check k8s-apply k8s-namespace validate-deployment
+.PHONY: dev test e2e backend-migrate backend-seed env-check k8s-apply k8s-namespace validate-deployment verify
+
+verify:
+	pnpm lint
+	pnpm type-check
+	pnpm build
+	pnpm test:unit $(if $(TEST_PATTERN),-- --filter $(TEST_PATTERN),)
+
 
 dev:
 	npm run dev
