@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "types": ["expo-router"],
+    "baseUrl": "./",
+    "paths": {
+      "@/otp-utils": ["./otp-utils/src"],
+      "@/api/*": ["./api/*"],
+      "@/storage/*": ["./storage/*"],
+      "@/providers/*": ["./providers/*"]
+    }
+  },
+  "include": ["app", "api", "storage", "providers", "otp-utils"],
+  "exclude": ["node_modules"]
+}

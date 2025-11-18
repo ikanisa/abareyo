@@ -1,0 +1,17 @@
+{
+  "name": "@rayon/otp-utils",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "android", "ios"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
