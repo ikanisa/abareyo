@@ -186,6 +186,7 @@ kubectl get ingressclass
 ### 1.4 Launch Assets & Accessibility ✅
 
 - [x] Store icons & storyboard mocks exported from [`docs/launch/icons`](./docs/launch/icons) and [`docs/launch/screenshots`](./docs/launch/screenshots)
+- [ ] Capture device screenshots (iOS Safari share-sheet install prompt, Android/Chrome install prompt, USSD payment instructions) and archive them under [`reports/screenshots/`](./reports/screenshots) with links in the release ticket.
 - [x] Promo copy synced from [`docs/launch/promo-copy.md`](./docs/launch/promo-copy.md)
 - [x] Accessibility/performance checklists reviewed (`docs/launch/checklists/*`)
 - [x] VoiceOver/TalkBack spot checks noted in release ticket

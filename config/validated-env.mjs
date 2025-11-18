@@ -157,9 +157,14 @@ if (enforcementProfile === 'production' && !parsed.NEXT_PUBLIC_SITE_URL) {
 }
 
 if (missingCritical.length > 0) {
-  throw new Error(
-    `Missing required environment variables:\n  - ${missingCritical.join('\n  - ')}`,
-  );
+  const shouldThrow = parsed.NODE_ENV === 'production' || parsed.APP_ENV === 'production';
+  const message = `Missing required environment variables:\n  - ${missingCritical.join('\n  - ')}`;
+
+  if (shouldThrow) {
+    throw new Error(message);
+  }
+
+  console.warn(`[env] ${message}`);
 }
 
 if (missingWarnOnly.length > 0 && process.env.NODE_ENV !== 'test' && !process.env.CI) {

@@ -79,6 +79,9 @@ jobs:
         env:
           PREFLIGHT_ALLOW_MISSING_ENV: '1'
 
+      - name: Lighthouse PWA audit (mobile install/perf)
+        run: npm run lint:pwa
+
       - name: Install backend deps
         working-directory: backend
         run: npm ci
