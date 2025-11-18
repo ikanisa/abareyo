@@ -1,0 +1,6 @@
+# Physical provisioning artifacts are generated at build time.
+Provisioning/*.mobileprovision
+Provisioning/*.p12
+Provisioning/*.cer
+Provisioning/*.pem
+Provisioning/*.json

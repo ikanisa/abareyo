@@ -137,12 +137,19 @@ Add to GitHub repository secrets (**Settings > Secrets and variables > Actions**
 - [ ] Check GitHub Actions artifacts
 - [ ] Download APK artifact
 - [ ] Test APK on Android device
+- [ ] Attach `./gradlew assembleRelease` log excerpt (showing minify/resource shrink) to the release ticket for auditability
+- [ ] Capture a screenshot of the GitHub Actions summary confirming the artifact checksum and upload to `reports/releases/<date>`
 
 ### Local APK Build (Optional)
 - [ ] Mobile builds are not produced from this repo; skip the legacy APK step.
 - [ ] Check APK location: `android/app/build/outputs/apk/release/`
 - [ ] Test APK installation on device
 - [ ] Verify app functionality
+
+### Mobile Signing Evidence
+- [ ] Run `ios/scripts/import-provisioning.sh` (CI or local) so the `Provisioning/` folder is hydrated from `APPLE_*` secrets
+- [ ] Store keystore/certificate changes per [`docs/mobile/signing-keys.md`](./docs/mobile/signing-keys.md) and attach screenshots/log links to the release record
+- [ ] Upload SHA-256 checksums for `android/app/release.jks` (CI-generated) and the iOS provisioning profile next to the deploy logs
 
 ## Monitoring & Observability
 

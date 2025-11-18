@@ -198,6 +198,14 @@ kubectl get ingressclass
 - [x] Admin dashboard smoke: `curl -H "x-admin-token: $ADMIN_TOKEN" "$BACKEND_URL/admin/otp/dashboard"` shows recent send/verify activity, blacklist state, and rate-limit counters.
 - [x] Evidence (raw curl output + screenshots for consent copy) attached under [`audit/smoke-tests/otp-smoke.md`](./audit/smoke-tests/otp-smoke.md) and linked to the release ticket.
 
+### 1.6 Mobile Build & Signing Evidence ✅
+
+- [ ] `./gradlew assembleRelease` log uploaded (CI artifact or screenshot) showing `isMinifyEnabled=true` and `isShrinkResources=true` per [`android/app/build.gradle.kts`](./android/app/build.gradle.kts).
+- [ ] BuildConfig secrets (`API_BASE_URL`, `SUPABASE_*`) verified by checking the generated `BuildConfig.java` snippet in the CI artifact and attaching the log excerpt to the release ticket.
+- [ ] `ios/scripts/import-provisioning.sh` executed in CI with `APPLE_*` secrets and its console output stored with the workflow logs.
+- [ ] Signing material (Android keystore, iOS provisioning profile + .p12) archived following [`docs/mobile/signing-keys.md`](./docs/mobile/signing-keys.md) — include screenshots of the updated 1Password entries plus GitHub secret audit log links.
+- [ ] Attach checksum evidence for each artifact (e.g., `shasum -a 256 Provisioning/AbareyoMobile_Distribution.mobileprovision`) to the release ticket to make the supply-chain trail verifiable.
+
 ### 1.6 Supply Chain & Provenance ✅
 
 - [x] Verify `report/sbom/manifest.json`, SBOM files, and provenance documents exist locally.
