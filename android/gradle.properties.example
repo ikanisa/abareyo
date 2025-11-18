@@ -1,0 +1,15 @@
+# Android Gradle properties template.
+# Copy to android/gradle.properties and adjust before invoking ./gradlew tasks.
+# The variables below are surfaced inside build.gradle.kts (BuildConfig + resValues)
+# so Compose screens read the same OTP + API settings documented in docs/mobile/whatsapp-auth.md.
+
+# Mirrors API_BASE_URL from packages/mobile/.env.example and powers BuildConfig.API_BASE_URL
+# which AuthRepository + OTP data sources read for HTTPS calls.
+API_BASE_URL=https://fan-api.rayonsports.rw
+
+# WhatsApp OTP wiring (forwarded to BuildConfig + SecretsManager)
+# so server-driven templates and access tokens match src/lib/server/otp/whatsapp.ts expectations.
+WHATSAPP_ACCESS_TOKEN=
+WHATSAPP_PHONE_NUMBER_ID=
+WHATSAPP_OTP_TEMPLATE=otp_verification
+META_WABA_BASE_URL=https://graph.facebook.com/v20.0
