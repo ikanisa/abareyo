@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { consumerNavigationByHref, type ConsumerNavigationItem } from "@/app/navigation";
+import { navigationByHref, type NavigationItem } from "@/app/navigation";
 
 type MetadataFallback = {
   title?: string;
@@ -21,18 +21,17 @@ const buildLocaleAlternates = (href: string) => {
   } satisfies Record<(typeof SUPPORTED_LOCALES)[number], string>;
 };
 
-export const getConsumerNavigation = (href: string): ConsumerNavigationItem | undefined =>
-  consumerNavigationByHref.get(href);
+export const getNavigationItem = (href: string): NavigationItem | undefined => navigationByHref.get(href);
 
 export const buildRouteMetadata = (
   href: string,
   fallback: MetadataFallback = {},
 ): Metadata => {
-  const item = getConsumerNavigation(href);
+  const item = getNavigationItem(href);
   const fallbackTitle = fallback.title ?? item?.meta.title ?? item?.title;
   const description = fallback.description ?? item?.meta.description ?? item?.description;
   const canonical = fallback.canonical ?? item?.href ?? href;
-  const title = fallbackTitle ?? 'Rayon Sports';
+  const title = fallbackTitle ?? "Control Center";
 
   const languages = buildLocaleAlternates(href);
 
