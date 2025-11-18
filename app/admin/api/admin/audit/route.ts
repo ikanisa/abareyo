@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
     const entityTypeFilter = searchParams.get('entityType') ?? searchParams.get('entity_type') ?? undefined;
     const search = searchParams.get('search') ?? searchParams.get('q') ?? undefined;
     const since = searchParams.get('since') ?? undefined;
+    const format = searchParams.get('format') ?? undefined;
 
     let supabase;
     try {
@@ -63,6 +64,32 @@ export async function GET(request: NextRequest) {
     if (error) throw error;
 
     adminLogger.info('admin.audit.list', { admin: session.user.id, count: data?.length ?? 0 });
+    if (format === 'csv') {
+      const toCell = (value: unknown) => {
+        if (value === null || value === undefined) return '';
+        const asString = typeof value === 'string' ? value : JSON.stringify(value);
+        return `"${asString.replace(/"/g, '""')}"`;
+      };
+      const rows = (data ?? []).map((row) => [
+        row.id,
+        row.action,
+        row.entity_type,
+        row.entity_id,
+        row.admin?.display_name ?? row.admin?.email ?? row.admin_user_id ?? '',
+        row.at,
+        row.ip,
+        row.ua,
+      ]);
+      const header = 'id,action,entity_type,entity_id,admin,at,ip,ua';
+      const csv = [header, ...rows.map((cells) => cells.map(toCell).join(','))].join('\n');
+      return new Response(csv, {
+        status: 200,
+        headers: {
+          'content-type': 'text/csv; charset=utf-8',
+          'content-disposition': `attachment; filename="audit-logs-${Date.now()}.csv"`,
+        },
+      });
+    }
     return respond({ logs: data ?? [] });
   } catch (error) {
     if (error instanceof AdminAuthError) {

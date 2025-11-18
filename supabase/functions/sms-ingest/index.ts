@@ -3,12 +3,16 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { getServiceRoleClient } from "../_shared/client.ts";
 import { getSmsIngestToken, requireEnv } from "../_shared/env.ts";
 import { json, jsonError, parseJsonBody, requireMethod } from "../_shared/http.ts";
+import { extractRequestMeta, writeAuditLog } from "../_shared/audit.ts";
 
 type Payload = {
   text?: string;
   from_msisdn?: string;
   received_at?: string;
   source?: string;
+  provider?: string;
+  provider_message_id?: string;
+  idempotency_key?: string;
 };
 
 const TOKEN = requireEnv(getSmsIngestToken(), "SMS_INGEST_TOKEN");
@@ -47,6 +51,14 @@ serve(async (req) => {
 
   const payload = parsed.data ?? {};
   const text = sanitize(payload.text);
+  const provider = sanitize(payload.provider) || req.headers.get("x-sms-provider")?.trim() || "unknown";
+  const providerMessageId =
+    sanitize(payload.provider_message_id) || req.headers.get("x-provider-message-id")?.trim() || null;
+  const explicitIdempotency = sanitize(payload.idempotency_key) || req.headers.get("x-idempotency-key")?.trim();
+  const idempotencyKey =
+    explicitIdempotency || providerMessageId
+      ? `${provider}:${explicitIdempotency ?? providerMessageId}`
+      : null;
 
   if (!text) {
     return jsonError("missing_text", 400);
@@ -56,6 +68,26 @@ serve(async (req) => {
   const source = sanitize(payload.source) || "edge:sms-ingest";
   const sender = sanitize(payload.from_msisdn) || null;
 
+  if (idempotencyKey) {
+    const { data: existing } = await supabase
+      .from("sms_raw")
+      .select("id, metadata")
+      .contains("metadata", { idempotency_key: idempotencyKey })
+      .limit(1);
+
+    if (existing && existing.length) {
+      const smsId = existing[0].id;
+      await writeAuditLog({
+        action: "sms.ingest.dedup",
+        entityType: "sms_raw",
+        entityId: smsId,
+        context: { provider, idempotencyKey, source, receivedAt },
+        ...extractRequestMeta(req),
+      });
+      return json({ ok: true, sms_id: smsId, reused: true });
+    }
+  }
+
   const { data, error } = await supabase
     .from("sms_raw")
     .insert({
@@ -63,6 +95,11 @@ serve(async (req) => {
       from_msisdn: sender,
       received_at: receivedAt,
       source,
+      metadata: {
+        provider,
+        provider_message_id: providerMessageId,
+        idempotency_key: idempotencyKey,
+      },
     })
     .select("id")
     .single();
@@ -73,6 +110,15 @@ serve(async (req) => {
   }
 
   const smsId = data.id;
+
+  await writeAuditLog({
+    action: "sms.ingest.accepted",
+    entityType: "sms_raw",
+    entityId: smsId,
+    after: { text, from_msisdn: sender, source, provider, provider_message_id: providerMessageId },
+    context: { receivedAt, idempotencyKey },
+    ...extractRequestMeta(req),
+  });
 
   try {
     const url = new URL(req.url);

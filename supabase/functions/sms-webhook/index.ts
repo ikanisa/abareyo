@@ -4,6 +4,7 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { getServiceRoleClient } from "../_shared/client.ts";
 import { getSmsWebhookToken, requireEnv } from "../_shared/env.ts";
 import { json, parseJsonBody, requireMethod } from "../_shared/http.ts";
+import { extractRequestMeta, writeAuditLog } from "../_shared/audit.ts";
 
 const TOKEN = requireEnv(getSmsWebhookToken(), "SMS_WEBHOOK_TOKEN");
 const db = getServiceRoleClient();
@@ -32,7 +33,7 @@ async function ensureTicketPass(orderId: string) {
     .catch(() => {});
 }
 
-async function matchAndConfirm(amount: number, ref: string): Promise<MatchResult> {
+async function matchAndConfirm(amount: number, ref: string, idempotencyKey: string | null): Promise<MatchResult> {
   const { data: ticketOrders } = await db
     .from("ticket_orders")
     .select("id,total,status,user_id")
@@ -45,7 +46,13 @@ async function matchAndConfirm(amount: number, ref: string): Promise<MatchResult
     await ensureTicketPass(ticketOrder.id);
     await db
       .from("payments")
-      .insert({ kind: "ticket", amount, status: "confirmed", ticket_order_id: ticketOrder.id, metadata: { ref } })
+      .insert({
+        kind: "ticket",
+        amount,
+        status: "confirmed",
+        ticket_order_id: ticketOrder.id,
+        metadata: { ref, idempotency_key: idempotencyKey },
+      })
       .catch(() => {});
     return { kind: "ticket_order", id: ticketOrder.id };
   }
@@ -61,7 +68,13 @@ async function matchAndConfirm(amount: number, ref: string): Promise<MatchResult
     await db.from("orders").update({ status: "paid", momo_ref: ref }).eq("id", shopOrder.id);
     await db
       .from("payments")
-      .insert({ kind: "shop", amount, status: "confirmed", order_id: shopOrder.id, metadata: { ref } })
+      .insert({
+        kind: "shop",
+        amount,
+        status: "confirmed",
+        order_id: shopOrder.id,
+        metadata: { ref, idempotency_key: idempotencyKey },
+      })
       .catch(() => {});
     return { kind: "shop_order", id: shopOrder.id };
   }
@@ -77,7 +90,7 @@ async function matchAndConfirm(amount: number, ref: string): Promise<MatchResult
     await db.from("insurance_quotes").update({ status: "paid", ref }).eq("id", quote.id);
     await db
       .from("payments")
-      .insert({ kind: "policy", amount, status: "confirmed", metadata: { ref } })
+      .insert({ kind: "policy", amount, status: "confirmed", metadata: { ref, idempotency_key: idempotencyKey } })
       .catch(() => {});
     return { kind: "insurance_quote", id: quote.id };
   }
@@ -93,7 +106,7 @@ async function matchAndConfirm(amount: number, ref: string): Promise<MatchResult
     await db.from("sacco_deposits").update({ status: "confirmed", ref }).eq("id", deposit.id);
     await db
       .from("payments")
-      .insert({ kind: "deposit", amount, status: "confirmed", metadata: { ref } })
+      .insert({ kind: "deposit", amount, status: "confirmed", metadata: { ref, idempotency_key: idempotencyKey } })
       .catch(() => {});
     return { kind: "sacco_deposit", id: deposit.id };
   }
@@ -106,6 +119,8 @@ serve(async (req) => {
   if (methodError) {
     return methodError;
   }
+
+  const requestMeta = extractRequestMeta(req);
 
   const auth = req.headers.get("authorization")?.split("Bearer ")[1];
   if (!auth || auth !== TOKEN) {
@@ -122,12 +137,43 @@ serve(async (req) => {
     received: new Date().toISOString(),
     length: txt.length,
   });
+  const provider = req.headers.get("x-sms-provider")?.trim() ?? "unknown";
+  const providedKey = req.headers.get("x-idempotency-key")?.trim();
+  const idempotencyKey = providedKey ? `${provider}:${providedKey}` : null;
+
+  if (idempotencyKey) {
+    const { data: existingPayments } = await db
+      .from("payments")
+      .select("id, kind, order_id, metadata")
+      .contains("metadata", { idempotency_key: idempotencyKey })
+      .limit(1);
+
+    if (existingPayments && existingPayments.length) {
+      const existing = existingPayments[0];
+      await writeAuditLog({
+        action: "sms.webhook.dedup",
+        entityType: "payment",
+        entityId: existing.id,
+        context: { provider, idempotencyKey },
+        ...requestMeta,
+      });
+      return json({ ok: true, reused: true, result: { kind: existing.kind, id: existing.order_id } });
+    }
+  }
   const refMatch = txt.match(/Ref[: ]+([A-Z0-9\-]+)/i);
   const amtMatch = txt.match(/RWF[: ]*([\d,]+)/i);
   const REF = refMatch?.[1] ?? crypto.randomUUID().slice(0, 8).toUpperCase();
   const AMT = amtMatch ? Number(amtMatch[1].replace(/,/g, "")) : 0;
 
-  const result = await matchAndConfirm(AMT, REF);
+  const result = await matchAndConfirm(AMT, REF, idempotencyKey);
   console.log("[edge:sms-webhook] processed", { ref: REF, amount: AMT, result: result.kind });
+  await writeAuditLog({
+    action: "sms.webhook.processed",
+    entityType: "payment",
+    entityId: result.id,
+    after: { ref: REF, amount: AMT, result: result.kind },
+    context: { provider, idempotencyKey },
+    ...requestMeta,
+  });
   return json({ ok: true, parsed: { REF, AMT }, result });
 });
