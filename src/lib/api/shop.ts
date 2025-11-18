@@ -1,45 +1,28 @@
+import { z } from 'zod';
+
+import {
+  RetailCheckoutRequestContract,
+  RetailCheckoutResponseContract,
+  RetailProductContract,
+  retailSchemas,
+} from '@rayon/api/contracts/retail';
 import { httpClient } from '@/services/http-client';
 
-export interface ShopProduct {
-  id: string;
-  name: string;
-  price: number;
-  stock: number;
-  images: ShopProductImage[];
-  thumbnailUrl?: string | null;
-  category?: string | null;
+const productListSchema = z.array(retailSchemas.product);
+
+export function fetchProducts(): Promise<RetailProductContract[]> {
+  return httpClient.data<RetailProductContract[]>('/shop/products').then((data) =>
+    productListSchema.parse(data),
+  );
 }
 
-export interface ShopProductImage {
-  key: string;
-  url: string | null;
-  alt?: string | null;
-  contentType?: string | null;
-}
-
-export interface ShopCheckoutPayload {
-  items: { productId: string; quantity: number }[];
-  channel: 'mtn' | 'airtel';
-  userId?: string;
-  contactName?: string;
-  contactPhone?: string;
-}
-
-export interface ShopCheckoutResponse {
-  orderId: string;
-  paymentId?: string;
-  total: number;
-  ussdCode: string;
-  expiresAt: string;
-}
-
-export function fetchProducts() {
-  return httpClient.data<ShopProduct[]>('/shop/products');
-}
-
-export async function checkoutShop(payload: ShopCheckoutPayload): Promise<ShopCheckoutResponse> {
-  return httpClient.data<ShopCheckoutResponse>('/shop/checkout', {
+export async function checkoutShop(
+  payload: RetailCheckoutRequestContract,
+): Promise<RetailCheckoutResponseContract> {
+  const validatedPayload = retailSchemas.checkoutRequest.parse(payload);
+  const data = await httpClient.data<RetailCheckoutResponseContract>('/shop/checkout', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(validatedPayload),
   });
+  return retailSchemas.checkoutResponse.parse(data);
 }

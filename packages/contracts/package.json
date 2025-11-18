@@ -5,6 +5,9 @@
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
+  "dependencies": {
+    "zod": "^3.25.76"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json"
   },
@@ -12,6 +15,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./versioning": {
+      "types": "./src/versioning.ts",
+      "default": "./src/versioning.ts"
     },
     "./onboarding": {
       "types": "./src/onboarding.ts",
@@ -36,6 +43,22 @@
     "./members": {
       "types": "./src/members.ts",
       "default": "./src/members.ts"
+    },
+    "./tickets": {
+      "types": "./src/tickets/index.ts",
+      "default": "./src/tickets/index.ts"
+    },
+    "./retail": {
+      "types": "./src/retail/index.ts",
+      "default": "./src/retail/index.ts"
+    },
+    "./insurance": {
+      "types": "./src/insurance/index.ts",
+      "default": "./src/insurance/index.ts"
+    },
+    "./sacco": {
+      "types": "./src/sacco/index.ts",
+      "default": "./src/sacco/index.ts"
     }
   }
 }

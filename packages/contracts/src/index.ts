@@ -65,6 +65,10 @@ export * from './services';
 export * from './rewards';
 export * from './news';
 export * from './members';
+export * from './tickets';
+export * from './retail';
+export * from './insurance';
+export * from './sacco';
 
 export type TicketCheckoutItemContract = {
   zone: TicketZoneContract;

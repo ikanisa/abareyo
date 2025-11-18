@@ -1,162 +1,114 @@
+import { z } from 'zod';
+
+import {
+  ActiveTicketPassContract,
+  RotateTicketPassResponseContract,
+  TicketAnalyticsContract,
+  TicketCatalogMatchContract,
+  TicketCatalogResponseContract,
+  TicketCheckoutRequestContract,
+  TicketCheckoutResponseContract,
+  TicketOrderReceiptContract,
+  TicketOrderSummaryContract,
+  ticketSchemas,
+} from '@rayon/api/contracts/tickets';
 import { adminFetch } from '@/lib/admin/csrf';
 
-// Type definitions inlined from contracts
-export enum TicketZoneContract {
-  VIP = 'VIP',
-  REGULAR = 'REGULAR',
-  GENERAL = 'GENERAL',
-}
-
-export type TicketCheckoutItemContract = {
-  zone: TicketZoneContract;
-  quantity: number;
-  price: number;
-};
-
-export type TicketCheckoutRequestContract = {
-  matchId: string;
-  items: TicketCheckoutItemContract[];
-  channel?: 'mtn' | 'airtel';
-};
-
-export type TicketCheckoutResponseContract = {
-  orderId: string;
-  total: number;
-  ussdCode: string;
-  expiresAt: string;
-  paymentId?: string;
-};
-
-export type TicketZoneMetaContract = {
-  zone: TicketZoneContract;
-  price: number;
-  capacity: number;
-  remaining: number;
-  gate: string;
-};
-
-export type TicketCatalogMatchContract = {
-  id: string;
-  opponent: string;
-  kickoff: string;
-  venue: string;
-  competition?: string | null;
-  status: string;
-  zones: TicketZoneMetaContract[];
-};
-
-export type TicketCatalogResponseContract = {
-  matches: TicketCatalogMatchContract[];
-};
-
-export type TicketAnalyticsContract = {
-  totals: {
-    revenue: number;
-    orders: number;
-    paid: number;
-    pending: number;
-    cancelled: number;
-    expired: number;
-    averageOrderValue: number;
-  };
-  matchBreakdown: {
-    matchId: string;
-    opponent: string;
-    kickoff: string;
-    venue: string;
-    totalRevenue: number;
-    paidOrders: number;
-    seatsSold: number;
-    capacity: number;
-  }[];
-  recentSales: {
-    date: string;
-    revenue: number;
-    orders: number;
-  }[];
-  paymentStatus: {
-    status: string;
-    count: number;
-  }[];
-};
-
-export type TicketOrderMatchContract = {
-  id: string;
-  opponent: string;
-  kickoff: string;
-  venue: string;
-};
-
-export type TicketOrderItemContract = {
-  id: string;
-  zone: TicketZoneContract | string;
-  quantity: number;
-  price: number;
-};
-
-export type TicketOrderPaymentSummaryContract = {
-  id: string;
-  status: string;
-  amount: number;
-  createdAt: string;
-};
-
-export type TicketOrderSummaryContract = {
-  id: string;
-  status: string;
-  total: number;
-  createdAt: string;
-  expiresAt: string;
-  ussdCode: string;
-  smsRef?: string | null;
-  match: TicketOrderMatchContract | null;
-  items: TicketOrderItemContract[];
-  payments: TicketOrderPaymentSummaryContract[];
-};
-
-export type TicketOrderReceiptContract = TicketOrderSummaryContract & {
-  payments: (TicketOrderPaymentSummaryContract & {
-    confirmedAt: string | null;
-    metadata: Record<string, unknown> | null;
-  })[];
-  passes: {
-    id: string;
-    zone: TicketZoneContract | string;
-    gate?: string | null;
-    state: string;
-    updatedAt: string;
-    transferredToUserId?: string | null;
-  }[];
-};
-
-export type ActiveTicketPassContract = {
-  passId: string;
-  matchId: string;
-  matchOpponent: string;
-  kickoff: string;
-  zone: TicketZoneContract;
-  gate?: string | null;
-  updatedAt: string;
-};
-
-export type RotateTicketPassResponseContract = {
-  passId: string;
-  token: string;
-  rotatedAt: string;
-  validForSeconds: number;
-};
-
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? '/api';
+
+const passVerificationSchema = z.object({
+  status: z.enum(['verified', 'used', 'refunded', 'not_found']),
+  passId: z.string().optional(),
+  orderId: z.string().optional(),
+  zone: z.string().optional(),
+});
+
+const gateHistoryItemSchema = z.object({
+  id: z.string(),
+  passId: z.string(),
+  stewardId: z.string().nullable().optional(),
+  result: z.string(),
+  createdAt: z.string(),
+  pass: z.object({
+    id: z.string(),
+    zone: z.string(),
+    orderId: z.string(),
+    order: z.object({
+      matchId: z.string(),
+      userId: z.string().nullable().optional(),
+    }),
+  }),
+});
+
+const initiateTransferPayloadSchema = z.object({
+  passId: z.string(),
+  ownerUserId: z.string(),
+  targetUserId: z.string().optional(),
+  targetPhone: z.string().optional(),
+});
+
+const initiateTransferResponseSchema = z.object({
+  transferCode: z.string(),
+  passId: z.string(),
+  targetUserId: z.string().nullable(),
+});
+
+const claimTransferPayloadSchema = z.object({
+  passId: z.string(),
+  recipientUserId: z.string(),
+  transferCode: z.string(),
+});
+
+const matchSummarySchema = z.object({
+  id: z.string(),
+  opponent: z.string(),
+  kickoff: z.string(),
+  venue: z.string(),
+  status: z.string(),
+  competition: z.string().nullable().optional(),
+  score: z
+    .object({
+      home: z.number(),
+      away: z.number(),
+    })
+    .nullable()
+    .optional(),
+  timeline: z
+    .array(
+      z.object({
+        minute: z.number(),
+        type: z.string(),
+        description: z.string(),
+        team: z.enum(['home', 'away']),
+      }),
+    )
+    .optional(),
+  stats: z
+    .array(
+      z.object({
+        label: z.string(),
+        home: z.number(),
+        away: z.number(),
+      }),
+    )
+    .optional(),
+});
+
+const apiData = async <T>(response: Response, schema: z.ZodType<T>) => {
+  const payload = (await response.json()) as { data: unknown };
+  return schema.parse(payload.data ?? payload);
+};
 
 export async function createTicketCheckout(
   payload: TicketCheckoutRequestContract,
 ): Promise<TicketCheckoutResponseContract> {
+  const validatedPayload = ticketSchemas.checkoutRequest.parse(payload);
   const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/tickets/checkout`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(validatedPayload),
   });
 
   if (!response.ok) {
@@ -164,16 +116,10 @@ export async function createTicketCheckout(
     throw new Error(message || 'Failed to create ticket order');
   }
 
-  const { data } = (await response.json()) as { data: TicketCheckoutResponseContract };
-  return data;
+  return apiData(response, ticketSchemas.checkoutResponse);
 }
 
-export interface PassVerificationResponse {
-  status: 'verified' | 'used' | 'refunded' | 'not_found';
-  passId?: string;
-  orderId?: string;
-  zone?: string;
-}
+export type PassVerificationResponse = z.infer<typeof passVerificationSchema>;
 
 export async function verifyTicketPass(token: string, options?: { dryRun?: boolean; stewardId?: string }) {
   const params = new URLSearchParams();
@@ -181,7 +127,9 @@ export async function verifyTicketPass(token: string, options?: { dryRun?: boole
     params.set('dryRun', 'true');
   }
 
-  const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/tickets/verify-pass${params.toString() ? `?${params.toString()}` : ''}`, {
+  const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/tickets/verify-pass${
+    params.toString() ? `?${params.toString()}` : ''
+  }`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ token, stewardId: options?.stewardId }),
@@ -191,26 +139,10 @@ export async function verifyTicketPass(token: string, options?: { dryRun?: boole
     throw new Error(await response.text());
   }
 
-  const { data } = (await response.json()) as { data: PassVerificationResponse };
-  return data;
+  return apiData(response, passVerificationSchema);
 }
 
-export interface GateHistoryItem {
-  id: string;
-  passId: string;
-  stewardId?: string | null;
-  result: string;
-  createdAt: string;
-  pass: {
-    id: string;
-    zone: string;
-    orderId: string;
-    order: {
-      matchId: string;
-      userId?: string | null;
-    };
-  };
-}
+export type GateHistoryItem = z.infer<typeof gateHistoryItemSchema>;
 
 export async function fetchGateHistory() {
   const response = await adminFetch('/admin/api/tickets/gate-history', { cache: 'no-store' });
@@ -219,122 +151,83 @@ export async function fetchGateHistory() {
     throw new Error(await response.text());
   }
 
-  const { data } = (await response.json()) as { data: GateHistoryItem[] };
-  return data;
+  return apiData(response, z.array(gateHistoryItemSchema));
 }
 
-export interface InitiateTransferPayload {
-  passId: string;
-  ownerUserId: string;
-  targetUserId?: string;
-  targetPhone?: string;
-}
-
-export interface InitiateTransferResponse {
-  transferCode: string;
-  passId: string;
-  targetUserId: string | null;
-}
+export type InitiateTransferPayload = z.infer<typeof initiateTransferPayloadSchema>;
+export type InitiateTransferResponse = z.infer<typeof initiateTransferResponseSchema>;
 
 export async function initiateTicketTransfer(payload: InitiateTransferPayload) {
+  const body = initiateTransferPayloadSchema.parse(payload);
   const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/tickets/passes/initiate-transfer`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
     throw new Error(await response.text());
   }
 
-  const { data } = (await response.json()) as { data: InitiateTransferResponse };
-  return data;
+  return apiData(response, initiateTransferResponseSchema);
 }
 
-export interface ClaimTransferPayload {
-  passId: string;
-  recipientUserId: string;
-  transferCode: string;
-}
+export type ClaimTransferPayload = z.infer<typeof claimTransferPayloadSchema>;
 
 export async function claimTicketTransfer(payload: ClaimTransferPayload) {
+  const body = claimTransferPayloadSchema.parse(payload);
   const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/tickets/passes/claim-transfer`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
     throw new Error(await response.text());
   }
 
-  return (await response.json()) as { data: { passId: string; recipientUserId: string } };
+  return apiData(response, z.object({ passId: z.string(), recipientUserId: z.string() }));
 }
 
-export async function fetchTicketCatalog() {
+export async function fetchTicketCatalog(): Promise<TicketCatalogMatchContract[]> {
   const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/tickets/catalog`);
   if (!response.ok) {
     throw new Error(await response.text());
   }
-  const { data } = (await response.json()) as { data: TicketCatalogResponseContract['matches'] };
-  return data;
+  const catalog = await apiData(response, ticketSchemas.catalogResponse);
+  return (catalog as TicketCatalogResponseContract).matches;
 }
 
-export type TicketMatchSummary = {
-  id: string;
-  opponent: string;
-  kickoff: string;
-  venue: string;
-  status: string;
-  competition?: string | null;
-  score?: {
-    home: number;
-    away: number;
-  } | null;
-  timeline?: Array<{
-    minute: number;
-    type: string;
-    description: string;
-    team: 'home' | 'away';
-  }>;
-  stats?: Array<{
-    label: string;
-    home: number;
-    away: number;
-  }>;
-};
+export type TicketMatchSummary = z.infer<typeof matchSummarySchema>;
 
 export async function fetchMatchSummaries() {
   const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/matches/summaries`);
   if (!response.ok) {
     throw new Error(await response.text());
   }
-  const { data } = (await response.json()) as { data: TicketMatchSummary[] };
-  return data;
+  return apiData(response, z.array(matchSummarySchema));
 }
 
-export async function fetchTicketAnalytics() {
+export async function fetchTicketAnalytics(): Promise<TicketAnalyticsContract> {
   const response = await adminFetch('/admin/api/tickets/analytics', { cache: 'no-store' });
 
   if (!response.ok) {
     throw new Error(await response.text());
   }
 
-  const { data } = (await response.json()) as { data: TicketAnalyticsContract };
-  return data;
+  return apiData(response, ticketSchemas.analytics);
 }
 
-export async function fetchActivePasses(userId: string) {
+export async function fetchActivePasses(userId: string): Promise<ActiveTicketPassContract[]> {
   const params = new URLSearchParams({ userId });
   const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/tickets/passes?${params.toString()}`);
   if (!response.ok) {
     throw new Error(await response.text());
   }
-  const { data } = (await response.json()) as { data: ActiveTicketPassContract[] };
-  return data;
+  return apiData(response, z.array(ticketSchemas.activePass));
 }
 
-export async function rotateTicketPass(passId: string, userId: string) {
+export async function rotateTicketPass(passId: string, userId: string): Promise<RotateTicketPassResponseContract> {
   const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/tickets/passes/rotate`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -345,18 +238,16 @@ export async function rotateTicketPass(passId: string, userId: string) {
     throw new Error(await response.text());
   }
 
-  const { data } = (await response.json()) as { data: RotateTicketPassResponseContract };
-  return data;
+  return apiData(response, ticketSchemas.rotatePass);
 }
 
-export async function fetchTicketOrders(userId: string) {
+export async function fetchTicketOrders(userId: string): Promise<TicketOrderSummaryContract[]> {
   const params = new URLSearchParams({ userId });
   const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/tickets/orders?${params.toString()}`);
   if (!response.ok) {
     throw new Error(await response.text());
   }
-  const { data } = (await response.json()) as { data: TicketOrderSummaryContract[] };
-  return data;
+  return apiData(response, z.array(ticketSchemas.orderSummary));
 }
 
 export async function cancelTicketOrder(orderId: string, userId: string) {
@@ -368,16 +259,19 @@ export async function cancelTicketOrder(orderId: string, userId: string) {
   if (!response.ok) {
     throw new Error(await response.text());
   }
-  const { data } = (await response.json()) as { data: { id: string; status: string } };
-  return data;
+  return apiData(response, z.object({ id: z.string(), status: z.string() }));
 }
 
-export async function fetchTicketReceipt(orderId: string, userId: string) {
+export async function fetchTicketReceipt(
+  orderId: string,
+  userId: string,
+): Promise<TicketOrderReceiptContract> {
   const params = new URLSearchParams({ userId });
-  const response = await fetch(`${BASE_URL.replace(/\/$/, '')}/tickets/orders/${orderId}/receipt?${params.toString()}`);
+  const response = await fetch(
+    `${BASE_URL.replace(/\/$/, '')}/tickets/orders/${orderId}/receipt?${params.toString()}`,
+  );
   if (!response.ok) {
     throw new Error(await response.text());
   }
-  const { data } = (await response.json()) as { data: TicketOrderReceiptContract };
-  return data;
+  return apiData(response, ticketSchemas.orderReceipt);
 }

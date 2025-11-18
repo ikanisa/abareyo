@@ -4,6 +4,11 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./contracts": "./src/contracts/index.ts",
+    "./contracts/tickets": "./src/contracts/tickets.ts",
+    "./contracts/retail": "./src/contracts/retail.ts",
+    "./contracts/insurance": "./src/contracts/insurance.ts",
+    "./contracts/sacco": "./src/contracts/sacco.ts",
     "./http": "./src/http/index.ts",
     "./supabase": "./src/supabase/index.ts",
     "./types/database": "./types/database.ts"
