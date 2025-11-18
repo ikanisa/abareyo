@@ -14,7 +14,7 @@ export const GlassCard = ({
   return (
     <div
       className={cn(
-        "glass-card transition-all duration-300",
+        "glass-card transition-all duration-deliberate ease-expressive",
         variant === "hero" && "glow-primary",
         variant === "accent" && "glow-accent",
         className
