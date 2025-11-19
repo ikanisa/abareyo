@@ -15,6 +15,23 @@
   --space-14: 4rem;
   --space-16: 4.5rem;
 
+  /* Radius scale */
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-pill: 999px;
+  --radius: var(--radius-md);
+
+  /* Motion primitives */
+  --motion-duration-fast: 160ms;
+  --motion-duration-standard: 200ms;
+  --motion-duration-deliberate: 260ms;
+  --motion-ease-standard: cubic-bezier(0.2, 0, 0.38, 0.9);
+  --motion-ease-expressive: cubic-bezier(0.16, 1, 0.3, 1);
+
   /* Content widths */
   --content-width-sm: 36rem;
   --content-width-md: 48rem;

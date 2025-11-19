@@ -1,0 +1,46 @@
+import { Badge } from "@/components/ui/badge";
+import { GlassCard } from "@/components/ui/glass-card";
+
+export const meta = {
+  title: "Design Tokens / Overview",
+};
+
+# Design Tokens
+
+This Storybook-lite doc shows how the Tailwind-integrated tokens map to our UI primitives.
+
+## Spacing and radii
+- Use `p-4`, `gap-6`, and related utilities to pick up the tokenized spacing scale.
+- Prefer `rounded-md`, `rounded-xl`, or `rounded-pill` over ad hoc values to keep pills and chips consistent.
+
+<GlassCard className="p-6 space-y-3">
+  <h3 className="text-heading-sm">Tokenized container</h3>
+  <p className="text-body-sm text-muted-foreground">
+    This card uses `p-6` for padding (resolving to `var(--space-6)`) and the glass styling from our
+    base layer. The default transition timing is driven by `duration-deliberate` + `ease-expressive`.
+  </p>
+</GlassCard>
+
+## Color roles
+Semantic colors resolve to HSL tokens in `src/index.css`. Apply them through Tailwind utilities:
+
+- `bg-card` / `text-card-foreground` for surfaces
+- `bg-primary` / `text-primary-foreground` for brand emphasis
+- `border-border` / `ring-ring` for focus affordances
+
+<Badge variant="success" className="rounded-pill px-3 py-1">
+  Success badge
+</Badge>
+
+## Motion primitives
+Apply `duration-fast`, `duration-standard`, or `duration-deliberate` along with `ease-brand` or `ease-expressive`.
+They map to the CSS variables in `src/styles/tokens.css`, so reduced-motion handling stays centralized.
+
+<Badge variant="accent" className="rounded-pill px-3 py-1 duration-fast ease-brand">
+  Motion-aware accent
+</Badge>
+
+## Dos and don'ts
+- ✅ Do lean on the spacing/radius/color tokens to keep primitives visually aligned.
+- ✅ Do reuse `GlassCard`, `Badge`, and other primitives rather than re-implementing shadows or borders.
+- ❌ Don’t hard-code pixel values or bespoke transitions that fight the token definitions.
