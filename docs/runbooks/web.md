@@ -14,6 +14,7 @@ This runbook documents how to develop, deploy, and operate the Next.js web appli
 | Unit tests with coverage | `pnpm test --coverage` |
 | Coverage report only | `pnpm coverage` |
 | Playwright smoke tests | `make e2e` |
+| Verify Supabase schema parity | `make verify` |
 | Deployment preflight | `node scripts/preflight.mjs` |
 | Supabase function deploys | `pnpm supabase:functions deploy` |
 
@@ -29,6 +30,17 @@ This runbook documents how to develop, deploy, and operate the Next.js web appli
 
 If Supabase containers break, run `supabase stop && supabase start` then `supabase migration up` to resync.
 
+### Supabase schema drift remediation
+
+- Export the production shadow database URL from your secrets manager:
+
+  ```bash
+  export PRODUCTION_DATABASE_SHADOW_URL=postgresql://postgres:<password>@db.<ref>.supabase.co:5432/postgres
+  ```
+
+- Run the guard locally or in CI: `make verify`.
+- If the check fails, apply the missing migrations (`supabase db push --db-url "$PRODUCTION_DATABASE_SHADOW_URL"`) and commit any new migration files to `supabase/migrations`.
+- Re-run `make verify` to confirm the schema matches production before merging.
 ## Auth & QR smokes
 
 - OTP: follow the WhatsApp curl smoke in [`README.md`](../../README.md#whatsapp-otp-smoke-tests) after setting `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SECRET_KEY`.
