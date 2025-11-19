@@ -1,0 +1,25 @@
+{
+  "name": "@rayon/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "lint": "expo lint",
+    "typecheck": "tsc --noEmit",
+    "test": "jest"
+  },
+  "dependencies": {
+    "expo": "~51.0.0",
+    "expo-router": "^3.6.0",
+    "react": "18.3.1",
+    "react-native": "0.76.0",
+    "react-native-paper": "^5.12.5",
+    "@react-native-async-storage/async-storage": "^1.23.1",
+    "@react-native-community/netinfo": "^11.4.1",
+    "expo-constants": "^16.0.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
