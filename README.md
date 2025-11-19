@@ -141,6 +141,8 @@ If you attempt to reuse the same OTP or submit the wrong code more than five tim
 
 `package.json` exposes the same script names across npm and pnpm. A deeper explanation of each command—including when to run it during feature development or release prep—is available in [`docs/runbooks/web.md`](docs/runbooks/web.md#core-commands). The canonical pnpm entry points are:
 
+> New to the project? Start with the concise happy-path checklist in [`docs/happy-path.md`](docs/happy-path.md) for env provisioning, install, and Supabase bootstrapping.
+
 - `pnpm dev` – Next.js dev server with HMR.
 - `pnpm build` – Production build (runs `next build`).
 - `pnpm start` – Serve the production bundle (`next start`).
