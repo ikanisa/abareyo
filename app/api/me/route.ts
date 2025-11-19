@@ -1,9 +1,6 @@
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabase } from '@/app/_lib/supabase';
 
-const MEMBER_COOKIE = 'gikundiro:member-id';
-const MEMBER_PROFILE_COOKIE = 'gikundiro:member-profile';
+import { getSupabaseServerClient } from '@/lib/supabase/server';
 
 type MemberProfile = {
   id: string;
@@ -20,76 +17,38 @@ type MemberProfile = {
   user_code: string | null;
 };
 
-const parseProfileCookie = (raw: string | undefined) => {
-  if (!raw) {
-    return null;
-  }
-  try {
-    return JSON.parse(decodeURIComponent(raw)) as MemberProfile;
-  } catch (error) {
-    console.warn('Unable to parse fallback member profile', error);
-    return null;
-  }
-};
-
 export async function GET(req: NextRequest) {
-  const supabase = getSupabase();
-  const cookieStore = cookies();
-  const headerId = req.headers.get('x-client-id') ?? req.headers.get('x-user-id');
-  const cookieId = cookieStore.get(MEMBER_COOKIE)?.value ?? undefined;
-  const userId = headerId ?? cookieId;
+  const response = NextResponse.next();
+  try {
+    const supabase = getSupabaseServerClient({ request: req, response });
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-  if (!userId) {
-    const fallback = parseProfileCookie(cookieStore.get(MEMBER_PROFILE_COOKIE)?.value);
-    if (fallback) {
-      return NextResponse.json({ me: fallback });
+    if (authError || !user) {
+      return NextResponse.json({ me: null }, { status: 401, headers: response.headers });
     }
-    return NextResponse.json({ me: null });
-  }
 
-  if (!supabase) {
-    const fallback = parseProfileCookie(cookieStore.get(MEMBER_PROFILE_COOKIE)?.value);
-    if (fallback && fallback.id === userId) {
-      return NextResponse.json({ me: fallback });
+    const { data, error } = await supabase
+      .from('users')
+      .select(
+        'id, name, display_name, region, fan_club, public_profile, language, momo_number, joined_at, avatar_url, phone, user_code',
+      )
+      .eq('id', user.id)
+      .maybeSingle<MemberProfile>();
+
+    if (error) {
+      return NextResponse.json({ error: 'failed_to_load_profile' }, { status: 500, headers: response.headers });
     }
-    return NextResponse.json({ me: null });
+
+    if (!data) {
+      return NextResponse.json({ me: null }, { status: 404, headers: response.headers });
+    }
+
+    return NextResponse.json({ me: data }, { headers: response.headers });
+  } catch (error) {
+    console.error('[me] Supabase auth failed', error);
+    return NextResponse.json({ me: null }, { status: 500, headers: response.headers });
   }
-
-  const { data, error } = await supabase
-    .from('users')
-    .select(
-      'id, name, display_name, region, fan_club, public_profile, language, momo_number, joined_at, avatar_url, phone, user_code',
-    )
-    .eq('id', userId)
-    .maybeSingle<MemberProfile>();
-
-  if (error) {
-    return NextResponse.json({ error: 'failed_to_load_profile' }, { status: 500 });
-  }
-
-  if (!data) {
-    return NextResponse.json({ me: null });
-  }
-
-  cookieStore.set({
-    name: MEMBER_COOKIE,
-    value: userId,
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 60 * 60 * 24 * 365,
-    path: '/',
-  });
-
-  cookieStore.set({
-    name: MEMBER_PROFILE_COOKIE,
-    value: encodeURIComponent(JSON.stringify(data)),
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 60 * 60 * 24 * 30,
-    path: '/',
-  });
-
-  return NextResponse.json({ me: data });
 }

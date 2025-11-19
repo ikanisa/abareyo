@@ -1,145 +1,143 @@
 "use client";
+
 import type { ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import type { Session, User } from "@supabase/supabase-js";
 
-import { createContext, useContext, useEffect, useMemo } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-import { fetchFanSession, finalizeFanOnboarding, loginWithSupabaseToken, logoutFan } from "@/lib/api/fan";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import type { FanSession } from "@/lib/api/fan";
 
-type FanSessionData = Awaited<ReturnType<typeof fetchFanSession>>;
-type FanUser = FanSession["user"];
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 type AuthContextValue = {
-  session: FanSessionData;
-  user: FanUser | null;
-  onboardingStatus: string | null;
+  session: Session | null;
+  user: User | null;
   loading: boolean;
-  login: (sessionId: string) => Promise<void>;
-  completeWhatsappLogin: (payload: { accessToken: string; refreshToken?: string | null }) => Promise<void>;
+  signInWithPassword: (payload: { email: string; password: string }) => Promise<void>;
+  signUp: (payload: { email: string; password: string }) => Promise<void>;
+  sendMagicLink: (payload: { email: string }) => Promise<void>;
+  resetPassword: (payload: { email: string }) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
 };
 
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const queryClient = useQueryClient();
   const supabase = getSupabaseBrowserClient();
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState<boolean>(Boolean(supabase));
 
-  const sessionQuery = useQuery({
-    queryKey: ['fan', 'session'],
-    queryFn: fetchFanSession,
-    retry: false,
-    staleTime: 0,
-  });
-
-  const loginMutation = useMutation({
-    mutationFn: async (sessionId: string) => {
-      await finalizeFanOnboarding({ sessionId });
-      await queryClient.invalidateQueries({ queryKey: ['fan', 'session'] });
-    },
-  });
-
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      await logoutFan();
-      await queryClient.invalidateQueries({ queryKey: ['fan', 'session'] });
-    },
-  });
-
-  const whatsappLoginMutation = useMutation({
-    mutationFn: async ({ accessToken, refreshToken }: { accessToken: string; refreshToken?: string | null }) => {
-      if (!supabase) {
-        throw new Error('Supabase client is not available');
-      }
-
-      const { error } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken ?? accessToken,
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      await loginWithSupabaseToken({ accessToken });
-      await queryClient.invalidateQueries({ queryKey: ['fan', 'session'] });
-    },
-  });
-
-  const value = useMemo(() => {
-    const data = sessionQuery.data ?? null;
-    return {
-      session: data,
-      user: data?.user ?? null,
-      onboardingStatus: data?.onboardingStatus ?? null,
-      loading:
-        sessionQuery.isLoading ||
-        sessionQuery.isFetching ||
-        loginMutation.isPending ||
-        logoutMutation.isPending ||
-        whatsappLoginMutation.isPending,
-      login: async (sessionId: string) => {
-        await loginMutation.mutateAsync(sessionId);
-      },
-      completeWhatsappLogin: async ({ accessToken, refreshToken }) => {
-        await whatsappLoginMutation.mutateAsync({ accessToken, refreshToken });
-      },
-      logout: async () => {
-        await logoutMutation.mutateAsync();
-      },
-      refresh: async () => {
-        await queryClient.invalidateQueries({ queryKey: ['fan', 'session'] });
-      },
-    };
-  }, [
-    loginMutation,
-    loginMutation.isPending,
-    logoutMutation,
-    logoutMutation.isPending,
-    whatsappLoginMutation,
-    whatsappLoginMutation.isPending,
-    queryClient,
-    sessionQuery.data,
-    sessionQuery.isFetching,
-    sessionQuery.isLoading,
-  ]) as AuthContextValue;
-
-  useEffect(() => {
+  const initialiseSession = useCallback(async () => {
     if (!supabase) {
+      setSession(null);
+      setLoading(false);
       return;
     }
+    setLoading(true);
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      console.warn("[auth] Unable to fetch session", error.message);
+    }
+    setSession(data.session ?? null);
+    setLoading(false);
+  }, [supabase]);
 
-    let cancelled = false;
+  useEffect(() => {
+    void initialiseSession();
+    if (!supabase) {
+      return undefined;
+    }
 
-    const ensureSession = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (cancelled) return;
-        if (!data.session) {
-          const { error } = await supabase.auth.signInAnonymously();
-          if (error) {
-            console.warn('[auth] Failed to initialise anonymous Supabase session', error.message);
-          }
-        }
-      } catch (error) {
-        console.warn('[auth] Unable to verify Supabase session', error);
-      }
-    };
-
-    ensureSession();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(async () => {
-      await queryClient.invalidateQueries({ queryKey: ['fan', 'session'] });
+    const { data } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+      setLoading(false);
     });
 
     return () => {
-      cancelled = true;
-      authListener?.subscription?.unsubscribe();
+      data?.subscription.unsubscribe();
     };
-  }, [supabase, queryClient]);
+  }, [initialiseSession, supabase]);
+
+  const signInWithPassword = useCallback(
+    async ({ email, password }: { email: string; password: string }) => {
+      if (!supabase) throw new Error("Supabase client unavailable");
+      setLoading(true);
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      setLoading(false);
+      if (error) throw new Error(error.message);
+      setSession(data.session ?? null);
+    },
+    [supabase],
+  );
+
+  const signUp = useCallback(
+    async ({ email, password }: { email: string; password: string }) => {
+      if (!supabase) throw new Error("Supabase client unavailable");
+      setLoading(true);
+      const { error, data } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: `${window.location.origin}/auth/login` },
+      });
+      setLoading(false);
+      if (error) throw new Error(error.message);
+      setSession(data.session ?? null);
+    },
+    [supabase],
+  );
+
+  const sendMagicLink = useCallback(
+    async ({ email }: { email: string }) => {
+      if (!supabase) throw new Error("Supabase client unavailable");
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/auth/login` },
+      });
+      setLoading(false);
+      if (error) throw new Error(error.message);
+    },
+    [supabase],
+  );
+
+  const resetPassword = useCallback(
+    async ({ email }: { email: string }) => {
+      if (!supabase) throw new Error("Supabase client unavailable");
+      setLoading(true);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/login`,
+      });
+      setLoading(false);
+      if (error) throw new Error(error.message);
+    },
+    [supabase],
+  );
+
+  const logout = useCallback(async () => {
+    if (!supabase) return;
+    setLoading(true);
+    const { error } = await supabase.auth.signOut();
+    setLoading(false);
+    if (error) throw new Error(error.message);
+    setSession(null);
+  }, [supabase]);
+
+  const refresh = useCallback(async () => {
+    await initialiseSession();
+  }, [initialiseSession]);
+
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      session,
+      user: session?.user ?? null,
+      loading,
+      signInWithPassword,
+      signUp,
+      sendMagicLink,
+      resetPassword,
+      logout,
+      refresh,
+    }),
+    [loading, logout, resetPassword, sendMagicLink, session, signInWithPassword, signUp, refresh],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
@@ -147,7 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error("useAuth must be used within AuthProvider");
   }
   return ctx;
 };
