@@ -9,5 +9,5 @@
 - Later phases enforce accessibility, telemetry, and documentation sign-off, requiring Axe/PA11y parity and published runbooks before the programme can close.【F:plans/REFACTOR_PLAN_PHASED.md†L21-L31】
 
 ## Deployment Readiness Touchpoints
-- Deployment quality gates remain unchanged: lint, type-check, unit tests, and build must pass alongside the preflight script, and the command pair `npm run validate:deployment` / `make validate-deployment` stays the recommended validation entrypoint.【F:DEPLOYMENT_CHECKLIST.md†L23-L43】
-- Environment and infrastructure expectations still require Supabase, backend integrations, Redis, Kubernetes, and secret provisioning prior to go-live, matching the existing checklist owners rely on today.【F:DEPLOYMENT_CHECKLIST.md†L45-L152】
+- Deployment quality gates remain unchanged: lint, type-check, unit tests, and build must pass alongside the preflight script, and the command pair `npm run validate:deployment` / `make validate-deployment` stays the recommended validation entrypoint.【F:README.md†L186-L216】
+- Environment and infrastructure expectations now follow the consolidated Supabase-first runbooks (`docs/runbooks/deploy.md`, `docs/runbooks/web.md`), which cover auth, QR, and secret provisioning for staging and production.

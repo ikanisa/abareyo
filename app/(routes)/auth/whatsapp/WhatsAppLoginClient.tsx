@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MessageCircle } from "lucide-react";
+import { Check, Clock4, MessageCircle } from "lucide-react";
 
 import PageShell from "@/app/_components/shell/PageShell";
 import TopAppBar from "@/app/_components/ui/TopAppBar";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
 import { dispatchTelemetryEvent } from "@/lib/observability";
@@ -27,6 +29,19 @@ const WhatsAppLoginClient = () => {
   const { toast } = useToast();
   const { completeWhatsappLogin } = useAuth();
   const [requestContext, setRequestContext] = useState<RequestContext | null>(null);
+  const [activeStep, setActiveStep] = useState<"phone" | "otp">("phone");
+
+  const steps = useMemo(
+    () => [
+      { id: "phone", label: "Number", description: "Add your WhatsApp number" },
+      { id: "otp", label: "Code", description: "Enter the one-time code" },
+    ],
+    [],
+  );
+
+  useEffect(() => {
+    setActiveStep(requestContext ? "otp" : "phone");
+  }, [requestContext]);
 
   const handleReset = () => {
     if (requestContext) {
@@ -106,18 +121,75 @@ const WhatsAppLoginClient = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {requestContext ? (
-              <OtpVerificationForm
-                key={requestContext.requestId}
-                requestId={requestContext.requestId}
-                phone={requestContext.phone}
-                initialCountdown={requestContext.resendAfter}
-                onBack={handleReset}
-                onVerified={handleVerificationSuccess}
-              />
-            ) : (
-              <PhoneEntryForm onSuccess={handleRequestIssued} />
-            )}
+            <div className="flex flex-wrap gap-2">
+              {steps.map((step) => {
+                const completed = requestContext !== null && step.id === "phone";
+                const isActive = activeStep === step.id;
+                return (
+                  <Badge
+                    key={step.id}
+                    variant={isActive ? "default" : completed ? "secondary" : "outline"}
+                    className="flex items-center gap-2 rounded-full px-3 py-1 text-xs"
+                  >
+                    {completed ? <Check className="h-3 w-3" /> : <Clock4 className="h-3 w-3" />}
+                    <span className="font-medium">{step.label}</span>
+                  </Badge>
+                );
+              })}
+            </div>
+
+            <Accordion
+              type="single"
+              collapsible
+              value={activeStep}
+              onValueChange={(value) => setActiveStep(value === "otp" ? "otp" : "phone")}
+              className="rounded-lg border"
+            >
+              <AccordionItem value="phone" className="border-border/60">
+                <AccordionTrigger className="px-3 text-sm font-semibold">
+                  Step 1 · Add your number
+                  <span className="text-xs font-normal text-muted-foreground">{steps[0]?.description}</span>
+                </AccordionTrigger>
+                <AccordionContent className="px-3">
+                  <PhoneEntryForm
+                    onSuccess={handleRequestIssued}
+                    onSmsFallback={() => {
+                      toast({
+                        title: "SMS requested",
+                        description: "We’ll use SMS if WhatsApp delivery keeps failing.",
+                      });
+                      setActiveStep("phone");
+                    }}
+                  />
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="otp" disabled={!requestContext} className="border-border/60 data-[disabled]:opacity-60">
+                <AccordionTrigger className="px-3 text-sm font-semibold">
+                  Step 2 · Verify code
+                  <span className="text-xs font-normal text-muted-foreground">{steps[1]?.description}</span>
+                </AccordionTrigger>
+                <AccordionContent className="px-3">
+                  {requestContext ? (
+                    <OtpVerificationForm
+                      key={requestContext.requestId}
+                      requestId={requestContext.requestId}
+                      phone={requestContext.phone}
+                      initialCountdown={requestContext.resendAfter}
+                      onBack={handleReset}
+                      onVerified={handleVerificationSuccess}
+                      onSmsFallback={() => {
+                        toast({
+                          title: "SMS requested",
+                          description: "We’ll try sending an SMS code if WhatsApp stalls.",
+                        });
+                      }}
+                    />
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Start with your number to unlock this step.</p>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </CardContent>
           <CardFooter className="flex flex-col gap-3 text-xs text-muted-foreground">
             <Separator />

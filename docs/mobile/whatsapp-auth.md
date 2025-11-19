@@ -50,4 +50,4 @@ This guide outlines how the cross-platform mobile clients integrate with the Wha
 - Verification requires a 6-digit code on every platform; attempting fewer digits returns actionable errors.
 - Successful verification immediately stores the JWT and unblocks the remainder of onboarding.
 
-For release sign-off, copy the relevant checklist items from [DEPLOYMENT_CHECKLIST.md](../../DEPLOYMENT_CHECKLIST.md) into your playbook and confirm the secure storage locations are documented for security reviews.
+For release sign-off, mirror the auth + secret steps from [`docs/runbooks/deploy.md`](../runbooks/deploy.md) in your playbook and confirm the secure storage locations are documented for security reviews.

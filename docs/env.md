@@ -15,8 +15,9 @@ This guide centralises the environment configuration for the Rayon Sports Digita
 
 Start from `.env.example` for local work and `.env.production.example` for staged deployments. The critical variables are:
 
-- **Supabase**: `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_PROJECT_REF`
-- **Application**: `NEXT_PUBLIC_BACKEND_URL`, `NEXT_PUBLIC_ENVIRONMENT_LABEL`, `APP_ENABLE_CSP`
+- **Supabase auth**: `SUPABASE_URL`, `SUPABASE_SECRET_KEY` (or `SITE_SUPABASE_SECRET_KEY` when using Vault), `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_PROJECT_REF`, `SUPABASE_AUTH_REDIRECT_URL`
+- **Browser auth client**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `NEXT_PUBLIC_SUPABASE_ANON_KEY` during the migration window), `NEXT_PUBLIC_BACKEND_URL`, `NEXT_PUBLIC_ENVIRONMENT_LABEL`
+- **QR + realtime**: `REALTIME_SIGNING_SECRET` (channel auth for `qr-token` + `event-checkin`), `SITE_SUPABASE_URL`, `SITE_SUPABASE_PUBLISHABLE_KEY`
 - **Payments & SMS**: `SMS_WEBHOOK_TOKEN`, `SMS_INGEST_TOKEN`, `MOMO_WEBHOOK_SECRET`, `USSD_CALLBACK_SECRET`
 - **Observability**: `SENTRY_DSN`, `LOGFLARE_API_KEY`, `PROM_PUSH_GATEWAY_URL`
 
@@ -33,7 +34,7 @@ Refer to [`docs/payments-policy.md`](payments-policy.md#required-secrets) for pa
 
 - **Local**: Managed manually in `.env.local`. Rotate tokens whenever you run `supabase start` or receive new SMS sandbox credentials.
 - **Staging**: Store in the staging namespace of your secret manager (e.g., Doppler, 1Password Connect). Access is limited to QA engineers and release managers.
-- **Production**: Inject via Vercel environment variables or Kubernetes secrets. Keys must be base64 encoded when stored in K8s manifests. All updates require a two-person review and should be accompanied by a [deployment checklist](../DEPLOYMENT_CHECKLIST.md) run.
+- **Production**: Inject via Vercel environment variables or Kubernetes secrets. Keys must be base64 encoded when stored in K8s manifests. All updates require a two-person review and should be accompanied by the deployment runbook steps in [`docs/runbooks/deploy.md`](runbooks/deploy.md).
 - **Rotation**: Document every rotation in the `infra/secret-rotations.log` file and notify the on-call channel.
 
 ## Validation Commands
@@ -45,7 +46,7 @@ pnpm env:lint
 # Run Supabase connectivity probe (requires SUPABASE_* variables)
 pnpm supabase:health
 
-# Confirm Edge Function secrets before deploying
+# Confirm Edge Function secrets (REALTIME_SIGNING_SECRET, SITE_SUPABASE_*) before deploying QR/auth flows
 pnpm supabase:functions check-secrets
 ```
 

@@ -29,10 +29,12 @@ jobs:
       NEXT_PUBLIC_BACKEND_URL: http://localhost:3000/api
       NEXT_PUBLIC_SUPABASE_URL: https://ci.example.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-anon-key
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-publishable-key
       NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN: ci-onboarding-token
       SUPABASE_SERVICE_ROLE_KEY: ci-service-role
       SITE_SUPABASE_URL: https://ci.example.com
       SITE_SUPABASE_SECRET_KEY: ci-site-secret
+      SITE_SUPABASE_PUBLISHABLE_KEY: ci-publishable-key
       ONBOARDING_API_TOKEN: ci-onboarding-token
       OPENAI_API_KEY: ci-openai-key
       TEST_REDIS_URL: redis://127.0.0.1:6379/15
@@ -45,6 +47,11 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.0 --activate
 
       - name: Use npm@11.4.2
         run: npm i -g npm@11.4.2
@@ -65,14 +72,8 @@ jobs:
       - name: License policy compliance
         run: npm run check:licenses
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Type check
-        run: npm run type-check
-
-      - name: Test
-        run: npm test
+      - name: Verify (lint, type-check, build, targeted tests)
+        run: make verify
 
       - name: Preflight (env + backend + build)
         run: node scripts/preflight.mjs

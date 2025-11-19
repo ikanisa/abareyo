@@ -62,6 +62,13 @@ export const dismissManualSms = (
     body: JSON.stringify(payload),
   });
 
+export const updateManualPaymentMetadata = (paymentId: string, metadata: Record<string, unknown>) =>
+  httpClient.request<{ status: string }>(`/admin/sms/manual/payments/${paymentId}/metadata`, {
+    admin: true,
+    method: 'PATCH',
+    body: JSON.stringify({ metadata }),
+  });
+
 export const fetchSmsParserPrompts = () =>
   httpClient.data<SmsParserPrompt[]>(`/admin/sms/parser/prompts`, { admin: true });
 

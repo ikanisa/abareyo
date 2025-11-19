@@ -7,6 +7,7 @@ import { z } from "../_shared/schema.ts";
 import { getOpenAiApiKey, requireEnv } from "../_shared/env.ts";
 import { getServiceRoleClient } from "../_shared/client.ts";
 import { json, jsonError, requireMethod, validateJsonBody } from "../_shared/http.ts";
+import { extractRequestMeta, writeAuditLog } from "../_shared/audit.ts";
 import { logError, logInfo, logWarn } from "../_shared/log.ts";
 
 const supabase = getServiceRoleClient();
@@ -93,9 +94,17 @@ serve(async (req) => {
     return methodError;
   }
 
+  const requestMeta = extractRequestMeta(req);
+
   const validation = await validateJsonBody(req, payloadSchema);
   if (validation.error || !validation.data) {
     logWarn("parse_sms_invalid_payload", { endpoint: "parse-sms" });
+    await writeAuditLog({
+      action: "sms.parse.invalid_payload",
+      entityType: "sms_raw",
+      context: { error: "invalid_payload" },
+      ...requestMeta,
+    });
     return validation.error ?? jsonError("invalid_payload", 400);
   }
 
@@ -110,6 +119,13 @@ serve(async (req) => {
 
   if (smsError || !sms) {
     logWarn("parse_sms_not_found", { smsId, error: smsError?.message });
+    await writeAuditLog({
+      action: "sms.parse.not_found",
+      entityType: "sms_raw",
+      entityId: smsId,
+      context: { error: smsError?.message },
+      ...requestMeta,
+    });
     return jsonError("sms_not_found", 404);
   }
 
@@ -120,6 +136,13 @@ serve(async (req) => {
     logError("parse_sms_openai_failed", {
       smsId,
       error: (err as Error).message,
+    });
+    await writeAuditLog({
+      action: "sms.parse.openai_failed",
+      entityType: "sms_raw",
+      entityId: smsId,
+      context: { error: (err as Error).message },
+      ...requestMeta,
     });
     return jsonError((err as Error).message, 502);
   }
@@ -139,6 +162,12 @@ serve(async (req) => {
 
   if (error || !row) {
     logError("parse_sms_insert_failed", { smsId, error: error?.message });
+    await writeAuditLog({
+      action: "sms.parse.insert_failed",
+      entityType: "sms_parsed",
+      context: { smsId, error: error?.message },
+      ...requestMeta,
+    });
     return jsonError(error?.message ?? "insert_failed", 500);
   }
 
@@ -155,5 +184,13 @@ serve(async (req) => {
   }
 
   logInfo("parse_sms_completed", { smsId, smsParsedId: row.id });
+  await writeAuditLog({
+    action: "sms.parse.completed",
+    entityType: "sms_parsed",
+    entityId: row.id,
+    before: { smsId },
+    after: { smsParsedId: row.id, ref: parsedSms.ref ?? null, amount: parsedSms.amount ?? null },
+    ...requestMeta,
+  });
   return json({ ok: true, sms_parsed_id: row.id });
 });

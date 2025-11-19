@@ -55,6 +55,6 @@ Ensure production dependencies remain secure, supported, and aligned with releas
 - **Missed window**: report in engineering weekly sync; reschedule within two weeks.
 
 ## References
-- Deployment runbooks: `DEPLOYMENT_CHECKLIST.md`, `DEPLOYMENT_QUICKSTART.md`
+- Deployment runbooks: `docs/runbooks/deploy.md`, `docs/runbooks/web.md`
 - Supply chain artifacts: `report/sbom/`
 - License policy: `config/compliance/license-policies.json`
