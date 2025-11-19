@@ -69,6 +69,7 @@ export const AdminAuditLogTable = ({ initial }: { initial?: AuditLogEntry[] }) =
   const [searchDraft, setSearchDraft] = useState('');
   const [isLoading, setIsLoading] = useState(!(initial && initial.length));
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [selected, setSelected] = useState<AuditLogEntry | null>(null);
 
   const load = useCallback(
@@ -165,6 +166,39 @@ export const AdminAuditLogTable = ({ initial }: { initial?: AuditLogEntry[] }) =
     void load(filters, { silentRefresh: true });
   }, [filters, load]);
 
+  const downloadCsv = useCallback(async () => {
+    setIsExporting(true);
+    try {
+      const params = new URLSearchParams({ limit: '200', format: 'csv' });
+      if (filters.search) params.set('search', filters.search);
+      if (filters.adminUserId) params.set('adminUserId', filters.adminUserId);
+      if (filters.action) params.set('action', filters.action);
+
+      const response = await fetch(`/admin/api/admin/audit?${params.toString()}`, { credentials: 'include' });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload?.error?.message ?? 'audit_export_failed');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `audit-logs-${new Date().toISOString().slice(0, 10)}.csv`;
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+      toast({ title: 'Export ready', description: 'CSV download started.' });
+    } catch (error) {
+      toast({
+        title: 'Unable to export audit logs',
+        description: error instanceof Error ? error.message : undefined,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  }, [filters.action, filters.adminUserId, filters.search, toast]);
+
   useEffect(() => {
     setSearchDraft(filters.search ?? '');
   }, [filters.search]);
@@ -177,6 +211,9 @@ export const AdminAuditLogTable = ({ initial }: { initial?: AuditLogEntry[] }) =
           <p className="text-sm text-slate-400">Immutable log of admin mutations with before/after snapshots.</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={downloadCsv} disabled={isExporting || isLoading}>
+            {isExporting ? 'Preparing…' : 'Download CSV'}
+          </Button>
           <Button variant="outline" size="sm" onClick={refresh} disabled={isRefreshing || isLoading}>
             {isRefreshing ? 'Refreshing…' : 'Refresh'}
           </Button>

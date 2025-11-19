@@ -6,6 +6,7 @@ import { z } from "../_shared/schema.ts";
 
 import { getServiceRoleClient } from "../_shared/client.ts";
 import { json, jsonError, requireMethod, validateJsonBody } from "../_shared/http.ts";
+import { extractRequestMeta, writeAuditLog } from "../_shared/audit.ts";
 import { logError, logInfo, logWarn } from "../_shared/log.ts";
 
 const supabase = getServiceRoleClient();
@@ -26,6 +27,8 @@ serve(async (req) => {
   if (methodError) {
     return methodError;
   }
+
+  const requestMeta = extractRequestMeta(req);
 
   const validation = await validateJsonBody(req, payloadSchema);
   if (validation.error || !validation.data) {
@@ -62,6 +65,13 @@ serve(async (req) => {
   const existingPayment = existingPayments?.[0];
   if (existingPayment) {
     logInfo("match_payment_reuse", { smsParsedId, existingPayment: existingPayment.id });
+    await writeAuditLog({
+      action: "sms.match.reused",
+      entityType: "payment",
+      entityId: existingPayment.id,
+      context: { smsParsedId, orderId: existingPayment.order_id, kind: existingPayment.kind },
+      ...requestMeta,
+    });
     return json({
       ok: true,
       kind: existingPayment.kind,
@@ -90,6 +100,7 @@ serve(async (req) => {
   let momoStatus: "pending" | "allocated" | "failed" | "manual" = "pending";
   let allocatedTo: string | null = null;
   let allocatedId: string | null = null;
+  let outcome: "allocated" | "unmatched" | "manual" = "unmatched";
 
   if (matchedOrder) {
     orderId = matchedOrder.id;
@@ -99,6 +110,7 @@ serve(async (req) => {
     momoStatus = "allocated";
     allocatedTo = "ticket_order";
     allocatedId = orderId;
+    outcome = "allocated";
 
     await supabase
       .from("ticket_orders")
@@ -175,6 +187,15 @@ serve(async (req) => {
   }
 
   logInfo("match_payment_completed", { smsParsedId, orderId, kind });
+  await writeAuditLog({
+    action: "sms.match.completed",
+    entityType: "payment",
+    entityId: orderId,
+    before: { smsParsedId },
+    after: { orderId, kind, status: paymentStatus, outcome },
+    context: { amount, matchedEntity },
+    ...requestMeta,
+  });
   return json({
     ok: true,
     kind,
