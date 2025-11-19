@@ -22,6 +22,11 @@ jobs:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
       API_BASE_URL: ${{ vars.IOS_API_BASE_URL }}
+      WHATSAPP_ACCESS_TOKEN: ${{ secrets.WHATSAPP_ACCESS_TOKEN }}
+      WHATSAPP_PHONE_NUMBER_ID: ${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
+      WHATSAPP_OTP_TEMPLATE: ${{ vars.WHATSAPP_OTP_TEMPLATE }}
+      META_WABA_BASE_URL: ${{ vars.META_WABA_BASE_URL }}
+      EXPO_PUBLIC_WEB_URL: ${{ vars.EXPO_PUBLIC_WEB_URL }}
     steps:
       - uses: actions/checkout@v4
         with:

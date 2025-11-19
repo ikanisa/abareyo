@@ -1,0 +1,13 @@
+// iOS xcconfig sample for Abareyo mobile builds.
+// Import this file from your .xcconfig or project build settings so SwiftUI targets
+// share the same OTP + API configuration described in docs/mobile/whatsapp-auth.md.
+
+// API_BASE_URL injects into the Info.plist + process environment so AuthAPI picks up the
+// HTTPS host before performing WhatsApp OTP verification.
+API_BASE_URL = https://fan-api.rayonsports.rw
+
+// WhatsApp OTP credentials that mirror src/lib/server/otp/whatsapp.ts defaults.
+WHATSAPP_ACCESS_TOKEN =
+WHATSAPP_PHONE_NUMBER_ID =
+WHATSAPP_OTP_TEMPLATE = otp_verification
+META_WABA_BASE_URL = https://graph.facebook.com/v20.0
