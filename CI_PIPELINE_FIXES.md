@@ -249,9 +249,8 @@ npm run lint
 ## Additional Resources
 
 - [Repository README](README.md) - Main repository documentation
-- [Deployment Guide](DEPLOYMENT_GUIDE.md) - Detailed deployment instructions
-- [Netlify Deployment Checklist](NETLIFY_DEPLOYMENT_CHECKLIST.md) - Netlify-specific guide
-- [Production Readiness](PRODUCTION_READINESS.md) - Production checklist
+- [Deployment runbook](docs/runbooks/deploy.md) - Supabase-first deployment and secret guidance
+- [Web runbook](docs/runbooks/web.md) - Commands, preflight, and auth/QR smokes
 
 ## Notes
 

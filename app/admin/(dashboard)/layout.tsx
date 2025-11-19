@@ -2,9 +2,10 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 
-import { AdminShell } from '@/components/admin/AdminShell';
 import AdminOfflineNotice from '@/components/admin/AdminOfflineNotice';
 import { AdminSessionProvider } from '@/providers/admin-session-provider';
+import { AdminFeatureFlagsProvider } from '@/providers/admin-feature-flags-provider';
+import { AdminLocaleProvider } from '@/providers/admin-locale-provider';
 import { fetchAdminFeatureFlagsSnapshot } from '@/services/admin/feature-flags';
 import { listAllPermissions, type AdminPermission } from '@/config/admin-rbac';
 import {
@@ -12,6 +13,7 @@ import {
   reportAdminAvailabilityIssue,
 } from '@/lib/observability/admin';
 import { buildAdminRouteMetadata } from '@admin/_lib/metadata';
+import AdminLayout from '../_components/AdminLayout';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -227,9 +229,11 @@ const AdminDashboardLayout = async ({ children }: { children: ReactNode }) => {
 
   return (
     <AdminSessionProvider value={{ user: context.value.user, permissions: context.value.permissions }}>
-      <AdminShell user={context.value.user} environment={ENV_LABEL} featureFlags={featureFlags}>
-        {children}
-      </AdminShell>
+      <AdminLocaleProvider>
+        <AdminFeatureFlagsProvider initialFlags={featureFlags}>
+          <AdminLayout environment={ENV_LABEL}>{children}</AdminLayout>
+        </AdminFeatureFlagsProvider>
+      </AdminLocaleProvider>
     </AdminSessionProvider>
   );
 };

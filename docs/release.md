@@ -69,7 +69,7 @@ CI must be green before a PR can merge. Preview deploys auto-run for branches pr
    - Unpublish staged builds in Google Play Console/TestFlight.
    - Revert to the previous tag in the Capacitor repo and rebuild using the steps in [`docs/runbooks/mobile.md`](runbooks/mobile.md#release-pipeline).
 
-Document every rollback in `DEPLOYMENT_AUDIT_SUMMARY.md` with root cause and remediation plan.
+Document every rollback in `reports/operations-log.md` with root cause and remediation plan.
 
 ## Post-Release Monitoring
 

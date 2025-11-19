@@ -27,6 +27,7 @@ export type ManualReviewPayment = {
   status: string;
   kind: string;
   createdAt: string;
+  riskScore?: number | null;
   metadata?: Record<string, unknown> | null;
   order?: { id: string; status: string | null } | null;
   membership?: { id: string; plan?: { name: string } | null } | null;

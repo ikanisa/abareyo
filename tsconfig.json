@@ -64,6 +64,9 @@
       "@rayon/ui/*": [
         "./packages/ui/src/*"
       ],
+      "@/domains/*": [
+        "./src/domains/*"
+      ],
       "@/*": [
         "./src/*"
       ]

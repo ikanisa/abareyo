@@ -1,9 +1,25 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Ban, Clock3, Inbox, Link2, RefreshCw, RotateCcw, ShieldCheck, TriangleAlert, Wand2 } from 'lucide-react';
+import {
+  ArrowDownUp,
+  Ban,
+  BookmarkPlus,
+  Clock3,
+  ExternalLink,
+  Inbox,
+  Keyboard,
+  Link2,
+  ListFilter,
+  RefreshCw,
+  RotateCcw,
+  Save,
+  ShieldCheck,
+  TriangleAlert,
+  Wand2,
+} from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +29,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
+import { useAdminFilters } from '@/lib/admin-ui';
 import {
   activateSmsParserPrompt,
   attachSmsToPayment,
@@ -26,7 +43,9 @@ import {
   fetchSmsQueueOverview,
   retryManualSms,
   testSmsParser,
+  updateManualPaymentMetadata,
 } from '@/lib/api/admin/sms';
+import type { ManualReviewPayment } from '@/types/admin-sms';
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: 'medium',
@@ -41,6 +60,22 @@ const RESOLUTION_OPTIONS = [
 
 type ResolutionValue = (typeof RESOLUTION_OPTIONS)[number]['value'];
 
+type PaymentSort = 'newest' | 'risk';
+
+type PaymentFilters = {
+  status: string;
+  kind: string;
+  sort: PaymentSort;
+};
+
+type SavedPaymentFilter = {
+  name: string;
+  filters: PaymentFilters;
+};
+
+const PAYMENT_FILTER_STORAGE_KEY = 'admin::sms::manual-payments::filters';
+const PAYMENT_FILTER_PRESETS_KEY = 'admin::sms::manual-payments::saved-presets';
+
 export default function AdminSmsView() {
   const { toast } = useToast();
   const [selectedSmsId, setSelectedSmsId] = useState<string | null>(null);
@@ -51,6 +86,14 @@ export default function AdminSmsView() {
   const [isTestingPrompt, startTestTransition] = useTransition();
   const [dismissReason, setDismissReason] = useState<ResolutionValue>('ignore');
   const [dismissNote, setDismissNote] = useState('');
+  const { filters, setFilter, reset: resetFilters } = useAdminFilters<PaymentFilters>({
+    defaults: { status: 'all', kind: 'all', sort: 'newest' },
+    storageKey: PAYMENT_FILTER_STORAGE_KEY,
+    storageScope: 'local',
+  });
+  const [savedFilters, setSavedFilters] = useState<SavedPaymentFilter[]>([]);
+  const [savedFilterName, setSavedFilterName] = useState('');
+  const [metadataDraft, setMetadataDraft] = useState('');
 
   const inboundQuery = useQuery({
     queryKey: ['admin', 'sms', 'inbound'],
@@ -67,6 +110,19 @@ export default function AdminSmsView() {
     queryFn: () => fetchManualReviewPayments(50),
   });
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = window.localStorage.getItem(PAYMENT_FILTER_PRESETS_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as SavedPaymentFilter[];
+        setSavedFilters(parsed);
+      }
+    } catch (error) {
+      console.warn('Unable to load saved payment filters', error);
+    }
+  }, []);
+
   const promptsQuery = useQuery({
     queryKey: ['admin', 'sms', 'prompts'],
     queryFn: fetchSmsParserPrompts,
@@ -76,6 +132,15 @@ export default function AdminSmsView() {
     queryKey: ['admin', 'sms', 'prompts', 'active'],
     queryFn: fetchActiveSmsParserPrompt,
   });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(PAYMENT_FILTER_PRESETS_KEY, JSON.stringify(savedFilters));
+    } catch (error) {
+      console.warn('Unable to persist saved filters', error);
+    }
+  }, [savedFilters]);
 
   const queueOverviewQuery = useQuery({
     queryKey: ['admin', 'sms', 'queue'],
@@ -178,9 +243,43 @@ export default function AdminSmsView() {
     },
   });
 
+  const updateMetadataMutation = useMutation({
+    mutationFn: ({ paymentId, metadata }: { paymentId: string; metadata: Record<string, unknown> }) =>
+      updateManualPaymentMetadata(paymentId, metadata),
+    onSuccess: () => {
+      toast({ title: 'Metadata saved' });
+      manualPaymentsQuery.refetch();
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Unable to save metadata';
+      toast({ title: message, variant: 'destructive' });
+    },
+  });
+
   const inboundRecords = useMemo(() => inboundQuery.data ?? [], [inboundQuery.data]);
   const manualSms = useMemo(() => manualSmsQuery.data ?? [], [manualSmsQuery.data]);
+  const sortedManualSms = useMemo(
+    () =>
+      manualSms
+        .slice()
+        .sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()),
+    [manualSms],
+  );
   const manualPayments = useMemo(() => manualPaymentsQuery.data ?? [], [manualPaymentsQuery.data]);
+  const statusOptions = useMemo(() => {
+    const unique = new Set<string>(['all']);
+    manualPayments.forEach((payment) => {
+      if (payment.status) unique.add(payment.status);
+    });
+    return Array.from(unique);
+  }, [manualPayments]);
+  const kindOptions = useMemo(() => {
+    const unique = new Set<string>(['all']);
+    manualPayments.forEach((payment) => {
+      if (payment.kind) unique.add(payment.kind);
+    });
+    return Array.from(unique);
+  }, [manualPayments]);
   const prompts = useMemo(() => promptsQuery.data ?? [], [promptsQuery.data]);
   const activePrompt = activePromptQuery.data ?? null;
   const queueOverview = queueOverviewQuery.data ?? null;
@@ -191,11 +290,50 @@ export default function AdminSmsView() {
     [manualSms, selectedSmsId],
   );
 
+  const riskScoreForPayment = useCallback((payment: ManualReviewPayment) => {
+    if (typeof payment.riskScore === 'number') return payment.riskScore;
+    const raw = payment.metadata as Record<string, unknown> | null | undefined;
+    if (raw && typeof raw.riskScore === 'number') return raw.riskScore;
+    if (raw && typeof raw.risk === 'number') return raw.risk;
+    return 0;
+  }, []);
+
+  const visiblePayments = useMemo(() => {
+    const filtered = manualPayments.filter((payment) => {
+      const statusMatches = filters.status === 'all' || payment.status === filters.status;
+      const kindMatches = filters.kind === 'all' || payment.kind === filters.kind;
+      return statusMatches && kindMatches;
+    });
+    const enriched = filtered.map((payment) => ({ payment, risk: riskScoreForPayment(payment) }));
+    enriched.sort((a, b) => {
+      if (filters.sort === 'risk') {
+        if (b.risk !== a.risk) return b.risk - a.risk;
+      }
+      return new Date(b.payment.createdAt).getTime() - new Date(a.payment.createdAt).getTime();
+    });
+    return enriched.map((entry) => entry.payment);
+  }, [filters.kind, filters.sort, filters.status, manualPayments, riskScoreForPayment]);
+
+  const selectedPayment = useMemo(
+    () => (selectedPaymentId ? visiblePayments.find((payment) => payment.id === selectedPaymentId) ?? null : null),
+    [selectedPaymentId, visiblePayments],
+  );
+
   useEffect(() => {
     if (selectedSmsId && !selectedSms) {
       setSelectedSmsId(null);
     }
   }, [selectedSms, selectedSmsId]);
+
+  useEffect(() => {
+    if (selectedPaymentId && !selectedPayment) {
+      setSelectedPaymentId(null);
+    }
+  }, [selectedPayment, selectedPaymentId]);
+
+  useEffect(() => {
+    setMetadataDraft(selectedPayment ? JSON.stringify(selectedPayment.metadata ?? {}, null, 2) : '');
+  }, [selectedPayment]);
 
   const suggestedPayments = useMemo(() => {
     if (!selectedSms?.parsed) {
@@ -204,13 +342,13 @@ export default function AdminSmsView() {
     return manualPayments.filter((payment) => payment.amount === selectedSms.parsed?.amount);
   }, [manualPayments, selectedSms]);
 
-  const handleManualAttach = () => {
+  const handleManualAttach = useCallback(() => {
     if (!selectedSmsId || !selectedPaymentId) {
       toast({ title: 'Select both an SMS and a payment', variant: 'destructive' });
       return;
     }
     attachMutation.mutate({ smsId: selectedSmsId, paymentId: selectedPaymentId });
-  };
+  }, [attachMutation, selectedPaymentId, selectedSmsId, toast]);
 
   const handlePromptTest = () => {
     if (!sampleText.trim()) {
@@ -226,15 +364,15 @@ export default function AdminSmsView() {
     });
   };
 
-  const handleRetrySelected = () => {
+  const handleRetrySelected = useCallback(() => {
     if (!selectedSmsId) {
       toast({ title: 'Select an SMS to retry', variant: 'destructive' });
       return;
     }
     retrySmsMutation.mutate(selectedSmsId);
-  };
+  }, [retrySmsMutation, selectedSmsId, toast]);
 
-  const handleDismissSelected = () => {
+  const handleDismissSelected = useCallback(() => {
     if (!selectedSmsId) {
       toast({ title: 'Select an SMS to resolve', variant: 'destructive' });
       return;
@@ -244,7 +382,82 @@ export default function AdminSmsView() {
       resolution: dismissReason,
       note: dismissNote.trim() || undefined,
     });
-  };
+  }, [dismissNote, dismissReason, dismissSmsMutation, selectedSmsId, toast]);
+
+  const handleMetadataSave = useCallback(() => {
+    if (!selectedPaymentId) {
+      toast({ title: 'Select a payment to edit metadata', variant: 'destructive' });
+      return;
+    }
+    try {
+      const parsed = metadataDraft.trim() ? (JSON.parse(metadataDraft) as Record<string, unknown>) : {};
+      updateMetadataMutation.mutate({ paymentId: selectedPaymentId, metadata: parsed });
+    } catch (error) {
+      toast({ title: 'Invalid metadata JSON', description: 'Please fix the JSON before saving.', variant: 'destructive' });
+    }
+  }, [metadataDraft, selectedPaymentId, toast, updateMetadataMutation]);
+
+  const selectedPaymentLink = useMemo(() => {
+    if (!selectedPayment) return null;
+    if (selectedPayment.order) return `/admin/orders?search=${selectedPayment.order.id}`;
+    if (selectedPayment.membership) return `/admin/membership?search=${selectedPayment.membership.id}`;
+    if (selectedPayment.donation) return `/admin/fundraising?search=${selectedPayment.donation.id}`;
+    return null;
+  }, [selectedPayment]);
+
+  const handleOpenPaymentLink = useCallback(() => {
+    if (!selectedPaymentLink) {
+      toast({ title: 'No linked entity', description: 'Attach a payment to a record first.' });
+      return;
+    }
+    window.open(selectedPaymentLink, '_blank', 'noopener');
+  }, [selectedPaymentLink, toast]);
+
+  const handleSaveFilterPreset = useCallback(() => {
+    const name = savedFilterName.trim();
+    if (!name) {
+      toast({ title: 'Name required', description: 'Provide a label for this filter preset.', variant: 'destructive' });
+      return;
+    }
+    setSavedFilters((prev) => {
+      const withoutExisting = prev.filter((preset) => preset.name !== name);
+      return [...withoutExisting, { name, filters }];
+    });
+    toast({ title: 'Filters saved', description: 'Preset stored in local browser storage.' });
+    setSavedFilterName('');
+  }, [filters, savedFilterName, toast]);
+
+  const handleApplyFilterPreset = useCallback(
+    (preset: SavedPaymentFilter) => {
+      setFilter('status', preset.filters.status);
+      setFilter('kind', preset.filters.kind);
+      setFilter('sort', preset.filters.sort);
+    },
+    [setFilter],
+  );
+
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
+      if (target && target.getAttribute('contenteditable') === 'true') return;
+      const key = event.key.toLowerCase();
+      if (key === 'a' && selectedSmsId && selectedPaymentId) {
+        event.preventDefault();
+        handleManualAttach();
+      }
+      if (key === 'r' && selectedSmsId) {
+        event.preventDefault();
+        handleDismissSelected();
+      }
+      if (key === 'l' && selectedPaymentId) {
+        event.preventDefault();
+        handleOpenPaymentLink();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [handleDismissSelected, handleManualAttach, handleOpenPaymentLink, selectedPaymentId, selectedSmsId]);
 
   const sortedPrompts = useMemo(
     () =>
@@ -404,7 +617,7 @@ export default function AdminSmsView() {
             <p className="text-sm text-slate-400">No SMS in manual review.</p>
           ) : (
             <div className="max-h-80 space-y-2 overflow-auto pr-1">
-              {manualSms.map((sms) => {
+              {sortedManualSms.map((sms) => {
                 const isSelected = selectedSmsId === sms.id;
                 const confidence = sms.parsed ? Math.round(sms.parsed.confidence * 100) : null;
                 return (
@@ -429,12 +642,87 @@ export default function AdminSmsView() {
           )}
         </div>
         <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Link2 className="h-5 w-5 text-primary" />
-            <div>
-              <h2 className="text-lg font-semibold text-slate-100">Pending payments</h2>
-              <p className="text-xs text-slate-400">Attach the selected SMS once verified.</p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Link2 className="h-5 w-5 text-primary" />
+              <div>
+                <h2 className="text-lg font-semibold text-slate-100">Pending payments</h2>
+                <p className="text-xs text-slate-400">Attach the selected SMS once verified.</p>
+              </div>
             </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
+              <div className="flex items-center gap-1">
+                <ArrowDownUp className="h-3.5 w-3.5" />
+                <Select value={filters.sort} onValueChange={(value: PaymentSort) => setFilter('sort', value)}>
+                  <SelectTrigger className="h-8 w-[140px] bg-white/5 text-xs">
+                    <SelectValue placeholder="Sort payments" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest first</SelectItem>
+                    <SelectItem value="risk">Risk score</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-1">
+                <ListFilter className="h-3.5 w-3.5" />
+                <Select value={filters.status} onValueChange={(value) => setFilter('status', value)}>
+                  <SelectTrigger className="h-8 w-[120px] bg-white/5 text-xs">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusOptions.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={filters.kind} onValueChange={(value) => setFilter('kind', value)}>
+                  <SelectTrigger className="h-8 w-[120px] bg-white/5 text-xs">
+                    <SelectValue placeholder="Kind" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {kindOptions.map((kind) => (
+                      <SelectItem key={kind} value={kind}>
+                        {kind}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 px-3 text-xs">
+                Reset
+              </Button>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                value={savedFilterName}
+                onChange={(event) => setSavedFilterName(event.target.value)}
+                placeholder="Save filters as..."
+                className="h-8 w-48 bg-white/5 text-xs"
+              />
+              <Button size="sm" variant="outline" className="h-8 px-3 text-xs" onClick={handleSaveFilterPreset}>
+                <Save className="mr-1.5 h-3.5 w-3.5" /> Save
+              </Button>
+            </div>
+            {savedFilters.length ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <BookmarkPlus className="h-3.5 w-3.5 text-primary" />
+                {savedFilters.map((preset) => (
+                  <Button
+                    key={preset.name}
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 px-3 text-xs"
+                    onClick={() => handleApplyFilterPreset(preset)}
+                  >
+                    {preset.name}
+                  </Button>
+                ))}
+              </div>
+            ) : null}
           </div>
           {manualPaymentsQuery.isLoading ? (
             <div className="space-y-2">
@@ -442,12 +730,13 @@ export default function AdminSmsView() {
                 <Skeleton key={index} className="h-20 w-full" />
               ))}
             </div>
-          ) : manualPayments.length === 0 ? (
+          ) : visiblePayments.length === 0 ? (
             <p className="text-sm text-slate-400">No payments awaiting manual confirmation.</p>
           ) : (
             <div className="max-h-80 space-y-2 overflow-auto pr-1">
-              {manualPayments.map((payment) => {
+              {visiblePayments.map((payment) => {
                 const isSelected = selectedPaymentId === payment.id;
+                const riskScore = riskScoreForPayment(payment);
                 return (
                   <button
                     key={payment.id}
@@ -457,9 +746,12 @@ export default function AdminSmsView() {
                       isSelected ? 'border-primary bg-primary/10' : 'border-white/10 hover:border-primary/40'
                     }`}
                   >
-                    <p className="text-sm font-semibold text-slate-100">
-                      {payment.amount.toLocaleString()} {payment.currency}
-                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-slate-100">
+                        {payment.amount.toLocaleString()} {payment.currency}
+                      </p>
+                      <span className="text-xs text-slate-400">Risk {riskScore.toFixed(1)}</span>
+                    </div>
                     <p className="text-xs text-slate-400">
                       {payment.kind} • {dateFormatter.format(new Date(payment.createdAt))}
                     </p>
@@ -584,6 +876,47 @@ export default function AdminSmsView() {
                   <Ban className="mr-2 h-4 w-4" /> Dismiss
                 </Button>
               </div>
+              {selectedPayment ? (
+                <div className="space-y-2 rounded-xl border border-white/10 bg-black/20 p-3 text-xs">
+                  <div className="flex items-center justify-between text-[11px] uppercase tracking-wide text-slate-400">
+                    <span>Payment metadata</span>
+                    <span className="flex items-center gap-1 text-[10px] normal-case text-slate-500">
+                      <Keyboard className="h-3 w-3" /> A approve/link • R reject • L open link
+                    </span>
+                  </div>
+                  <Textarea
+                    value={metadataDraft}
+                    onChange={(event) => setMetadataDraft(event.target.value)}
+                    className="bg-white/5 text-slate-100"
+                    rows={5}
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" onClick={handleMetadataSave} disabled={updateMetadataMutation.isPending}>
+                      <Save className="mr-2 h-4 w-4" /> Save metadata
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={updateMetadataMutation.isPending}
+                      onClick={() =>
+                        setMetadataDraft(selectedPayment ? JSON.stringify(selectedPayment.metadata ?? {}, null, 2) : '')
+                      }
+                    >
+                      Reset
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={!selectedPaymentLink}
+                      onClick={handleOpenPaymentLink}
+                    >
+                      <ExternalLink className="mr-2 h-4 w-4" /> Open linked record
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500">Select a payment to edit metadata or open linked records.</p>
+              )}
             </div>
           ) : (
             <p className="text-sm text-slate-400">Select an SMS to view conflict details.</p>

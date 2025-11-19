@@ -4,7 +4,7 @@ import {
   CircuitBreaker,
   CircuitBreakerOpenError,
   CircuitBreakerTimeoutError,
-} from '../../../backend/src/observability/circuit-breaker.js';
+} from '@rayon/api/legacy/backend';
 
 const createLogger = () => ({
   log: vi.fn(),

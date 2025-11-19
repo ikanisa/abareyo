@@ -30,16 +30,16 @@ import {
   type TicketCatalogMatchContract,
   type TicketOrderSummaryContract,
   type TicketOrderReceiptContract,
-} from "@/lib/api/tickets";
+} from "@/domains/ticketing";
 import { useToast } from "@/components/ui/use-toast";
 import {
   formatUssdDisplay,
+  recordTicketPendingPayment,
   startClipboardFirstUssdHandoff,
   type ClipboardHandoffResult,
-} from "@/lib/ussd";
-import { recordTicketPendingPayment } from "@/lib/payments";
+} from "@/domains/payments";
 import { useRealtime } from "@/providers/realtime-provider";
-import { useAuth } from "@/providers/auth-provider";
+import { useAuth } from "@/domains/auth";
 import { UssdHandoffGuide } from "@/app/_components/payments/UssdHandoffGuide";
 
 type Channel = "mtn" | "airtel";

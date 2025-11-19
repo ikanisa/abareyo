@@ -1,22 +1,38 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { SmsPermissionCard } from '@/components/sms-permission-card';
-import { MobileMoneyPaymentHistory } from '@/components/mobile-money-payment-history';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Suspense, useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+
+import { PullToRefreshHint } from "@/app/_components/shell/PullToRefreshHint";
+import PageShell from "@/app/_components/shell/PageShell";
+import SubpageHeader from "@/app/_components/shell/SubpageHeader";
+import { SmsPermissionCard } from "@/components/sms-permission-card";
+import {
+  MobileMoneyPaymentHistory,
+  MobileMoneyPaymentHistorySkeleton,
+} from "@/components/mobile-money-payment-history";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { refreshPayments } from "@/lib/api/payments";
 
 export default function PaymentsPage() {
   const [permissionGranted, setPermissionGranted] = useState(false);
+  const queryClient = useQueryClient();
+  const handleRefresh = useCallback(() => refreshPayments(queryClient), [queryClient]);
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Mobile Money Payments</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage your mobile money payments and SMS detection
-        </p>
-      </div>
-
+    <PageShell
+      header={
+        <div className="space-y-3">
+          <PullToRefreshHint onRefresh={handleRefresh} />
+          <SubpageHeader
+            title="Mobile Money"
+            eyebrow="Payments & reconciliation"
+            description="Review detected SMS transactions, allocate them to orders, and keep your balances synced."
+          />
+        </div>
+      }
+      mainClassName="space-y-6"
+    >
       <Tabs defaultValue="history" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="history">Payment History</TabsTrigger>
@@ -24,7 +40,9 @@ export default function PaymentsPage() {
         </TabsList>
 
         <TabsContent value="history" className="space-y-4">
-          <MobileMoneyPaymentHistory />
+          <Suspense fallback={<MobileMoneyPaymentHistorySkeleton />}>
+            <MobileMoneyPaymentHistory onRefresh={() => handleRefresh()} />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-4">
@@ -34,18 +52,15 @@ export default function PaymentsPage() {
           />
 
           {permissionGranted && (
-            <div className="rounded-lg border p-4 bg-green-50 dark:bg-green-950">
-              <h3 className="font-semibold text-green-900 dark:text-green-100">
-                SMS Detection Active
-              </h3>
-              <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                The app will now automatically detect mobile money payment SMS messages
-                and allocate them to your pending orders.
+            <div className="rounded-lg border border-white/15 bg-white/10 p-4 text-white">
+              <h3 className="font-semibold">SMS Detection Active</h3>
+              <p className="mt-1 text-sm text-white/80">
+                The app will automatically detect mobile money payment SMS messages and allocate them to your pending orders.
               </p>
             </div>
           )}
         </TabsContent>
       </Tabs>
-    </div>
+    </PageShell>
   );
 }

@@ -2,6 +2,8 @@
 
 import type { Order, OrderStatus } from "@/app/_data/shop_v2";
 import { formatCurrency } from "@/app/_data/shop_v2";
+import { getOrderProgressLabel } from "@/lib/api/orders";
+import { Button } from "@/components/ui/button";
 
 const statusOrder: OrderStatus[] = ["ordered", "paid", "ready", "pickedup"];
 
@@ -14,9 +16,11 @@ const statusLabels: Record<OrderStatus, string> = {
 
 type OrderTrackerProps = {
   orders: Order[];
+  onAdvanceStatus?: (orderId: string) => void;
+  pendingOrderId?: string | null;
 };
 
-const OrderTracker = ({ orders }: OrderTrackerProps) => {
+const OrderTracker = ({ orders, onAdvanceStatus, pendingOrderId }: OrderTrackerProps) => {
   if (orders.length === 0) {
     return (
       <div className="card break-words whitespace-normal break-words whitespace-normal text-white/80" role="status">
@@ -37,8 +41,22 @@ const OrderTracker = ({ orders }: OrderTrackerProps) => {
                 <p className="text-sm uppercase tracking-wide text-white/60">Order {order.id}</p>
                 <p className="text-xl font-semibold text-white">{formatCurrency(order.total)}</p>
               </div>
-              <div className="rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-wide text-white/70">
-                {order.pointsUsed} pts used
+              <div className="flex items-center gap-2">
+                <div className="rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-wide text-white/70">
+                  {order.pointsUsed} pts used
+                </div>
+                {onAdvanceStatus ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    className="border-white/20 bg-white/10 text-white"
+                    disabled={pendingOrderId === order.id || order.status === "pickedup"}
+                    onClick={() => onAdvanceStatus(order.id)}
+                  >
+                    {pendingOrderId === order.id ? "Updating…" : getOrderProgressLabel(order.status)}
+                  </Button>
+                ) : null}
               </div>
             </header>
             <div className="relative">

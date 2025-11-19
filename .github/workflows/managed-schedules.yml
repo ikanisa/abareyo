@@ -113,10 +113,13 @@ jobs:
           TARGET_ENVIRONMENT: ${{ needs.plan.outputs.environment }}
           PROD_SUPABASE_URL: ${{ secrets.SCHEDULE_PROD_SUPABASE_URL }}
           PROD_SUPABASE_SECRET: ${{ secrets.SCHEDULE_PROD_SUPABASE_SERVICE_ROLE }}
+          PROD_SUPABASE_PUBLISHABLE: ${{ secrets.SCHEDULE_PROD_SUPABASE_PUBLISHABLE_KEY }}
           STAGING_SUPABASE_URL: ${{ secrets.SCHEDULE_STAGING_SUPABASE_URL }}
           STAGING_SUPABASE_SECRET: ${{ secrets.SCHEDULE_STAGING_SUPABASE_SERVICE_ROLE }}
+          STAGING_SUPABASE_PUBLISHABLE: ${{ secrets.SCHEDULE_STAGING_SUPABASE_PUBLISHABLE_KEY }}
           DEFAULT_SUPABASE_URL: ${{ secrets.SITE_SUPABASE_URL }}
           DEFAULT_SUPABASE_SECRET: ${{ secrets.SITE_SUPABASE_SECRET_KEY }}
+          DEFAULT_SUPABASE_PUBLISHABLE: ${{ secrets.SITE_SUPABASE_PUBLISHABLE_KEY }}
           PROD_SENTRY_DSN: ${{ secrets.SCHEDULE_PROD_SENTRY_DSN }}
           STAGING_SENTRY_DSN: ${{ secrets.SCHEDULE_STAGING_SENTRY_DSN }}
           DEFAULT_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
@@ -127,11 +130,13 @@ jobs:
             production)
               url="${PROD_SUPABASE_URL:-${DEFAULT_SUPABASE_URL}}"
               secret="${PROD_SUPABASE_SECRET:-${DEFAULT_SUPABASE_SECRET}}"
+              publishable="${PROD_SUPABASE_PUBLISHABLE:-${DEFAULT_SUPABASE_PUBLISHABLE}}"
               sentry="${PROD_SENTRY_DSN:-${DEFAULT_SENTRY_DSN}}"
               ;;
             staging)
               url="${STAGING_SUPABASE_URL:-${DEFAULT_SUPABASE_URL}}"
               secret="${STAGING_SUPABASE_SECRET:-${DEFAULT_SUPABASE_SECRET}}"
+              publishable="${STAGING_SUPABASE_PUBLISHABLE:-${DEFAULT_SUPABASE_PUBLISHABLE}}"
               sentry="${STAGING_SENTRY_DSN:-${DEFAULT_SENTRY_DSN}}"
               ;;
             *)
@@ -148,6 +153,7 @@ jobs:
 
           echo "supabase_url=${url}" >>"${GITHUB_OUTPUT}"
           echo "supabase_secret=${secret}" >>"${GITHUB_OUTPUT}"
+          echo "supabase_publishable=${publishable}" >>"${GITHUB_OUTPUT}"
           echo "sentry_dsn=${sentry}" >>"${GITHUB_OUTPUT}"
 
       - name: Execute data retention tasks
@@ -158,6 +164,8 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ steps.secrets.outputs.supabase_url }}
           SITE_SUPABASE_SECRET_KEY: ${{ steps.secrets.outputs.supabase_secret }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ steps.secrets.outputs.supabase_secret }}
+          SITE_SUPABASE_PUBLISHABLE_KEY: ${{ steps.secrets.outputs.supabase_publishable }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ steps.secrets.outputs.supabase_publishable }}
           NEXT_PUBLIC_ENVIRONMENT_LABEL: ${{ needs.plan.outputs.environment }}
           SENTRY_ENVIRONMENT: ${{ needs.plan.outputs.environment }}
           SENTRY_DSN: ${{ steps.secrets.outputs.sentry_dsn }}

@@ -86,6 +86,11 @@ jobs:
             secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
             'preview-anon-key'
           }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{
+            secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY != '' &&
+            secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+            'preview-publishable-key'
+          }}
           NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN: ${{
             secrets.NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN != '' &&
             secrets.NEXT_PUBLIC_ONBOARDING_PUBLIC_TOKEN ||
@@ -105,6 +110,11 @@ jobs:
             secrets.SITE_SUPABASE_SECRET_KEY != '' &&
             secrets.SITE_SUPABASE_SECRET_KEY ||
             'preview-site-secret'
+          }}
+          SITE_SUPABASE_PUBLISHABLE_KEY: ${{
+            secrets.SITE_SUPABASE_PUBLISHABLE_KEY != '' &&
+            secrets.SITE_SUPABASE_PUBLISHABLE_KEY ||
+            'preview-site-publishable'
           }}
           ONBOARDING_API_TOKEN: ${{
             secrets.ONBOARDING_API_TOKEN != '' &&
